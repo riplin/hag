@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+*.com
+
+# Mac junk
+**/.DS_Store
