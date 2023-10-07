@@ -2144,7 +2144,7 @@ IsMonochrome4:
     pop    dx
     or     dl, dl
     jne    PlayMemoryErrorBeeps
-MemorySuccess:
+Label0x158b:
     jmp    Label0x1597
 PlayMemoryErrorBeeps:
     mov    al, 03h                      ;3 beeps
@@ -2179,7 +2179,7 @@ SetStartupVideoMode PROC NEAR
     mov  ax, (BDA_DH_80x25Color SHL 8) OR 03h;0x2003
     mov  bl, 07h
 IsMonochrome:                           ;Offset 0x15d2
-    and  byte ptr ds:[BDA_DetectedHardware], BDA_DH_InitialVideoModeMask;Offset 0410h, 0xcf
+    and  byte ptr ds:[BDA_DetectedHardware], NOT BDA_DH_InitialVideoModeMask;Offset 0410h, 0xcf
     or   byte ptr ds:[BDA_DetectedHardware], ah;Offset 0410h
     xor  ah, ah                         ;INT10_00_SetVideoMode
     int  42h                            ;Call system int 10h handler
@@ -2192,7 +2192,7 @@ IsVGA:                                  ;Offset 0x15e6
     jne  IsMonochromeOrInactive         ;Offset 0x15fb
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0487h, 0x8
     jne  IsMonochromeOrInactive         ;Offset 0x15fb
-    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0487h, 0xfd
+    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_Monochrome;Offset 0487h, 0xfd
     jmp  Label0x1600                    ;Offset 0x1600
 IsMonochromeOrInactive:                 ;Offset 0x15fb
     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
@@ -2249,29 +2249,6 @@ DisplayCombinationCode  DB 0Ch          ;00 - Color, Not VGA
                         DB 0Bh          ;01 - Color, VGA
                         DB 0Eh          ;10 - Mono, Not VGA
                         DB 0Dh          ;11 - Mono, VGA
-
-BDA_VideoModeOptions                    EQU 0487h;Byte 0x487
-    BDA_VMO_CursorEmulationEnabled      EQU 01h
-    BDA_VMO_Monochrome                  EQU 02h
-    BDA_VMO_Unknown                     EQU 04h
-    BDA_VMO_Inactive                    EQU 08h
-    BDA_VMO_Memory64k                   EQU 00h
-    BDA_VMO_Memory128k                  EQU 20h
-    BDA_VMO_Memory192k                  EQU 40h
-    BDA_VMO_Memory256k                  EQU 60h
-    BDA_VMO_MemoryMask                  EQU 60h
-    BDA_VMO_DontClearDisplay            EQU 80h
-
-BDA_VideoDisplayDataArea                EQU 0489h;Byte 0x489
-    BDA_VDDA_VGA                        EQU 01h
-    BDA_VDDA_GrayScale                  EQU 02h
-    BDA_VDDA_MonochromeMonitor          EQU 04h
-    BDA_VDDA_DefaultPaletteDisabled     EQU 08h
-    BDA_VDDA_DisplaySwitchingEnabled    EQU 40h
-    BDA_VDDA_LineMode350                EQU 00h
-    BDA_VDDA_LineMode400                EQU 10h
-    BDA_VDDA_LineMode200                EQU 80h
-    BDA_VDDA_LineModeMask               EQU 90h
 
 ConfigureDisplayCombinationCode PROC NEAR;Offset 0x1682
     mov  al, byte ptr ds:[BDA_VideoModeOptions];Offset 0487h
