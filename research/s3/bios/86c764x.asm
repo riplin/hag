@@ -87,6 +87,7 @@ ColorCompareRegister                    EQU 0B2E8h
 BackgroundMix                           EQU 0B6E8h
 ForegroundMix                           EQU 0BAE8h
 ReadRegisterData                        EQU 0BEE8h
+WriteRegisterData                       EQU 0BEE8h
 PixelDataTransfer                       EQU 0E2E8h
 PixelDataTransferExtension              EQU 0E2EAh
 PatternY                                EQU 0EAE8h
@@ -1426,7 +1427,7 @@ Label0x10b9:                            ;Offset 0x10b9
     je   Label0x10c3                    ;Offset 0x10c3
     jmp  Label0x115c                    ;Offset 0x115c
 Label0x10c3:                            ;Offset 0x10c3
-    call Func0x121e                     ;Offset 0x121e
+    call ClearMemory                    ;Offset 0x121e
     call EmptyFunction1                 ;Offset 0x230
     mov  al, 41h
     call ReadDataWithIndexRegister      ;Offset 0x4640
@@ -1607,7 +1608,7 @@ Label0x1204:                            ;Offset 0x1204
     jmp  Func0x240a;Offset 0x240a
 Func0x11f1 ENDP
 
-Func0x1207 PROC NEAR                    ;Offset 0x1207
+SetCPUUpperMemoryAddressBits PROC NEAR  ;Offset 0x1207
     push ax
     push dx
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
@@ -1633,15 +1634,15 @@ Func0x1207 PROC NEAR                    ;Offset 0x1207
     pop  dx
     pop  ax
     ret  
-Func0x1207 ENDP
+SetCPUUpperMemoryAddressBits ENDP
 
 EmptyFunction2 PROC NEAR                ;Offset 0x121d
     ;Code was probably commented out
     ret
 EmptyFunction2 ENDP
 
-Func0x121e PROC NEAR                    ;Offset 0x121e
-    test byte ptr ds:[BDA_VideoModeOptions], 80h;Offset 0x487
+ClearMemory PROC NEAR                   ;Offset 0x121e
+    test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_DontClearDisplay;Offset 0x487, 80h
     je   Label0x1226                    ;Offset 0x1226
     ret
 Label0x1226:                            ;Offset 0x1226
@@ -1649,72 +1650,79 @@ Label0x1226:                            ;Offset 0x1226
     push ax
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
     call UnlockExtendedCRTRegisters     ;Offset 0xfa6
-    mov  al, 58h
+    mov  al, 58h                        ;CR58 - Linear Address Window Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0efh
-    out  dx, ax
-    mov  al, 50h
+    and  ah, 0efh                       ;bit 4 = 0 - Disable linear addressing
+    out  dx, ax                         ;Write Out
+    mov  al, 50h                        ;CR50 - Extended System Control 1 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0fh
-    or   ah, 10h
-    out  dx, ax
-    mov  al, 43h
+    and  ah, 0fh                        ;Clear out top 4 bits
+    or   ah, 10h                        ;bit 4 = 1 - 16 bits / pixel
+    out  dx, ax                         ;Write out
+    mov  al, 43h                        ;CR43 - Extended Mode register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0f7h
-    out  dx, ax
-    mov  al, 40h
+    and  ah, 0f7h                       ;bit 3 = 0 - Unknown
+    out  dx, ax                         ;
+    mov  al, 40h                        ;CR40 - System Configuration register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    or   ah, 01h
+    or   ah, 01h                        ;bit 0 = 1 - Enable enhanced register access
     out  dx, ax
-    mov  dx, 4ae8h
-    mov  al, 07h
+    mov  dx, AdvancedFunctionControl    ;0x4ae8
+    mov  al, 07h                        ;bit 0 = 1 - Enable Enhanced Functions
+                                        ;bit 1 = 1 - Unknown
+                                        ;bit 2 = 1 - Enhanced modes pixel length = 4 bits / pixel
     out  dx, al
-    mov  dh, 0beh
+    mov  dh, 0beh                       ;0xbee8 - WriteRegisterData
     xor  ax, ax
-    mov  ah, 10h
+    mov  ah, 10h                        ;bits 15-12 = 0001 - Index = 0x1 - Top Scissors
+    out  dx, ax                         ;bits 11-0 = 0x000
+    mov  ah, 20h                        ;bits 15-12 = 0010 - Index = 0x2 - Left Scissors
+    out  dx, ax                         ;bits 11-0 = 0x000
+    mov  ax, 3fffh                      ;bits 15-12 = 0011 - Index 0x3 - Bottom Scissors
+    out  dx, ax                         ;bits 11-0 = 0xfff
+    mov  ah, 4fh                        ;bits 15-12 = 0100 - Index 0x4 - Right Scissors
+    out  dx, ax                         ;bits 11-0 = 0xfff
+    push ax                             ;store 0x4fff
+    mov  ax, 0e040h                     ;bits 15-12 = 0111 - Index 0xe - Multifunction Control Miscellaneous
+    out  dx, ax                         ;bit 6 = 1 - Slow Read/Modify/Write Cycle
+    pop  ax                             ;0x4fff
+    mov  dh, 0AAh                       ;0xaae8 - BitplaneWriteMask
+    mov  ah, 0ffh                       ;0xffff
+    out  dx, ax                         ;update all bitplanes lower 16 bits
+    out  dx, ax                         ;update all bitplanes upper 16 bits
+    mov  dh, 0a6h                       ;0xa6e8 - ForegroundColorRegister
+    xor  ax, ax                         ;0
+    out  dx, ax                         ;set foreground color to black, lower 16 bits
+    out  dx, ax                         ;set foreground color to black, upper 16 bits
+    mov  dh, 0bah                       ;0xbae8 - ForegroundMix
+    mov  al, 27h                        ;0x0027
+                                        ;bits 3-0 = 0111 = Mix Type: new
+                                        ;bits 6-5 = 01 = Color Source: Foreground color
     out  dx, ax
-    mov  ah, 20h
+    mov  dh, 0beh                       ;0xbee8 - WriteRegisterData
+    mov  ax, 0a000h                     ;bits 15-12 = 1020 - Index 0xa - Pixel Control
+    out  dx, ax                         ;bits 7-6 = 00 - Foreground Mix register is always selected
+    mov  dh, 86h                        ;0x86e8 - CurrentXPosition
+    xor  ax, ax                         ;0
     out  dx, ax
-    mov  ax, 3fffh
-    out  dx, ax
-    mov  ah, 4fh
-    out  dx, ax
-    push ax
-    mov  ax, 0e040h
-    out  dx, ax
-    pop  ax
-    mov  dh, 0aah
-    mov  ah, 0ffh
-    out  dx, ax
-    out  dx, ax
-    mov  dh, 0a6h
-    xor  ax, ax
-    out  dx, ax
-    out  dx, ax
-    mov  dh, 0bah
-    mov  al, 27h
-    out  dx, ax
-    mov  dh, 0beh
-    mov  ax, 0a000h
-    out  dx, ax
-    mov  dh, 86h
-    xor  ax, ax
-    out  dx, ax
-    mov  dh, 82h
-    out  dx, ax
-    mov  dh, 96h
-    mov  ax, 0fffh
-    out  dx, ax
-    mov  dh, 0beh
-    out  dx, ax
-    mov  dh, 09ah
-    mov  ax, 40b3h
+    mov  dh, 82h                        ;0x82e8 - CurrentYPosition
+    out  dx, ax                         ;0
+    mov  dh, 96h                        ;0x96e8 - MajorAxisPixelCount
+    mov  ax, 0fffh                      ;0xfff = 4095
+    out  dx, ax                         ;0b1000000101 10011
+    mov  dh, 0beh                       ;0xbee8 - WriteRegisterData
+    out  dx, ax                         ;bits 15-12 = 0 - Minor Axis Pixel Count, bits 11-0 = 4095 - Rectangle Height
+    mov  dh, 09ah                       ;0x9ae8 - DrawingCommand
+    mov  ax, 40b3h                      ;bit 1 = 1 - Multiple pixels transferred at a time (across the plane mode)
+                                        ;bit 4 = 1 - Draw Pixels
+                                        ;bits 7-5 = 101 - Select Drawing Direction 225 degrees, +Y,X maj, +X
+                                        ;bits 15-13 = 010 - Rectangle fill
     out  dx, ax
     call WaitGraphicsEngineReady        ;Offset 0x12a6
     pop  ax
     pop  dx
     ret
-Func0x121e ENDP
+ClearMemory ENDP
 
 WaitGraphicsEngineReady PROC NEAR       ;Offset 0x12a6
     push dx
@@ -1753,86 +1761,89 @@ ResetGraphicsEngine PROC NEAR           ;Offset 0x12c9
     ret
 ResetGraphicsEngine ENDP
 
-Func0x12dc PROC NEAR                    ;Offset 0x12dc
+ConfigureAndClearVideoMemory PROC NEAR  ;Offset 0x12dc
     call UnlockExtendedCRTRegisters     ;Offset 0xfa6
     call UnlockExtendedSequencerRegisters;Offset 0xf92
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 36h
+    mov  al, 36h                        ;CR36 - Configuration 1 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 1fh
-    out  dx, ax
-    test ah, 04h
-    je   Label0x1321                    ;Offset 0x1321
+    and  ah, 1fh                        ;And off the top 3 bits
+                                        ;000 = 4MB memory
+    out  dx, ax                         ;Write out
+    test ah, 04h                        ;If bit 2 = 0 - Extended Data Out (EDO) Mode
+    je   Trio32OrEDO                    ;Offset 0x1321
     call ReadDeviceIDAndRevision        ;Offset 0xfc2
-    cmp  ah, 10h
-    je   Label0x1321                    ;Offset 0x1321
+    cmp  ah, 10h                        ;Trio32
+    je   Trio32OrEDO                    ;Offset 0x1321
     push dx
-    mov  dx, 03c4h
-    mov  al, 0ah
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    mov  al, 0ah                        ;SRA - External Bus Request Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    or   ah, 40h
-    out  dx, ax
-    pop  dx
-    mov  bl, 3fh
-    call Func0x1207                     ;Offset 0x1207
-    call Func0x1359                     ;Offset 0x1359
-    je   Label0x1339                    ;Offset 0x1339
+    or   ah, 40h                        ;Flip bit 6 to 1 - Pin 50 outputs ~RAS1 for FPM
+    out  dx, ax                         ;Write out
+    pop  dx                             ;Restore CRTControllerIndexRegister
+    mov  bl, 3fh                        ;Set memory bits to 0x0fc000 - 0b000011111100000000000000 - 4MB
+    call SetCPUUpperMemoryAddressBits   ;Offset 0x1207
+    call TestMemory                     ;Offset 0x1359
+    je   Found4MB                       ;Offset 0x1339
     push dx
-    mov  dx, 03c4h
-    mov  al, 0ah
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    mov  al, 0ah                        ;SRA - External Bus Request Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0bfh
-    out  dx, ax
-    pop  dx
-Label0x1321:                            ;Offset 0x1321
-    mov  bl, 1fh
-    call Func0x1207                     ;Offset 0x1207
-    call Func0x1359                     ;Offset 0x1359
-    je   Label0x133d                    ;Offset 0x133d
-    mov  bl, 0fh
-    call Func0x1207                     ;Offset 0x1207
-    call Func0x1359                     ;Offset 0x1359
-    je   Label0x1341                    ;Offset 0x1341
-    mov  bh, 0e0h
+    and  ah, 0bfh                       ;Flip bit 6 to 0 - Pin 50 outputs ~OE0 for FPM
+    out  dx, ax                         ;Write out
+    pop  dx                             ;Restore CRTControllerIndexRegister
+Trio32OrEDO:                            ;Offset 0x1321
+    mov  bl, 1fh                        ;Set memory bits to 0x07c000 - 0b000001111100000000000000 - 2MB
+    call SetCPUUpperMemoryAddressBits   ;Offset 0x1207
+    call TestMemory                     ;Offset 0x1359
+    je   Found2MB                       ;Offset 0x133d
+    mov  bl, 0fh                        ;;Set memory bits to 0x03c000 - 0b000000111100000000000000 - 1MB
+    call SetCPUUpperMemoryAddressBits   ;Offset 0x1207
+    call TestMemory                     ;Offset 0x1359
+    je   Found1MB                       ;Offset 0x1341
+    mov  bh, 0e0h                       ;CR36 bits 7-5 - 111 = 4MB
     jmp  Label0x1343                    ;Offset 0x1343
-Label0x1339:                            ;Offset 0x1339
-    xor  bx, bx
+Found4MB:                               ;Offset 0x1339
+    xor  bx, bx                         ;CR36 bits 7-5 - 000 = 4MB
     jmp  Label0x1343                    ;Offset 0x1343
-Label0x133d:                            ;Offset 0x133d
-    mov  bh, 80h
+Found2MB:                               ;Offset 0x133d
+    mov  bh, 80h                        ;CR36 bits 7-5 - 100 = 2MB
     jmp  Label0x1343                    ;Offset 0x1343
-Label0x1341:                            ;Offset 0x1341
-    mov  bh, 0c0h
+Found1MB:                               ;Offset 0x1341
+    mov  bh, 0c0h                       ;CR36 bits 7-5 - 110 = 1MB
 Label0x1343:                            ;Offset 0x1343
-    mov  al, 36h
+    mov  al, 36h                        ;CR36 - Configuration 1 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 1fh
-    or   ah, bh
-    out  dx, ax
-    mov  bl, 0
-    call Func0x1207                     ;Offset 0x1207
-    call Func0x121e                     ;Offset 0x121e
+    and  ah, 1fh                        ;And out upper 3 bits. 
+    or   ah, bh                         ;Or in memory found
+    out  dx, ax                         ;Write out
+    mov  bl, 00h                        ;Reset upper memory bit address to 0
+    call SetCPUUpperMemoryAddressBits   ;Offset 0x1207
+    call ClearMemory                    ;Offset 0x121e
     xor  bx, bx
     ret  
-Func0x12dc ENDP
+ConfigureAndClearVideoMemory ENDP
 
-Func0x1359 PROC NEAR                    ;Offset 0x1359
-    mov        al, 80h
+;outputs:
+;zero flag: 0 = success, 1 = fail
+TestMemory PROC NEAR                    ;Offset 0x1359
+    mov        al, 80h                  ;Test value
 Label0x135b:                            ;Offset 0x135b
-    xor        di, di
-    mov        cx, 00ffh
-    rep stosb
-    xor        di, di
-    mov        cx, 00ffh
-    repe scasb
+    xor        di, di                   ;destination offset
+    mov        cx, 00ffh                ;test 255 bytes
+    rep stosb                           ;store test value in memory
+    xor        di, di                   ;reset offset
+    mov        cx, 00ffh                ;test 255 bytes
+    repe scasb                          ;if not equal, exit
     jne        Label0x1373              ;Offset 0x1373
-    cmp        al, 00h
+    cmp        al, 00h                  ;if zero, done testing
     je         Label0x1373              ;Offset 0x1373
-    shr        al, 01h
+    shr        al, 01h                  ;move test bit down one bit.
     jmp        Label0x135b              ;Offset 0x135b
 Label0x1373:                            ;Offset 0x1373
     ret        
-Func0x1359 ENDP
+TestMemory ENDP
 
 UnlockExtendedCRTRegistersSafe PROC NEAR;Offset 0x1374
     push       ax
@@ -2100,7 +2111,7 @@ Label0x1539:
     je     IsMonochrome3
     mov    al, 0fh
 IsMonochrome3:
-    call   Func0x4a47
+    call   GetVideoModeOverrideTable    ;es:si points to video mode override table entry based on al
     call   Func0x4829
     mov    ax, 0a000h                   ;Segment 0xa000
     mov    es, ax
@@ -2115,7 +2126,7 @@ IsMonochrome3:
                                         ;bits 3-0 = 1111 - Enable writing to all planes
     mov    dx, SequenceIndex            ;port - 0x3c4
     out    dx, ax
-    call   Func0x12dc
+    call   ConfigureAndClearVideoMemory
     jne    Label0x1572
     xor    dl, dl
     jmp    Label0x1574
@@ -2128,7 +2139,7 @@ Label0x1574:
     je     Label0x1580
     mov    al, 07h
 Label0x1580:
-    call   Func0x4a47
+    call   GetVideoModeOverrideTable
     call   Func0x4829
     pop    dx
     or     dl, dl
@@ -2501,7 +2512,7 @@ Label0x1885:                            ;Offset 0x1885
     call Func0x1bea                     ;Offset 0x1bea
 Label0x1896:                            ;Offset 0x1896
     mov  bx, 0010h
-    call Func0x1d95                     ;Offset 0x1d95
+    call GetVideoOverrideTable          ;Offset 0x1d95
     je   Label0x18c9                    ;Offset 0x18c9
     les  bx, es:[bx + 06h]
     mov  ax, es
@@ -2826,7 +2837,7 @@ Label0x1b7b:                            ;Offset 0x1b7b
     mov       al, byte ptr cs:[di + Data1811];Offset 0x1811
     mov       byte ptr ds:[BDA_CRTModeControlRegValue], al;Offset 0x465
 Label0x1b86:                            ;Offset 0x1b86
-    call      Func0x4a44                ;Offset 0x4a44
+    call      GetCurrentVideoModeOverrideTable;Offset 0x4a44
     push      si
     lodsb     byte ptr es:[si]
     xor       ah, ah
@@ -2851,7 +2862,7 @@ Func0x1bac PROC NEAR                    ;Offset 0x1bac
     push      si
     push      es
     mov       bx, 04h
-    call      Func0x1d95                ;Offset 0x1d95
+    call      GetVideoOverrideTable     ;Offset 0x1d95
     pop       ds
     je        Exit                      ;Offset 0x1bc5
     add       si, 23h
@@ -2868,7 +2879,7 @@ Exit:                                   ;Offset 0x1bc5
 Func0x1bac ENDP
 
 Func0x1bc9 PROC NEAR                    ;Offset 0x1bc9
-    call Func0x1d95                     ;Offset 0x1d95
+    call GetVideoOverrideTable          ;Offset 0x1d95
     jne  Func0x1bd1                     ;Offset 0x1bd1
     or   al, 0ffh
     ret
@@ -2991,7 +3002,7 @@ Func0x1c8e ENDP
 
 Func0x1cb4 PROC NEAR                    ;Offset 0x1cb4
     mov   bx, 10h
-    call  Func0x1d95                    ;Offset 0x1d95
+    call  GetVideoOverrideTable         ;Offset 0x1d95
     je    Label0x1cce                   ;Offset 0x1cce
     les   bx, es:[bx + 0ah]
     mov   ax, es
@@ -3109,15 +3120,15 @@ Label0x1d8c:
     ret
 Func0x1d47 ENDP
 
-Func0x1d95 PROC NEAR
+GetVideoOverrideTable PROC NEAR
     push di
-    les  di, ds:[BDA_VideoParameterControlBlockPointer];Offset 0x4a8
-    les  bx, es:[bx + di]
-    mov  di, es
-    or   di, bx
+    les  di, ds:[BDA_VideoParameterControlBlockPointer];Offset 0x4a8 load segment:offset of video parameter control block into es:di
+    les  bx, es:[bx + di]               ;Load segment:offset to video override table into es:bx
+    mov  di, es                         ;
+    or   di, bx                         ;or together segment and offset (not null test?)
     pop  di
-    ret
-Func0x1d95 ENDP
+    ret                                 ;return, es:bx is now offset into table.
+GetVideoOverrideTable ENDP
 
 SetTextModeCursorShape PROC NEAR        ;Offset 0x1da3
     mov  word ptr ds:[BDA_CursorEndScanLine], cx;Offset 0x460
@@ -5134,9 +5145,9 @@ Func0x2bfc PROC NEAR                    ;Offset 0x2bfc
     je     Func0x2c6a                   ;Offset 0x2c6a
     cmp    al, 08h
     je     Label0x2c15                  ;Offset 0x2c15
-    cmp    al, 07h
+    cmp    al, 07h                      ;Bell character
     jne    Func0x2c53                   ;Offset 0x2c53
-    call   Func0x2ce0                   ;Offset 0x2ce0
+    call   BellCharacterBeep            ;Offset 0x2ce0
     jmp    Func0x2ccf                   ;Offset 0x2ccf
 Label0x2c10:                            ;Offset 0x2c10
     xor    dl, dl
@@ -5262,7 +5273,7 @@ Func0x2cd9 PROC NEAR                    ;Offset 0x2cd9
     jmp    Func0x2ccf                   ;Offset 0x2ccf
 Func0x2cd9 ENDP
 
-Func0x2ce0 PROC NEAR                    ;Offset 0x2ce0
+BellCharacterBeep PROC NEAR             ;Offset 0x2ce0
     push   ax
     push   bx
     push   cx
@@ -5278,7 +5289,7 @@ Func0x2ce0 PROC NEAR                    ;Offset 0x2ce0
     pop    bx
     pop    ax
     ret    
-Func0x2ce0 ENDP
+BellCharacterBeep ENDP
 
 GetCurrentVideoMode PROC NEAR           ;Offset 0x2cf9
     mov    al, byte ptr ds:[BDA_VideoModeOptions];Offset 0x487
@@ -6445,7 +6456,7 @@ Label0x350f:                            ;Offset 0x350f
     jne         Label0x3555             ;Offset 0x3555
     mov         dl, 0ffh
     mov         bx, 0010h
-    call        Func0x1d95              ;Offset 0x1d95
+    call        GetVideoOverrideTable   ;Offset 0x1d95
     je          Label0x354c             ;Offset 0x354c
     les         bx, es:[bx + 02h]
     mov         ax, es
@@ -6479,7 +6490,7 @@ Func0x3556 PROC NEAR                    ;Offset 0x3556
     push        es
     mov         cx, 0ffffh
     mov         bx, 10h
-    call        Func0x1d95              ;Offset 0x1d95
+    call        GetVideoOverrideTable   ;Offset 0x1d95
     je          Label0x3580             ;Offset 0x3580
     les         bx, es:[bx + 02h]
     mov         ax, es
@@ -7128,7 +7139,7 @@ VideoParametersTable STRUCT
     DisplayedRowsMinus1 BYTE ?
     CharacterMatrixHeightPoints BYTE ?
     VideoBufferSize WORD ?
-    SequencerRegisters DWORD ?
+    SequencerRegisters DWORD ?          ;SR1-SR4
     MiscOutputRegisterValues BYTE ?
     CRTCRegisters BYTE 25 DUP (?)
     AttributeControllerRegs BYTE 20 DUP (?)
@@ -7657,7 +7668,7 @@ Func0x46b5 PROC NEAR
     push ax
     push si
     push es
-    call Func0x4a47                     ;Offset 0x4a47
+    call GetVideoModeOverrideTable      ;Offset 0x4a47
     call Func0x4829                     ;Offset 0x4829
     pop  es
     pop  si
@@ -7941,6 +7952,8 @@ ClearColor:                             ;Offset 0x481f
     ret
 ClearPalette ENDP
 
+;inputs:
+;es:si video mode table pointer
 Func0x4829 PROC NEAR                    ;Offset 0x4829
     push  cx
     push  dx
@@ -7950,43 +7963,44 @@ Func0x4829 PROC NEAR                    ;Offset 0x4829
     push  ax
     call  PrepareAttributeController    ;Offset 0x47ae
     mov   cx, 0005h
-    add   si, cx
-    mov   ax, 0100h
-    mov   dx, 03c4h
-    cli   
+    add   si, cx                        ;point to byte 5 in video mode table entry - SequencerRegisters
+    mov   ax, 0100h                     ;SR0 - Asynchronous reset (should serve no function on Trio32/Trio64)
+    mov   dx, SequenceIndex             ;port - 0x3c4
+    cli
     out   dx, ax
-    inc   al
-    mov   ah, 20h
+    inc   al                            ;SR1 - Clock Mode Register
+    mov   ah, 20h                       ;bit 5 = 1 - Turn screen off
     out   dx, ax
-    or    ah, byte ptr es:[si]
+    or    ah, byte ptr es:[si]          ;Write Clock mode register again.
     out   dx, ax
-    mov   al, byte ptr es:[si + 04h]
-    mov   dx, 03c2h
+    mov   al, byte ptr es:[si + 04h]    ;Load MiscOutputRegisterValues
+    mov   dx, MiscellaneousWrite        ;port - 0x3c2
     out   dx, al
-    mov   ax, 0300h
-    mov   dx, 03c4h
+    mov   ax, 0300h                     ;CR0 - Asynchronous and Synchronous reset (should server no function on Trio32/Trio64)
+    mov   dx, SequenceIndex             ;port - 0x3c4
     out   dx, ax
-    sti   
-    mov   cx, 03h
-    mov   al, 02h
+    sti
+    mov   cx, 03h                       ;loop remaining 3 bytes
+    mov   al, 02h                       ;SR2 - Enable Write Plane register
     inc   si
 Label0x4862:                            ;Offset 0x4862
-    mov   ah, byte ptr es:[si]
+    mov   ah, byte ptr es:[si]          ;
     out   dx, ax
     inc   al
     inc   si
     loop  Label0x4862                   ;Offset 0x4862
+                                        ;si no points at MiscOutputRegisterValues
     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0463h = port 0x3?4
-    cmp   byte ptr ds:[BDA_DisplayMode], 08h;Offset 0449h
+    cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Unknown1;Offset 0449h, 0x8
     jb    Label0x487d                   ;Offset 0x487d
-    cmp   byte ptr ds:[BDA_DisplayMode], 0ch;Offset 0449h
+    cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Reserved2;Offset 0449h, 0xc
     jbe   Label0x488a                   ;Offset 0x488a
 Label0x487d:                            ;Offset 0x487d
-    mov   dx, 03b4h
+    mov   dx, 03b4h                     ;port - 0x3b4
     mov   al, byte ptr es:[si]
     test  al, 01h
     je    Label0x488a                   ;Offset 0x488a
-    mov   dx, 03d4h
+    mov   dx, 03d4h                     ;port - 0x3d4
 Label0x488a:                            ;Offset 0x488a
     mov   word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0463h
     inc   si
@@ -8196,17 +8210,21 @@ Data4a08 DB 17h, 17h, 18h, 18h, 04h, 05h, 06h, 19h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh
 Data4a1c DB 13h, 14h, 15h, 16h, 04h, 05h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
 Data4a30 DB 00h, 01h, 02h, 03h, 04h, 05h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
 
-Func0x4a44 PROC NEAR                    ;Offset 0x4a44
+GetCurrentVideoModeOverrideTable PROC NEAR;Offset 0x4a44
     mov al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-Func0x4a44 ENDP
+GetCurrentVideoModeOverrideTable ENDP
 ;continue!
-Func0x4a47 PROC NEAR                    ;Offset 0x4a47
+;inputs:
+;al = mode
+;outputs:
+;es:si into video override table based on mode passed in in al
+GetVideoModeOverrideTable PROC NEAR     ;Offset 0x4a47
     push ax
     push bx
-    cmp  al, 13h
+    cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
     jbe  Label0x4a62                    ;Offset 0x4a62
     xor  si, si
-    mov  es, si
+    mov  es, si                         ;
     call Func0x106c                     ;Offset 0x106c
     jne  Label0x4a62                    ;Offset 0x4a62
     mov  ax, es
@@ -8220,30 +8238,31 @@ Label0x4a62:                            ;Offset 0x4a62
     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0x489, 0x10
     jne  Label0x4a87                    ;Offset 0x4a87
     mov  si, offset Data4a1c            ;Offset 0x4a1c
-    mov  ah, byte ptr ds:[0488h]        ;Offset 0x488
-    and  ah, 0fh
-    cmp  ah, 03h
+    mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
+    and  ah, BDA_EFBS_AdapterTypeMask   ;0xf
+    cmp  ah, BDA_EFBS_MDAHiResEnhanced  ;0x3
     je   Label0x4a87                    ;Offset 0x4a87
-    cmp  ah, 09h
+    cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x9
     je   Label0x4a87                    ;Offset 0x4a87
-    cmp  al, 07h
+    cmp  al, BDA_DM_80x25_Monochrome_Text;0x7
     je   Label0x4a87                    ;Offset 0x4a87
     mov  si, offset Data4a30            ;Offset 0x4a30
 Label0x4a87:                            ;Offset 0x4a87
     mov  bl, al
     xor  bh, bh
-    mov  al, byte ptr cs:[bx + si]
+    mov  al, byte ptr cs:[bx + si]      ;Look up the mode in one of three tables above
     mov  ah, 40h
-    mul  ah
-    mov  si, ax
-    xor  bx, bx
-    call Func0x1d95                     ;Offset 0x1d95
-    add  si, bx
+    mul  ah                             ;multiply by 64
+    mov  si, ax                         ;Index of 64 x Mode
+    xor  bx, bx                         ;bx = 0 will return first element
+    call GetVideoOverrideTable          ;Offset 0x1d95
+    add  si, bx                         ;es:bx is segment:offset into video override table
+                                        ;es:si is segment:offset into video override table based on mode
 Label0x4a9b:                            ;Offset 0x4a9b
     pop  bx
     pop  ax
     ret
-Func0x4a47 ENDP
+GetVideoModeOverrideTable ENDP
 
 PrintBanner PROC NEAR                   ;Offset 0x4a9e
     xor    cl, cl                       ;Clear cl
@@ -8880,7 +8899,7 @@ Func0x5123 PROC NEAR                    ;Offset 0x5123
     jne  Label0x513f                    ;Offset 0x513f
     shl  bx, 02h
 Label0x513f:                            ;Offset 0x513f
-    call Func0x1207                     ;Offset 0x1207
+    call SetCPUUpperMemoryAddressBits   ;Offset 0x1207
     mov  ax, 004fh
 Label0x5145:                            ;Offset 0x5145
     pop  bx
