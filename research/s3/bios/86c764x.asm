@@ -2112,7 +2112,7 @@ Label0x1539:
     mov    al, 0fh
 IsMonochrome3:
     call   GetVideoModeOverrideTable    ;es:si points to video mode override table entry based on al
-    call   Func0x4829
+    call   ApplyVideoParameters
     mov    ax, 0a000h                   ;Segment 0xa000
     mov    es, ax
     mov    ax, 0805h                    ;GC5 - Graphics Controller Mode register
@@ -2127,35 +2127,35 @@ IsMonochrome3:
     mov    dx, SequenceIndex            ;port - 0x3c4
     out    dx, ax
     call   ConfigureAndClearVideoMemory
-    jne    Label0x1572
+    jne    MemoryFailure
     xor    dl, dl
-    jmp    Label0x1574
-Label0x1572:
+    jmp    MemorySuccess
+MemoryFailure:
     mov    dl, 03h
-Label0x1574:
+MemorySuccess:
     push   dx
     mov    al, 03h
-    test   byte ptr ds:[BDA_VideoModeOptions], 02h;Offset 0487h
-    je     Label0x1580
+    test   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
+    je     IsMonochrome4
     mov    al, 07h
-Label0x1580:
+IsMonochrome4:
     call   GetVideoModeOverrideTable
-    call   Func0x4829
+    call   ApplyVideoParameters
     pop    dx
     or     dl, dl
-    jne    Label0x158d
-Label0x158b:
+    jne    PlayMemoryErrorBeeps
+MemorySuccess:
     jmp    Label0x1597
-Label0x158d:
+PlayMemoryErrorBeeps:
     mov    al, 03h                      ;3 beeps
     call   PlayBeepPattern              ;Offset 0x468c
     mov    word ptr [bp + 04h], 01h
 Label0x1597:
-    call   Func0x15b6
+    call   SetStartupVideoMode
     cmp    byte ptr ds:[BDA_DisplayCombinationCodeTableIndex], 00h;Offset 048ah
-    jne    Label0x15a4
-    call   Func0x1682
-Label0x15a4:
+    jne    DisplayCombinationCodeAlreadySetUp
+    call   ConfigureDisplayCombinationCode
+DisplayCombinationCodeAlreadySetUp:
     call   ClearBIOSFlags               ;0xe97
     call   EmptyFunction1               ;Offset 0x230
     call   PrintBanner
@@ -2167,113 +2167,139 @@ Label0x15a4:
     retf
 VideoBootstrap ENDP
 
-Func0x15b6 PROC NEAR
-    test byte ptr ds:[0489h], 01h       ;Offset 0489h
-    jne  Label0x15e6                    ;Offset 0x15e6
-    mov  ax, word ptr ds:[0410h]        ;Offset 0410h
-    push ax
+SetStartupVideoMode PROC NEAR
+    test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0489h, 0x1
+    jne  IsVGA                          ;Offset 0x15e6
+    mov  ax, word ptr ds:[BDA_DetectedHardware];Offset 0410h
+    push ax                             ;Save DetecedHardware
     mov  bl, 03h
-    mov  ax, 3007h
-    test byte ptr ds:[0487h], 02h       ;Offset 0487h
-    je   Label0x15d2                    ;Offset 0x15d2
-    mov  ax, 2003h
+    mov  ax, (BDA_DH_80x25Monochrome SHL 8) OR 07h;0x3007
+    test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
+    je   IsMonochrome                   ;Offset 0x15d2
+    mov  ax, (BDA_DH_80x25Color SHL 8) OR 03h;0x2003
     mov  bl, 07h
-Label0x15d2:                            ;Offset 0x15d2
-    and  byte ptr ds:[0410h], 0cfh      ;Offset 0410h
-    or   byte ptr ds:[0410h], ah        ;Offset 0410h
-    xor  ah, ah
-    int  42h
-    pop  ax
-    mov  word ptr ds:[0410h], ax        ;Offset 0410h
+IsMonochrome:                           ;Offset 0x15d2
+    and  byte ptr ds:[BDA_DetectedHardware], BDA_DH_InitialVideoModeMask;Offset 0410h, 0xcf
+    or   byte ptr ds:[BDA_DetectedHardware], ah;Offset 0410h
+    xor  ah, ah                         ;INT10_00_SetVideoMode
+    int  42h                            ;Call system int 10h handler
+    pop  ax                             ;Restore DetectedHardware
+    mov  word ptr ds:[BDA_DetectedHardware], ax;Offset 0410h
     jmp  Label0x1600                    ;Offset 0x1600
     nop  
-Label0x15e6:                            ;Offset 0x15e6
-    test byte ptr ds:[0489h], 04h       ;Offset 0489h
-    jne  Label0x15fb                    ;Offset 0x15fb
-    test byte ptr ds:[0487h], 08h       ;Offset 0487h
-    jne  Label0x15fb                    ;Offset 0x15fb
-    and  byte ptr ds:[0487h], 0fdh      ;Offset 0487h
+IsVGA:                                  ;Offset 0x15e6
+    test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x4
+    jne  IsMonochromeOrInactive         ;Offset 0x15fb
+    test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0487h, 0x8
+    jne  IsMonochromeOrInactive         ;Offset 0x15fb
+    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0487h, 0xfd
     jmp  Label0x1600                    ;Offset 0x1600
-Label0x15fb:                            ;Offset 0x15fb
-    or   byte ptr ds:[0487h], 02h       ;Offset 0487h
+IsMonochromeOrInactive:                 ;Offset 0x15fb
+    or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
 Label0x1600:                            ;Offset 0x1600
-    mov  ax, 2009h
+    mov  ax, (BDA_DH_80x25Color SHL 8) OR BDA_EFBS_MDAHiResEnhanced_2;0x2009
     mov  bl, 03h
-    test byte ptr ds:[0487h], 02h       ;Offset 0487h
-    je   Label0x1611                    ;Offset 0x1611
-    mov  ax, 300bh
+    test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
+    je   IsMonochrome2                  ;Offset 0x1611
+    mov  ax, (BDA_DH_80x25Monochrome SHL 8) OR BDA_EFBS_CGAMono80x25_2;0x300b
     mov  bl, 07h
-Label0x1611:                            ;Offset 0x1611
-    and  byte ptr ds:[0488h], 0f0h      ;Offset 0488h
-    or   byte ptr ds:[0488h], al        ;Offset 0488h
-    and  byte ptr ds:[0410h], 0cfh      ;Offset 0410h
-    or   byte ptr ds:[0410h], ah        ;Offset 0410h
-    mov  al, byte ptr ds:[0487h]        ;Offset 0487h
-    and  al, 08h
-    and  byte ptr ds:[0487h], 0f7h      ;Offset 0487h
-    mov  ah, byte ptr ds:[0489h]        ;Offset 0489h
-    and  ah, 01h
-    and  byte ptr ds:[0489h], 0feh      ;Offset 0489h
-    push ax
-    xor  ah, ah
-    mov  al, bl
+IsMonochrome2:                          ;Offset 0x1611
+    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0488h, 0xf0
+    or   byte ptr ds:[BDA_EGAFeatureBitSwitches], al;Offset 0488h
+    and  byte ptr ds:[BDA_DetectedHardware], NOT BDA_DH_InitialVideoModeMask;Offset 0410h, 0xcf
+    or   byte ptr ds:[BDA_DetectedHardware], ah;Offset 0410h
+    mov  al, byte ptr ds:[BDA_VideoModeOptions];Offset 0487h
+    and  al, BDA_VMO_Inactive           ;0x8
+    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_Inactive;Offset 0487h, 0xf7
+    mov  ah, byte ptr ds:[BDA_VideoDisplayDataArea];Offset 0489h
+    and  ah, BDA_VDDA_VGA               ;0x1
+    and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_VGA;Offset 0489h, 0xfe
+    push ax                             ;Store inactive and vga bits
+    xor  ah, ah                         ;INT10_00_SetVideoMode
+    mov  al, bl                         ;Video mode 0x3 or 0x7
     int  10h
     pop  ax
-    or   byte ptr ds:[0489h], ah        ;Offset 0489h
-    test ah, 01h
-    jne  Label0x167d                    ;Offset 0x167d
-    test al, 08h
-    je   Label0x167d                    ;Offset 0x167d
+    or   byte ptr ds:[BDA_VideoDisplayDataArea], ah;Offset 0489h or back in the vga bit
+    test ah, BDA_VDDA_VGA               ;0x1
+    jne  Exit                           ;Offset 0x167d
+    test al, BDA_VMO_Inactive           ;0x8
+    je   Exit                           ;Offset 0x167d
     push ax
-    mov  ax, 3003h
+    mov  ax, (BDA_DH_80x25Monochrome SHL 8) OR BDA_EFBS_MDAHiResEnhanced;3003h
     mov  bl, 07h
-    test byte ptr ds:[0487h], 02h       ;Offset 0487h
-    je   Label0x1660                    ;Offset 0x1660
-    mov  ax, 2005h
+    test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
+    je   IsMonochrome3                  ;Offset 0x1660
+    mov  ax, (BDA_DH_80x25Color SHL 8) OR BDA_EFBS_CGAMono80x25;2005h
     mov  bl, 03h
-Label0x1660:                            ;Offset 0x1660
-    and  byte ptr ds:[0488h], 0f0h      ;Offset 0488h
-    or   byte ptr ds:[0488h], al        ;Offset 0488h
-    and  byte ptr ds:[0410h], 0cfh      ;Offset 0410h
-    or   byte ptr ds:[0410h], ah        ;Offset 0410h
+IsMonochrome3:                          ;Offset 0x1660
+    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], 0f0h;Offset 0488h
+    or   byte ptr ds:[BDA_EGAFeatureBitSwitches], al;Offset 0488h
+    and  byte ptr ds:[BDA_DetectedHardware], 0cfh;Offset 0410h
+    or   byte ptr ds:[BDA_DetectedHardware], ah;Offset 0410h
     pop  ax
-    or   byte ptr ds:[0487h], al        ;Offset 0487h
-    xor  ah, ah
+    or   byte ptr ds:[BDA_VideoModeOptions], al;Offset 0487h
+    xor  ah, ah                         ;INT10_00_SetVideoMode
     mov  al, bl
     int  10h
-Label0x167d:                            ;Offset 0x167d
+Exit:                                   ;Offset 0x167d
     ret
-Func0x15b6 ENDP
+SetStartupVideoMode ENDP
 
-Data167e                DB 0Ch, 0Bh, 0Eh, 0Dh
+DisplayCombinationCode  DB 0Ch          ;00 - Color, Not VGA
+                        DB 0Bh          ;01 - Color, VGA
+                        DB 0Eh          ;10 - Mono, Not VGA
+                        DB 0Dh          ;11 - Mono, VGA
 
-Func0x1682 PROC NEAR                    ;Offset 0x1682
-    mov  al, byte ptr ds:[0487h]        ;Offset 0487h
-    and  al, 02h
-    mov  ah, byte ptr ds:[0489h]        ;Offset 0489h
-    and  ah, 01h
+BDA_VideoModeOptions                    EQU 0487h;Byte 0x487
+    BDA_VMO_CursorEmulationEnabled      EQU 01h
+    BDA_VMO_Monochrome                  EQU 02h
+    BDA_VMO_Unknown                     EQU 04h
+    BDA_VMO_Inactive                    EQU 08h
+    BDA_VMO_Memory64k                   EQU 00h
+    BDA_VMO_Memory128k                  EQU 20h
+    BDA_VMO_Memory192k                  EQU 40h
+    BDA_VMO_Memory256k                  EQU 60h
+    BDA_VMO_MemoryMask                  EQU 60h
+    BDA_VMO_DontClearDisplay            EQU 80h
+
+BDA_VideoDisplayDataArea                EQU 0489h;Byte 0x489
+    BDA_VDDA_VGA                        EQU 01h
+    BDA_VDDA_GrayScale                  EQU 02h
+    BDA_VDDA_MonochromeMonitor          EQU 04h
+    BDA_VDDA_DefaultPaletteDisabled     EQU 08h
+    BDA_VDDA_DisplaySwitchingEnabled    EQU 40h
+    BDA_VDDA_LineMode350                EQU 00h
+    BDA_VDDA_LineMode400                EQU 10h
+    BDA_VDDA_LineMode200                EQU 80h
+    BDA_VDDA_LineModeMask               EQU 90h
+
+ConfigureDisplayCombinationCode PROC NEAR;Offset 0x1682
+    mov  al, byte ptr ds:[BDA_VideoModeOptions];Offset 0487h
+    and  al, BDA_VMO_Monochrome         ;0x2
+    mov  ah, byte ptr ds:[BDA_VideoDisplayDataArea];Offset 0489h
+    and  ah, BDA_VDDA_VGA               ;0x1
     or   al, ah
     xor  ah, ah
     mov  bx, ax
-    mov  al, byte ptr cs:[bx + offset Data167e];Offset 0x167e
-    mov  byte ptr ds:[048ah], al        ;Offset 048ah
+    mov  al, byte ptr cs:[bx + offset DisplayCombinationCode];Offset 0x167e
+    mov  byte ptr ds:[BDA_DisplayCombinationCodeTableIndex], al;Offset 048ah
     cmp  al, 0eh
-    jne  Label0x16c1                    ;Offset 0x16c1
+    jne  Exit                           ;Offset 0x16c1
     push ds
-    mov  ax, 0c600h
+    mov  ax, 0c600h                     ;Not sure what this memory refers to docs say PGA communication area, but that's probably wrong
     mov  ds, ax
     mov  ah, byte ptr ds:[03d4h]        ;Offset 03d4h
     mov  byte ptr ds:[03d4h], 28h       ;Offset 03d4h
-    mov  dx, 03d4h
+    mov  dx, CRTControllerIndexD        ;port - 0x3d4
     in   al, dx
     mov  byte ptr ds:[03d4h], ah        ;Offset 03d4h
     pop  ds
-    cmp  al, 28h
-    jne  Label0x16c1                    ;Offset 0x16c1
-    mov  byte ptr ds:[048ah], 0fh       ;Offset 048ah
-Label0x16c1:                            ;Offset 0x16c1
+    cmp  al, 28h                        ;Check if port 0x3d4 is memory mapped?
+    jne  Exit                           ;Offset 0x16c1
+    mov  byte ptr ds:[BDA_DisplayCombinationCodeTableIndex], 0fh;Offset 048ah
+Exit:                                   ;Offset 0x16c1
     ret  
-Func0x1682 ENDP
+ConfigureDisplayCombinationCode ENDP
 
 ;Looks to be testing the address range of the cursor?
 ;
@@ -2488,7 +2514,7 @@ Label0x1850:                            ;Offset 0x1850
     call Func0x1b05                     ;Offset 0x1b05
     and  byte ptr ds:[BDA_VideoModeOptions], 0f3h;Offset 0x487
     call Func0x1bac                     ;Offset 0x1bac
-    call Func0x4829                     ;Offset 0x4829
+    call ApplyVideoParameters           ;Offset 0x4829
     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call Func0x1079                     ;Offset 0x1079
     call Func0x4909                     ;Offset 0x4909
@@ -6920,7 +6946,7 @@ Label0x38b4:                            ;Offset 0x38b4
     xchg      byte ptr ds:[BDA_VideoDisplayDataArea], al;Offset 0x489
     push      ax
     push      word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    call      Func0x4829                ;Offset 0x4829
+    call      ApplyVideoParameters      ;Offset 0x4829
     pop       word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     pop       ax
     mov       byte ptr ds:[BDA_VideoDisplayDataArea], al;Offset 0x489
@@ -7141,9 +7167,9 @@ VideoParametersTable STRUCT
     VideoBufferSize WORD ?
     SequencerRegisters DWORD ?          ;SR1-SR4
     MiscOutputRegisterValues BYTE ?
-    CRTCRegisters BYTE 25 DUP (?)
+    CRTCRegisters BYTE 25 DUP (?)       ;CR0-CR18
     AttributeControllerRegs BYTE 20 DUP (?)
-    GraphicsControllerRegs BYTE 9 DUP (?)
+    GraphicsControllerRegs BYTE 9 DUP (?) ;GR0-GR8
 VideoParametersTable ENDS
 
 ;The assembler doesn't like all that data on one line, so I am just overlapping these to make struct accesses work.
@@ -7669,7 +7695,7 @@ Func0x46b5 PROC NEAR
     push si
     push es
     call GetVideoModeOverrideTable      ;Offset 0x4a47
-    call Func0x4829                     ;Offset 0x4829
+    call ApplyVideoParameters           ;Offset 0x4829
     pop  es
     pop  si
     pop  ax
@@ -7954,7 +7980,7 @@ ClearPalette ENDP
 
 ;inputs:
 ;es:si video mode table pointer
-Func0x4829 PROC NEAR                    ;Offset 0x4829
+ApplyVideoParameters PROC NEAR          ;Offset 0x4829
     push  cx
     push  dx
     mov   cx, 0019h
@@ -7983,96 +8009,101 @@ Func0x4829 PROC NEAR                    ;Offset 0x4829
     mov   cx, 03h                       ;loop remaining 3 bytes
     mov   al, 02h                       ;SR2 - Enable Write Plane register
     inc   si
-Label0x4862:                            ;Offset 0x4862
+WriteSequenceRegisters:                 ;Offset 0x4862
     mov   ah, byte ptr es:[si]          ;
     out   dx, ax
     inc   al
     inc   si
-    loop  Label0x4862                   ;Offset 0x4862
+    loop  WriteSequenceRegisters        ;Offset 0x4862
                                         ;si no points at MiscOutputRegisterValues
     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0463h = port 0x3?4
     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Unknown1;Offset 0449h, 0x8
     jb    Label0x487d                   ;Offset 0x487d
     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Reserved2;Offset 0449h, 0xc
-    jbe   Label0x488a                   ;Offset 0x488a
+    jbe   IsMonochrome                  ;Offset 0x488a
 Label0x487d:                            ;Offset 0x487d
-    mov   dx, 03b4h                     ;port - 0x3b4
+    mov   dx, CRTControllerIndexB       ;port - 0x3b4
     mov   al, byte ptr es:[si]
-    test  al, 01h
-    je    Label0x488a                   ;Offset 0x488a
-    mov   dx, 03d4h                     ;port - 0x3d4
-Label0x488a:                            ;Offset 0x488a
-    mov   word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0463h
-    inc   si
-    mov   ax, 11h
-    out   dx, ax
-    pop   ax
-    pop   cx
+    test  al, 01h                       ;bit 0 - 0 = Monochrome emulation, 1 = Color emulation
+    je    IsMonochrome                  ;Offset 0x488a
+    mov   dx, CRTControllerIndexD       ;port - 0x3d4
+IsMonochrome:                           ;Offset 0x488a
+    mov   word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0463h Store CRTControllerIndex in BDA
+    inc   si                            ;Point to CRTCRegisters
+    mov   ax, 11h                       ;CR11 - Vertical Retrace End register
+    out   dx, ax                        ;Clear to 0
+                                        ;bits 3-0 = 000 - Vertical retrace end set to 0 scanlines
+                                        ;bit 4 = 0 - Clear vertical retrace interrupt
+                                        ;bit 5 = 0 - Enable vertical retrace interrupt
+                                        ;bit 6 = 0 - 3 dram refresh cycles generated per horizontal line
+                                        ;bit 7 = 0 - Writing to all CRT controller registers enabled
+    pop   ax                            ;0x0000
+    pop   cx                            ;0x0019 - 25
     add   si, ax
-Label0x4897:                            ;Offset 0x4897
-    mov   ah, byte ptr es:[si]
+WriteCRTCRegisters:                     ;Offset 0x4897
+    mov   ah, byte ptr es:[si]          ;Write CR0-CR18
     inc   si
     out   dx, ax
     inc   al
-    loop  Label0x4897                   ;Offset 0x4897
-    add   dx, 06h
-    in    al, dx
-    cmp   byte ptr ds:[BDA_DisplayMode], 09h;Offset 0449h
+    loop  WriteCRTCRegisters            ;Offset 0x4897
+    add   dx, 06h                       ;port - 0x3?a - InputStatus1
+    in    al, dx                        ;Reset Attribute Controller port 0x3c0 to point to index register
+    cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Unknown2;Offset 0449h, 0x9
     je    Label0x48b2                   ;Offset 0x48b2
-    cmp   byte ptr ds:[BDA_DisplayMode], 0bh;Offset 0449h
+    cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Reserved1;Offset 0449h, 0xb
     jne   Label0x48b6                   ;Offset 0x48b6
 Label0x48b2:                            ;Offset 0x48b2
-    sub   dl, 20h
-    in    al, dx
+    sub   dl, 20h                       ;port - 0x3ba - InputStatus1
+    in    al, dx                        ;Reset Attribute Controller port 0x3c0 to point to index register
 Label0x48b6:                            ;Offset 0x48b6
-    xor   ah, ah
-    mov   cx, 0010h
-    mov   dx, 03c0h
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0489h
-    jne   Label0x48cf                   ;Offset 0x48cf
-Label0x48c5:                            ;Offset 0x48c5
-    mov   al, ah
-    out   dx, al
-    inc   ah
+    xor   ah, ah                        ;0
+    mov   cx, 0010h                     ;16
+    mov   dx, AttributeControllerIndex  ;port - 0x3c0
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_DefaultPaletteDisabled;Offset 0489h, 0x8
+    jne   DefaultPaletteDisabled        ;Offset 0x48cf
+WritePalette:                           ;Offset 0x48c5
+    mov   al, ah                        ;
+    out   dx, al                        ;Index
+    inc   ah                            ;counts up to 0x11?
     lodsb es:[si]
     out   dx, al
-    loop  Label0x48c5                   ;Offset 0x48c5
-Label0x48cf:                            ;Offset 0x48cf
-    add   ah, cl
-    add   si, cx
-    mov   cx, 0005h
-Label0x48d6:                            ;Offset 0x48d6
-    cmp   ah, 11h
-    jne   Label0x48e4                   ;Offset 0x48e4
+    loop  WritePalette                  ;Offset 0x48c5
+DefaultPaletteDisabled:                 ;Offset 0x48cf
+    add   ah, cl                        ;Skip over palette data, ah = 0x10
+    add   si, cx                        ;Skip over palette data
+    mov   cx, 0005h                     ;
+WriteAttributeControllerRegs:           ;Offset 0x48d6
+    cmp   ah, 11h                       ;
+    jne   Skip17                        ;Offset 0x48e4
     inc   si
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0489h
-    jne   Label0x48f1                   ;Offset 0x48f1
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_DefaultPaletteDisabled;Offset 0489h, 0x8
+    jne   DefaultPaletteDisabled2       ;Offset 0x48f1
     dec   si
-Label0x48e4:                            ;Offset 0x48e4
+Skip17:                                 ;Offset 0x48e4
     mov   al, ah
-    out   dx, al
-    xor   al, al
-    cmp   ah, 14h
-    je    Label0x48f0                   ;Offset 0x48f0
+    out   dx, al                        ;write 0x10 or 0x11
+    xor   al, al                        ;0
+    cmp   ah, 14h                       ;Don't load 20th byte
+    je    Skip20                        ;Offset 0x48f0
     lodsb es:[si]
-Label0x48f0:                            ;Offset 0x48f0
-    out   dx, al
-Label0x48f1:                            ;Offset 0x48f1
+Skip20:                                 ;Offset 0x48f0
+    out   dx, al                        ;Write out 0 or the loaded value
+DefaultPaletteDisabled2:                ;Offset 0x48f1
     inc   ah
-    loop  Label0x48d6                   ;Offset 0x48d6
-    xor   al, al
-    mov   cx, 0009h
-    mov   dx, 03ceh
-Label0x48fd:                            ;Offset 0x48fd
+    loop  WriteAttributeControllerRegs  ;Offset 0x48d6 loop 5 bytes
+    xor   al, al                        ;0
+    mov   cx, 0009h                     ;count 9, si points to GraphicsControllerRegs
+    mov   dx, GraphicsControllerIndex   ;port - 0x3ce
+WriteGraphicsControllerRegs:            ;Offset 0x48fd
     mov   ah, byte ptr es:[si]
     inc   si
     out   dx, ax
     inc   al
-    loop  Label0x48fd                   ;Offset 0x48fd
+    loop  WriteGraphicsControllerRegs   ;Offset 0x48fd write out GR0-GR8
     pop   dx
     pop   cx
     ret
-Func0x4829 ENDP
+ApplyVideoParameters ENDP
 
 ;WARNING, THIS FUNCTION RUNS INTO THE NEXT!! DON'T MOVE
 Func0x4909 PROC NEAR                    ;Offset 0x4909
