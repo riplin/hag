@@ -13,6 +13,8 @@
 ;PCI: https://wiki.osdev.org/PCI
 ;Display Data Channel:https://glenwing.github.io/docs/VESA-EDDC-1.2.pdf
 ;Display Data Channel:https://glenwing.github.io/docs/VESA-DDCCI-1.1.pdf
+;VESA EDID:https://en.wikipedia.org/wiki/Extended_Display_Identification_Data
+;VESA VDIF: ???? need help here!
 ;
 ;Hex editor: https://hexed.it/
 ;Disassembler: https://shell-storm.org/online/Online-Assembler-and-Disassembler/ (allowed me to disassemble specific sections manually)
@@ -180,7 +182,63 @@ BDA_VideoDisplayDataArea                EQU 0489h;Byte 0x489
 BDA_DisplayCombinationCodeTableIndex    EQU 048ah;Byte 0x48a
 BDA_VideoParameterControlBlockPointer   EQU 04a8h;Dword 0x4a8
 
-INT10_00_SetVideoMode                   EQU 00h
+INT10_00_SetVideoMode                   EQU 00h;mode in al
+;These are currently a best guess based on information from http://www.ctyme.com/intr/rb-0069.htm
+;All the modes above 13h are speculative and based on the code.
+;Format:
+;INT10_00_ Mode _ Text or Graphics _ Text XxY _ Character XxY _ Resolution XxY _ Number of Colors Mono, Grayscale, Color _ Pages _ Address
+    INT10_00_xx_DontClearDisplay        EQU 80h
+    INT10_00_00_T_40x25_9x16_360x400_16C_8_B800 EQU 00h
+    INT10_00_01_T_40x25_9x16_360x400_16C_8_B800 EQU 01h
+    INT10_00_02_T_80x25_9x16_720x400_16C_8_B800 EQU 02h
+    INT10_00_03_T_80x25_9x16_720x400_16C_8_B800 EQU 03h
+    INT10_00_04_G_40x25_8x8_320x200_4C_x_B800 EQU 04h
+    INT10_00_05_G_40x25_8x8_320x200_4C_x_B800 EQU 05h
+    INT10_00_06_G_80x25_8x8_640x200_2M_x_B800 EQU 06h
+    INT10_00_07_T_80x25_9x16_720x400_M_x_B000 EQU 07h
+    INT10_00_08_Unknown                 EQU 08h
+    INT10_00_09_Unknown                 EQU 09h
+    INT10_00_0A_Unknown                 EQU 0Ah
+    INT10_00_0B_Reserved                EQU 0Bh
+    INT10_00_0C_Reserved                EQU 0Ch
+    INT10_00_0D_G_40x25_8x8_320x200_16C_8_A000 EQU 0Dh
+    INT10_00_0E_G_80x25_8x8_640x200_16C_4_A000 EQU 0Eh
+    INT10_00_0F_G_80x25_8x14_640x350_M_2_A000 EQU 0Fh
+    INT10_00_10_G_80x25_8x14_640x350_4C_2_A000 EQU 10h
+    INT10_00_11_G_80x30_8x16_640x480_M_x_A000 EQU 11h
+    INT10_00_12_G_80x30_8x16_640x480_16C_x_A000 EQU 12h
+    INT10_00_13_G_40x25_8x8_320x200_256C_x_A000 EQU 13h
+    INT10_00_49_S3_Trio_Mode            EQU 49h
+    INT10_00_4A_S3_Trio_Mode            EQU 4Ah
+    INT10_00_4B_S3_Trio_Mode            EQU 4Bh
+    INT10_00_4C_S3_Trio_Mode            EQU 4Ch
+    INT10_00_4D_S3_Trio_Mode            EQU 4Dh
+    INT10_00_4E_S3_Trio_Mode            EQU 4Eh
+    INT10_00_4F_S3_Trio_Mode            EQU 4Fh
+    INT10_00_52_S3_Trio_Mode            EQU 52h
+    INT10_00_54_S3_Trio_Mode            EQU 54h
+    INT10_00_55_S3_Trio_Mode            EQU 55h
+    INT10_00_68_S3_Trio_Mode            EQU 68h
+    INT10_00_69_S3_Trio_Mode            EQU 69h
+    INT10_00_6A_S3_Trio_Mode            EQU 6Ah
+    INT10_00_6B_S3_Trio_Mode            EQU 6Bh
+    INT10_00_6C_S3_Trio_Mode            EQU 6Ch
+    INT10_00_6D_S3_Trio_Mode            EQU 6Dh
+    INT10_00_6E_S3_Trio_Mode            EQU 6Eh
+    INT10_00_6F_S3_Trio_Mode            EQU 6Fh
+    INT10_00_70_S3_Trio_Mode            EQU 70h
+    INT10_00_71_S3_Trio_Mode            EQU 71h
+    INT10_00_72_S3_Trio_Mode            EQU 72h
+    INT10_00_73_S3_Trio_Mode            EQU 73h
+    INT10_00_74_S3_Trio_Mode            EQU 74h
+    INT10_00_75_S3_Trio_Mode            EQU 75h
+    INT10_00_76_S3_Trio_Mode            EQU 76h
+    INT10_00_77_S3_Trio_Mode            EQU 77h
+    INT10_00_78_S3_Trio_Mode            EQU 78h
+    INT10_00_79_S3_Trio_Mode            EQU 79h
+    INT10_00_7A_S3_Trio_Mode            EQU 7Ah
+    INT10_00_7C_S3_Trio_Mode            EQU 7Ch
+
 INT10_01_SetTextModeCursorShape         EQU 01h
 INT10_02_SetCursorPosition              EQU 02h
 INT10_03_GetCursorPositionAndSize       EQU 03h
@@ -236,6 +294,7 @@ INT10_1A_DisplayCombinationCodeFuncs    EQU 1Ah;Subfunctions in al
     INT10_1A_01_SetCombinationCode      EQU 01h
 INT10_1B_FunctionalityAndStateInfo      EQU 1Bh
 INT10_1C_SaveRestoreVideoState          EQU 1Ch
+INT10_4F_VESASuperVGABIOSFunctions      EQU 4Fh
 
 ROMStart:
 ROMMagic                DB 55h, 0AAh
@@ -979,7 +1038,7 @@ Data0BC4                DB 0BBh, 006h, 081h, 000h, 070h, 008h, 008h, 0FFh, 0FFh,
 Func0xdf6 PROC NEAR                     ;Offset 0xdf6
     push dx
     push bx
-    call Func0x103a                     ;Offset 0x103a
+    call FindVideoModeData              ;Offset 0x103a
     cmp  al, 13h
     jbe  Label0xe18                     ;Offset 0xe18
     mov  al, (Struct0522 ptr es:[di + offset Data0522]).Value5;Offset 0x527
@@ -1348,29 +1407,36 @@ TextModeAndMonitorCheck PROC NEAR
     ret
 TextModeAndMonitorCheck ENDP
 
-Func0x103a PROC NEAR                   ;Offset 0x103a
+;inputs:
+;al = video mode > 13h
+;outputs:
+;di points to video mode info
+;zero flag = 0 - found, 1 - not found
+;destroys:
+;es
+FindVideoModeData PROC NEAR             ;Offset 0x103a
     push ax
     mov  di, cs
     mov  es, di
     mov  di, offset Data0522            ;Offset 0x522
-Label0x1042:                            ;Offset 0x1042
-    cmp  (Struct0522 ptr es:[di]).Value0, 0ffh
-    je   Label0x1052                    ;Offset 0x1052
-    cmp  (Struct0522 ptr es:[di]).Value0, al
-    je   Label0x1052                    ;Offset 0x1052
-    add  di, 09h
-    jmp  Label0x1042                    ;Offset 0x1042
-Label0x1052:                            ;Offset 0x1052
+FindModeData:                           ;Offset 0x1042
+    cmp  (Struct0522 ptr es:[di]).Value0, 0ffh;Terminate
+    je   Done                           ;Offset 0x1052
+    cmp  (Struct0522 ptr es:[di]).Value0, al;al = video mode > 13h
+    je   Done                           ;Offset 0x1052
+    add  di, SIZEOF Struct0522          ;0x9
+    jmp  FindModeData                   ;Offset 0x1042
+Done:                                   ;Offset 0x1052
     sub  di, offset Data0522            ;Offset 0x522
     cmp  (Struct0522 ptr es:[di + offset Data0522]).Value0, al;Offset 0x522
     pop  ax
     ret  
-Func0x103a ENDP
+FindVideoModeData ENDP
 
 Func0x105d PROC NEAR                    ;Offset 0x105d
     push di
     push es
-    call Func0x103a                     ;Offset 0x103a
+    call FindVideoModeData              ;Offset 0x103a
     jne  Label0x1069                    ;Offset 0x1069
     mov  al, (Struct0522 ptr cs:[di + offset Data0522]).Value3;Offset 0x525
 Label0x1069:                            ;Offset 0x1069
@@ -1382,7 +1448,7 @@ Func0x105d ENDP
 Func0x106c PROC NEAR                    ;Offset 0x106c
     push di
     push es
-    call Func0x103a                     ;Offset 0x103a
+    call FindVideoModeData              ;Offset 0x103a
     mov  si, (Struct0522 ptr cs:[di + offset Data0522]).Value1;Offset 0x523
     pop  es
     pop  di
@@ -1423,7 +1489,7 @@ Func0x1079 PROC NEAR                    ;Offset 0x1079
     pop  si
 Label0x10b9:                            ;Offset 0x10b9
     mov  al, bl
-    call Func0x103a                     ;Offset 0x103a
+    call FindVideoModeData              ;Offset 0x103a
     je   Label0x10c3                    ;Offset 0x10c3
     jmp  Label0x115c                    ;Offset 0x115c
 Label0x10c3:                            ;Offset 0x10c3
@@ -1918,7 +1984,7 @@ Label0x13c9:                            ;Offset 0x13c9
     call  ReadDataWithIndexRegister     ;Offset 0x4640
     mov   al, ah
     mov   cl, ah
-    call  Func0x103a                    ;Offset 0x103a
+    call  FindVideoModeData             ;Offset 0x103a
     mov   al, byte ptr es:[di + 0526h]
     pop   di
     pop   es
@@ -2060,10 +2126,10 @@ VideoBootstrap PROC FAR                 ;Offset 0x148C
     mov    byte ptr ds:[BDA_VideoDisplayDataArea], 00h;Offset 0489h - reset all flags
     call   SetupPointersAndInterruptHandlers
     call   ConfigureColorOrMonochrome
-    mov    ax, (BDA_EFBS_CGAMono80x25_2 SHL 8) OR 07h;80x25 text mode monochrome, 0xb07
+    mov    ax, (BDA_EFBS_CGAMono80x25_2 SHL 8) OR INT10_00_07_T_80x25_9x16_720x400_M_x_B000;80x25 text mode monochrome, 0xb07
     test   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
     jne    IsMonochrome
-    mov    ax, (BDA_EFBS_MDAHiResEnhanced_2 SHL 8) OR 03h;80x25 text mode 16 color, 0x903
+    mov    ax, (BDA_EFBS_MDAHiResEnhanced_2 SHL 8) OR INT10_00_03_T_80x25_9x16_720x400_16C_8_B800;80x25 text mode 16 color, 0x903
 IsMonochrome:
     mov    byte ptr ds:[BDA_EGAFeatureBitSwitches], ah;Offset 0488h
     xor    ah, ah                       ;INT10_00_SetVideoMode
@@ -2074,14 +2140,14 @@ IsMonochrome:
     jne    VGAEnabled
     mov    ax, word ptr ds:[BDA_DetectedHardware];Offset 0410h
     push   ax
-    mov    bl, 03h
-    mov    ax, (BDA_DH_80x25Monochrome SHL 8) OR 07h;80x25 text mode monochrome, 0x3007
+    mov    bl, INT10_00_03_T_80x25_9x16_720x400_16C_8_B800;0x3
+    mov    ax, (BDA_DH_80x25Monochrome SHL 8) OR INT10_00_07_T_80x25_9x16_720x400_M_x_B000;80x25 text mode monochrome, 0x3007
     test   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
-    je     IsMonochrome2
-    mov    ax, (BDA_DH_80x25Color SHL 8) OR 03h;80x25 text mode 16 color, 0x2003
-    mov    bl, 07h
-IsMonochrome2:
-    and    byte ptr ds:[BDA_DetectedHardware], 0cfh;Offset 0410h
+    je     IsColor
+    mov    ax, (BDA_DH_80x25Color SHL 8) OR INT10_00_03_T_80x25_9x16_720x400_16C_8_B800;80x25 text mode 16 color, 0x2003
+    mov    bl, INT10_00_07_T_80x25_9x16_720x400_M_x_B000;0x7
+IsColor:
+    and    byte ptr ds:[BDA_DetectedHardware], NOT BDA_DH_InitialVideoModeMask;Offset 0410h, 0xcf
     or     byte ptr ds:[BDA_DetectedHardware], ah;Offset 0410h
     xor    ah, ah                       ;INT10_00_SetVideoMode
     int    42h                          ;System BIOS Video interrupt
@@ -2106,16 +2172,16 @@ VGAEnabled:
 Label0x1539:
     test   byte ptr cs:[Data0199], 04h  ;Data0199 = 0x80
     jne    Label0x158b
-    mov    al, 0eh
+    mov    al, INT10_00_0E_G_80x25_8x8_640x200_16C_4_A000;0xe
     test   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
-    je     IsMonochrome3
-    mov    al, 0fh
-IsMonochrome3:
+    je     IsColor2
+    mov    al, INT10_00_0F_G_80x25_8x14_640x350_M_2_A000;0xf
+IsColor2:
     call   GetVideoModeOverrideTable    ;es:si points to video mode override table entry based on al
     call   ApplyVideoParameters
     mov    ax, 0a000h                   ;Segment 0xa000
     mov    es, ax
-    mov    ax, 0805h                    ;GC5 - Graphics Controller Mode register
+    mov    ax, 0805h                    ;GR5 - Graphics Controller Mode register
                                         ;bit 4 = 1 - Enable Read Compare
     mov    dx, GraphicsControllerIndex  ;port - 0x3ce
     out    dx, ax
@@ -2134,11 +2200,11 @@ MemoryFailure:
     mov    dl, 03h
 MemorySuccess:
     push   dx
-    mov    al, 03h
+    mov    al, INT10_00_03_T_80x25_9x16_720x400_16C_8_B800;0x3
     test   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
-    je     IsMonochrome4
-    mov    al, 07h
-IsMonochrome4:
+    je     IsColor3
+    mov    al, INT10_00_07_T_80x25_9x16_720x400_M_x_B000;0x7
+IsColor3:
     call   GetVideoModeOverrideTable
     call   ApplyVideoParameters
     pop    dx
@@ -2172,13 +2238,13 @@ SetStartupVideoMode PROC NEAR
     jne  IsVGA                          ;Offset 0x15e6
     mov  ax, word ptr ds:[BDA_DetectedHardware];Offset 0410h
     push ax                             ;Save DetecedHardware
-    mov  bl, 03h
+    mov  bl, INT10_00_03_T_80x25_9x16_720x400_16C_8_B800;0x3
     mov  ax, (BDA_DH_80x25Monochrome SHL 8) OR 07h;0x3007
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
-    je   IsMonochrome                   ;Offset 0x15d2
+    je   IsColor                        ;Offset 0x15d2
     mov  ax, (BDA_DH_80x25Color SHL 8) OR 03h;0x2003
-    mov  bl, 07h
-IsMonochrome:                           ;Offset 0x15d2
+    mov  bl, INT10_00_07_T_80x25_9x16_720x400_M_x_B000;0x7
+IsColor:                                ;Offset 0x15d2
     and  byte ptr ds:[BDA_DetectedHardware], NOT BDA_DH_InitialVideoModeMask;Offset 0410h, 0xcf
     or   byte ptr ds:[BDA_DetectedHardware], ah;Offset 0410h
     xor  ah, ah                         ;INT10_00_SetVideoMode
@@ -2198,11 +2264,11 @@ IsMonochromeOrInactive:                 ;Offset 0x15fb
     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
 Label0x1600:                            ;Offset 0x1600
     mov  ax, (BDA_DH_80x25Color SHL 8) OR BDA_EFBS_MDAHiResEnhanced_2;0x2009
-    mov  bl, 03h
+    mov  bl, INT10_00_03_T_80x25_9x16_720x400_16C_8_B800;0x3
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
     je   IsMonochrome2                  ;Offset 0x1611
     mov  ax, (BDA_DH_80x25Monochrome SHL 8) OR BDA_EFBS_CGAMono80x25_2;0x300b
-    mov  bl, 07h
+    mov  bl, INT10_00_07_T_80x25_9x16_720x400_M_x_B000;0x7
 IsMonochrome2:                          ;Offset 0x1611
     and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0488h, 0xf0
     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], al;Offset 0488h
@@ -2226,11 +2292,11 @@ IsMonochrome2:                          ;Offset 0x1611
     je   Exit                           ;Offset 0x167d
     push ax
     mov  ax, (BDA_DH_80x25Monochrome SHL 8) OR BDA_EFBS_MDAHiResEnhanced;3003h
-    mov  bl, 07h
+    mov  bl, INT10_00_07_T_80x25_9x16_720x400_M_x_B000;0x7
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0487h, 0x2
     je   IsMonochrome3                  ;Offset 0x1660
     mov  ax, (BDA_DH_80x25Color SHL 8) OR BDA_EFBS_CGAMono80x25;2005h
-    mov  bl, 03h
+    mov  bl, INT10_00_03_T_80x25_9x16_720x400_16C_8_B800;0x3
 IsMonochrome3:                          ;Offset 0x1660
     and  byte ptr ds:[BDA_EGAFeatureBitSwitches], 0f0h;Offset 0488h
     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], al;Offset 0488h
@@ -2462,21 +2528,21 @@ Data1811 DB 2Ch, 28h, 2Dh, 29h, 2Ah, 2Eh, 1Eh, 29h;Offset 0x1811
 
 SetVideoMode PROC NEAR                  ;Offset 0x1819
     call UnlockExtendedCRTRegistersSafe ;Offset 0x1374
-    jne  Label0x182b                    ;Offset 0x182b
-    mov  ah, al
-    and  al, 7fh
-    cmp  al, 13h
-    jbe  Label0x182c                    ;Offset 0x182c
-    call Func0x103a                     ;Offset 0x103a
-    je   Label0x182c                    ;Offset 0x182c
-Label0x182b:                            ;Offset 0x182b
+    jne  Failure                        ;Offset 0x182b
+    mov  ah, al                         ;al = requested video mode
+    and  al, NOT INT10_00_xx_DontClearDisplay;0x7f
+    cmp  al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
+    jbe  ValidVideoMode                 ;Offset 0x182c
+    call FindVideoModeData              ;Offset 0x103a
+    je   ValidVideoMode                 ;Offset 0x182c
+Failure:                                ;Offset 0x182b
     ret
-Label0x182c:                            ;Offset 0x182c
-    and  byte ptr ds:[BDA_VideoModeOptions], 7fh;Offset 0x487
-    and  ah, 80h
+ValidVideoMode:                         ;Offset 0x182c
+    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
+    and  ah, INT10_00_xx_DontClearDisplay;0x80
     or   byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487
     call Func0x18e8                     ;Offset 0x18e8
-    cmp  al, 13h
+    cmp  al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
     ja   Label0x1850                    ;Offset 0x1850
     call Func0x1a4e                     ;Offset 0x1a4e
     je   Label0x1850                    ;Offset 0x1850
@@ -2549,18 +2615,20 @@ Label0x18da:                            ;Offset 0x18da
     ret  
 SetVideoMode ENDP
 
+;inputs:
+;al = video mode
 Func0x18e8 PROC NEAR                    ;Offset 0x18e8
     mov  bl, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
-    and  bl, 30h
-    test byte ptr ds:[BDA_VideoDisplayDataArea], 01h;Offset 0x489
-    je   Label0x1944                    ;Offset 0x1944
+    and  bl, BDA_DH_InitialVideoModeMask;0x30
+    test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489, 0x1
+    je   Label0x1944                    ;Offset 0x1944 - not in VGA mode.
     cmp  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
-    je   Label0x1944                    ;Offset 0x1944
+    je   Label0x1944                    ;Offset 0x1944 - already in this video mode
     mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
-    and  ah, 0fh
-    cmp  al, 07h
+    and  ah, BDA_EFBS_AdapterTypeMask   ;0xf
+    cmp  al, INT10_00_07_T_80x25_9x16_720x400_M_x_B000;0x7
     je   Label0x1983                    ;Offset 0x1983
-    cmp  al, 0fh
+    cmp  al, INT10_00_0F_G_80x25_8x14_640x350_M_2_A000;0xf
     je   Label0x1983                    ;Offset 0x1983
     mov  bh, al
     call Func0x105d                     ;Offset 0x105d
@@ -2573,9 +2641,9 @@ Label0x1918:                            ;Offset 0x1918
     je   Label0x1923                    ;Offset 0x1923
     jmp  Label0x19b7                    ;Offset 0x19b7
 Label0x1923:                            ;Offset 0x1923
-    cmp  word ptr ds:[BDA_VideoBaseIOPort], 03d4h;Offset 0x463, port - 0x3d4
+    cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexD;Offset 0x463, port - 0x3d4
     je   Label0x1944                    ;Offset 0x1944
-    cmp  bl, 30h
+    cmp  bl, BDA_DH_80x25Monochrome     ;0x30
     je   Label0x198e                    ;Offset 0x198e
     cmp  ah, 05h
     jbe  Label0x1944                    ;Offset 0x1944
@@ -2588,29 +2656,29 @@ Label0x1923:                            ;Offset 0x1923
 Label0x1944:                            ;Offset 0x1944
     ret
 Label0x1945:                            ;Offset 0x1945
-    mov  bl, 48h
+    mov  bl, BDA_EFBS_FeatureConnector0 OR BDA_EFBS_MDAHiRes80x25_2;0x48
     jmp  Label0x1950                    ;Offset 0x1950
 Label0x1949:                            ;Offset 0x1949
-    mov  bl, 8bh
+    mov  bl, BDA_EFBS_FeatureConnector1 OR BDA_EFBS_CGAMono80x25_2;0x8b
     jmp  Label0x1950                    ;Offset 0x1950
     nop
 Label0x194e:                            ;Offset 0x194e
-    mov  bl, 0bh
+    mov  bl, BDA_EFBS_CGAMono80x25_2    ;0xb
 Label0x1950:                            ;Offset 0x1950
-    and  byte ptr ds:[BDA_VideoModeOptions], 0fdh;Offset 0x487
+    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_Monochrome;Offset 0x487, 0xfd
     and  byte ptr ds:[BDA_EGAFeatureBitSwitches], 0f0h;Offset 0x488
     mov  ah, byte ptr ds:[BDA_VideoDisplayDataArea];Offset 0x489
     not  ah
-    and  ah, 80h
-    rol  ah, 01h
+    and  ah, BDA_VDDA_LineMode200;0x80
+    rol  ah, 01h;rotate top bit in to first bit - BDA_EFBS_MDAColor80x25
     or   ah, bl
     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], ah;Offset 0x488
-    and  byte ptr ds:[BDA_VideoDisplayDataArea], 7fh;Offset 0x489
+    and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_LineMode200;Offset 0x489, 0x7f
     test byte ptr cs:[Data0197], 01h    ;Offset 0x197
     je   Label0x1944                    ;Offset 0x1944
 Label0x1978:                            ;Offset 0x1978
-    and  byte ptr ds:[BDA_DetectedHardware], 0cfh;Offset 0x410
-    or   word ptr ds:[BDA_DetectedHardware], 20h;Offset 0x410
+    and  byte ptr ds:[BDA_DetectedHardware], NOT BDA_DH_InitialVideoModeMask;Offset 0x410, 0x0cf
+    or   word ptr ds:[BDA_DetectedHardware], BDA_DH_80x25Color;Offset 0x410, 0x20
     ret
 Label0x1983:                            ;Offset 0x1983 
     test byte ptr cs:[Data0197], 01h    ;Offset 0x197
@@ -2620,7 +2688,7 @@ Label0x198e:                            ;Offset 0x198e
     mov  al, 07h
     jmp  Label0x1944                    ;Offset 0x1944
 Label0x1992:                            ;Offset 0x1992
-    cmp  word ptr ds:[BDA_VideoBaseIOPort], 03b4h;Offset 0x463, port - 0x3b4
+    cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexB;Offset 0x463, port - 0x3b4
     je   Label0x1a16                    ;Offset 0x1a16
     cmp  bl, 30h
     jne  Label0x19d8                    ;Offset 0x19d8
@@ -2635,7 +2703,7 @@ Label0x1992:                            ;Offset 0x1992
     mov  bl, 08h
     jmp  Label0x1a03                    ;Offset 0x1a03
 Label0x19b7:                            ;Offset 0x19b7
-    cmp  word ptr ds:[BDA_VideoBaseIOPort], 03d4h;Offset 0x463, port - 0x3d4
+    cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexD;Offset 0x463, port - 0x3d4
     je   Label0x1978                    ;Offset 0x1978
     cmp  ah, 05h
     jbe  Label0x19d3                    ;Offset 0x19d3
@@ -2652,27 +2720,27 @@ Label0x19d8:                            ;Offset 0x19d8
     mov  al, 00h
     jmp  Label0x1a16                    ;Offset 0x1a16
 Label0x19dc:                            ;Offset 0x19dc
-    or   byte ptr ds:[BDA_VideoModeOptions], 02h;Offset 0x487
+    or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
     jmp  Label0x1a16                    ;Offset 0x1a16
 Label0x19e3:                            ;Offset 0x19e3
-    or   byte ptr ds:[BDA_VideoModeOptions], 02h;Offset 0x487
-    or   byte ptr ds:[BDA_VideoDisplayDataArea], 80h;Offset 0x489
-    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], 0f0h;Offset 0x488
-    or   byte ptr ds:[BDA_EGAFeatureBitSwitches], 0bh;Offset 0x488
+    or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
+    or   byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode200;Offset 0x489, 0x80
+    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488, 0xf0
+    or   byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_CGAMono80x25_2;Offset 0x488, 0xb
     test byte ptr cs:[Data0197], 01h    ;Offset 0x197
     je   Label0x1a16                    ;Offset 0x1a16
     jmp  Label0x1a48                    ;Offset 0x1a48
 Label0x1a01:                            ;Offset 0x1a01
     mov  bl, 0bh
 Label0x1a03:                            ;Offset 0x1a03
-    or   byte ptr ds:[BDA_VideoModeOptions], 02h;Offset 0x487
-    and  byte ptr ds:[BDA_VideoDisplayDataArea], 7fh;Offset 0x489
-    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], 0f0h;Offset 0x488
+    or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
+    and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_LineMode200;Offset 0x489, 0x7f
+    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488, 0xf0
     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], bl;Offset 0x488
 Label0x1a16:                            ;Offset 0x1a16
     ret
 Label0x1a17:                            ;Offset 0x1a17
-    cmp  word ptr ds:[BDA_VideoBaseIOPort], 03b4h;Offset 0x463, port - 0x3b4
+    cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexB;Offset 0x463, port - 0x3b4
     je   Label0x1a48                    ;Offset 0x1a48
     cmp  ah, 05h
     jbe  Label0x1a34                    ;Offset 0x1a34
@@ -2684,72 +2752,72 @@ Label0x1a17:                            ;Offset 0x1a17
     jbe  Label0x19d3                    ;Offset 0x19d3
     ret
 Label0x1a34:                            ;Offset 0x1a34
-    or   byte ptr ds:[BDA_VideoModeOptions], 02h;Offset 0x487
-    and  byte ptr ds:[BDA_VideoDisplayDataArea], 7fh;Offset 0x489
-    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], 0f0h;Offset 0x488
-    or   byte ptr ds:[BDA_EGAFeatureBitSwitches], 0bh;Offset 0x488
+    or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
+    and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_LineMode200;Offset 0x489, 0x7f
+    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488, 0xf0
+    or   byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_CGAMono80x25_2;Offset 0x488, 0xb
 Label0x1a48:                            ;Offset 0x1a48
-    or   word ptr ds:[BDA_DetectedHardware], 30h;Offset 0x410
+    or   word ptr ds:[BDA_DetectedHardware], BDA_DH_80x25Monochrome;Offset 0x410, 0x30
     ret  
 Func0x18e8 ENDP
 
 Func0x1a4e PROC NEAR                    ;Offset 0x1a4e
     mov  ah, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
-    and  ah, 30h
-    cmp  ah, 30h
-    jne  Label0x1a6a                    ;Offset 0x1a6a
-    test byte ptr ds:[BDA_VideoModeOptions], 02h;Offset 0x487
+    and  ah, BDA_DH_InitialVideoModeMask;0x30
+    cmp  ah, BDA_DH_80x25Monochrome     ;0x30
+    jne  IsColor                        ;Offset 0x1a6a
+    test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
     jne  Label0x1aad                    ;Offset 0x1aad
-    or   byte ptr ds:[BDA_VideoModeOptions], 08h;Offset 0x487
-    mov  al, 0eh
+    or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487, 0x8
+    mov  al, 0eh                        ;al = PointHeightOfCharacterMatrix 0xe = 14
     jmp  Label0x1a84                    ;Offset 0x1a84
-Label0x1a6a:                            ;Offset 0x1a6a
-    test byte ptr ds:[BDA_VideoModeOptions], 02h;Offset 0x487
-    je   Label0x1a8f                    ;Offset 0x1a8f
-    mov  ah, 08h
+IsColor:                                ;Offset 0x1a6a
+    test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
+    je   IsMonochrome                   ;Offset 0x1a8f
+    mov  ah, BDA_VMO_Inactive           ;0x8
     cmp  al, 02h
     jbe  Label0x1a7e                    ;Offset 0x1a7e
     cmp  al, 04h
     jae  Label0x1a7e                    ;Offset 0x1a7e
-    or   ah, 04h
+    or   ah, BDA_VMO_Unknown            ;0x4
 Label0x1a7e:                            ;Offset 0x1a7e
     or   byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487
-    mov  al, 08h
+    mov  al, 08h                        ; al = PointHeightOfCharacterMatrix 0x8 = 8
 Label0x1a84:                            ;Offset 0x1a84
-    mov  byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484
+    mov  byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484, 0x18 = 24
     mov  ah, 00h
     mov  word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
     ret
-Label0x1a8f:                            ;Offset 0x1a8f
+IsMonochrome:                           ;Offset 0x1a8f
     cmp  al, 0fh
     je   Label0x1aa4                    ;Offset 0x1aa4
     cmp  al, 07h
     je   Label0x1aa4                    ;Offset 0x1aa4
     mov  bh, al
     call Func0x105d                     ;Offset 0x105d
-    jne  Label0x1ac9                    ;Offset 0x1ac9
+    jne  Exit                           ;Offset 0x1ac9
     test al, 02h
     mov  al, bh
-    jne  Label0x1ac9                    ;Offset 0x1ac9
+    jne  Exit                           ;Offset 0x1ac9
 Label0x1aa4:                            ;Offset 0x1aa4
     mov  al, 00h
-    and  byte ptr ds:[BDA_VideoModeOptions], 7fh;Offset 0x487
-    jmp  Label0x1ac9                    ;Offset 0x1ac9
+    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
+    jmp  Exit                           ;Offset 0x1ac9
 Label0x1aad:                            ;Offset 0x1aad
     cmp  al, 0fh
-    je   Label0x1ac9                    ;Offset 0x1ac9
+    je   Exit                           ;Offset 0x1ac9
     cmp  al, 07h
-    je   Label0x1ac9                    ;Offset 0x1ac9
+    je   Exit                           ;Offset 0x1ac9
     mov  bh, al
     call Func0x105d                     ;Offset 0x105d
     jne  Label0x1ac2                    ;Offset 0x1ac2
     test al, 02h
     mov  al, bh
-    je   Label0x1ac9                    ;Offset 0x1ac9
+    je   Exit                           ;Offset 0x1ac9
 Label0x1ac2:                            ;Offset 0x1ac2
     mov  al, 07h
-    and  byte ptr ds:[BDA_VideoModeOptions], 7fh;Offset 0x487
-Label0x1ac9:                            ;Offset 0x1ac9
+    and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
+Exit:                                   ;Offset 0x1ac9
     DB 03Ah, 0C0h                       ;cmp  al, al - masm encoding difference
     ret
 Func0x1a4e ENDP
@@ -9082,18 +9150,18 @@ Label0x5285:                            ;Offset 0x5285
     ret  
 Func0x5203 ENDP
 
-Func0x5287 PROC NEAR                    ;Offset 0x5287
+VESADDCReadEDID PROC NEAR               ;Offset 0x5287
     push bx
     push cx
-    call Func0x5342                     ;Offset 0x5342
+    call VESADDCInstallationCheck       ;Offset 0x5342 returns bx = 0x0102 if DDC, 0x0105 if ?, 0x0000 if not detected
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 55h
+    mov  al, 55h                        ;CR55 - Extended RAMDAC Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    or   ah, 04h
+    or   ah, 04h                        ;bit 2 = 1 - Enable General Input Port Read
     out  dx, ax
-    test bl, 02h
-    jne  Label0x52ba                    ;Offset 0x52ba
-    test bl, 01h
+    test bl, 02h                        ;
+    jne  DDCFound                       ;Offset 0x52ba test if DDC
+    test bl, 01h                        ;0x0105 if ?,
     je   Label0x52c0                    ;Offset 0x52c0
     call TurnOffScreen                  ;Offset 0x47ed
     mov  bx, 0ff06h
@@ -9105,9 +9173,9 @@ Func0x5287 PROC NEAR                    ;Offset 0x5287
 Label0x52b5:                            ;Offset 0x52b5
     call Func0x5452                     ;Offset 0x5452
     jmp  Label0x52c0                    ;Offset 0x52c0
-Label0x52ba:                            ;Offset 0x52ba
-    mov  bx, 0080h
-    call Func0x5519                     ;Offset 0x5519
+DDCFound:                               ;Offset 0x52ba
+    mov  bx, 0080h                      ;Read from word 00, flags 0x80, bit 0 = 0 - read response into es:di
+    call DDCSendCommand                 ;Offset 0x5519
 Label0x52c0:                            ;Offset 0x52c0
     mov  dx, 03c4h                      ;port - 0x3c4
     mov  al, 0dh
@@ -9116,95 +9184,101 @@ Label0x52c0:                            ;Offset 0x52c0
     out  dx, ax
     call TurnOnScreen                   ;Offset 0x4800
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 55h
+    mov  al, 55h                        ;CR55 - Extended RAMDAC Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0fbh
+    and  ah, 0fbh                       ;bit 2 = 0 - Disable General Input Port Read (RAMDAC reads enabled)
     out  dx, ax
     xor  bh, 01h
     pop  cx
     pop  bx
     ret  
-Func0x5287 ENDP
+VESADDCReadEDID ENDP
 
-Func0x52e1 PROC NEAR                    ;Offset 0x52e1
+;I can't find a format specification for VDIF. If anyone knows where I can find one, please let me know!
+VESADDCReadVDIF PROC NEAR               ;Offset 0x52e1
     push bx
     push cx
     push dx
-    call Func0x5342                     ;Offset 0x5342
+    call VESADDCInstallationCheck       ;Offset 0x5342 returns bx = 0x0102 if DDC, 0x0105 if ?, 0x0000 if not detected
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 55h
+    mov  al, 55h                        ;CR55 - Extended RAMDAC Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    or   ah, 04h
+    or   ah, 04h                        ;bit 2 = 1 - Enable General Input Port Read
     out  dx, ax
     pop  dx
     xor  bh, bh
-    test bl, 02h
-    je   Label0x5330                    ;Offset 0x5330
-    and  dx, 0ffh
-    shl  dl, 06h
-    add  dl, 80h
-    mov  bh, dl
-    mov  bl, 42h
-    push bx
-    mov  bx, 8001h
-    call Func0x5519                     ;Offset 0x5519
-    call Func0x5584                     ;Offset 0x5584
+    test bl, 02h                        ;Test if DDC
+    je   Done                           ;Offset 0x5330
+    and  dx, 0ffh                       ;This is confusing. and off the top byte
+    shl  dl, 06h                        ;shift up so only 2 bits remain
+    add  dl, 80h                        ;add 0x80 to toggle top bit?
+    mov  bh, dl                         ;bh is start word
+    mov  bl, 42h                        ;flags?
+    push bx                             ;Store confusing value
+    mov  bx, 8001h                      ;Send command, don't read result, word offset 0x80
+    call DDCSendCommand                 ;Offset 0x5519
+    call DDCReceiveByte                 ;Offset 0x5584
     cmp  bh, 56h
-    jne  Label0x532c                    ;Offset 0x532c
-    call Func0x5593                     ;Offset 0x5593
-    call Func0x5584                     ;Offset 0x5584
+    jne  HeaderDataMismatch             ;Offset 0x532c
+    call DDCSendAck                     ;Offset 0x5593
+    call DDCReceiveByte                 ;Offset 0x5584
     cmp  bh, 44h
-    jne  Label0x532c                    ;Offset 0x532c
-    call Func0x54b2                     ;Offset 0x54b2
+    jne  HeaderDataMismatch             ;Offset 0x532c
+    call DDCSend02313                   ;Offset 0x54b2
+    pop  bx                             ;Restore confusing value
+    call DDCSendCommand                 ;Offset 0x5519
+    jmp  Done                           ;Offset 0x5330
+HeaderDataMismatch:                     ;Offset 0x532c
     pop  bx
-    call Func0x5519                     ;Offset 0x5519
-    jmp  Label0x5330                    ;Offset 0x5330
-Label0x532c:                            ;Offset 0x532c
-    pop  bx
-    call Func0x54b2                     ;Offset 0x54b2
-Label0x5330:                            ;Offset 0x5330
+    call DDCSend02313                   ;Offset 0x54b2
+Done:                                   ;Offset 0x5330
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 55h
+    mov  al, 55h                        ;CR55 - Extended RAMDAC Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0fbh
+    and  ah, 0fbh                       ;bit 2 = 0 - Disable General Input Port Read (RAMDAC reads enabled)
     out  dx, ax
     xor  bh, 01h
     pop  cx
     pop  bx
     ret  
-Func0x52e1 ENDP
+VESADDCReadVDIF ENDP
 
-Func0x5342 PROC NEAR                    ;Offset 0x5342
+;outputs:
+;bx = 
+;     0x0102 = DDC
+;     0x0105 = ?
+;     0x0000 = Not found
+VESADDCInstallationCheck PROC NEAR      ;Offset 0x5342
     call      GetCRTControllerIndexRegister;Offset 0xfdd
-    mov       al, 55h
+    mov       al, 55h                   ;CR55 - Extended RAMDAC Control register
     call      ReadDataWithIndexRegister ;Offset 0x4640
-    or        ah, 04h
+    or        ah, 04h                   ;bit 2 = 1 - Enable General Input Port Read
     out       dx, ax
-    mov       bx, 01h
-    call      Func0x5519                ;Offset 0x5519
-    call      Func0x5584                ;Offset 0x5584
-    cmp       bh, 00h
-    jne       Label0x536f               ;Offset 0x536f
-    call      Func0x5593                ;Offset 0x5593
-    call      Func0x5584                ;Offset 0x5584
+    mov       bx, 0001h                 ;word offset 0x00, flag bit 0 = don't read response.
+    call      DDCSendCommand            ;Offset 0x5519
+    call      DDCReceiveByte            ;Offset 0x5584
+    cmp       bh, 00h                   ;Expect 0x00 response, fixed header pattern is 00 FF FF FF FF FF FF 00
+    jne       HeaderDataMismatch        ;Offset 0x536f
+    call      DDCSendAck                ;Offset 0x5593
+    call      DDCReceiveByte            ;Offset 0x5584
     cmp       bh, 0ffh
-    jne       Label0x536f               ;Offset 0x536f
-    call      Func0x54b2                ;Offset 0x54b2
+    jne       HeaderDataMismatch        ;Offset 0x536f
+    call      DDCSend02313              ;Offset 0x54b2
     mov       bx, 0102h
-    jmp       Label0x537a               ;Offset 0x537a
-Label0x536f:                            ;Offset 0x536f
-    mov       bx, 00h
+    jmp       Done                      ;Offset 0x537a
+HeaderDataMismatch:                     ;Offset 0x536f
+    mov       bx, 0000h
     call      Func0x5480                ;Offset 0x5480
-    je        Label0x537a               ;Offset 0x537a
+    je        Done                      ;Offset 0x537a
     mov       bx, 0105h
-Label0x537a:                            ;Offset 0x537a
-    mov       al, 55h
+Done:                                   ;Offset 0x537a
+    mov       al, 55h                   ;CR55 - Extended RAMDAC Control register
     call      ReadDataWithIndexRegister ;Offset 0x4640
-    and       ah, 0fbh
+    and       ah, 0fbh                  ;bit 2 = 0 - Disable General Input Port Read (RAMDAC reads enabled)
     out       dx, ax
-    xor       dx, dx
+    xor       dx, dx                    ;This resets the flags...
     ret       
-Func0x5342 ENDP
+VESADDCInstallationCheck ENDP
 
 Func0x5386 PROC NEAR                    ;Offset 0x5386
     mov       dx, 03c8h                 ;port - 0x3c8
@@ -9390,162 +9464,178 @@ Label0x549b:                            ;Offset 0x549b
     ret
 Func0x5480 ENDP
 
-Func0x549d PROC NEAR                    ;Offset 0x549d
+DDCSend1320 PROC NEAR                   ;Offset 0x549d
     mov       bl, 01h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 03h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 02h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 00h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     ret
-Func0x549d ENDP
+DDCSend1320 ENDP
 
-Func0x54b2 PROC NEAR                    ;Offset 0x54b2
+DDCSend02313 PROC NEAR                  ;Offset 0x54b2
     mov       bl, 00h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 02h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 03h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 01h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 03h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     ret
-Func0x54b2 ENDP
+DDCSend02313 ENDP
 
-Func0x54cc PROC NEAR                    ;Offset 0x54cc
+DDCSendData PROC NEAR                   ;Offset 0x54cc
     push      dx
     push      cx
     push      ax
     call      GetCRTControllerIndexRegister;Offset 0xfdd
-    mov       al, 5ch
+    mov       al, 5ch                   ;CR5C - General Output Port register
     call      ReadDataWithIndexRegister ;Offset 0x4640
-    and       ah, 0fch
-    or        ah, bl
+    and       ah, 0fch                  ;And out lowest two bits.
+    or        ah, bl                    ;send lowest two bits.
     out       dx, ax
     mov       cx, 0113h
-Label0x54e0:                            ;Offset 0x54e0
-    loop      Label0x54e0               ;Offset 0x54e0
+WaitLoop:                               ;Offset 0x54e0 - This feels like a time sensitive loop!
+    loop      WaitLoop                  ;Offset 0x54e0
     pop       ax
     pop       cx
     pop       dx
     ret
-Func0x54cc ENDP
+DDCSendData ENDP
 
-Func0x54e6 PROC NEAR                    ;Offset 0x54e6
+DDCReceiveBit PROC NEAR                 ;Offset 0x54e6
     push      dx
     push      ax
     mov       bl, 01h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     mov       bl, 03h
-    call      Func0x54cc                ;Offset 0x54cc
-    mov       dx, 03c8h                 ;port - 0x3c8
+    call      DDCSendData               ;Offset 0x54cc
+    mov       dx, DACWriteIndex         ;port - 0x3c8 - DACWriteIndex, but now it behaves as General IO Port 
     in        al, dx
-    and       al, 01h
-    or        bh, al
+    and       al, 01h                   ;mask off everything but the bottom bit
+    or        bh, al                    ;or into bh
     mov       bl, 01h
-    call      Func0x54cc                ;Offset 0x54cc
+    call      DDCSendData               ;Offset 0x54cc
     pop       ax
     pop       dx
     ret
-Func0x54e6 ENDP
+DDCReceiveBit ENDP
 
-Func0x5502 PROC NEAR                    ;Offset 0x5502
+DDCSendBit PROC NEAR                    ;Offset 0x5502
     xor       bl, bl
     or        bl, bh
-    and       bl, 01h
-    call      Func0x54cc                ;Offset 0x54cc
-    or        bl, 02h
-    call      Func0x54cc                ;Offset 0x54cc
-    and       bl, 01h
-    call      Func0x54cc                ;Offset 0x54cc
+    and       bl, 01h                   ;Send 2 bits: 0x maybe the top bit is a clock signal?
+    call      DDCSendData               ;Offset 0x54cc
+    or        bl, 02h                   ;Send 2 bits: 1x
+    call      DDCSendData               ;Offset 0x54cc
+    and       bl, 01h                   ;Send 2 bits: 0x
+    call      DDCSendData               ;Offset 0x54cc
     ret
-Func0x5502 ENDP
+DDCSendBit ENDP
 
-Func0x5519 PROC NEAR                    ;Offset 0x5519
-    mov       cx, bx
-    call      Func0x549d                ;Offset 0x549d
-    mov       bh, 0a0h
-    call      Func0x5570                ;Offset 0x5570
-    mov       bx, cx
-    call      Func0x5570                ;Offset 0x5570
-    call      Func0x549d                ;Offset 0x549d
-    mov       bh, 0a1h
-    call      Func0x5570                ;Offset 0x5570
-    test      cx, 01h
-    jne       Label0x556f               ;Offset 0x556f
-    push      cx
-    push      di
-    pushf
-    cld
-    and       cx, 0fch
-    dec       cx
+;inputs:
+;bl = flags. bit 0 = 1 - read response into es:di, 0 = exit after send command
+;            bit 1 = 1 - perform accumulation test (total must be 0), 0 = ignore
+;            bits 7-2 = number of bytes to read * 4
+;bh = word offset
+;returns:
+;bh = 0 - fail
+;bh = 1 - success
+DDCSendCommand PROC NEAR                ;Offset 0x5519
+    mov       cx, bx                    ;store word offset and flags
+    call      DDCSend1320               ;Offset 0x549d
+    mov       bh, 0a0h                  ;Send device ID A0h - write operation
+    call      DDCSendByte               ;Offset 0x5570
+    mov       bx, cx                    ;Send upper byte of bx - word offset
+    call      DDCSendByte               ;Offset 0x5570
+    call      DDCSend1320               ;Offset 0x549d
+    mov       bh, 0a1h                  ;Send device ID A1h - read operation
+    call      DDCSendByte               ;Offset 0x5570
+    test      cx, 01h                   ;if lower bit set, don't read response.
+    jne       Exit                      ;Offset 0x556f
+    push      cx                        ;store word offset and flags
+    push      di                        ;store destination index
+    pushf                               ;store flags
+    cld                                 ;clear direction flag
+    and       cx, 0fch                  ;And off word offset and bottom two flags
+    dec       cx                        ;number of bytes to read minus one (since that's read after the loop)
     xor       ah, ah
-Label0x5541:                            ;Offset 0x5541
-    call      Func0x5584                ;Offset 0x5584
-    call      Func0x5593                ;Offset 0x5593
+ReceiveBytes:                           ;Offset 0x5541
+    call      DDCReceiveByte            ;Offset 0x5584
+    call      DDCSendAck                ;Offset 0x5593
     mov       al, bh
     stosb
     add       ah, bh
-    loop      Label0x5541               ;Offset 0x5541
-    call      Func0x5584                ;Offset 0x5584
+    loop      ReceiveBytes              ;Offset 0x5541
+    call      DDCReceiveByte            ;Offset 0x5584
     mov       al, bh
     stosb
     add       bh, ah
-    call      Func0x54b2                ;Offset 0x54b2
-    popf
-    pop       di
-    pop       cx
-    test      cx, 0002h
+    call      DDCSend02313              ;Offset 0x54b2
+    popf                                ;restore direction flag
+    pop       di                        ;restore index
+    pop       cx                        ;
+    test      cx, 0002h                 ;test bit 1
     je        Label0x5566               ;Offset 0x5566
     mov       bh, 01h
-    jmp       Label0x556f               ;Offset 0x556f
+    jmp       Exit                      ;Offset 0x556f
 Label0x5566:                            ;Offset 0x5566
     cmp       bh, 00h
     mov       bh, 00h
-    jne       Label0x556f               ;Offset 0x556f
+    jne       Exit                      ;Offset 0x556f
     inc       bh
-Label0x556f:                            ;Offset 0x556f
+Exit:                                   ;Offset 0x556f
     ret
-Func0x5519 ENDP
+DDCSendCommand ENDP
 
-Func0x5570 PROC NEAR                    ;Offset 0x5570
+;inputs:
+;bh = byte to send
+;outputs:
+;none
+DDCSendByte PROC NEAR                   ;Offset 0x5570
     push      cx
     mov       cx, 08h
-Label0x5574:                            ;Offset 0x5574
+SendBit:                                ;Offset 0x5574
     rol       bh, 01h
-    call      Func0x5502                ;Offset 0x5502
-    loop      Label0x5574               ;Offset 0x5574
+    call      DDCSendBit                ;Offset 0x5502
+    loop      SendBit                   ;Offset 0x5574
     push      bx
-    mov       bh, 01h
-    call      Func0x5502                ;Offset 0x5502
+    mov       bh, 01h                   ;Stop bit?
+    call      DDCSendBit                ;Offset 0x5502
     pop       bx
     pop       cx
     ret
-Func0x5570 ENDP
+DDCSendByte ENDP
 
-Func0x5584 PROC NEAR                    ;Offset 0x5584
+;inputs:
+;none
+;outputs:
+;bh = read byte
+DDCReceiveByte PROC NEAR                ;Offset 0x5584
     push      cx
     xor       bh, bh
     mov       cx, 08h
-Label0x558a:                            ;Offset 0x558a
+ReceiveBit:                             ;Offset 0x558a
     rol       bh, 01h
-    call      Func0x54e6                ;Offset 0x54e6
-    loop      Label0x558a               ;Offset 0x558a
+    call      DDCReceiveBit             ;Offset 0x54e6
+    loop      ReceiveBit                ;Offset 0x558a
     pop       cx
     ret
-Func0x5584 ENDP
+DDCReceiveByte ENDP
 
-Func0x5593 PROC NEAR                    ;Offset 0x5593
+DDCSendAck PROC NEAR                    ;Offset 0x5593
     push      bx
     xor       bh, bh
-    call      Func0x5502                ;Offset 0x5502
+    call      DDCSendBit                ;Offset 0x5502
     pop       bx
     ret
-Func0x5593 ENDP
+DDCSendAck ENDP
 
 GetSetDACPaletteControl PROC NEAR       ;Offset 0x559b
     mov  byte ptr ss:[bp + 11h], 01h
@@ -9606,34 +9696,34 @@ Label0x55fa:                            ;Offset 0x55fa
 VESAPowerManagement ENDP
 
 VESADisplayDataChannel PROC NEAR        ;Offset 0x55ff
-    mov       byte ptr ss:[bp + 11h], 01h
-    cmp       bl, 02h
-    ja        Label0x5636               ;Offset 0x5636
+    mov       byte ptr ss:[bp + 11h], 01h;ah return value 0x01 = failed
+    cmp       bl, 02h                   ;0x00 - 0x02 are valid values.
+    ja        Exit                      ;Offset 0x5636
     cmp       bl, 00h
-    je        Label0x5617               ;Offset 0x5617
+    je        InstallationCheck         ;Offset 0x5617
     cmp       bl, 01h
-    je        Label0x5622               ;Offset 0x5622
+    je        ReadEDID                  ;Offset 0x5622
     cmp       bl, 02h
-    je        Label0x562a               ;Offset 0x562a
-Label0x5617:                            ;Offset 0x5617
-    call      Func0x5342                ;Offset 0x5342
+    je        ReadVDIF                  ;Offset 0x562a
+InstallationCheck:                      ;Offset 0x5617
+    call      VESADDCInstallationCheck  ;Offset 0x5342
     mov       word ptr ss:[bp + 0eh], bx
-    je        Label0x5632               ;Offset 0x5632
-    jmp       Label0x5636               ;Offset 0x5636
+    je        Success                   ;Offset 0x5632 - Last instruction is xor dx, dx - so this always succeeds?
+    jmp       Exit                      ;Offset 0x5636
     nop
-Label0x5622:                            ;Offset 0x5622
-    call      Func0x5287                ;Offset 0x5287
-    je        Label0x5632               ;Offset 0x5632
-    jmp       Label0x5636               ;Offset 0x5636
+ReadEDID:                               ;Offset 0x5622
+    call      VESADDCReadEDID           ;Offset 0x5287
+    je        Success                   ;Offset 0x5632
+    jmp       Exit                      ;Offset 0x5636
     nop
-Label0x562a:                            ;Offset 0x562a
-    call      Func0x52e1                ;Offset 0x52e1
-    je        Label0x5632               ;Offset 0x5632
-    jmp       Label0x5636               ;Offset 0x5636
+ReadVDIF:                               ;Offset 0x562a
+    call      VESADDCReadVDIF           ;Offset 0x52e1
+    je        Success                   ;Offset 0x5632
+    jmp       Exit                      ;Offset 0x5636
     nop
-Label0x5632:                            ;Offset 0x5632
-    mov       byte ptr [bp + 11h], 0
-Label0x5636:                            ;Offset 0x5636
+Success:                                ;Offset 0x5632
+    mov       byte ptr [bp + 11h], 00h  ;ah return value 0x00 = success
+Exit:                                   ;Offset 0x5636
     ret
 VESADisplayDataChannel ENDP
 
@@ -9710,11 +9800,11 @@ IntHandlerCallTable     DW SetVideoMode ;Offset 0x1819              ;00h
 InterruptHandlerEntrypoint PROC FAR     ;Offset 0x56c6
     sti
     cld
-    cmp  ah, 0eh
+    cmp  ah, INT10_0E_TeletypeOutput    ;function 0xe
     je   GotoTeletypeHandler            ;Offset 0x5703
-    cmp  ah, 0ch
+    cmp  ah, INT10_0C_WriteGraphicsPixel;function 0xc
     je   GotoWriteGraphicsPixelHandler  ;Offset 0x5706
-    cmp  ah, 0dh
+    cmp  ah, INT10_0D_ReadGraphicsPixel ;function 0xd
     je   GotoReadGraphicsPixelHandler   ;Offset 0x5709
     push ax
     push bx
@@ -9730,7 +9820,7 @@ InterruptHandlerEntrypoint PROC FAR     ;Offset 0x56c6
     mov  si, ax
     mov  al, ah
     xor  ah, ah
-    cmp  al, 1dh
+    cmp  al, 1dh                        ;0x1c is last supported function, except vesa
     jae  GotoVESAHandler                ;Offset 0x570c
     shl  ax, 01h
     xchg ax, si
@@ -9754,7 +9844,7 @@ GotoReadGraphicsPixelHandler:           ;Offset 0x5709
     jmp  ReadGraphicsPixel              ;Offset 0x2b6a
 GotoVESAHandler:                        ;Offset 0x570c
     mov  ax, si
-    cmp  ah, 4fh                        ;VESA functions
+    cmp  ah, INT10_4F_VESASuperVGABIOSFunctions;VESA functions, 0x4f
     jne  Exit                           ;Offset 0x56f9
     call VESAHandler                    ;Offset 0x4b01
     jmp  Exit                           ;Offset 0x56f9
