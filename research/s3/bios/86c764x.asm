@@ -2,6 +2,8 @@
 
 ;Resources:
 ;
+;Original BIOS file was downloaded from here: http://chukaev.ru54.com/video_en.htm - 86c764x1.zip
+;
 ;Interrupt list: http://www.ctyme.com/intr/int.htm
 ;S3 Trio32/Trio64 programming manual: http://www.bitsavers.org/components/s3/DB014-B_Trio32_Trio64_Graphics_Accelerators_Mar1995.pdf
 ;VGADOC: https://pdos.csail.mit.edu/6.828/2018/readings/hardware/vgadoc/S3.TXT
@@ -6012,9 +6014,9 @@ Func0x312c ENDP
 Data315a                DW offset Characters8x14;Offset 0x05f20
                         DW offset LowerCharacters8x8;Offset 0x05720
                         DW offset UpperCharacters8x8;Offset 0x05b20
-                        DW offset ImageW14;Offset 0x06d20
+                        DW offset Patch8x14;Offset 0x06d20
                         DW offset Characters8x16;Offset 0x06e30
-                        DW offset ImageW16;Offset 0x07e30
+                        DW offset Patch8x16;Offset 0x07e30
 
 Func0x3166 PROC NEAR                    ;Offset 0x3166
     mov es, word ptr cs:[Data1488]      ;Offset 0x1488
@@ -7747,7 +7749,6 @@ Func0x46b5 PROC NEAR
     ret  
 Func0x46b5 ENDP
 
-;This function seems to draw something hardcoded on the screen.
 Func0x46c2 PROC NEAR                    ;Offset 0x46c2
     push      ax
     push      bx
@@ -7823,7 +7824,7 @@ Label0x472c:                            ;Offset 0x472c
     pop       bx
     pop       es
     pop       ds
-    call      DrawSplashImage           ;Offset 0x4760
+    call      PatchCharacterSet         ;Offset 0x4760
     mov       dx, 03c4h
     mov       ax, 0302h
     out       dx, ax
@@ -7853,9 +7854,7 @@ Func0x46c2 ENDP
 ;inputs:
 ;bl = flags 0x80 = 8 lines, 0x40 = 7 lines
 ;
-;This function displays one of two images.
-;Both are the same image, just at slightly different aspect ratios / resolutions.
-DrawSplashImage PROC NEAR                    ;Offset 0x4760
+PatchCharacterSet PROC NEAR             ;Offset 0x4760
     push      ax
     push      cx
     push      di
@@ -7866,12 +7865,12 @@ DrawSplashImage PROC NEAR                    ;Offset 0x4760
     test      bl, 0c0h                  ;bl & 0c0h == 0 -> exit
     je        Exit                      ;Offset 0x4797
     mov       cx, 0007h                 ;7 * 2 pixels
-    mov       si, offset ImageW14       ;Offset 0x6d20
+    mov       si, offset Patch8x14      ;Offset 0x6d20
     test      bl, 80h                   ;bit 7 set -> Start copy of 7 lines
-    jne       NextScanline              ;Offset 0x477f
-    mov       si, offset ImageW16       ;Offset 0x7e30
+    jne       NextCharacter             ;Offset 0x477f
+    mov       si, offset Patch8x16      ;Offset 0x7e30
     mov       cl, 08h                   ;8 * 2 pixels
-NextScanline:                           ;Offset 0x477f
+NextCharacter:                          ;Offset 0x477f
     mov       ah, byte ptr cs:[si]      ;read byte
     inc       si                        ;point to next one
     or        ah, ah                    ;is ah zero? -> Exit
@@ -7884,7 +7883,7 @@ NextScanline:                           ;Offset 0x477f
     rep movsw es:[di], cs:[si]          ;move cx words
     sti                                 ;restore interrupts
     pop       cx                        ;restore count
-    jmp       NextScanline              ;Offset 0x477f
+    jmp       NextCharacter             ;Offset 0x477f
 Exit:                                   ;Offset 0x4797
     pop       es
     pop       si
@@ -7892,7 +7891,7 @@ Exit:                                   ;Offset 0x4797
     pop       cx
     pop       ax
     ret       
-DrawSplashImage ENDP
+PatchCharacterSet ENDP
 
 EnablePaletteBasedVideo PROC NEAR       ;Offset 0x479d
     push      dx                        ;preserve dx
@@ -9153,34 +9152,34 @@ Func0x5203 ENDP
 VESADDCReadEDID PROC NEAR               ;Offset 0x5287
     push bx
     push cx
-    call VESADDCInstallationCheck       ;Offset 0x5342 returns bx = 0x0102 if DDC, 0x0105 if ?, 0x0000 if not detected
+    call VESADDCInstallationCheck       ;Offset 0x5342 returns bx = 0x0102 if DDC2, 0x0105 if DDC1, 0x0000 if not detected
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
     mov  al, 55h                        ;CR55 - Extended RAMDAC Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
     or   ah, 04h                        ;bit 2 = 1 - Enable General Input Port Read
     out  dx, ax
-    test bl, 02h                        ;
-    jne  DDCFound                       ;Offset 0x52ba test if DDC
-    test bl, 01h                        ;0x0105 if ?,
-    je   Label0x52c0                    ;Offset 0x52c0
+    test bl, 02h                        ;test if DDC2
+    jne  DDC2Found                      ;Offset 0x52ba
+    test bl, 01h                        ;0x0105 test if DDC1
+    je   Done                           ;Offset 0x52c0
     call TurnOffScreen                  ;Offset 0x47ed
     mov  bx, 0ff06h
-    call Func0x5386                     ;Offset 0x5386
-    jne  Label0x52b5                    ;Offset 0x52b5
+    call DDC1FindHeader                 ;Offset 0x5386
+    jne  DDC1HeaderFound                ;Offset 0x52b5
     mov  bx, 0007h
-    call Func0x5386                     ;Offset 0x5386
-    je   Label0x52c0                    ;Offset 0x52c0
-Label0x52b5:                            ;Offset 0x52b5
-    call Func0x5452                     ;Offset 0x5452
-    jmp  Label0x52c0                    ;Offset 0x52c0
-DDCFound:                               ;Offset 0x52ba
+    call DDC1FindHeader                 ;Offset 0x5386
+    je   Done                           ;Offset 0x52c0
+DDC1HeaderFound:                        ;Offset 0x52b5
+    call DDC1ReadData                   ;Offset 0x5452
+    jmp  Done                           ;Offset 0x52c0
+DDC2Found:                              ;Offset 0x52ba
     mov  bx, 0080h                      ;Read from word 00, flags 0x80, bit 0 = 0 - read response into es:di
     call DDCSendCommand                 ;Offset 0x5519
-Label0x52c0:                            ;Offset 0x52c0
-    mov  dx, 03c4h                      ;port - 0x3c4
-    mov  al, 0dh
+Done:                                   ;Offset 0x52c0
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    mov  al, 0dh                        ;SRD - Extended Sequencer register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0fh
+    and  ah, 0fh                        ;set VSYNC and HSYNC to 00 - Normal operation
     out  dx, ax
     call TurnOnScreen                   ;Offset 0x4800
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
@@ -9188,7 +9187,7 @@ Label0x52c0:                            ;Offset 0x52c0
     call ReadDataWithIndexRegister      ;Offset 0x4640
     and  ah, 0fbh                       ;bit 2 = 0 - Disable General Input Port Read (RAMDAC reads enabled)
     out  dx, ax
-    xor  bh, 01h
+    xor  bh, 01h                        ;Toggle lower bit
     pop  cx
     pop  bx
     ret  
@@ -9199,7 +9198,7 @@ VESADDCReadVDIF PROC NEAR               ;Offset 0x52e1
     push bx
     push cx
     push dx
-    call VESADDCInstallationCheck       ;Offset 0x5342 returns bx = 0x0102 if DDC, 0x0105 if ?, 0x0000 if not detected
+    call VESADDCInstallationCheck       ;Offset 0x5342 returns bx = 0x0102 if DDC2, 0x0105 if DDC1, 0x0000 if not detected
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
     mov  al, 55h                        ;CR55 - Extended RAMDAC Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
@@ -9224,13 +9223,13 @@ VESADDCReadVDIF PROC NEAR               ;Offset 0x52e1
     call DDCReceiveByte                 ;Offset 0x5584
     cmp  bh, 44h
     jne  HeaderDataMismatch             ;Offset 0x532c
-    call DDCSend02313                   ;Offset 0x54b2
+    call DDCSendEnd                     ;Offset 0x54b2
     pop  bx                             ;Restore confusing value
     call DDCSendCommand                 ;Offset 0x5519
     jmp  Done                           ;Offset 0x5330
 HeaderDataMismatch:                     ;Offset 0x532c
     pop  bx
-    call DDCSend02313                   ;Offset 0x54b2
+    call DDCSendEnd                     ;Offset 0x54b2
 Done:                                   ;Offset 0x5330
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
     mov  al, 55h                        ;CR55 - Extended RAMDAC Control register
@@ -9245,8 +9244,8 @@ VESADDCReadVDIF ENDP
 
 ;outputs:
 ;bx = 
-;     0x0102 = DDC
-;     0x0105 = ?
+;     0x0102 = DDC2
+;     0x0105 = DDC1
 ;     0x0000 = Not found
 VESADDCInstallationCheck PROC NEAR      ;Offset 0x5342
     call      GetCRTControllerIndexRegister;Offset 0xfdd
@@ -9263,13 +9262,13 @@ VESADDCInstallationCheck PROC NEAR      ;Offset 0x5342
     call      DDCReceiveByte            ;Offset 0x5584
     cmp       bh, 0ffh
     jne       HeaderDataMismatch        ;Offset 0x536f
-    call      DDCSend02313              ;Offset 0x54b2
+    call      DDCSendEnd                ;Offset 0x54b2
     mov       bx, 0102h
     jmp       Done                      ;Offset 0x537a
 HeaderDataMismatch:                     ;Offset 0x536f
     mov       bx, 0000h
-    call      Func0x5480                ;Offset 0x5480
-    je        Done                      ;Offset 0x537a
+    call      TestIfDDC1                ;Offset 0x5480
+    je        Done                      ;Offset 0x537a - if no bit change was detected, there's nothing sending data
     mov       bx, 0105h
 Done:                                   ;Offset 0x537a
     mov       al, 55h                   ;CR55 - Extended RAMDAC Control register
@@ -9280,191 +9279,205 @@ Done:                                   ;Offset 0x537a
     ret       
 VESADDCInstallationCheck ENDP
 
-Func0x5386 PROC NEAR                    ;Offset 0x5386
-    mov       dx, 03c8h                 ;port - 0x3c8
-    call      Func0x5421                ;Offset 0x5421
-    mov       cx, 0480h
-Label0x538f:                            ;Offset 0x538f
+;inputs:
+;bh = expected value
+;bl = count of FF bytes
+DDC1FindHeader PROC NEAR                ;Offset 0x5386
+    mov       dx, DACWriteIndex         ;port - 0x3c8
+    call      DDC1ReadByte              ;Offset 0x5421
+    mov       cx, 0480h                 ;Loop for 1152 bits (144 bytes)
+FindByte:                               ;Offset 0x538f
     DB 03Ah, 0E7h                       ;cmp       ah, bh - masm encoding difference
-    je        Label0x53a4               ;Offset 0x53a4
-    shl       ah, 01h
-    call      Func0x5439                ;Offset 0x5439
-    in        al, dx
-    and       al, 01h
-    or        ah, al
-    loop      Label0x538f               ;Offset 0x538f
-    mov       bh, 01h
-    jmp       Label0x53e4               ;Offset 0x53e4
+    je        Found                     ;Offset 0x53a4
+    shl       ah, 01h                   ;shift out upper bit
+    call      SendVSyncPulse            ;Offset 0x5439
+    in        al, dx                    ;Read a bit
+    and       al, 01h                   ;mask off top 7 bits
+    or        ah, al                    ;set lowest bit
+    loop      FindByte                  ;Offset 0x538f
+    mov       bh, 01h                   ;set bh to 0x1
+    jmp       NotFound                  ;Offset 0x53e4 - byte wasn't found
     nop
-Label0x53a4:                            ;Offset 0x53a4
+Found:                                  ;Offset 0x53a4
     push      bx
-Label0x53a5:                            ;Offset 0x53a5
+FindFFByte:                             ;Offset 0x53a5
     dec       bl
-    je        Label0x53b7               ;Offset 0x53b7
-    call      Func0x5439                ;Offset 0x5439
-    call      Func0x5421                ;Offset 0x5421
+    je        FoundFFBytes              ;Offset 0x53b7
+    call      SendVSyncPulse            ;Offset 0x5439
+    call      DDC1ReadByte              ;Offset 0x5421
     cmp       ah, 0ffh
-    je        Label0x53a5               ;Offset 0x53a5
+    je        FindFFByte                ;Offset 0x53a5
     pop       bx
-    jmp       Label0x538f               ;Offset 0x538f
-Label0x53b7:                            ;Offset 0x53b7
+    jmp       FindByte                  ;Offset 0x538f
+FoundFFBytes:                           ;Offset 0x53b7
     pop       bx
-    call      Func0x5439                ;Offset 0x5439
-    call      Func0x5421                ;Offset 0x5421
+    call      SendVSyncPulse            ;Offset 0x5439
+    call      DDC1ReadByte              ;Offset 0x5421
     cmp       ah, 00h
-    jne       Label0x538f               ;Offset 0x538f
+    jne       FindByte                  ;Offset 0x538f
     cmp       bh, 00h
-    je        Label0x53e2               ;Offset 0x53e2
+    je        FoundHeader               ;Offset 0x53e2
     push      cx
-    mov       cx, 0438h
-Label0x53cc:                            ;Offset 0x53cc
-    call      Func0x5439                ;Offset 0x5439
-    loop      Label0x53cc               ;Offset 0x53cc
+    mov       cx, 0438h                 ;0x438 = 1080 bits = 135 bytes
+SkipBits:                               ;Offset 0x53cc
+    call      SendVSyncPulse            ;Offset 0x5439
+    loop      SkipBits                  ;Offset 0x53cc
     pop       cx
-    call      Func0x5421                ;Offset 0x5421
-    cmp       ah, 00h
-    jne       Label0x538f               ;Offset 0x538f
-    mov       cx, 0040h
-Label0x53dd:                            ;Offset 0x53dd
-    call      Func0x5439                ;Offset 0x5439
-    loop      Label0x53dd               ;Offset 0x53dd
-Label0x53e2:                            ;Offset 0x53e2
+    call      DDC1ReadByte              ;Offset 0x5421
+    cmp       ah, 00h                   ;
+    jne       FindByte                  ;Offset 0x538f didn't find the byte we were looking for
+    mov       cx, 0040h                 ;skip 0x40 = 64 bits = 8 bytes
+SkipMoreBits:                           ;Offset 0x53dd
+    call      SendVSyncPulse            ;Offset 0x5439
+    loop      SkipMoreBits              ;Offset 0x53dd
+FoundHeader:                            ;Offset 0x53e2
     mov       bh, 00h
-Label0x53e4:                            ;Offset 0x53e4
-    xor       bh, 01h
-    ret       
-Func0x5386 ENDP
+NotFound:                               ;Offset 0x53e4
+    xor       bh, 01h                   ;xor-ing 0x1 = 0, 0x0 = 1
+    ret
+DDC1FindHeader ENDP
 
-Func0x53e8 PROC NEAR                    ;Offset 0x53e8
+WaitForVSync PROC NEAR                  ;Offset 0x53e8
     push      dx
     push      cx
     push      ax
-    mov       dx, 03dah                 ;port - 0x3da
+    mov       dx, InputStatus1D         ;port - 0x3da
     mov       cx, 0ffffh
 Label0x53f1:                            ;Offset 0x53f1
     in        al, dx
-    and       al, 08h
-    jcxz      Label0x53fd               ;Offset 0x53fd
+    and       al, 08h                   ;bit 3 = 0 - Vertical Sync is in the Display mode
+    jcxz      Fail                      ;Offset 0x53fd
     loope     Label0x53f1               ;Offset 0x53f1
 Label0x53f8:                            ;Offset 0x53f8
     in        al, dx
-    and       al, 08h
+    and       al, 08h                   ;bit 3 = 1 - Vertical Sync is in the vertical retrace mode
     loopne    Label0x53f8               ;Offset 0x53f8
-Label0x53fd:                            ;Offset 0x53fd
+Fail:                                   ;Offset 0x53fd
     pop       ax
     pop       cx
     pop       dx
     ret
-Func0x53e8 ENDP
+WaitForVSync ENDP
 
-Func0x5401 PROC NEAR                    ;Offset 0x5401
+;inputs:
+;bh = 0x01 - VSYNC = 1, 0x00 = VSYNC = 0
+SetVSYNC PROC NEAR                    ;Offset 0x5401
     push      dx
     push      ax
-    mov       dx, 03c4h                 ;port - 0x3c4
-    mov       al, 0dh
+    mov       dx, SequenceIndex         ;port - 0x3c4
+    mov       al, 0dh                   ;SRD - Extended Sequencer register
     call      ReadDataWithIndexRegister ;Offset 0x4640
-    and       ah, 3fh
-    cmp       bh, 01h
-    jne       Label0x541a               ;Offset 0x541a
-    or        ah, 80h
+    and       ah, 3fh                   ;keep top 2 bits.
+    cmp       bh, 01h                   ;
+    jne       Vsync0                    ;Offset 0x541a
+    or        ah, 80h                   ;bits 7-6 = 10 - VSYNC = 1
     out       dx, ax
-    jmp       Label0x541e               ;Offset 0x541e
+    jmp       Done                      ;Offset 0x541e
     nop
-Label0x541a:                            ;Offset 0x541a
-    or        ah, 40h
+Vsync0:                                 ;Offset 0x541a
+    or        ah, 40h                   ;bits 7-6 = 01 - VSYNC = 0
     out       dx, ax
-Label0x541e:                            ;Offset 0x541e
+Done:                                   ;Offset 0x541e
     pop       ax
     pop       dx
     ret
-Func0x5401 ENDP
+SetVSYNC ENDP
 
-Func0x5421 PROC NEAR                    ;Offset 0x5421
+;inputs:
+;dx = RAMDAC port
+;outputs:
+;ah = byte read
+DDC1ReadByte PROC NEAR                  ;Offset 0x5421
     push      cx
     xor       ah, ah
     mov       cl, 08h
-Label0x5426:                            ;Offset 0x5426
+ReadBit:                                ;Offset 0x5426
     dec       cl
-    call      Func0x5439                ;Offset 0x5439
+    call      SendVSyncPulse            ;Offset 0x5439
     in        al, dx
-    and       al, 01h
-    shl       al, cl
-    or        ah, al
+    and       al, 01h                   ;mask off top 7 bits
+    shl       al, cl                    ;shift by which bit we're reading - 1
+    or        ah, al                    ;add to result
     cmp       cl, 00h
-    jne       Label0x5426               ;Offset 0x5426
+    jne       ReadBit                   ;Offset 0x5426
     pop       cx
     ret       
-Func0x5421 ENDP
+DDC1ReadByte ENDP
 
-Func0x5439 PROC NEAR                    ;Offset 0x5439
+SendVSyncPulse PROC NEAR                ;Offset 0x5439
     push      cx
     push      bx
     mov       bh, 01h
-    call      Func0x5401                ;Offset 0x5401
+    call      SetVSYNC                  ;Offset 0x5401
     mov       cx, 0113h
-Label0x5443:                            ;Offset 0x5443
-    loop      Label0x5443               ;Offset 0x5443
+Wait1:                                  ;Offset 0x5443 - time sensitive loop!
+    loop      Wait1                     ;Offset 0x5443
     mov       bh, 00h
-    call      Func0x5401                ;Offset 0x5401
+    call      SetVSYNC                  ;Offset 0x5401
     mov       cx, 0113h
-Label0x544d:                            ;Offset 0x544d
-    loop      Label0x544d               ;Offset 0x544d
+Wait2:                                  ;Offset 0x544d - time sensitive loop!
+    loop      Wait2                     ;Offset 0x544d
     pop       bx
     pop       cx
     ret       
-Func0x5439 ENDP
+SendVSyncPulse ENDP
 
-Func0x5452 PROC NEAR                    ;Offset 0x5452
+;inputs:
+;es:di points to output buffer
+;outputs:
+;bh = 1 - success, 0 - failure
+DDC1ReadData PROC NEAR                    ;Offset 0x5452
     pushf
     cld
     push      di
     xor       al, al
-    stosb
+    stosb                               ;Recreate 00 FF FF FF FF FF FF 00 header pattern
     not       al
     mov       cx, 06h
     rep stosb
     xor       al, al
     stosb
-    mov       bh, 0fah
-    mov       cx, 078h
-Label0x5467:                            ;Offset 0x5467
-    call      Func0x5439                ;Offset 0x5439
-    call      Func0x5421                ;Offset 0x5421
+    mov       bh, 0fah                  ;0xfa = 250
+    mov       cx, 078h                  ;0x78 = 120
+ReadBytes:                              ;Offset 0x5467
+    call      SendVSyncPulse            ;Offset 0x5439
+    call      DDC1ReadByte              ;Offset 0x5421
     mov       al, ah
     add       bh, ah
     stosb
-    loop      Label0x5467               ;Offset 0x5467
+    loop      ReadBytes                 ;Offset 0x5467
     pop       di
     popf      
     cmp       bh, 00h
     mov       bh, 00h
-    jne       Label0x547f               ;Offset 0x547f
+    jne       Done                      ;Offset 0x547f
     inc       bh
-Label0x547f:                            ;Offset 0x547f
+Done:                                   ;Offset 0x547f
     ret       
-Func0x5452 ENDP
+DDC1ReadData ENDP
 
-Func0x5480 PROC NEAR                    ;Offset 0x5480
+;Tests to see if there's continuous data being sent
+TestIfDDC1 PROC NEAR                    ;Offset 0x5480
     push      dx
-    mov       dx, 03c8h                 ;port - 0x3c8
-    call      Func0x53e8                ;Offset 0x53e8
+    mov       dx, DACWriteIndex         ;port - 0x3c8
+    call      WaitForVSync              ;Offset 0x53e8
+    in        al, dx                    ;read general io port
+    and       al, 01h                   ;keep the lowest bit (data)
+    mov       ah, al                    ;store in ah
+    mov       cx, 32h                   ;for 50 frames, loop
+ReadLoop:                               ;Offset 0x548f
+    call      WaitForVSync              ;Offset 0x53e8
     in        al, dx
-    and       al, 01h
-    mov       ah, al
-    mov       cx, 32h
-Label0x548f:                            ;Offset 0x548f
-    call      Func0x53e8                ;Offset 0x53e8
-    in        al, dx
-    and       al, 01h
+    and       al, 01h                   ;read bit again
     DB 03Ah, 0C4h                       ;cmp       al, ah - masm encoding difference
-    jne       Label0x549b               ;Offset 0x549b
-    loop      Label0x548f               ;Offset 0x548f
-Label0x549b:                            ;Offset 0x549b
+    jne       Done                      ;Offset 0x549b if they are different, we're done
+    loop      ReadLoop                  ;Offset 0x548f
+Done:                                   ;Offset 0x549b
     pop       dx
     ret
-Func0x5480 ENDP
+TestIfDDC1 ENDP
 
-DDCSend1320 PROC NEAR                   ;Offset 0x549d
+DDCSendBegin PROC NEAR                  ;Offset 0x549d
     mov       bl, 01h
     call      DDCSendData               ;Offset 0x54cc
     mov       bl, 03h
@@ -9474,9 +9487,9 @@ DDCSend1320 PROC NEAR                   ;Offset 0x549d
     mov       bl, 00h
     call      DDCSendData               ;Offset 0x54cc
     ret
-DDCSend1320 ENDP
+DDCSendBegin ENDP
 
-DDCSend02313 PROC NEAR                  ;Offset 0x54b2
+DDCSendEnd PROC NEAR                    ;Offset 0x54b2
     mov       bl, 00h
     call      DDCSendData               ;Offset 0x54cc
     mov       bl, 02h
@@ -9488,7 +9501,7 @@ DDCSend02313 PROC NEAR                  ;Offset 0x54b2
     mov       bl, 03h
     call      DDCSendData               ;Offset 0x54cc
     ret
-DDCSend02313 ENDP
+DDCSendEnd ENDP
 
 DDCSendData PROC NEAR                   ;Offset 0x54cc
     push      dx
@@ -9549,12 +9562,12 @@ DDCSendBit ENDP
 ;bh = 1 - success
 DDCSendCommand PROC NEAR                ;Offset 0x5519
     mov       cx, bx                    ;store word offset and flags
-    call      DDCSend1320               ;Offset 0x549d
+    call      DDCSendBegin              ;Offset 0x549d
     mov       bh, 0a0h                  ;Send device ID A0h - write operation
     call      DDCSendByte               ;Offset 0x5570
     mov       bx, cx                    ;Send upper byte of bx - word offset
     call      DDCSendByte               ;Offset 0x5570
-    call      DDCSend1320               ;Offset 0x549d
+    call      DDCSendBegin              ;Offset 0x549d
     mov       bh, 0a1h                  ;Send device ID A1h - read operation
     call      DDCSendByte               ;Offset 0x5570
     test      cx, 01h                   ;if lower bit set, don't read response.
@@ -9577,7 +9590,7 @@ ReceiveBytes:                           ;Offset 0x5541
     mov       al, bh
     stosb
     add       bh, ah
-    call      DDCSend02313              ;Offset 0x54b2
+    call      DDCSendEnd                ;Offset 0x54b2
     popf                                ;restore direction flag
     pop       di                        ;restore index
     pop       cx                        ;
@@ -10242,7 +10255,7 @@ Characters8x14          DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h,
                         DB 000h, 000h, 000h, 000h, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 000h, 000h, 000h, 000h
                         DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
 
-ImageW14                DB 01Dh, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh, 066h, 024h, 000h, 000h, 000h, 000h, 000h;Offset 0x6d20
+Patch8x14               DB 01Dh, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh, 066h, 024h, 000h, 000h, 000h, 000h, 000h;Offset 0x6d20
                         DB 022h, 000h, 063h, 063h, 063h, 022h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
                         DB 02Bh, 000h, 000h, 000h, 018h, 018h, 018h, 0FFh, 018h, 018h, 018h, 000h, 000h, 000h, 000h
                         DB 02Dh, 000h, 000h, 000h, 000h, 000h, 000h, 0FFh, 000h, 000h, 000h, 000h, 000h, 000h, 000h
@@ -10519,7 +10532,7 @@ Characters8x16          DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h,
                         DB 000h, 000h, 000h, 000h, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 07Ch, 000h, 000h, 000h, 000h, 000h
                         DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
 
-ImageW16                DB 01Dh, 000h, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh, 066h, 024h, 000h, 000h, 000h, 000h, 000h, 000h;Offset 0x7e30
+Patch8x16               DB 01Dh, 000h, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh, 066h, 024h, 000h, 000h, 000h, 000h, 000h, 000h;Offset 0x7e30
                         DB 022h, 000h, 063h, 063h, 063h, 022h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
                         DB 02Bh, 000h, 000h, 000h, 000h, 000h, 018h, 018h, 0FFh, 018h, 018h, 000h, 000h, 000h, 000h, 000h, 000h
                         DB 02Dh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 0FFh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
