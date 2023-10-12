@@ -34,3 +34,8 @@
 
 # Mac junk
 **/.DS_Store
+
+# Build folder
+*.bin
+*.zip
+*.err
