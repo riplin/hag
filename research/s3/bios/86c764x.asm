@@ -337,7 +337,7 @@ ORG 184H
                         DB 01h                      ;Offset 0x194
                         DB 05h                      ;Offset 0x195
                         DB 07h                      ;Offset 0x196
-Data0197                DB 09h                      ;Offset 0x197
+Data0197                DB 09h                      ;Offset 0x197 - bit 7 - Save / Restore functionality supported
                         DB 02h                      ;Offset 0x198
 Data0199                DB 80h                      ;Offset 0x199
 PCISystemConfig         DB 0D0h                     ;Offset 0x19a
@@ -414,6 +414,9 @@ PCIHeader:
 
                         DB 0B5h, 03h, 93h, 03h, 02h, 0FFh, 0FFh ;Unknown, Offset 0x220
 
+;inputs:
+;al = ?
+;bl = character generator ram bank
 Func0x227 PROC NEAR                     ;Offset 0x227
     push ax
     cmp  al, 55h
@@ -2158,14 +2161,16 @@ Label0x13c9:                            ;Offset 0x13c9
     ret
 Func0x1384 ENDP
 
-Func0x13e6 PROC NEAR                    ;Offset 0x13e6
-    mov   dx, 03c4h                     ;port - 0x3c4
-    in    al, dx
-    push  ax
+;inputs:
+;es:di: pointer to 19 SR registers, 64 CR registers (68 bytes), 1 advanced function control byte
+WriteSequencerCRTCAndAdvancedFunctionsRegisters PROC NEAR;Offset 0x13e6
+    mov   dx, SequenceIndex             ;port - 0x3c4
+    in    al, dx                        ;fetch index
+    push  ax                            ;store index
     call  UnlockExtendedSequencerRegisters;Offset 0xf92
-    mov   cx, 13h
-    mov   ah, 09h
-Label0x13f3:                            ;Offset 0x13f3
+    mov   cx, 13h                       ;loop 19 times
+    mov   ah, 09h                       ;SR9 - SR1B
+LoadSequenceRegisters:                  ;Offset 0x13f3
     mov   al, ah
     out   dx, al
     inc   dx
@@ -2173,16 +2178,16 @@ Label0x13f3:                            ;Offset 0x13f3
     out   dx, al
     dec   dx
     inc   ah
-    loop  Label0x13f3                   ;Offset 0x13f3
-    pop   ax
-    out   dx, al
+    loop  LoadSequenceRegisters         ;Offset 0x13f3
+    pop   ax                            ;restore index
+    out   dx, al                        ;set index back to what it was
     call  GetCRTControllerIndexRegister ;Offset 0xfdd
-    in    al, dx
-    push  ax
+    in    al, dx                        ;fetch index
+    push  ax                            ;store index
     call  UnlockExtendedCRTRegisters    ;Offset 0xfa6
-    mov   cx, 40h
-    mov   ah, 30h
-Label0x140e:                            ;Offset 0x140e
+    mov   cx, 40h                       ;64
+    mov   ah, 30h                       ;CR30 - CR6F
+LoadCRTContollerRegisters:              ;Offset 0x140e
     mov   al, ah
     out   dx, al
     inc   dx
@@ -2190,48 +2195,48 @@ Label0x140e:                            ;Offset 0x140e
     out   dx, al
     dec   dx
     inc   ah
-    cmp   ah, 4ah
-    je    Label0x1422                   ;Offset 0x1422
-    cmp   ah, 4bh
-    jne   Label0x1436                   ;Offset 0x1436
-Label0x1422:                            ;Offset 0x1422
-    mov   al, 45h
+    cmp   ah, 4ah                       ;Handle CR4A differently
+    je    HandleHWCursorColors          ;Offset 0x1422
+    cmp   ah, 4bh                       ;Handle CR4B differently
+    jne   ContinueCRTCLoop              ;
+HandleHWCursorColors:                   ;Offset 0x1422
+    mov   al, 45h                       ;CR45 - Hardware Graphics Cursor Mode register
     out   dx, al
     inc   dx
-    in    al, dx
-    dec   dx
-    mov   al, ah
-    out   dx, al
+    in    al, dx                        ;Read hardware graphics cursor mode to reset CR4A/CR4B index
+    dec   dx                            
+    mov   al, ah                        ;CR4A/CR4B - Hardware Graphics Cursor Foreground/Background Color Stack register
+    out   dx, al                        ;
     inc   dx
-    lodsb byte ptr es:[si]
+    lodsb byte ptr es:[si]              ;R
     out   dx, al
-    lodsb byte ptr es:[si]
+    lodsb byte ptr es:[si]              ;G
     out   dx, al
-    lodsb byte ptr es:[si]
+    lodsb byte ptr es:[si]              ;B
     out   dx, al
     dec   dx
-Label0x1436:                            ;Offset 0x1436
-    loop  Label0x140e                   ;Offset 0x140e
-    mov   al, 40h
+ContinueCRTCLoop:                       ;Offset 0x1436
+    loop  LoadCRTContollerRegisters     ;Offset 0x140e
+    mov   al, 40h                       ;CR40 - System Configuration Register
     call  ReadDataWithIndexRegister     ;Offset 0x4640
-    push  ax
-    push  dx
-    or    ah, 01h
+    push  ax                            ;Save CR40 content
+    push  dx                            ;Save CRTC index register
+    or    ah, 01h                       ;Enable enhanced features
     out   dx, ax
-    lodsb byte ptr es:[si]
-    mov   dx, 4ae8h                     ;port - 0x4ae8
+    lodsb byte ptr es:[si]              ;
+    mov   dx, AdvancedFunctionControl   ;port - 0x4ae8
     out   dx, al
-    mov   dx, 0aae8h                    ;port - 0xaae8
-    mov   ax, 0ffffh
+    mov   dx, BitplaneWriteMask         ;port - 0xaae8
+    mov   ax, 0ffffh                    ;Set write plane mask to update all planes
     out   dx, ax
     out   dx, ax
-    pop   dx
+    pop   dx                            ;Restore CRTC index register
     pop   ax
-    out   dx, ax
+    out   dx, ax                        ;Restore CR40 lock back to what it was
     pop   ax
-    out   dx, al
+    out   dx, al                        ;Restore CRTC Index back to what it was
     ret
-Func0x13e6 ENDP
+WriteSequencerCRTCAndAdvancedFunctionsRegisters ENDP
 
 ;inputs:
 ;none
@@ -2734,7 +2739,7 @@ ValidVideoMode:                         ;Offset 0x182c
 IsVESAMode:                             ;Offset 0x1850
     push cx
     mov  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
-    call Func0x1b05                     ;Offset 0x1b05
+    call SetTextModeBiosData            ;Offset 0x1b05
     and  byte ptr ds:[BDA_VideoModeOptions], 0f3h;Offset 0x487
     call Func0x1bac                     ;Offset 0x1bac
     call ApplyVideoParameters           ;Offset 0x4829
@@ -2754,16 +2759,16 @@ IsVESAMode:                             ;Offset 0x1850
     je   Label0x18b5                    ;Offset 0x18b5
 Label0x1885:                            ;Offset 0x1885
     call Func0x1c65                     ;Offset 0x1c65
-    mov  ax, 000bh
+    mov  ax, 000bh                      ;ax = sub index to mode list
     mov  bx, 0008h                      ;Fetch element 3 - Alphanumeric Character Set Override pointer
-    call FetchVideoParameterBlockElement;Offset 0x1bc9
+    call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
     jne  CharacterSetNotFound           ;Offset 0x1896
     call Func0x1bea                     ;Offset 0x1bea
 CharacterSetNotFound:                   ;Offset 0x1896
     mov  bx, 0010h                      ;Secondary Save Pointer Table pointer (VGA)
     call GetVideoParameterBlockElement  ;Offset 0x1d95
     je   Label0x18c9                    ;Offset 0x18c9
-    les  bx, es:[bx + 06h]
+    les  bx, es:[bx + 06h]              ;Pointer to Character font definition table
     mov  ax, es
     or   ax, bx
     je   Label0x18c9                    ;Offset 0x18c9
@@ -2774,11 +2779,11 @@ CharacterSetNotFound:                   ;Offset 0x1896
     jmp  Label0x18c9                    ;Offset 0x18c9
 Label0x18b5:                            ;Offset 0x18b5
     mov  word ptr ds:[BDA_CursorEndScanLine], 00h;Offset 0x460
-    mov  ax, 0007h
+    mov  ax, 0007h                      ;ax = sub index to mode list
     mov  bx, 000ch                      ;Fetch element 4 - Graphics Character Set Override pointer
-    call FetchVideoParameterBlockElement;Offset 0x1bc9
+    call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
     jne  Label0x18c9                    ;Offset 0x18c9
-    call Func0x1c8e                     ;Offset 0x1c8e
+    call SetGraphicsCharacterFont       ;Offset 0x1c8e
 Label0x18c9:                            ;Offset 0x18c9
     test byte ptr ds:[BDA_VideoModeOptions], 80h;Offset 0x487
     jne  Label0x18da                    ;Offset 0x18da
@@ -3030,7 +3035,7 @@ Exit:                                   ;Offset 0x1b04
     ret
 SetSystemAdapterVideoMode ENDP
 
-Func0x1b05 PROC NEAR                    ;Offset 0x1b05
+SetTextModeBiosData PROC NEAR           ;Offset 0x1b05
     mov       es, word ptr cs:[Data1488];Offset 0x1488
     mov       di, 010ch                 ;int 43 - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
     cmp       al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
@@ -3078,7 +3083,7 @@ CharMapSelected:                        ;Offset 0x1b4b
     mov       word ptr ds:[BDA_VideoBufferOffset], ax;Offset 0x44e
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     cmp       al, BDA_DM_80x25_Monochrome_Text;0x07
-    ja        Label0x1b86               ;Offset 0x1b86
+    ja        NotCGA                    ;Offset 0x1b86
     xor       ah, ah                    ;reset ah
     mov       di, ax                    ;di is display mode
     mov       al, 3fh                   ;CGA color palette
@@ -3097,7 +3102,7 @@ IsMode6:                                ;Offset 0x1b7b
     mov       byte ptr ds:[BDA_CGAColorPaletteMaskSetting], al;Offset 0x466
     mov       al, byte ptr cs:[di + Mode0_7ControlRegValue];Offset 0x1811
     mov       byte ptr ds:[BDA_CRTModeControlRegValue], al;Offset 0x465
-Label0x1b86:                            ;Offset 0x1b86
+NotCGA:                                 ;Offset 0x1b86
     call      GetCurrentVideoModeOverrideTable;Offset 0x4a44
     push      si
     lodsb     byte ptr es:[si]
@@ -3115,7 +3120,7 @@ Label0x1b86:                            ;Offset 0x1b86
     mov       word ptr ds:[BDA_CursorEndScanLine], ax;Offset 0x460
     pop       si
     ret       
-Func0x1b05 ENDP
+SetTextModeBiosData ENDP
 
 Func0x1bac PROC NEAR                    ;Offset 0x1bac
     push      ds
@@ -3141,15 +3146,21 @@ Func0x1bac ENDP
 
 ;inputs:
 ;bx is index into video parameter table
+;ax sub index into pulled table
 ;outputs:
 ;es:bx is new pointer - can be null
 ;al = 0xff if fail. unmodified otherwise.
-FetchVideoParameterBlockElement PROC NEAR;Offset 0x1bc9
+;
+;Fetches a pointer from the parameter block and then
+;adds ax to it. after that, it runs through until 0xff or until current video mode found
+;if found, it returns unmodified bx and al = video mode.
+;if not found, it returns unmodified bx and al = 0xff
+FetchCheckedVideoParameterBlockElement PROC NEAR;Offset 0x1bc9
     call GetVideoParameterBlockElement  ;Offset 0x1d95
     jne  Func0x1bd1                     ;Offset 0x1bd1
     or   al, 0ffh                       ;
     ret
-FetchVideoParameterBlockElement ENDP
+FetchCheckedVideoParameterBlockElement ENDP
 
 Func0x1bd1 PROC NEAR                    ;Offset 0x1bd1
     push bx
@@ -3171,17 +3182,17 @@ Label0x1be6:                            ;Offset 0x1be6
 Func0x1bd1 ENDP
 
 Func0x1bea PROC NEAR                    ;Offset 0x1bea
-    mov  al, byte ptr es:[bx + 0ah]
-    push ax
-    mov  cx, word ptr es:[bx + 02h]
-    mov  dx, word ptr es:[bx + 04h]
-    mov  si, word ptr es:[bx + 06h]
-    mov  ax, word ptr es:[bx + 08h]
-    mov  bx, word ptr es:[bx]
-    xchg bl, bh
-    and  bl, 3fh
-    mov  es, ax
-    mov  al, 10h
+    mov  al, byte ptr es:[bx + 0ah]     ;number of character rows displayed
+    push ax                             ;save that
+    mov  cx, word ptr es:[bx + 02h]     ;number of characters defined
+    mov  dx, word ptr es:[bx + 04h]     ;first character code in table
+    mov  si, word ptr es:[bx + 06h]     ;offset to character font
+    mov  ax, word ptr es:[bx + 08h]     ;segment to character font
+    mov  bx, word ptr es:[bx]           ;bl = length of each character, bh = character generator ram bank
+    xchg bl, bh                         ;bh = length of each character, bl = character generator ram bank
+    and  bl, 3fh                        ;keep the lowest 6 bits
+    mov  es, ax                         ;segment to character font
+    mov  al, 10h                        ;
     call Func0x2f71                     ;Offset 0x2f71
     pop  ax
     cmp  al, 0ffh
@@ -3248,23 +3259,23 @@ Label0x1c8a:                            ;Offset 0x1c8a
     ret   
 Func0x1c65 ENDP
 
-Func0x1c8e PROC NEAR                    ;Offset 0x1c8e
-    mov   al, byte ptr es:[bx]
+SetGraphicsCharacterFont PROC NEAR      ;Offset 0x1c8e
+    mov   al, byte ptr es:[bx]          ;number of displayed character rows
     dec   al
     mov   byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
-    mov   ax, word ptr es:[bx + 01h]
+    mov   ax, word ptr es:[bx + 01h]    ;length of character definition in bytes
     mov   word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
-    mov   ax, word ptr es:[bx + 03h]
-    mov   bx, word ptr es:[bx + 05h]
+    mov   ax, word ptr es:[bx + 03h]    ;offset of character font
+    mov   bx, word ptr es:[bx + 05h]    ;segment of character font
     mov   es, word ptr cs:[Data1488]    ;Offset 0x1488
-    mov   di, 010ch                     ;Offset 0x10c
+    mov   di, 010ch                     ;Offset 0x10c int 0x43 - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
     cli
     stosw word ptr es:[di]
     mov   ax, bx
     stosw word ptr es:[di]
     sti
     ret
-Func0x1c8e ENDP
+SetGraphicsCharacterFont ENDP
 
 Func0x1cb4 PROC NEAR                    ;Offset 0x1cb4
     mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
@@ -4030,18 +4041,26 @@ Func0x21d9 PROC NEAR                    ;Offset 0x21d9
     jmp       Func0x222c                ;Offset 0x222c
 Func0x21d9 ENDP
 
+;inputs:
+;ax = 
+;cx = 
+;dx = 
+;outputs:
+;di = 
+;destroys:
+;ax, si
 Func0x220b PROC NEAR                    ;Offset 0x220b
-    mov       si, dx
+    mov       si, dx                    ;save dx
     mov       di, ax
     and       di, 0ffh
     mov       al, ah
-    mul       byte ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
-    mul       word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    add       di, ax
+    mul       byte ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a   ax = al * number of screen columns
+    mul       word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485 dx:ax = ax * height of character
+    add       di, ax    ;di = offset + al * number of screen columns * height of character
     xor       ah, ah
     mov       al, byte ptr ds:[BDA_ActiveDisplayNumber];Offset 0x462
-    mul       word ptr ds:[BDA_VideoBufferSize];Offset 0x44c
-    add       di, ax
+    mul       word ptr ds:[BDA_VideoBufferSize];Offset 0x44c dx:ax = display number * video buffer size
+    add       di, ax    ;di = display number * video buffer size + (offset + al * number of screen columns * height of character)
     mov       dx, si
 Func0x220b ENDP
 
@@ -5919,10 +5938,10 @@ Func0x2f38 PROC NEAR                    ;Offset 0x2f38
     ret;done
 Func0x2f38 ENDP
 
-TextModeCharCallTable   DW offset Func0x2f8f;Offset 0x2f8f
+TextModeCharCallTable   DW offset SetTextFontAndAddressingMode;Offset 0x2f8f
                         DW offset Func0x2f92;Offset 0x2f92
                         DW offset Func0x2fa3;Offset 0x2fa3
-                        DW offset Func0x2fb4;Offset 0x2fb4
+                        DW offset SelectCharacterFont;Offset 0x2fb4
                         DW offset Func0x2fbd;Offset 0x2fbd
                         DW offset Func0x2f8e;Offset 0x2f8e
                         DW offset Func0x2f8e;Offset 0x2f8e
@@ -5952,17 +5971,16 @@ TextModeCharFunctions ENDP
 ;continue!
 
 ;inputs:
-;al = 
-;ah = 
-;bl = 
+;al = function flags
+;bl = character generator ram bank
 Func0x2f71 PROC NEAR                    ;Offset 0x2f71
     call Func0x227                      ;Offset 0x227 ands the top 2 bits off bl if al == 55
-    mov  ah, al
-    and  al, 0fh
-    and  ah, 30h
-    shr  ah, 01h
-    or   al, ah
-    cmp  al, 19h                        ;25
+    mov  ah, al                         ;ah is now ?
+    and  al, 0fh                        ;keep bits 3-0
+    and  ah, 30h                        ;keep bits 5-4
+    shr  ah, 01h                        ;now 4-3 
+    or   al, ah                         ;mush together. Effectively, bit 4 and 3 overlap. If either is set, or neither is set.
+    cmp  al, 19h                        ;if over 25, leave
     jae  Func0x2f8e                     ;Offset 0x2f8e
     mov  ah, 00h
     mov  di, ax
@@ -5974,9 +5992,9 @@ Func0x2f8e PROC NEAR                    ;Offset 0x2f8e
     ret
 Func0x2f8e ENDP
 
-Func0x2f8f PROC NEAR                    ;Offset 0x2f8f
-    jmp  Func0x46c2                     ;Offset 0x46c2
-Func0x2f8f ENDP
+SetTextFontAndAddressingMode PROC NEAR  ;Offset 0x2f8f
+    jmp  SetTextFontAndAddressing       ;Offset 0x46c2
+SetTextFontAndAddressingMode ENDP
 
 Func0x2f92 PROC NEAR                    ;Offset 0x2f92
     mov  si, offset Characters8x14      ;Offset 0x5f20
@@ -5985,7 +6003,7 @@ Func0x2f92 PROC NEAR                    ;Offset 0x2f92
     xor  dx, dx
     mov  cx, 0100h
     mov  bh, 0eh
-    jmp  Func0x46c2                     ;Offset 0x46c2
+    jmp  SetTextFontAndAddressing       ;Offset 0x46c2
 Func0x2f92 ENDP
 
 Func0x2fa3 PROC NEAR                    ;Offset 0x2fa3
@@ -5995,16 +6013,16 @@ Func0x2fa3 PROC NEAR                    ;Offset 0x2fa3
     xor  dx, dx
     mov  cx, 100h
     mov  bh, 08h
-    jmp  Func0x46c2                     ;Offset 0x46c2
+    jmp  SetTextFontAndAddressing       ;Offset 0x46c2
 Func0x2fa3 ENDP
 
-Func0x2fb4 PROC NEAR                    ;Offset 0x2fb4
-    mov  al, 03h
+SelectCharacterFont PROC NEAR           ;Offset 0x2fb4
+    mov  al, 03h                        ;SR3 - Character Font Select register
     mov  ah, bl
-    mov  dx, 03c4h                      ;Offset 0x3c4
+    mov  dx, SequenceIndex              ;port - 0x3c4
     out  dx, ax
     ret  
-Func0x2fb4 ENDP
+SelectCharacterFont ENDP
 
 Func0x2fbd PROC NEAR                    ;Offset 0x2fbd
     mov  si, offset Characters8x16      ;Offset 0x6e30
@@ -6013,11 +6031,11 @@ Func0x2fbd PROC NEAR                    ;Offset 0x2fbd
     xor  dx, dx
     mov  cx, 100h
     mov  bh, 10h
-    jmp  Func0x46c2                     ;Offset 0x46c2
+    jmp  SetTextFontAndAddressing       ;Offset 0x46c2
 Func0x2fbd ENDP
 
 Func0x2fce PROC NEAR                    ;Offset 0x2fce
-    call Func0x46c2                     ;Offset 0x46c2
+    call SetTextFontAndAddressing       ;Offset 0x46c2
     jmp  Func0x3010                     ;Offset 0x3010
     nop
 Func0x2fce ENDP
@@ -6029,7 +6047,7 @@ Func0x2fd4 PROC NEAR                    ;Offset 0x2fd4
     xor  dx, dx
     mov  cx, 100h
     mov  bh, 0eh
-    call Func0x46c2                     ;Offset 0x46c2
+    call SetTextFontAndAddressing       ;Offset 0x46c2
     jmp  Func0x3010                     ;Offset 0x3010
     nop
 Func0x2fd4 ENDP
@@ -6041,7 +6059,7 @@ Func0x2fe8 PROC NEAR                    ;Offset 0x2fe8
     xor  dx, dx
     mov  cx, 100h
     mov  bh, 08h
-    call Func0x46c2                     ;Offset 0x46c2
+    call SetTextFontAndAddressing       ;Offset 0x46c2
     jmp  Func0x3010                     ;Offset 0x3010
     nop
 Func0x2fe8 ENDP
@@ -6053,7 +6071,7 @@ Func0x2ffc PROC NEAR                    ;Offset 0x2ffc
     xor  dx, dx
     mov  cx, 100h
     mov  bh, 10h
-    call Func0x46c2                     ;Offset 0x46c2
+    call SetTextFontAndAddressing       ;Offset 0x46c2
     jmp  Func0x3010                     ;Offset 0x3010
     nop  
 Func0x2ffc ENDP
@@ -6954,43 +6972,50 @@ Label0x36fb:                            ;Offset 0x36fb
 FunctionalityAndStateInfo ENDP
 
 ;Offset 0x3707
-SaveRestoreCallTable    DW offset Func0x373d;Offset 0x373d
-                        DW offset Func0x3755;Offset 0x3755
-                        DW offset Func0x3887;Offset 0x3887
+SaveRestoreCallTable    DW offset FetchStateBufferSize;Offset 0x373d
+                        DW offset SaveVideoState;Offset 0x3755
+                        DW offset RestoreVideoState;Offset 0x3887
 
 SaveRestoreVideoState PROC NEAR         ;Offset 0x370d
     mov  byte ptr [bp + 10h], 00h
-    test byte ptr cs:[Data0197], 08h    ;Offset 0x197
-    je   Label0x371d                    ;Offset 0x371d
+    test byte ptr cs:[Data0197], 08h    ;Offset 0x197 - Save / Restore functionality supported
+    je   SaveRestoreNotSupported        ;Offset 0x371d
     mov  byte ptr [bp + 10h], 1ch
-Label0x371d:                            ;Offset 0x371d
-    cmp  al, 02h
-    ja   Func0x372c                     ;Offset 0x372c
+SaveRestoreNotSupported:                ;Offset 0x371d
+    cmp  al, 02h                        ;0 - 2 valid values
+    ja   EmptyFunction7                 ;Offset 0x372c
     xor  ah, ah
     shl  ax, 01h
     mov  si, ax
     jmp  word ptr cs:[si + offset SaveRestoreCallTable];Offset 0x3707
 SaveRestoreVideoState ENDP
 
-Func0x372c PROC NEAR                    ;Offset 0x372c
+EmptyFunction7 PROC NEAR                ;Offset 0x372c
     ret
-Func0x372c ENDP
+EmptyFunction7 ENDP
 
-Data372d DB 00h, 02h, 02h, 03h, 0Dh, 0Eh, 0Eh, 0Fh, 02h, 03h, 03h, 04h, 0Eh, 0Fh, 0Fh, 10h
+RequestedStateSizesIn64ByteBlocks DB 00h, 02h, 02h, 03h, 0Dh, 0Eh, 0Eh, 0Fh, 02h, 03h, 03h, 04h, 0Eh, 0Fh, 0Fh, 10h
 
-Func0x373d PROC NEAR                    ;Offset 0x373d
-    and   cl, 0fh
-    je    Func0x372c                    ;Offset 0x372c
-    mov   byte ptr [bp + 10h], 1ch
+;inputs:
+;cl = requested states
+;bit 0 - video hardware (see #00049)
+;bit 1 - BIOS data areas
+;bit 2 - color registers and DAC state (see #00050)
+;bit 3 - S3 extended video hardware
+
+FetchStateBufferSize PROC NEAR          ;Offset 0x373d
+    and   cl, 0fh                       ;0x00 - 0xf bound check
+    je    EmptyFunction7                ;Offset 0x372c - this jump is stupid when there's a perfectly good ret in this function already.
+    mov   byte ptr [bp + 10h], 1ch      ;Function supported
     mov   bl, cl
     xor   bh, bh
     xor   ah, ah
-    mov   al, byte ptr cs:[bx + offset Data372d];Offset 0x372d
+    mov   al, byte ptr cs:[bx + offset RequestedStateSizesIn64ByteBlocks];Offset 0x372d
     mov   word ptr [bp + 0eh], ax
     ret
-Func0x373d ENDP
+FetchStateBufferSize ENDP
 
-Func0x3755 PROC NEAR                    ;Offset 0x3755
+SaveVideoState PROC NEAR                ;Offset 0x3755
     mov   di, bx
     add   di, 20h
     test  cl, 01h
@@ -7155,9 +7180,9 @@ Label0x3875:                            ;Offset 0x3875
     call  Func0x1384                    ;Offset 0x1384
 Label0x3886:                            ;Offset 0x3886
     ret   
-Func0x3755 ENDP
+SaveVideoState ENDP
 
-Func0x3887 PROC NEAR                    ;Offset 0x3887
+RestoreVideoState PROC NEAR             ;Offset 0x3887
     test      cl, 01h
     jne       Label0x388f               ;Offset 0x388f
     jmp       Label0x3914               ;Offset 0x3914
@@ -7165,7 +7190,7 @@ Label0x388f:                            ;Offset 0x388f
     mov       si, word ptr es:[bx]
     push      ds
     mov       dx, GraphicsControllerIndex;port - 0x3ce
-    mov       ax, 05h
+    mov       ax, 0005h
     out       dx, ax
     mov       ax, 0406h
     out       dx, ax
@@ -7267,10 +7292,10 @@ Label0x3968:                            ;Offset 0x3968
     test      byte ptr ss:[bp + 0ch], 08h
     je        Label0x3975               ;Offset 0x3975
     mov       si, word ptr es:[bx + 06h]
-    call      Func0x13e6                ;Offset 0x13e6
+    call      WriteSequencerCRTCAndAdvancedFunctionsRegisters;Offset 0x13e6
 Label0x3975:                            ;Offset 0x3975
     ret       
-Func0x3887 ENDP
+RestoreVideoState ENDP
 
 Func0x3976 PROC NEAR                    ;Offset 0x3976
     mov       al, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
@@ -7360,6 +7385,24 @@ VideoOverridePointerTable STRUCT
     Reserved1 FARPointer <?,?>
     Reserved2 FARPointer <?,?>
 VideoOverridePointerTable ENDS
+
+;Alphanumeric Character Set Override
+;	00   byte    length of each character definition in bytes
+;	01   byte    character generator RAM bank
+;	02   word    count of characters defined
+;	04   word    first character code in table
+;	06   dword   pointer to character font definition table
+;	0A   byte    number of character rows displayed
+;	0B   nbytes  array of applicable video modes
+;	0B+n byte    FFh end of mode list marker
+
+
+;Graphics Character Set Override
+;	00   byte    count of displayed character rows
+;	01   word    length of each character definition in bytes
+;	03   dword   pointer to character font definition table
+;	07   nbytes  array of applicable video modes
+;	07+n byte    FFh end of mode list marker
 
 ;Offset 0x3a09
 VideoOverrideTable1 VideoOverridePointerTable < <offset VideoParameters, 0C000h>, <00000h, 00000h>, <00000h, 00000h>, <00000h, 00000h>, <offset SecondarySaveTable1, 0C000h>, <00000h, 00000h>, <00000h, 00000h> >
@@ -7941,7 +7984,13 @@ Func0x46b5 PROC NEAR
     ret  
 Func0x46b5 ENDP
 
-Func0x46c2 PROC NEAR                    ;Offset 0x46c2
+;inputs:
+;es:si pointer to character font
+;dx = offset into ?
+;cx = Number of characters
+;bh = character height
+;bl = character generator ram bank
+SetTextFontAndAddressing PROC NEAR      ;Offset 0x46c2
     push      ax
     push      bx
     push      cx
@@ -7957,7 +8006,7 @@ Func0x46c2 PROC NEAR                    ;Offset 0x46c2
     out       dx, ax                    ;bit 2 = 1 - Enable plane 3 (counting from 1)
     mov       ax, 0704h                 ;SR4 - Memory Mode Control register
     out       dx, ax                    ;bit 0 = 1 - Unknown, bit 1 = 1 - 256kb memory access, bit 2 = 1 - Sequential Addressing Mode
-    mov       dx, 03ceh                 ;port - 0x3ce - Graphics Controller Index register
+    mov       dx, GraphicsControllerIndex;port - 0x3ce - Graphics Controller Index register
     mov       ax, 0204h                 ;GR4 - Read Plane Select Register
     out       dx, ax                    ;bit 1 = 1 - Enable plane 2 (counting from 1) 
     mov       ax, 0005h                 ;GR5 - Graphics Controller Mode register
@@ -7981,29 +8030,29 @@ Func0x46c2 PROC NEAR                    ;Offset 0x46c2
     mov       ds, ax
     mov       ax, 0a000h                ;Video memory
     mov       es, ax
-    push      bx
-    and       bl, 07h
-    ror       bl, 01h
-    ror       bl, 01h
-    rcr       bl, 01h
-    jae       Label0x4701               ;Offset 0x4701
-    add       bl, 10h
-Label0x4701:                            ;Offset 0x4701
-    shl       bl, 01h
+    push      bx                        ;store bh = character height, bl = character generator ram bank
+    and       bl, 07h                   ;0x00           ;0x01           ;0x02           ;0x03           ;0x04           ;0x05           ;0x06           ;0x07
+    ror       bl, 01h                   ;0x00 - C = 0   ;0x80 - C = 1   ;0x01 - C = 0   ;0x81 - C = 1   ;0x02 - C = 0   ;0x82 - C = 1   ;0x03 - C = 0   ;0x83 - C = 1
+    ror       bl, 01h                   ;0x00 - C = 0   ;0x40 - C = 0   ;0x80 - C = 1   ;0xC0 - C = 1   ;0x01 - C = 0   ;0x41 - C = 0   ;0x81 - C = 1   ;0xC1 - C = 1
+    rcr       bl, 01h                   ;0x00 - C = 0   ;0x20 - C = 0   ;0x40 - C = 0   ;0x60 - C = 0   ;0x00 - C = 1   ;0x20 - C = 1   ;0xD0 - C = 1   ;0xE0 - C = 1
+    jae       NoCarry                   ;Offset 0x4701 - same as jnc = jump no carry
+    add       bl, 10h                   ;0x10           ;0x30           ;0x50           ;0x70           ;               ;               ;               ;
+NoCarry:                                ;Offset 0x4701
+    shl       bl, 01h                   ;0x20           ;0x60           ;0xA0           ;0xE0           ;0x00           ;0x40           ;0x80           ;0xC0
     mov       ah, bl
     mov       al, 00h
-    mov       di, ax
+    mov       di, ax                    ;di = 0x0000(4), 0x2000(0), 0x4000(5), 0x6000(1), 0x8000(6), 0xA000(2), 0xC000(7), 0xE000(3)
     or        dx, dx
-    je        Label0x4714               ;Offset 0x4714
+    je        NoOffset                  ;Offset 0x4714
     mov       ax, 20h
     mul       dx
     add       di, ax
-Label0x4714:                            ;Offset 0x4714
+NoOffset:                               ;Offset 0x4714
     mov       dx, 20h
-    sub       dl, bh
-    jcxz      Label0x472c               ;Offset 0x472c
+    sub       dl, bh                    ;32 - character height
+    jcxz      CopyDone                  ;Offset 0x472c - if no characters, bail
     call      CopyRect                  ;Offset 0xea9
-    jne       Label0x472c               ;Offset 0x472c
+    jne       CopyDone                  ;Offset 0x472c
 Label0x4720:                            ;Offset 0x4720
     push      cx
     mov       cl, bh
@@ -8012,25 +8061,44 @@ Label0x4720:                            ;Offset 0x4720
     add       di, dx
     pop       cx
     loop      Label0x4720               ;Offset 0x4720
-Label0x472c:                            ;Offset 0x472c
-    pop       bx
-    pop       es
-    pop       ds
+CopyDone:                               ;Offset 0x472c
+    pop       bx                        ;restore bh = character height, bl = character generator ram bank
+    pop       es                        ;
+    pop       ds                        ;
     call      PatchCharacterSet         ;Offset 0x4760
-    mov       dx, 03c4h
-    mov       ax, 0302h
+    mov       dx, SequenceIndex         ;port - 0x3c4
+    mov       ax, 0302h                 ;SR2 - Enable Write Plane register
+                                        ;bits 3-0 = 0011 - Enable writing to plane 0 and 1
     out       dx, ax
-    mov       ax, 0304h
+    mov       ax, 0304h                 ;SR4 - Memory Mode Control register
+                                        ;bit 0 = 1 - Unknown
+                                        ;bit 1 = 1 - Allows complete memory access to 256KiB
+                                        ;bit 2 = 0 - Sequential Addressing Mode.
+                                        ;            Enables the odd/even addressing mode.
+                                        ;            Even addresses access planes 0 and 2.
+                                        ;            Odd addresses access planes 1 and 3.
     out       dx, ax
-    mov       dx, 03ceh
-    mov       ax, 04h
+    mov       dx, GraphicsControllerIndex;port - 0x3ce
+    mov       ax, 0004h                 ;GR4 - Read Plane Select Register
+                                        ;bits 1-0 = 00 - Plane 0
     out       dx, ax
-    mov       ax, 1005h
+    mov       ax, 1005h                 ;GR5 - Graphics Controller Mode register
+                                        ;bit 4 = 1 - Odd/Even addressing mode. Even CPU addresses access plane 0 and 2,
+                                        ;            while odd CPU addresses access plane 1 and 3. This option is useful
+                                        ;            for emulating the CGA compatible mode. The value of this bit should be
+                                        ;            the inverted value programmed in bit 2 of the Sequencer Memory Mode register
+                                        ;            SR4. This bit affects reading of display memory by the CPU.
     out       dx, ax
-    mov       ax, 0a06h
+    mov       ax, 0a06h                 ;GR6 - Memory Map Mode Control register
+                                        ;bit 0 = 0 - Text mode display addressing selected
+                                        ;bit 1 = 1 - Chain odd / even planes
+                                        ;bits 3-2 = 10 - B0000 - B7FFF (32KiB)
     cmp       word ptr ds:[BDA_VideoBaseIOPort], 03b4h;Offset 0463h
     je        Label0x4755               ;Offset 0x4755
-    mov       ah, 0eh
+    mov       ah, 0eh                   ;GR6 - Memory Map Mode Control register
+                                        ;bit 0 = 0 - Text mode display addressing selected
+                                        ;bit 1 = 1 - Chain odd / even planes
+                                        ;bits 3-2 = 11 - B8000 - BFFFF (32KiB)
 Label0x4755:                            ;Offset 0x4755
     out       dx, ax
     call      EnablePaletteBasedVideo   ;Offset 0x479d
@@ -8041,7 +8109,7 @@ Label0x4755:                            ;Offset 0x4755
     pop       bx
     pop       ax
     ret
-Func0x46c2 ENDP
+SetTextFontAndAddressing ENDP
 
 ;inputs:
 ;bl = flags 0x80 = 8 lines, 0x40 = 7 lines
