@@ -140,6 +140,12 @@ BDA_CursorStartScanLine                 EQU 0461h;Byte 0x461
 BDA_ActiveDisplayNumber                 EQU 0462h;Byte 0x462
 BDA_VideoBaseIOPort                     EQU 0463h;Word 0x463
 BDA_CRTModeControlRegValue              EQU 0465h;Byte 0x465
+    BDA_CMCRV_Mode23Text                EQU 01h
+    BDA_CMCRV_Mode45Graphics            EQU 02h
+    BDA_CMCRV_Monochrome                EQU 04h
+    BDA_CMCRV_VideoEnabled              EQU 08h
+    BDA_CMCRV_GraphicsOperation         EQU 10h
+    BDA_CMCRV_Blinking                  EQU 20h
 BDA_CGAColorPaletteMaskSetting          EQU 0466h;Byte 0x466
 BDA_RowsOnScreen                        EQU 0484h;Byte 0x484
 BDA_PointHeightOfCharacterMatrix        EQU 0485h;Word 0x485
@@ -337,7 +343,7 @@ Data0199                DB 80h                      ;Offset 0x199
 PCISystemConfig         DB 0D0h                     ;Offset 0x19a
 VLBSystemConfig         DB 0F0h                     ;Offset 0x19b
 Data019C                DW 0780h                    ;Offset 0x19c
-Data019E                DB 0Ch                      ;Offset 0x19e
+Data019E                DB 0Ch                      ;Offset 0x19e - This is the size of... something
                         DB 20h                      ;Unknown, Offset 0x19f
                         DB 02h                      ;Unknown, Offset 0x1a0
 Data01A1                DW offset VideoOverrideTable1.VideoParameterTable.sgm
@@ -412,7 +418,7 @@ Func0x227 PROC NEAR                     ;Offset 0x227
     push ax
     cmp  al, 55h
     jne  Label0x22f                     ;Offset 0x22f
-    and  bl, 3fh
+    and  bl, 3fh                        ;if al == 55h, and off the top 2 bits from bl
 Label0x22f:                             ;Offset 0x22f
     pop  ax
 Func0x227 ENDP
@@ -843,200 +849,337 @@ Exit:                                   ;Offset 0x521
     ret  
 Func0x3d9 ENDP
 
-Struct0522 STRUCT
+VideoModeData STRUCT
     Mode BYTE ?
-    Value1 WORD ?
+    OverrideTable WORD ?
     Flags BYTE ?    ;bit 0 - Window granularity and size: 0 = 32k, 1 = 64k
     AdvancedFunction BYTE ?
     ColorMode BYTE ?
     MemoryMode BYTE ?
     Value7 WORD ?
-Struct0522 ENDS
+VideoModeData ENDS
 ;These are all VESA modes.
-Data0522                Struct0522 < INT10_00_54_T_132x43, offset Data0631, 003h, 002h, 000h, 002h, offset Data087C >
-                        Struct0522 < INT10_00_55_T_132x25, offset Data0671, 033h, 002h, 000h, 002h, offset Data0888 >
-                        Struct0522 < INT10_00_68_G_640x400x256C, offset Data06B1, 036h, 003h, 000h, 00Eh, offset Data0894 >
-                        Struct0522 < INT10_00_69_G_640x480x256C, offset Data06F1, 036h, 003h, 000h, 00Eh, offset Data08B8 >
-                        Struct0522 < INT10_00_6A_G_800x600x16C, offset Data0731, 002h, 006h, 000h, 006h, offset Data08E8 >
-                        Struct0522 < INT10_00_6B_G_800x600x256C, offset Data0731, 006h, 003h, 000h, 00Eh, offset Data0918 >
-                        Struct0522 < INT10_00_6C_1024x768x16C, offset Data0771, 032h, 006h, 000h, 006h, offset Data0948 >
-                        Struct0522 < INT10_00_6D_1024x768x256C, offset Data0771, 036h, 007h, 000h, 00Eh, offset Data0978 >
-                        Struct0522 < INT10_00_6E_1280x1024x16C, offset Data07B1, 032h, 006h, 000h, 006h, offset Data0984 >
-                        Struct0522 < INT10_00_6F_1280x1024x256C, offset Data07B1, 036h, 003h, 005h, 00Eh, offset Data09B4 >
-                        Struct0522 < INT10_00_70_640x480x32K, offset Data06F1, 036h, 003h, 001h, 00Eh, offset Data09D8 >
-                        Struct0522 < INT10_00_71_640x480x64K, offset Data06F1, 036h, 003h, 002h, 00Eh, offset Data09D8 >
-                        Struct0522 < INT10_00_72_640x480x16M, offset Data06F1, 036h, 003h, 004h, 00Eh, offset Data09FC >
-                        Struct0522 < INT10_00_73_800x600x32K, offset Data0731, 006h, 003h, 001h, 00Eh, offset Data0A20 >
-                        Struct0522 < INT10_00_74_800x600x64K, offset Data0731, 006h, 003h, 002h, 00Eh, offset Data0A20 >
-                        Struct0522 < INT10_00_75_800x600x16M, offset Data0731, 006h, 003h, 004h, 00Eh, offset Data0A44 >
-                        Struct0522 < INT10_00_76_1024x768x32K, offset Data0771, 036h, 003h, 001h, 00Eh, offset Data0A74 >
-                        Struct0522 < INT10_00_77_1024x768x64K, offset Data0771, 036h, 003h, 002h, 00Eh, offset Data0A74 >
-                        Struct0522 < INT10_00_78_1024x768x16M, offset Data0771, 036h, 003h, 004h, 00Eh, offset Data0A80 >
-                        Struct0522 < INT10_00_79_1280x1024x32K, offset Data07B1, 036h, 003h, 001h, 00Eh, offset Data0A8C >
-                        Struct0522 < INT10_00_7A_1280x1024x64K, offset Data07B1, 036h, 003h, 002h, 00Eh, offset Data0A8C >
-                        Struct0522 < INT10_00_7C_1600x1200x256, offset Data0831, 036h, 003h, 005h, 00Eh, offset Data0A98 >
-                        Struct0522 < INT10_00_49_640x480x256C, offset Data06F1, 036h, 003h, 000h, 00Eh, offset Data0ABC >
-                        Struct0522 < INT10_00_4A_800x600x16C, offset Data0731, 002h, 007h, 000h, 00Eh, offset Data0AEC >
-                        Struct0522 < INT10_00_4B_800x600x256C, offset Data0731, 006h, 007h, 000h, 00Eh, offset Data0B1C >
-                        Struct0522 < INT10_00_4C_1024x768x16C, offset Data0771, 032h, 007h, 000h, 00Eh, offset Data0B4C >
-                        Struct0522 < INT10_00_4D_1024x768x256C, offset Data0771, 036h, 007h, 000h, 00Eh, offset Data0B7C >
-                        Struct0522 < INT10_00_4E_1152x864x256C, offset Data07F1, 036h, 007h, 000h, 00Eh, offset Data0B88 >
-                        Struct0522 < INT10_00_4F_1280x1024x16C, offset Data07B1, 032h, 007h, 005h, 00Eh, offset Data0BB8 >
-                        Struct0522 < INT10_00_52_640x400x16M, offset Data06B1, 036h, 003h, 004h, 00Eh, offset Data0BC4 >
+VESAVideoModeData       VideoModeData < INT10_00_54_T_132x43, offset VESAVideoParameters132x43, 003h, 002h, 000h, 002h, offset Data087C >
+                        VideoModeData < INT10_00_55_T_132x25, offset VESAVideoParameters132x25, 033h, 002h, 000h, 002h, offset Data0888 >
+                        VideoModeData < INT10_00_68_G_640x400x256C, offset VESAVideoParameters640x400, 036h, 003h, 000h, 00Eh, offset Data0894 >
+                        VideoModeData < INT10_00_69_G_640x480x256C, offset VESAVideoParameters640x480, 036h, 003h, 000h, 00Eh, offset Data08B8 >
+                        VideoModeData < INT10_00_6A_G_800x600x16C, offset VESAVideoParameters800x600, 002h, 006h, 000h, 006h, offset Data08E8 >
+                        VideoModeData < INT10_00_6B_G_800x600x256C, offset VESAVideoParameters800x600, 006h, 003h, 000h, 00Eh, offset Data0918 >
+                        VideoModeData < INT10_00_6C_1024x768x16C, offset VESAVideoParameters1024x768, 032h, 006h, 000h, 006h, offset Data0948 >
+                        VideoModeData < INT10_00_6D_1024x768x256C, offset VESAVideoParameters1024x768, 036h, 007h, 000h, 00Eh, offset Data0978 >
+                        VideoModeData < INT10_00_6E_1280x1024x16C, offset VESAVideoParameters1280x1024, 032h, 006h, 000h, 006h, offset Data0984 >
+                        VideoModeData < INT10_00_6F_1280x1024x256C, offset VESAVideoParameters1280x1024, 036h, 003h, 005h, 00Eh, offset Data09B4 >
+                        VideoModeData < INT10_00_70_640x480x32K, offset VESAVideoParameters640x480, 036h, 003h, 001h, 00Eh, offset Data09D8 >
+                        VideoModeData < INT10_00_71_640x480x64K, offset VESAVideoParameters640x480, 036h, 003h, 002h, 00Eh, offset Data09D8 >
+                        VideoModeData < INT10_00_72_640x480x16M, offset VESAVideoParameters640x480, 036h, 003h, 004h, 00Eh, offset Data09FC >
+                        VideoModeData < INT10_00_73_800x600x32K, offset VESAVideoParameters800x600, 006h, 003h, 001h, 00Eh, offset Data0A20 >
+                        VideoModeData < INT10_00_74_800x600x64K, offset VESAVideoParameters800x600, 006h, 003h, 002h, 00Eh, offset Data0A20 >
+                        VideoModeData < INT10_00_75_800x600x16M, offset VESAVideoParameters800x600, 006h, 003h, 004h, 00Eh, offset Data0A44 >
+                        VideoModeData < INT10_00_76_1024x768x32K, offset VESAVideoParameters1024x768, 036h, 003h, 001h, 00Eh, offset Data0A74 >
+                        VideoModeData < INT10_00_77_1024x768x64K, offset VESAVideoParameters1024x768, 036h, 003h, 002h, 00Eh, offset Data0A74 >
+                        VideoModeData < INT10_00_78_1024x768x16M, offset VESAVideoParameters1024x768, 036h, 003h, 004h, 00Eh, offset Data0A80 >
+                        VideoModeData < INT10_00_79_1280x1024x32K, offset VESAVideoParameters1280x1024, 036h, 003h, 001h, 00Eh, offset Data0A8C >
+                        VideoModeData < INT10_00_7A_1280x1024x64K, offset VESAVideoParameters1280x1024, 036h, 003h, 002h, 00Eh, offset Data0A8C >
+                        VideoModeData < INT10_00_7C_1600x1200x256, offset VESAVideoParameters1600x1200, 036h, 003h, 005h, 00Eh, offset Data0A98 >
+                        VideoModeData < INT10_00_49_640x480x256C, offset VESAVideoParameters640x480, 036h, 003h, 000h, 00Eh, offset Data0ABC >
+                        VideoModeData < INT10_00_4A_800x600x16C, offset VESAVideoParameters800x600, 002h, 007h, 000h, 00Eh, offset Data0AEC >
+                        VideoModeData < INT10_00_4B_800x600x256C, offset VESAVideoParameters800x600, 006h, 007h, 000h, 00Eh, offset Data0B1C >
+                        VideoModeData < INT10_00_4C_1024x768x16C, offset VESAVideoParameters1024x768, 032h, 007h, 000h, 00Eh, offset Data0B4C >
+                        VideoModeData < INT10_00_4D_1024x768x256C, offset VESAVideoParameters1024x768, 036h, 007h, 000h, 00Eh, offset Data0B7C >
+                        VideoModeData < INT10_00_4E_1152x864x256C, offset VESAVideoParameters1152x864, 036h, 007h, 000h, 00Eh, offset Data0B88 >
+                        VideoModeData < INT10_00_4F_1280x1024x16C, offset VESAVideoParameters1280x1024, 032h, 007h, 005h, 00Eh, offset Data0BB8 >
+                        VideoModeData < INT10_00_52_640x400x16M, offset VESAVideoParameters640x400, 036h, 003h, 004h, 00Eh, offset Data0BC4 >
                         DB 0FFh;Terminate
 
-Data0631                DB 084h, 02Ah, 008h, 000h, 040h, 001h, 003h, 000h, 002h, 06Fh, 09Ah, 083h, 084h, 09Ch, 088h, 01Ah
-                        DB 0BFh, 01Fh, 000h, 047h, 006h, 007h, 000h, 000h, 000h, 000h, 083h, 085h, 058h, 042h, 01Fh, 063h
-                        DB 0BAh, 0A3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
-                        DB 03Dh, 03Eh, 03Fh, 00Ch, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 090h, 00Eh, 000h, 0FFh
-Data0671                DB 084h, 018h, 010h, 000h, 020h, 001h, 003h, 000h, 002h, 06Fh, 09Ah, 083h, 084h, 09Ch, 088h, 01Ah
-                        DB 0BFh, 01Fh, 000h, 04Fh, 00Dh, 00Eh, 000h, 000h, 000h, 000h, 09Ch, 08Eh, 08Fh, 042h, 01Fh, 096h
-                        DB 0B9h, 0A3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
-                        DB 03Dh, 03Eh, 03Fh, 00Ch, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 090h, 00Eh, 000h, 0FFh
-Data06B1                DB 050h, 018h, 010h, 000h, 010h, 001h, 00Fh, 000h, 00Eh, 0EFh, 05Fh, 04Fh, 050h, 082h, 054h, 080h
-                        DB 0BFh, 01Fh, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 09Ch, 08Eh, 08Fh, 050h, 040h, 096h
-                        DB 0B9h, 0A3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 010h, 011h, 012h, 013h, 014h
-                        DB 015h, 016h, 017h, 041h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
-Data06F1                DB 050h, 01Dh, 010h, 000h, 010h, 001h, 00Fh, 000h, 00Eh, 0EFh, 05Fh, 04Fh, 050h, 002h, 053h, 09Fh
-                        DB 00Bh, 03Eh, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 0EAh, 08Ch, 0DFh, 080h, 060h, 0E7h
-                        DB 004h, 0ABh, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 010h, 011h, 012h, 013h, 014h
-                        DB 015h, 016h, 017h, 041h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
-Data0731                DB 064h, 04Ah, 008h, 000h, 0FAh, 001h, 00Fh, 000h, 00Eh, 0EFh, 07Bh, 063h, 063h, 080h, 067h, 010h
-                        DB 06Fh, 0F0h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 058h, 08Ah, 057h, 080h, 000h, 057h
-                        DB 000h, 0E3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
-                        DB 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
-Data0771                DB 080h, 02Fh, 010h, 0FFh, 0FFh, 001h, 00Fh, 000h, 006h, 0EFh, 09Ah, 07Fh, 07Fh, 09Dh, 081h, 017h
-                        DB 097h, 01Fh, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 080h, 084h, 07Fh, 080h, 000h, 080h
-                        DB 000h, 0E3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
-                        DB 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
-Data07B1                DB 0A0h, 03Fh, 010h, 000h, 001h, 001h, 00Fh, 000h, 006h, 0EFh, 0C0h, 09Fh, 0A0h, 083h, 0A4h, 019h
-                        DB 018h, 0B2h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 001h, 085h, 0FFh, 080h, 000h, 000h
-                        DB 018h, 0E3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
-                        DB 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
-Data07F1                DB 090h, 036h, 010h, 0FFh, 0FFh, 001h, 00Fh, 000h, 006h, 0EFh, 0B1h, 08Fh, 090h, 014h, 093h, 09Fh
-                        DB 09Ah, 0FFh, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 070h, 083h, 05Fh, 090h, 060h, 06Fh
-                        DB 08Dh, 0EBh, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
-                        DB 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
-Data0831                DB 0C8h, 04Bh, 010h, 0FFh, 0FFh, 001h, 00Fh, 000h, 006h, 02Fh, 001h, 0C7h, 0C8h, 081h, 0D3h, 013h
-                        DB 074h, 0E0h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 058h, 000h, 057h, 064h, 000h, 058h
-                        DB 000h, 0A3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
-                        DB 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
+VideoParametersTable STRUCT ;Struct size = 64 bytes
+    DisplayedCharacterColumns BYTE ?
+    DisplayedRowsMinus1 BYTE ?
+    CharacterMatrixHeightPoints BYTE ?
+    VideoBufferSize WORD ?
+    SequencerRegisters DWORD ?          ;SR1-SR4
+    MiscOutputRegisterValues BYTE ?
+    CRTCRegisters BYTE 25 DUP (?)       ;CR0-CR18
+    AttributeControllerRegs BYTE 20 DUP (?)
+    GraphicsControllerRegs BYTE 9 DUP (?) ;GR0-GR8
+VideoParametersTable ENDS
+
+VESAVideoParameters132x43 VideoParametersTable <>
+VESAVideoParameters132x25 VideoParametersTable <>
+VESAVideoParameters640x400 VideoParametersTable <>
+VESAVideoParameters640x480 VideoParametersTable <>
+VESAVideoParameters800x600 VideoParametersTable <>
+VESAVideoParameters1024x768 VideoParametersTable <>
+VESAVideoParameters1280x1024 VideoParametersTable <>
+VESAVideoParameters1152x864 VideoParametersTable <>
+VESAVideoParameters1600x1200 VideoParametersTable <>
+
+ORG offset VESAVideoParameters132x43
+                        DB 084h, 02Ah, 008h, 000h, 040h, 001h, 003h, 000h, 002h, 06Fh
+Data063B                DB 09Ah, 083h, 084h, 09Ch, 088h, 01Ah, 0BFh, 01Fh, 000h, 047h, 006h, 007h, 000h, 000h, 000h, 000h, 083h, 085h, 058h, 042h, 01Fh, 063h, 0BAh, 0A3h, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 00Ch, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 090h, 00Eh, 000h, 0FFh
+
+ORG offset VESAVideoParameters132x25
+                        DB 084h, 018h, 010h, 000h, 020h, 001h, 003h, 000h, 002h, 06Fh
+Data067B                DB 09Ah, 083h, 084h, 09Ch, 088h, 01Ah, 0BFh, 01Fh, 000h, 04Fh, 00Dh, 00Eh, 000h, 000h, 000h, 000h, 09Ch, 08Eh, 08Fh, 042h, 01Fh, 096h, 0B9h, 0A3h, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 00Ch, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 090h, 00Eh, 000h, 0FFh
+
+ORG offset VESAVideoParameters640x400
+                        DB 050h, 018h, 010h, 000h, 010h, 001h, 00Fh, 000h, 00Eh, 0EFh
+Data06BB                DB 05Fh, 04Fh, 050h, 082h, 054h, 080h, 0BFh, 01Fh, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 09Ch, 08Eh, 08Fh, 050h, 040h, 096h, 0B9h, 0A3h, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 010h, 011h, 012h, 013h, 014h, 015h, 016h, 017h, 041h, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
+
+ORG offset VESAVideoParameters640x480
+                        DB 050h, 01Dh, 010h, 000h, 010h, 001h, 00Fh, 000h, 00Eh, 0EFh
+Data06FB                DB 05Fh, 04Fh, 050h, 002h, 053h, 09Fh, 00Bh, 03Eh, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 0EAh, 08Ch, 0DFh, 080h, 060h, 0E7h, 004h, 0ABh, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 010h, 011h, 012h, 013h, 014h, 015h, 016h, 017h, 041h, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
+
+ORG offset VESAVideoParameters800x600
+                        DB 064h, 04Ah, 008h, 000h, 0FAh, 001h, 00Fh, 000h, 00Eh, 0EFh
+Data073B                DB 07Bh, 063h, 063h, 080h, 067h, 010h, 06Fh, 0F0h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 058h, 08Ah, 057h, 080h, 000h, 057h, 000h, 0E3h, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
+
+ORG offset VESAVideoParameters1024x768
+                        DB 080h, 02Fh, 010h, 0FFh, 0FFh, 001h, 00Fh, 000h, 006h, 0EFh
+Data077B                DB 09Ah, 07Fh, 07Fh, 09Dh, 081h, 017h, 097h, 01Fh, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 080h, 084h, 07Fh, 080h, 000h, 080h, 000h, 0E3h, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
+
+ORG offset VESAVideoParameters1280x1024
+                        DB 0A0h, 03Fh, 010h, 000h, 001h, 001h, 00Fh, 000h, 006h, 0EFh
+Data07BB                DB 0C0h, 09Fh, 0A0h, 083h, 0A4h, 019h, 018h, 0B2h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 001h, 085h, 0FFh, 080h, 000h, 000h, 018h, 0E3h, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
+
+ORG offset VESAVideoParameters1152x864
+                        DB 090h, 036h, 010h, 0FFh, 0FFh, 001h, 00Fh, 000h, 006h, 0EFh
+Data07FB                DB 0B1h, 08Fh, 090h, 014h, 093h, 09Fh, 09Ah, 0FFh, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 070h, 083h, 05Fh, 090h, 060h, 06Fh, 08Dh, 0EBh, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
+
+ORG offset VESAVideoParameters1600x1200
+                        DB 0C8h, 04Bh, 010h, 0FFh, 0FFh, 001h, 00Fh, 000h, 006h, 02Fh
+Data083B                DB 001h, 0C7h, 0C8h, 081h, 0D3h, 013h, 074h, 0E0h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 058h, 000h, 057h, 064h, 000h, 058h, 000h, 0A3h, 0FFh
+                        DB 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
 
 ;Offset 0x871
-                        DB 0FFh, 042h, 050h, 054h, 054h, 060h, 060h, 05Dh, 05Eh, 067h, 0FFh
+                        DB 0FFh;The 0xff from the previous data together with this FF is an invalid pointer
+                        DB 042h, 050h, 054h, 054h, 060h, 060h, 05Dh, 05Eh, 067h, 0FFh
+Data087C                DW offset Data063B
+                        DB 080h, 002h, 000h, 008h, 008h, 038h, 038h, 000h, 000h, 000h ;Offset 0x87c
+Data0888                DW offset Data067B
+                        DB 080h, 002h, 000h, 008h, 008h, 038h, 038h, 000h, 000h, 000h ;Offset 0x888
+Data0894                DW offset Data06BB
+                        DB 080h, 000h, 040h, 0F8h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x894
+                        DW offset Data06FB
+                        DB 080h, 000h, 040h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8a0
+                        DW offset Data0BD0
+                        DB 001h, 00Bh, 040h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8ac
+Data08B8                DW offset Data0BE9
+                        DB 002h, 00Bh, 040h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8b8
+                        DW offset Data073B
+                        DB 080h, 006h, 000h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8c4
+                        DW offset Data0C02
+                        DB 001h, 002h, 002h, 070h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x8d0
+                        DW offset Data0C1B
+                        DB 002h, 004h, 002h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x8dc
+Data08E8                DW offset Data0C34
+                        DB 003h, 010h, 002h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x8e8
+                        DW offset Data073B
+                        DB 080h, 006h, 080h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8f4
+                        DW offset Data0C02
+                        DB 001h, 002h, 082h, 070h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x900
+                        DW offset Data0C1B
+                        DB 002h, 004h, 082h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x90c 
+Data0918                DW offset Data0C34
+                        DB 003h, 010h, 082h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x918
+                        DW offset Data077B
+                        DB 080h, 027h, 000h, 060h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x924
+                        DW offset Data0C4D
+                        DB 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x930
+                        DW offset Data0C66
+                        DB 003h, 00Eh, 000h, 010h, 0C8h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x93c
+Data0948                DW offset Data0C7F
+                        DB 004h, 00Ah, 002h, 010h, 0C0h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x948
+                        DW offset Data077B
+                        DB 080h, 027h, 000h, 060h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x954
+                        DW offset Data0C4D
+                        DB 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x960
+                        DW offset Data0C66
+                        DB 003h, 00Eh, 000h, 010h, 048h, 0FFh, 048h, 000h, 000h, 001h ;Offset 0x96c
+Data0978                DW offset Data0C7F
+                        DB 004h, 00Ah, 002h, 010h, 048h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x978
+Data0984                DW offset Data07BB
+                        DB 082h, 02Eh, 000h, 038h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x984
+                        DW offset Data07BB
+                        DB 082h, 02Eh, 0C0h, 050h, 050h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x990
+                        DW offset Data0C98
+                        DB 004h, 00Ch, 0C0h, 028h, 028h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0x99c
+                        DW offset Data0CB1
+                        DB 005h, 009h, 0C0h, 020h, 020h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0x9a8
+Data09B4                DW offset Data0CCA
+                        DB 006h, 008h, 0C2h, 018h, 018h, 0FFh, 0FFh, 000h, 015h, 010h ;Offset 0x9b4
+                        DW offset Data0CE3
+                        DB 080h, 000h, 050h, 030h, 058h, 0FFh, 0FFh, 000h, 000h, 050h ;Offset 0x9c0
+                        DW offset Data0CFC
+                        DB 001h, 00Bh, 050h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 050h ;Offset 0x9cc
+Data09D8                DW offset Data0D15
+                        DB 002h, 00Bh, 050h, 028h, 0F8h, 0FFh, 0FFh, 000h, 000h, 050h ;Offset 0x9d8
+                        DW offset Data06FB
+                        DB 080h, 000h, 070h, 038h, 038h, 01Ch, 01Ch, 000h, 000h, 0D0h ;Offset 0x9e4
+                        DW offset Data0BD0
+                        DB 001h, 00Bh, 070h, 030h, 030h, 019h, 019h, 000h, 000h, 0D0h ;Offset 0x9f0
+Data09FC                DW offset Data0BE9
+                        DB 002h, 00Bh, 070h, 030h, 030h, 0FFh, 0FFh, 000h, 000h, 0D0h ;Offset 0x9fc
+                        DW offset Data0D2E
+                        DB 081h, 002h, 092h, 018h, 048h, 0FFh, 0FFh, 001h, 000h, 050h ;Offset 0xa08
+                        DW offset Data0D47
+                        DB 002h, 004h, 092h, 000h, 038h, 0FFh, 0FFh, 001h, 000h, 050h ;Offset 0xa14
+Data0A20                DW offset Data0D60
+                        DB 003h, 010h, 092h, 000h, 038h, 0FFh, 0FFh, 001h, 000h, 050h ;Offset 0xa20
+                        DW offset Data0C02
+                        DB 081h, 002h, 0B2h, 010h, 010h, 0FFh, 0FFh, 008h, 000h, 0D0h ;Offset 0xa2c
+                        DW offset Data0C1B
+                        DB 002h, 004h, 0B2h, 000h, 000h, 0FFh, 0FFh, 008h, 000h, 0D0h ;Offset 0xa38
+Data0A44                DW offset Data0C34
+                        DB 003h, 010h, 0B2h, 000h, 000h, 0FFh, 0FFh, 008h, 000h, 0D0h ;Offset 0xa44
+                        DW offset Data0D79
+                        DB 080h, 027h, 010h, 028h, 028h, 0FFh, 0FFh, 075h, 000h, 050h ;Offset 0xa50
+                        DW offset Data0D92
+                        DB 002h, 00Dh, 010h, 018h, 018h, 0FFh, 0FFh, 07Dh, 000h, 050h ;Offset 0xa5c
+                        DW offset Data0DAB
+                        DB 003h, 00Eh, 010h, 010h, 010h, 0FFh, 0FFh, 07Dh, 000h, 050h ;Offset 0xa68
+Data0A74                DW offset Data0DC4
+                        DB 004h, 00Ah, 012h, 010h, 010h, 0FFh, 0FFh, 05Dh, 000h, 050h ;Offset 0xa74
+Data0A80                DW offset Data077B
+                        DB 080h, 027h, 030h, 038h, 038h, 0FFh, 0FFh, 000h, 000h, 0D0h ;Offset 0xa80
+Data0A8C                DW offset Data0DDD
+                        DB 082h, 02Ah, 0D0h, 010h, 010h, 0FFh, 0FFh, 07Fh, 000h, 050h ;Offset 0xa8c
+Data0A98                DW offset Data083B
+                        DB 080h, 029h, 081h, 000h, 000h, 0FFh, 0FFh, 001h, 000h, 010h ;Offset 0xa98
+                        DW offset Data06FB
+                        DB 080h, 000h, 000h, 088h, 088h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xaa4
+                        DW offset Data0BD0
+                        DB 001h, 00Bh, 000h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xab0
+Data0ABC                DW offset Data0BE9
+                        DB 002h, 00Bh, 000h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xabc
+                        DW offset Data073B
+                        DB 080h, 006h, 000h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xac8
+                        DW offset Data0C02
+                        DB 001h, 002h, 002h, 070h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xad4
+                        DW offset Data0C1B
+                        DB 002h, 004h, 002h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xae0
+Data0AEC                DW offset Data0C34
+                        DB 003h, 010h, 002h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xaec
+                        DW offset Data073B
+                        DB 080h, 006h, 000h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xaf8
+                        DW offset Data0C02
+                        DB 001h, 002h, 000h, 070h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb04
+                        DW offset Data0C1B
+                        DB 002h, 004h, 000h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb10
+Data0B1C                DW offset Data0C34
+                        DB 003h, 010h, 000h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb1c
+                        DW offset Data077B
+                        DB 080h, 027h, 000h, 060h, 0C0h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb28
+                        DW offset Data0C4D
+                        DB 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb34
+                        DW offset Data0C66
+                        DB 003h, 00Eh, 000h, 010h, 0C8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb40
+Data0B4C                DW offset Data0C7F
+                        DB 004h, 00Ah, 002h, 010h, 0C0h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb4c
+                        DW offset Data077B
+                        DB 080h, 027h, 000h, 060h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb58
+                        DW offset Data0C4D
+                        DB 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb64
+                        DW offset Data0C66
+                        DB 003h, 00Eh, 000h, 010h, 048h, 0FFh, 048h, 000h, 000h, 000h ;Offset 0xb70
+Data0B7C                DW offset Data0C7F
+                        DB 004h, 00Ah, 002h, 010h, 048h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb7c
+Data0B88                DW offset Data07FB
+                        DB 084h, 00Ah, 001h, 010h, 040h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb88
+                        DW offset Data07BB
+                        DB 082h, 02Eh, 000h, 038h, 0F8h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0xb94
+                        DW offset Data0C98
+                        DB 004h, 00Ch, 000h, 018h, 0C0h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0xba0
+                        DW offset Data0CB1
+                        DB 045h, 009h, 000h, 018h, 080h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0xbac
+Data0BB8                DW offset Data0CCA
+                        DB 046h, 008h, 002h, 018h, 080h, 0FFh, 0FFh, 000h, 015h, 010h ;Offset 0xbb8
+Data0BC4                DW Offset Data06BB
+                        DB 081h, 000h, 070h, 008h, 008h, 0FFh, 0FFh, 000h, 000h, 0D0h ;Offset 0xbc4
 
-Data087C                DB 03Bh, 006h, 080h, 002h, 000h, 008h, 008h, 038h, 038h, 000h, 000h, 000h ;Offset 0x87c
-Data0888                DB 07Bh, 006h, 080h, 002h, 000h, 008h, 008h, 038h, 038h, 000h, 000h, 000h ;Offset 0x888
-Data0894                DB 0BBh, 006h, 080h, 000h, 040h, 0F8h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x894
-                        DB 0FBh, 006h, 080h, 000h, 040h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8a0
-                        DB 0D0h, 00Bh, 001h, 00Bh, 040h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8ac
-Data08B8                DB 0E9h, 00Bh, 002h, 00Bh, 040h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8b8
-                        DB 03Bh, 007h, 080h, 006h, 000h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8c4
-                        DB 002h, 00Ch, 001h, 002h, 002h, 070h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x8d0
-                        DB 01Bh, 00Ch, 002h, 004h, 002h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x8dc
-Data08E8                DB 034h, 00Ch, 003h, 010h, 002h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x8e8
-                        DB 03Bh, 007h, 080h, 006h, 080h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x8f4
-                        DB 002h, 00Ch, 001h, 002h, 082h, 070h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x900
-                        DB 01Bh, 00Ch, 002h, 004h, 082h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x90c 
-Data0918                DB 034h, 00Ch, 003h, 010h, 082h, 048h, 0F8h, 0FFh, 0FFh, 008h, 000h, 000h ;Offset 0x918
-                        DB 07Bh, 007h, 080h, 027h, 000h, 060h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x924
-                        DB 04Dh, 00Ch, 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x930
-                        DB 066h, 00Ch, 003h, 00Eh, 000h, 010h, 0C8h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x93c
-Data0948                DB 07Fh, 00Ch, 004h, 00Ah, 002h, 010h, 0C0h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x948
-                        DB 07Bh, 007h, 080h, 027h, 000h, 060h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x954
-                        DB 04Dh, 00Ch, 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x960
-                        DB 066h, 00Ch, 003h, 00Eh, 000h, 010h, 048h, 0FFh, 048h, 000h, 000h, 001h ;Offset 0x96c
-Data0978                DB 07Fh, 00Ch, 004h, 00Ah, 002h, 010h, 048h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x978
-Data0984                DB 0BBh, 007h, 082h, 02Eh, 000h, 038h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0x984
-                        DB 0BBh, 007h, 082h, 02Eh, 0C0h, 050h, 050h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0x990
-                        DB 098h, 00Ch, 004h, 00Ch, 0C0h, 028h, 028h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0x99c
-                        DB 0B1h, 00Ch, 005h, 009h, 0C0h, 020h, 020h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0x9a8
-Data09B4                DB 0CAh, 00Ch, 006h, 008h, 0C2h, 018h, 018h, 0FFh, 0FFh, 000h, 015h, 010h ;Offset 0x9b4
-                        DB 0E3h, 00Ch, 080h, 000h, 050h, 030h, 058h, 0FFh, 0FFh, 000h, 000h, 050h ;Offset 0x9c0
-                        DB 0FCh, 00Ch, 001h, 00Bh, 050h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 050h ;Offset 0x9cc
-Data09D8                DB 015h, 00Dh, 002h, 00Bh, 050h, 028h, 0F8h, 0FFh, 0FFh, 000h, 000h, 050h ;Offset 0x9d8
-                        DB 0FBh, 006h, 080h, 000h, 070h, 038h, 038h, 01Ch, 01Ch, 000h, 000h, 0D0h ;Offset 0x9e4
-                        DB 0D0h, 00Bh, 001h, 00Bh, 070h, 030h, 030h, 019h, 019h, 000h, 000h, 0D0h ;Offset 0x9f0
-Data09FC                DB 0E9h, 00Bh, 002h, 00Bh, 070h, 030h, 030h, 0FFh, 0FFh, 000h, 000h, 0D0h ;Offset 0x9fc
-                        DB 02Eh, 00Dh, 081h, 002h, 092h, 018h, 048h, 0FFh, 0FFh, 001h, 000h, 050h ;Offset 0xa08
-                        DB 047h, 00Dh, 002h, 004h, 092h, 000h, 038h, 0FFh, 0FFh, 001h, 000h, 050h ;Offset 0xa14
-Data0A20                DB 060h, 00Dh, 003h, 010h, 092h, 000h, 038h, 0FFh, 0FFh, 001h, 000h, 050h ;Offset 0xa20
-                        DB 002h, 00Ch, 081h, 002h, 0B2h, 010h, 010h, 0FFh, 0FFh, 008h, 000h, 0D0h ;Offset 0xa2c
-                        DB 01Bh, 00Ch, 002h, 004h, 0B2h, 000h, 000h, 0FFh, 0FFh, 008h, 000h, 0D0h ;Offset 0xa38
-Data0A44                DB 034h, 00Ch, 003h, 010h, 0B2h, 000h, 000h, 0FFh, 0FFh, 008h, 000h, 0D0h ;Offset 0xa44
-                        DB 079h, 00Dh, 080h, 027h, 010h, 028h, 028h, 0FFh, 0FFh, 075h, 000h, 050h ;Offset 0xa50
-                        DB 092h, 00Dh, 002h, 00Dh, 010h, 018h, 018h, 0FFh, 0FFh, 07Dh, 000h, 050h ;Offset 0xa5c
-                        DB 0ABh, 00Dh, 003h, 00Eh, 010h, 010h, 010h, 0FFh, 0FFh, 07Dh, 000h, 050h ;Offset 0xa68
-Data0A74                DB 0C4h, 00Dh, 004h, 00Ah, 012h, 010h, 010h, 0FFh, 0FFh, 05Dh, 000h, 050h ;Offset 0xa74
-Data0A80                DB 07Bh, 007h, 080h, 027h, 030h, 038h, 038h, 0FFh, 0FFh, 000h, 000h, 0D0h ;Offset 0xa80
-Data0A8C                DB 0DDh, 00Dh, 082h, 02Ah, 0D0h, 010h, 010h, 0FFh, 0FFh, 07Fh, 000h, 050h ;Offset 0xa8c
-Data0A98                DB 03Bh, 008h, 080h, 029h, 081h, 000h, 000h, 0FFh, 0FFh, 001h, 000h, 010h ;Offset 0xa98
-                        DB 0FBh, 006h, 080h, 000h, 000h, 088h, 088h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xaa4
-                        DB 0D0h, 00Bh, 001h, 00Bh, 000h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xab0
-Data0ABC                DB 0E9h, 00Bh, 002h, 00Bh, 000h, 088h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xabc
-                        DB 03Bh, 007h, 080h, 006h, 000h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xac8
-                        DB 002h, 00Ch, 001h, 002h, 002h, 070h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xad4
-                        DB 01Bh, 00Ch, 002h, 004h, 002h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xae0
-Data0AEC                DB 034h, 00Ch, 003h, 010h, 002h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xaec
-                        DB 03Bh, 007h, 080h, 006h, 000h, 080h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xaf8
-                        DB 002h, 00Ch, 001h, 002h, 000h, 070h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb04
-                        DB 01Bh, 00Ch, 002h, 004h, 000h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb10
-Data0B1C                DB 034h, 00Ch, 003h, 010h, 000h, 048h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb1c
-                        DB 07Bh, 007h, 080h, 027h, 000h, 060h, 0C0h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb28
-                        DB 04Dh, 00Ch, 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb34
-                        DB 066h, 00Ch, 003h, 00Eh, 000h, 010h, 0C8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb40
-Data0B4C                DB 07Fh, 00Ch, 004h, 00Ah, 002h, 010h, 0C0h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb4c
-                        DB 07Bh, 007h, 080h, 027h, 000h, 060h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb58
-                        DB 04Dh, 00Ch, 002h, 00Dh, 000h, 030h, 0F8h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb64
-                        DB 066h, 00Ch, 003h, 00Eh, 000h, 010h, 048h, 0FFh, 048h, 000h, 000h, 000h ;Offset 0xb70
-Data0B7C                DB 07Fh, 00Ch, 004h, 00Ah, 002h, 010h, 048h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb7c
-Data0B88                DB 0FBh, 007h, 084h, 00Ah, 001h, 010h, 040h, 0FFh, 0FFh, 000h, 000h, 000h ;Offset 0xb88
-                        DB 0BBh, 007h, 082h, 02Eh, 000h, 038h, 0F8h, 0FFh, 0FFh, 000h, 000h, 001h ;Offset 0xb94
-                        DB 098h, 00Ch, 004h, 00Ch, 000h, 018h, 0C0h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0xba0
-                        DB 0B1h, 00Ch, 045h, 009h, 000h, 018h, 080h, 0FFh, 0FFh, 000h, 055h, 010h ;Offset 0xbac
-Data0BB8                DB 0CAh, 00Ch, 046h, 008h, 002h, 018h, 080h, 0FFh, 0FFh, 000h, 015h, 010h ;Offset 0xbb8
-Data0BC4                DB 0BBh, 006h, 081h, 000h, 070h, 008h, 008h, 0FFh, 0FFh, 000h, 000h, 0D0h ;Offset 0xbc4
-
-                        DB 063h, 04Fh, 04Fh, 000h, 053h, 018h, 006h, 03Eh, 000h, 040h, 000h, 000h ;Offset 0xbd0
+;-------------------CRT Controller data
+Data0BD0                DB 063h, 04Fh, 04Fh, 000h, 053h, 018h, 006h, 03Eh, 000h, 040h, 000h, 000h ;Offset 0xbd0
                         DB 000h, 000h, 0FFh, 000h, 0E8h, 08Bh, 0DFh, 080h, 060h, 0DFh, 006h, 0ABh
-                        DB 0FFh, 064h, 04Fh, 04Fh, 000h, 052h, 01Ah, 0F2h, 01Fh, 000h, 040h, 000h
-                        DB 000h, 000h, 000h, 0FFh, 000h, 0E0h, 083h, 0DFh, 080h, 060h, 0DFh, 000h
-                        DB 0ABh, 0FFh, 07Fh, 063h, 063h, 080h, 069h, 019h, 072h, 0F0h, 000h, 060h
-                        DB 000h, 000h, 000h, 000h, 0FFh, 000h, 058h, 08Ch, 057h, 080h, 000h, 057h
-                        DB 000h, 0E3h, 0FFh, 07Dh, 063h, 063h, 080h, 06Bh, 01Ah, 099h, 0F0h, 000h
-                        DB 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 07Ch, 0A2h, 057h, 080h, 000h
-                        DB 057h, 099h, 0E3h, 0FFh, 07Fh, 063h, 063h, 000h, 066h, 010h, 06Fh, 0E0h
-                        DB 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 058h, 08Bh, 057h, 080h
-                        DB 000h, 057h, 000h, 0E3h, 0FFh, 0A4h, 07Fh, 07Fh, 007h, 083h, 095h, 025h
-                        DB 0F5h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 002h, 088h, 0FFh
-                        DB 080h, 000h, 0FFh, 025h, 0E3h, 0FFh, 0A2h, 07Fh, 07Fh, 085h, 083h, 094h
-                        DB 025h, 0F5h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 002h, 088h
-                        DB 0FFh, 080h, 000h, 0FFh, 025h, 0E3h, 0FFh, 0A2h, 07Fh, 07Fh, 083h, 082h
-                        DB 08Eh, 01Fh, 0FDh, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 001h
-                        DB 084h, 0FFh, 080h, 000h, 000h, 000h, 0EBh, 0FFh, 0D7h, 09Fh, 0A0h, 01Ah
-                        DB 0A5h, 01Dh, 01Eh, 052h, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h
-                        DB 003h, 086h, 0FFh, 080h, 000h, 000h, 000h, 0E3h, 0FFh, 0CCh, 09Fh, 0A0h
-                        DB 08Eh, 0A5h, 019h, 033h, 052h, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh
-                        DB 000h, 005h, 08Ch, 0FFh, 080h, 000h, 000h, 031h, 0E3h, 0FFh, 0CEh, 09Fh, 0A0h, 011h, 0A3h, 015h, 029h
-                        DB 052h, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 001h, 084h, 0FFh, 080h, 000h, 000h, 000h
-                        DB 0E3h, 0FFh, 0C2h, 09Fh, 0A0h, 084h, 0A3h, 01Bh, 00Ch, 03Eh, 000h, 040h, 000h, 000h, 000h, 000h
-                        DB 0FFh, 000h, 0E9h, 08Bh, 0DFh, 000h, 060h, 0E7h, 004h, 0ABh, 0FFh, 0CCh, 09Fh, 0A0h, 00Fh, 0A7h
-                        DB 011h, 006h, 03Eh, 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 0E8h, 08Bh, 0DFh, 080h, 060h
-                        DB 0DFh, 006h, 0ABh, 0FFh, 0CFh, 09Fh, 0A0h, 012h, 0A5h, 015h, 0F1h, 01Fh, 000h, 040h, 000h, 000h
-                        DB 000h, 000h, 0FFh, 000h, 0E0h, 083h, 0DFh, 080h, 060h, 0DFh, 000h, 0ABh, 0FFh, 003h, 0C7h, 0C8h
-                        DB 006h, 0D3h, 013h, 072h, 0F0h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 058h, 08Ch, 057h
-                        DB 064h, 000h, 057h, 000h, 0A3h, 0FFh, 000h, 0C7h, 0C8h, 003h, 0D7h, 015h, 099h, 0F0h, 000h, 060h
-                        DB 000h, 000h, 000h, 000h, 0FFh, 000h, 07Ch, 082h, 057h, 064h, 000h, 057h, 099h, 0A3h, 0FFh, 004h
-                        DB 0C7h, 0C8h, 007h, 0CDh, 001h, 06Fh, 0F0h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 058h
-                        DB 08Bh, 057h, 080h, 000h, 057h, 000h, 0E3h, 0FFh, 038h, 0FFh, 000h, 000h, 003h, 00Fh, 097h, 01Fh
-                        DB 000h, 040h, 000h, 000h, 000h, 000h, 0FFh, 000h, 080h, 084h, 07Fh, 000h, 000h, 080h, 000h, 0A3h
-                        DB 0FFh, 04Dh, 0FFh, 000h, 00Dh, 007h, 009h, 025h, 0F5h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh
-                        DB 000h, 002h, 088h, 0FFh, 080h, 000h, 0FFh, 025h, 0E3h, 0FFh, 049h, 0FFh, 000h, 009h, 007h, 009h
-                        DB 01Fh, 0F5h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 002h, 088h, 0FFh, 080h, 000h, 0FFh
-                        DB 01Fh, 0E3h, 0FFh, 048h, 0FFh, 000h, 008h, 005h, 01Dh, 01Fh, 0FDh, 000h, 060h, 000h, 000h, 000h
-                        DB 000h, 0FFh, 000h, 001h, 084h, 0FFh, 080h, 000h, 000h, 000h, 0EBh, 0FFh, 0A1h, 03Fh, 040h, 00Dh
-                        DB 049h, 003h, 018h, 0B2h, 000h, 060h, 000h, 000h, 000h, 000h, 0FFh, 000h, 001h, 085h, 0FFh, 080h
-                        DB 000h, 000h, 018h, 0E3h, 0FFh
+                        DB 0FFh 
+Data0BE9                DB 064h, 04Fh, 04Fh, 000h, 052h, 01Ah, 0F2h, 01Fh, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 0E0h, 083h, 0DFh, 080h, 060h, 0DFh, 000h, 0ABh
+                        DB 0FFh
+Data0C02                DB 07Fh, 063h, 063h, 080h, 069h, 019h, 072h, 0F0h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 058h, 08Ch, 057h, 080h, 000h, 057h, 000h, 0E3h
+                        DB 0FFh
+Data0C1B                DB 07Dh, 063h, 063h, 080h, 06Bh, 01Ah, 099h, 0F0h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 07Ch, 0A2h, 057h, 080h, 000h, 057h, 099h, 0E3h
+                        DB 0FFh
+Data0C34                DB 07Fh, 063h, 063h, 000h, 066h, 010h, 06Fh, 0E0h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 058h, 08Bh, 057h, 080h, 000h, 057h, 000h, 0E3h
+                        DB 0FFh
+Data0C4D                DB 0A4h, 07Fh, 07Fh, 007h, 083h, 095h, 025h, 0F5h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 002h, 088h, 0FFh, 080h, 000h, 0FFh, 025h, 0E3h
+                        DB 0FFh
+Data0C66                DB 0A2h, 07Fh, 07Fh, 085h, 083h, 094h, 025h, 0F5h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 002h, 088h, 0FFh, 080h, 000h, 0FFh, 025h, 0E3h
+                        DB 0FFh
+Data0C7F                DB 0A2h, 07Fh, 07Fh, 083h, 082h, 08Eh, 01Fh, 0FDh, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 001h, 084h, 0FFh, 080h, 000h, 000h, 000h, 0EBh
+                        DB 0FFh
+Data0C98                DB 0D7h, 09Fh, 0A0h, 01Ah, 0A5h, 01Dh, 01Eh, 052h, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 003h, 086h, 0FFh, 080h, 000h, 000h, 000h, 0E3h
+                        DB 0FFh
+Data0CB1                DB 0CCh, 09Fh, 0A0h, 08Eh, 0A5h, 019h, 033h, 052h, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 005h, 08Ch, 0FFh, 080h, 000h, 000h, 031h, 0E3h
+                        DB 0FFh
+Data0CCA                DB 0CEh, 09Fh, 0A0h, 011h, 0A3h, 015h, 029h, 052h, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 001h, 084h, 0FFh, 080h, 000h, 000h, 000h, 0E3h
+                        DB 0FFh
+Data0CE3                DB 0C2h, 09Fh, 0A0h, 084h, 0A3h, 01Bh, 00Ch, 03Eh, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 0E9h, 08Bh, 0DFh, 000h, 060h, 0E7h, 004h, 0ABh
+                        DB 0FFh
+Data0CFC                DB 0CCh, 09Fh, 0A0h, 00Fh, 0A7h, 011h, 006h, 03Eh, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 0E8h, 08Bh, 0DFh, 080h, 060h, 0DFh, 006h, 0ABh
+                        DB 0FFh
+Data0D15                DB 0CFh, 09Fh, 0A0h, 012h, 0A5h, 015h, 0F1h, 01Fh, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 0E0h, 083h, 0DFh, 080h, 060h, 0DFh, 000h, 0ABh
+                        DB 0FFh
+Data0D2E                DB 003h, 0C7h, 0C8h, 006h, 0D3h, 013h, 072h, 0F0h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 058h, 08Ch, 057h, 064h, 000h, 057h, 000h, 0A3h
+                        DB 0FFh
+Data0D47                DB 000h, 0C7h, 0C8h, 003h, 0D7h, 015h, 099h, 0F0h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 07Ch, 082h, 057h, 064h, 000h, 057h, 099h, 0A3h
+                        DB 0FFh
+Data0D60                DB 004h, 0C7h, 0C8h, 007h, 0CDh, 001h, 06Fh, 0F0h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 058h, 08Bh, 057h, 080h, 000h, 057h, 000h, 0E3h
+                        DB 0FFh
+Data0D79                DB 038h, 0FFh, 000h, 000h, 003h, 00Fh, 097h, 01Fh, 000h, 040h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 080h, 084h, 07Fh, 000h, 000h, 080h, 000h, 0A3h
+                        DB 0FFh
+Data0D92                DB 04Dh, 0FFh, 000h, 00Dh, 007h, 009h, 025h, 0F5h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 002h, 088h, 0FFh, 080h, 000h, 0FFh, 025h, 0E3h
+                        DB 0FFh
+Data0DAB                DB 049h, 0FFh, 000h, 009h, 007h, 009h, 01Fh, 0F5h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 002h, 088h, 0FFh, 080h, 000h, 0FFh, 01Fh, 0E3h
+                        DB 0FFh
+Data0DC4                DB 048h, 0FFh, 000h, 008h, 005h, 01Dh, 01Fh, 0FDh, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 001h, 084h, 0FFh, 080h, 000h, 000h, 000h, 0EBh
+                        DB 0FFh
+Data0DDD                DB 0A1h, 03Fh, 040h, 00Dh, 049h, 003h, 018h, 0B2h, 000h, 060h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 001h, 085h, 0FFh, 080h, 000h, 000h, 018h, 0E3h
+                        DB 0FFh
 ;inputs:
 ;al = video mode
 SetColorMode PROC NEAR                  ;Offset 0xdf6
@@ -1045,7 +1188,7 @@ SetColorMode PROC NEAR                  ;Offset 0xdf6
     call FindVideoModeData              ;Offset 0x103a
     cmp  al, 13h
     jbe  LegacyMode                     ;Offset 0xe18
-    mov  al, (Struct0522 ptr es:[di + offset Data0522]).ColorMode;Offset 0x527 - Translate video mode
+    mov  al, (VideoModeData ptr es:[di + offset VESAVideoModeData]).ColorMode;Offset 0x527 - Translate video mode
     cmp  al, 05h
     je   ColorMode8                     ;Offset 0xe31
     cmp  al, 04h
@@ -1420,7 +1563,7 @@ TextModeAndMonitorCheck ENDP
 ;inputs:
 ;al = video mode > 13h
 ;outputs:
-;di points to video mode info
+;di is offset into video mode info array
 ;zero flag = 0 - found, 1 - not found
 ;destroys:
 ;es
@@ -1428,17 +1571,17 @@ FindVideoModeData PROC NEAR             ;Offset 0x103a
     push ax
     mov  di, cs
     mov  es, di
-    mov  di, offset Data0522            ;Offset 0x522
+    mov  di, offset VESAVideoModeData   ;Offset 0x522
 FindModeData:                           ;Offset 0x1042
-    cmp  (Struct0522 ptr es:[di]).Mode, 0ffh;Terminate
+    cmp  (VideoModeData ptr es:[di]).Mode, 0ffh;Terminate
     je   Done                           ;Offset 0x1052
-    cmp  (Struct0522 ptr es:[di]).Mode, al;al = video mode > 13h
+    cmp  (VideoModeData ptr es:[di]).Mode, al;al = video mode > 13h
     je   Done                           ;Offset 0x1052
-    add  di, SIZEOF Struct0522          ;0x9
+    add  di, SIZEOF VideoModeData          ;0x9
     jmp  FindModeData                   ;Offset 0x1042
 Done:                                   ;Offset 0x1052
-    sub  di, offset Data0522            ;Offset 0x522
-    cmp  (Struct0522 ptr es:[di + offset Data0522]).Mode, al;Offset 0x522
+    sub  di, offset VESAVideoModeData   ;Offset 0x522
+    cmp  (VideoModeData ptr es:[di + offset VESAVideoModeData]).Mode, al;Offset 0x522
     pop  ax
     ret  
 FindVideoModeData ENDP
@@ -1454,22 +1597,22 @@ GetVideoModeFlags PROC NEAR             ;Offset 0x105d
     push es
     call FindVideoModeData              ;Offset 0x103a
     jne  NotFound                       ;Offset 0x1069
-    mov  al, (Struct0522 ptr cs:[di + offset Data0522]).Flags;Offset 0x525
+    mov  al, (VideoModeData ptr cs:[di + offset VESAVideoModeData]).Flags;Offset 0x525
 NotFound:                               ;Offset 0x1069
     pop  es
     pop  di
     ret  
 GetVideoModeFlags ENDP
 
-Func0x106c PROC NEAR                    ;Offset 0x106c
+GetVESAVideoModeOverrideTable PROC NEAR ;Offset 0x106c
     push di
     push es
     call FindVideoModeData              ;Offset 0x103a
-    mov  si, (Struct0522 ptr cs:[di + offset Data0522]).Value1;Offset 0x523
+    mov  si, (VideoModeData ptr cs:[di + offset VESAVideoModeData]).OverrideTable;Offset 0x523
     pop  es
     pop  di
     ret  
-Func0x106c ENDP
+GetVESAVideoModeOverrideTable ENDP
 
 ;inputs:
 ;al = video mode
@@ -1522,10 +1665,10 @@ Found:                                  ;Offset 0x10c3
     and  ah, 0f0h                       ;
     mov  bl, ah
     shr  bx, 04h                        ;
-    mov  ax, offset Data06F1            ;Offset 0x6f1
+    mov  ax, offset VESAVideoParameters640x480;Offset 0x6f1
     mov  cx, 03h
 Label0x10e3:                            ;Offset 0x10e3
-    cmp  (Struct0522 ptr es:[di + offset Data0522]).Value1, ax;Offset 0x523
+    cmp  (VideoModeData ptr es:[di + offset VESAVideoModeData]).OverrideTable, ax;Offset 0x523
     je   Label0x10f2                    ;Offset 0x10f2
     shr  bx, 03h
     DB 05h,40h,00h                      ;add  ax, 40h - masm encoding is different, but it's the same instruction
@@ -1534,7 +1677,7 @@ Label0x10f2:                            ;Offset 0x10f2
     and  bx, 07h
     mov  dx, SequenceIndex              ;port - 0x3c4
     mov  al, 04h                        ;SR4 - MemoryModeControl
-    mov  ah, (Struct0522 ptr es:[di + offset Data0522]).MemoryMode;Offset 0x528
+    mov  ah, (VideoModeData ptr es:[di + offset VESAVideoModeData]).MemoryMode;Offset 0x528
     out  dx, ax
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
     push dx
@@ -1547,13 +1690,13 @@ Label0x10f2:                            ;Offset 0x10f2
     and  ah, 7fh                        ;Set bit 7 to 0 - Enable writes to CRT controller registers
     out  dx, ax
     mov  dx, AdvancedFunctionControl    ;port - 0x4ae8 - Advanced Function Control
-    mov  al, (Struct0522 ptr es:[di + offset Data0522]).AdvancedFunction;Offset 0x526
+    mov  al, (VideoModeData ptr es:[di + offset VESAVideoModeData]).AdvancedFunction;Offset 0x526
     out  dx, al
-    pop  dx
+    pop  dx                             ;Restore CRTC register
     mov  ah, bl
     xor  bh, bh
     mov  bl, byte ptr cs:[Data019E]     ;offset 0x19e
-    mov  di, (Struct0522 ptr es:[di + offset Data0522]).Value7;Offset 0x529
+    mov  di, (VideoModeData ptr es:[di + offset VESAVideoModeData]).Value7;Offset 0x529
 Label0x112e:                            ;Offset 0x112e
     mov  al, byte ptr es:[di + 02h]
     test al, 80h
@@ -2008,7 +2151,7 @@ Label0x13c9:                            ;Offset 0x13c9
     mov   al, ah
     mov   cl, ah
     call  FindVideoModeData             ;Offset 0x103a
-    mov   al, byte ptr es:[di + 0526h]
+    mov   al, (VideoModeData ptr es:[di + offset VESAVideoModeData]).AdvancedFunction;Offset 0x526
     pop   di
     pop   es
     stosb byte ptr es:[di]
@@ -2551,7 +2694,16 @@ IsMonochrome:                           ;Offset 0x180e
     ret
 PrepareAttributeControllerAndResetNonUsedModeControl ENDP
 
-Data1811 DB 2Ch, 28h, 2Dh, 29h, 2Ah, 2Eh, 1Eh, 29h;Offset 0x1811
+;Offset 0x1811
+Mode0_7ControlRegValue  DB BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking                                         ;2Ch ;Mode 0: 101100
+                        DB BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking                                                                 ;28h ;Mode 1; 101000
+                        DB BDA_CMCRV_Mode23Text OR BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking                 ;2Dh ;Mode 2; 101101
+                        DB BDA_CMCRV_Mode23Text OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking                                         ;29h ;Mode 3; 101001
+                        DB BDA_CMCRV_Mode45Graphics OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking                                     ;2Ah ;Mode 4; 101010
+                        DB BDA_CMCRV_Mode45Graphics OR BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking             ;2Eh ;Mode 5; 101110
+                        DB BDA_CMCRV_Mode45Graphics OR BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_GraphicsOperation    ;1Eh ;Mode 6; 011110
+                        DB BDA_CMCRV_Mode23Text OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking                                         ;29h ;Mode 7; 101001
+
 ;inputs:
 ;al = requested video mode
 SetVideoMode PROC NEAR                  ;Offset 0x1819
@@ -2569,17 +2721,17 @@ ValidVideoMode:                         ;Offset 0x182c
     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
     and  ah, INT10_00_xx_DontClearDisplay;0x80
     or   byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487
-    call Func0x18e8                     ;Offset 0x18e8
+    call ModeSetBDA                     ;Offset 0x18e8
     cmp  al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
-    ja   Label0x1850                    ;Offset 0x1850
-    call Func0x1a4e                     ;Offset 0x1a4e
-    je   Label0x1850                    ;Offset 0x1850
+    ja   IsVESAMode                     ;Offset 0x1850
+    call Func0x1a4e                     ;Offset 0x1a4e - This function seems to destroy al?
+    je   IsVESAMode                     ;Offset 0x1850
     and  al, 0dfh
     mov  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
     call EmptyFunction3                 ;Offset 0x1380
-    call Func0x1acc                     ;Offset 0x1acc
+    call SetSystemAdapterVideoMode      ;Offset 0x1acc
     ret
-Label0x1850:                            ;Offset 0x1850
+IsVESAMode:                             ;Offset 0x1850
     push cx
     mov  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
     call Func0x1b05                     ;Offset 0x1b05
@@ -2591,11 +2743,11 @@ Label0x1850:                            ;Offset 0x1850
     call Func0x4909                     ;Offset 0x4909
     mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    cmp  al, 04h
+    cmp  al, BDA_DM_320x200_4_Color_Graphics1;0x04
     jb   Label0x1885                    ;Offset 0x1885
-    cmp  al, 07h
+    cmp  al, BDA_DM_80x25_Monochrome_Text;0x07
     je   Label0x1885                    ;Offset 0x1885
-    cmp  al, 13h
+    cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
     jbe  Label0x18b5                    ;Offset 0x18b5
     call GetVideoModeFlags              ;Offset 0x105d
     test al, 01h
@@ -2603,13 +2755,13 @@ Label0x1850:                            ;Offset 0x1850
 Label0x1885:                            ;Offset 0x1885
     call Func0x1c65                     ;Offset 0x1c65
     mov  ax, 000bh
-    mov  bx, 0008h
-    call Func0x1bc9                     ;Offset 0x1bc9
-    jne  Label0x1896                    ;Offset 0x1896
+    mov  bx, 0008h                      ;Fetch element 3 - Alphanumeric Character Set Override pointer
+    call FetchVideoParameterBlockElement;Offset 0x1bc9
+    jne  CharacterSetNotFound           ;Offset 0x1896
     call Func0x1bea                     ;Offset 0x1bea
-Label0x1896:                            ;Offset 0x1896
-    mov  bx, 0010h
-    call GetVideoOverrideTable          ;Offset 0x1d95
+CharacterSetNotFound:                   ;Offset 0x1896
+    mov  bx, 0010h                      ;Secondary Save Pointer Table pointer (VGA)
+    call GetVideoParameterBlockElement  ;Offset 0x1d95
     je   Label0x18c9                    ;Offset 0x18c9
     les  bx, es:[bx + 06h]
     mov  ax, es
@@ -2623,8 +2775,8 @@ Label0x1896:                            ;Offset 0x1896
 Label0x18b5:                            ;Offset 0x18b5
     mov  word ptr ds:[BDA_CursorEndScanLine], 00h;Offset 0x460
     mov  ax, 0007h
-    mov  bx, 000ch
-    call Func0x1bc9                     ;Offset 0x1bc9
+    mov  bx, 000ch                      ;Fetch element 4 - Graphics Character Set Override pointer
+    call FetchVideoParameterBlockElement;Offset 0x1bc9
     jne  Label0x18c9                    ;Offset 0x18c9
     call Func0x1c8e                     ;Offset 0x1c8e
 Label0x18c9:                            ;Offset 0x18c9
@@ -2645,7 +2797,7 @@ SetVideoMode ENDP
 
 ;inputs:
 ;al = video mode
-Func0x18e8 PROC NEAR                    ;Offset 0x18e8
+ModeSetBDA PROC NEAR                    ;Offset 0x18e8
     mov  bl, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
     and  bl, BDA_DH_InitialVideoModeMask;0x30
     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489, 0x1
@@ -2658,19 +2810,19 @@ Func0x18e8 PROC NEAR                    ;Offset 0x18e8
     je   Label0x1983                    ;Offset 0x1983
     cmp  al, INT10_00_0F_G_80x25_8x14_640x350_M_2_A000;0xf
     je   Label0x1983                    ;Offset 0x1983
-    mov  bh, al
+    mov  bh, al                         ;inputs: al = video mode, outputs: al = flags, zero = 0 success
     call GetVideoModeFlags              ;Offset 0x105d
-    jne  Label0x1918                    ;Offset 0x1918
-    test al, 02h
-    mov  al, bh
-    je   Label0x1983                    ;Offset 0x1983
-Label0x1918:                            ;Offset 0x1918
+    jne  NotFound                       ;Offset 0x1918
+    test al, 02h                        ;test bit 1
+    mov  al, bh                         ;al = video mode
+    je   Label0x1983                    ;Offset 0x1983 - if not set, jump
+NotFound:                               ;Offset 0x1918
     test byte ptr cs:[Data0197], 01h    ;Offset 0x197
-    je   Label0x1923                    ;Offset 0x1923
+    je   MonochromeMode                 ;Offset 0x1923
     jmp  Label0x19b7                    ;Offset 0x19b7
-Label0x1923:                            ;Offset 0x1923
+MonochromeMode:                         ;Offset 0x1923
     cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexD;Offset 0x463, port - 0x3d4
-    je   Exit                           ;Offset 0x1944
+    je   Exit                           ;Offset 0x1944 - We are operating in color mode. leave.
     cmp  bl, BDA_DH_80x25Monochrome     ;0x30
     je   Label0x198e                    ;Offset 0x198e
     cmp  ah, BDA_EFBS_CGAMono80x25      ;0x5
@@ -2787,21 +2939,23 @@ Label0x1a34:                            ;Offset 0x1a34
 Label0x1a48:                            ;Offset 0x1a48
     or   word ptr ds:[BDA_DetectedHardware], BDA_DH_80x25Monochrome;Offset 0x410, 0x30
     ret  
-Func0x18e8 ENDP
+ModeSetBDA ENDP
 
+;inputs:
+;al = video mode
 Func0x1a4e PROC NEAR                    ;Offset 0x1a4e
     mov  ah, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
     and  ah, BDA_DH_InitialVideoModeMask;0x30
     cmp  ah, BDA_DH_80x25Monochrome     ;0x30
     jne  IsColor                        ;Offset 0x1a6a
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-    jne  Label0x1aad                    ;Offset 0x1aad
+    jne  IsMonochrome2                  ;Offset 0x1aad
     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487, 0x8
     mov  al, 0eh                        ;al = PointHeightOfCharacterMatrix 0xe = 14
     jmp  Label0x1a84                    ;Offset 0x1a84
 IsColor:                                ;Offset 0x1a6a
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-    je   IsMonochrome                   ;Offset 0x1a8f
+    je   IsMonochrome1                  ;Offset 0x1a8f
     mov  ah, BDA_VMO_Inactive           ;0x8
     cmp  al, 02h
     jbe  Label0x1a7e                    ;Offset 0x1a7e
@@ -2816,7 +2970,7 @@ Label0x1a84:                            ;Offset 0x1a84
     mov  ah, 00h
     mov  word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
     ret
-IsMonochrome:                           ;Offset 0x1a8f
+IsMonochrome1:                          ;Offset 0x1a8f
     cmp  al, 0fh
     je   Label0x1aa4                    ;Offset 0x1aa4
     cmp  al, 07h
@@ -2831,18 +2985,18 @@ Label0x1aa4:                            ;Offset 0x1aa4
     mov  al, 00h
     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
     jmp  Exit                           ;Offset 0x1ac9
-Label0x1aad:                            ;Offset 0x1aad
+IsMonochrome2:                          ;Offset 0x1aad
     cmp  al, 0fh
     je   Exit                           ;Offset 0x1ac9
     cmp  al, 07h
     je   Exit                           ;Offset 0x1ac9
     mov  bh, al
     call GetVideoModeFlags              ;Offset 0x105d
-    jne  Label0x1ac2                    ;Offset 0x1ac2
+    jne  NotFound                       ;Offset 0x1ac2
     test al, 02h
     mov  al, bh
     je   Exit                           ;Offset 0x1ac9
-Label0x1ac2:                            ;Offset 0x1ac2
+NotFound:                               ;Offset 0x1ac2
     mov  al, 07h
     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
 Exit:                                   ;Offset 0x1ac9
@@ -2850,7 +3004,7 @@ Exit:                                   ;Offset 0x1ac9
     ret
 Func0x1a4e ENDP
 
-Func0x1acc PROC NEAR                    ;Offset 0x1acc
+SetSystemAdapterVideoMode PROC NEAR     ;Offset 0x1acc
     push  ds
     push  bp
     mov   ds, word ptr cs:[Data1488]    ;Offset 0x1488
@@ -2868,46 +3022,46 @@ Func0x1acc PROC NEAR                    ;Offset 0x1acc
     pop   ds
     mov   word ptr ss:[bp + 10h], ax
     mov   al, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
-    and   al, 30h
-    cmp   al, 30h
-    jne   Label0x1b04                   ;Offset 0x1b04
-    mov   word ptr ds:[BDA_CursorEndScanLine], 0b0ch;Offset 0x460
-Label0x1b04:                            ;Offset 0x1b04
+    and   al, BDA_DH_InitialVideoModeMask;0x30
+    cmp   al, BDA_DH_80x25Monochrome    ;0x30
+    jne   Exit                          ;Offset 0x1b04
+    mov   word ptr ds:[BDA_CursorEndScanLine], 0b0ch;Offset 0x460 - set cursor start and end
+Exit:                                   ;Offset 0x1b04
     ret
-Func0x1acc ENDP
+SetSystemAdapterVideoMode ENDP
 
 Func0x1b05 PROC NEAR                    ;Offset 0x1b05
     mov       es, word ptr cs:[Data1488];Offset 0x1488
-    mov       di, 010ch
-    cmp       al, 13h
-    jbe       Label0x1b2d               ;Offset 0x1b2d
+    mov       di, 010ch                 ;int 43 - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
+    cmp       al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
+    jbe       LegacyMode                ;Offset 0x1b2d
     call      GetVideoModeFlags         ;Offset 0x105d
-    jne       Label0x1b2d               ;Offset 0x1b2d
+    jne       LegacyMode                ;Offset 0x1b2d
     mov       bx, offset LowerCharacters8x8;Offset 0x5720
     test      al, 01h
-    jne       Label0x1b4b               ;Offset 0x1b4b
+    jne       CharMapSelected           ;Offset 0x1b4b
     and       al, 70h
-    je        Label0x1b4b               ;Offset 0x1b4b
+    je        CharMapSelected           ;Offset 0x1b4b
     mov       bx, offset Characters8x14 ;Offset 0x5f20
     cmp       al, 20h
-    jbe       Label0x1b4b               ;Offset 0x1b4b
+    jbe       CharMapSelected           ;Offset 0x1b4b
     mov       bx, offset Characters8x16 ;Offset 0x6e30
-    jmp       Label0x1b4b               ;Offset 0x1b4b
-Label0x1b2d:                            ;Offset 0x1b2d
+    jmp       CharMapSelected           ;Offset 0x1b4b
+LegacyMode:                             ;Offset 0x1b2d
     mov       bx, offset LowerCharacters8x8;Offset 0x5720
-    cmp       al, 13h
-    je        Label0x1b4b               ;Offset 0x1b4b
-    cmp       al, 08h
-    jb        Label0x1b4b               ;Offset 0x1b4b
+    cmp       al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
+    je        CharMapSelected           ;Offset 0x1b4b
+    cmp       al, INT10_00_08_Unknown   ;0x08
+    jb        CharMapSelected           ;Offset 0x1b4b
     mov       bx, offset Characters8x16 ;Offset 0x6e30
-    je        Label0x1b4b               ;Offset 0x1b4b
-    cmp       al, 11h
-    jae       Label0x1b4b               ;Offset 0x1b4b
+    je        CharMapSelected           ;Offset 0x1b4b
+    cmp       al, INT10_00_11_G_80x30_8x16_640x480_M_x_A000;0x11
+    jae       CharMapSelected           ;Offset 0x1b4b
     mov       bx, offset Characters8x14 ;Offset 0x5f20
-    cmp       al, 0fh
-    jae       Label0x1b4b               ;Offset 0x1b4b
+    cmp       al, INT10_00_0F_G_80x25_8x14_640x350_M_2_A000;0x0f
+    jae       CharMapSelected           ;Offset 0x1b4b
     mov       bx, offset LowerCharacters8x8;Offset 0x5720
-Label0x1b4b:                            ;Offset 0x1b4b
+CharMapSelected:                        ;Offset 0x1b4b
     mov       ax, bx
     cli
     stosw     word ptr es:[di]
@@ -2919,21 +3073,29 @@ Label0x1b4b:                            ;Offset 0x1b4b
     mov       di, offset DBA_CursorPositionPage0;Offset 0x450
     mov       cx, 0008h
     xor       ax, ax
-    rep stosw word ptr es:[di]
+    rep stosw word ptr es:[di]          ;reset all cursor positions
     mov       byte ptr ds:[BDA_ActiveDisplayNumber], al;Offset 0x462
     mov       word ptr ds:[BDA_VideoBufferOffset], ax;Offset 0x44e
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    cmp       al, 07h
+    cmp       al, BDA_DM_80x25_Monochrome_Text;0x07
     ja        Label0x1b86               ;Offset 0x1b86
-    xor       ah, ah
-    mov       di, ax
-    mov       al, 3fh
-    cmp       di, 06h
-    je        Label0x1b7b               ;Offset 0x1b7b
-    mov       al, 30h
-Label0x1b7b:                            ;Offset 0x1b7b
+    xor       ah, ah                    ;reset ah
+    mov       di, ax                    ;di is display mode
+    mov       al, 3fh                   ;CGA color palette
+                                        ;bit 5 = 1 - Mode 5 foreground colors - cyan/magenta/white
+                                        ;bit 4 = 1 - Background color intensified
+                                        ;bit 3 = 1 - Intensified border color (mode 2) and background color (mode 5)
+                                        ;bit 2 = 1 - Red
+                                        ;bit 1 = 1 - Green
+                                        ;bit 0 = 1 - Blue
+    cmp       di, BDA_DM_640x200_BW_Graphics;0x06
+    je        IsMode6                   ;Offset 0x1b7b
+    mov       al, 30h                   ;CGA color palette
+                                        ;bit 5 = 1 - Mode 5 foreground colors - cyan/magenta/white
+                                        ;bit 4 = 1 - Background color intensified
+IsMode6:                                ;Offset 0x1b7b
     mov       byte ptr ds:[BDA_CGAColorPaletteMaskSetting], al;Offset 0x466
-    mov       al, byte ptr cs:[di + Data1811];Offset 0x1811
+    mov       al, byte ptr cs:[di + Mode0_7ControlRegValue];Offset 0x1811
     mov       byte ptr ds:[BDA_CRTModeControlRegValue], al;Offset 0x465
 Label0x1b86:                            ;Offset 0x1b86
     call      GetCurrentVideoModeOverrideTable;Offset 0x4a44
@@ -2960,8 +3122,8 @@ Func0x1bac PROC NEAR                    ;Offset 0x1bac
     push      es
     push      si
     push      es
-    mov       bx, 04h
-    call      GetVideoOverrideTable     ;Offset 0x1d95
+    mov       bx, 04h                   ;Dynamic Parameter Save Area pointer (EGA, VGA)
+    call      GetVideoParameterBlockElement;Offset 0x1d95
     pop       ds
     je        Exit                      ;Offset 0x1bc5
     add       si, 23h
@@ -2977,12 +3139,17 @@ Exit:                                   ;Offset 0x1bc5
     ret
 Func0x1bac ENDP
 
-Func0x1bc9 PROC NEAR                    ;Offset 0x1bc9
-    call GetVideoOverrideTable          ;Offset 0x1d95
+;inputs:
+;bx is index into video parameter table
+;outputs:
+;es:bx is new pointer - can be null
+;al = 0xff if fail. unmodified otherwise.
+FetchVideoParameterBlockElement PROC NEAR;Offset 0x1bc9
+    call GetVideoParameterBlockElement  ;Offset 0x1d95
     jne  Func0x1bd1                     ;Offset 0x1bd1
-    or   al, 0ffh
+    or   al, 0ffh                       ;
     ret
-Func0x1bc9 ENDP
+FetchVideoParameterBlockElement ENDP
 
 Func0x1bd1 PROC NEAR                    ;Offset 0x1bd1
     push bx
@@ -3064,15 +3231,15 @@ Func0x1c19 ENDP
 Func0x1c65 PROC NEAR                    ;Offset 0x1c65
     xor   bl, bl
     mov   al, 01h
-    cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 0eh;Offset 0x485
-    je    Label0x1c80                   ;Offset 0x1c80
+    cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 0eh;Offset 0x485 8x14
+    je    Is8x14                        ;Offset 0x1c80
     mov   al, 02h
-    cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 08h;Offset 0x485
+    cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 08h;Offset 0x485 8x8
     je    Label0x1c8a                   ;Offset 0x1c8a
     mov   al, 04h
     or    bl, 40h
     jmp   Label0x1c8a                   ;Offset 0x1c8a
-Label0x1c80:                            ;Offset 0x1c80
+Is8x14:                                 ;Offset 0x1c80
     cmp   byte ptr ds:[BDA_DisplayMode], 07h;Offset 0x449
     jne   Label0x1c8a                   ;Offset 0x1c8a
     or    bl, 80h
@@ -3100,8 +3267,8 @@ Func0x1c8e PROC NEAR                    ;Offset 0x1c8e
 Func0x1c8e ENDP
 
 Func0x1cb4 PROC NEAR                    ;Offset 0x1cb4
-    mov   bx, 10h
-    call  GetVideoOverrideTable         ;Offset 0x1d95
+    mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
+    call  GetVideoParameterBlockElement ;Offset 0x1d95
     je    Label0x1cce                   ;Offset 0x1cce
     les   bx, es:[bx + 0ah]
     mov   ax, es
@@ -3219,15 +3386,17 @@ Label0x1d8c:
     ret
 Func0x1d47 ENDP
 
-GetVideoOverrideTable PROC NEAR
+;input:
+;bx = offset into Video Parameter Control Block
+GetVideoParameterBlockElement PROC NEAR
     push di
     les  di, ds:[BDA_VideoParameterControlBlockPointer];Offset 0x4a8 load segment:offset of video parameter control block into es:di
-    les  bx, es:[bx + di]               ;Load segment:offset to video override table into es:bx
+    les  bx, es:[bx + di]               ;Load segment:offset from video override table into es:bx
     mov  di, es                         ;
     or   di, bx                         ;or together segment and offset (not null test?)
     pop  di
-    ret                                 ;return, es:bx is now offset into table.
-GetVideoOverrideTable ENDP
+    ret                                 ;return, es:bx is now offset to table.
+GetVideoParameterBlockElement ENDP
 
 SetTextModeCursorShape PROC NEAR        ;Offset 0x1da3
     mov  word ptr ds:[BDA_CursorEndScanLine], cx;Offset 0x460
@@ -5781,8 +5950,13 @@ TextModeCharFunctions PROC NEAR         ;Offset 0x2f6b
     and  bl, 3fh
 TextModeCharFunctions ENDP
 ;continue!
+
+;inputs:
+;al = 
+;ah = 
+;bl = 
 Func0x2f71 PROC NEAR                    ;Offset 0x2f71
-    call Func0x227                      ;Offset 0x227
+    call Func0x227                      ;Offset 0x227 ands the top 2 bits off bl if al == 55
     mov  ah, al
     and  al, 0fh
     and  ah, 30h
@@ -6558,8 +6732,8 @@ Label0x350f:                            ;Offset 0x350f
     dec         al
     jne         Label0x3555             ;Offset 0x3555
     mov         dl, 0ffh
-    mov         bx, 0010h
-    call        GetVideoOverrideTable   ;Offset 0x1d95
+    mov         bx, 0010h               ;Secondary Save Pointer Table pointer (VGA)
+    call        GetVideoParameterBlockElement;Offset 0x1d95
     je          Label0x354c             ;Offset 0x354c
     les         bx, es:[bx + 02h]
     mov         ax, es
@@ -6592,8 +6766,8 @@ DisplayCombinationCodeFuncs ENDP
 Func0x3556 PROC NEAR                    ;Offset 0x3556
     push        es
     mov         cx, 0ffffh
-    mov         bx, 10h
-    call        GetVideoOverrideTable   ;Offset 0x1d95
+    mov         bx, 10h                 ;Secondary Save Pointer Table pointer (VGA)
+    call        GetVideoParameterBlockElement;Offset 0x1d95
     je          Label0x3580             ;Offset 0x3580
     les         bx, es:[bx + 02h]
     mov         ax, es
@@ -7236,18 +7410,6 @@ DB 006h, 007h
 
 ;Offset 0x3a99 - what is this?
 Data3a99 DB 0FFh, 0E0h, 00Fh, 000h, 000h, 000h, 000h, 007h, 002h, 008h, 0FFh, 00Eh, 000h, 000h, 03Fh, 000h
-
-VideoParametersTable STRUCT
-    DisplayedCharacterColumns BYTE ?
-    DisplayedRowsMinus1 BYTE ?
-    CharacterMatrixHeightPoints BYTE ?
-    VideoBufferSize WORD ?
-    SequencerRegisters DWORD ?          ;SR1-SR4
-    MiscOutputRegisterValues BYTE ?
-    CRTCRegisters BYTE 25 DUP (?)       ;CR0-CR18
-    AttributeControllerRegs BYTE 20 DUP (?)
-    GraphicsControllerRegs BYTE 9 DUP (?) ;GR0-GR8
-VideoParametersTable ENDS
 
 ;The assembler doesn't like all that data on one line, so I am just overlapping these to make struct accesses work.
 ;If anyone knows a cleaner way, please let me know
@@ -8311,9 +8473,9 @@ Label0x4a03:                            ;Offset 0x4a03
     ret
 Func0x49d4 ENDP
 
-Data4a08 DB 17h, 17h, 18h, 18h, 04h, 05h, 06h, 19h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
-Data4a1c DB 13h, 14h, 15h, 16h, 04h, 05h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
-Data4a30 DB 00h, 01h, 02h, 03h, 04h, 05h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
+VideoModeOverrideTranslationTable1 DB 17h, 17h, 18h, 18h, 04h, 05h, 06h, 19h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
+VideoModeOverrideTranslationTable2 DB 13h, 14h, 15h, 16h, 04h, 05h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
+VideoModeOverrideTranslationTable3 DB 00h, 01h, 02h, 03h, 04h, 05h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
 
 GetCurrentVideoModeOverrideTable PROC NEAR;Offset 0x4a44
     mov al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
@@ -8327,43 +8489,42 @@ GetVideoModeOverrideTable PROC NEAR     ;Offset 0x4a47
     push ax
     push bx
     cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
-    jbe  Label0x4a62                    ;Offset 0x4a62
+    jbe  NotVESA                        ;Offset 0x4a62 if less than or equal, regular video mode
     xor  si, si
     mov  es, si                         ;
-    call Func0x106c                     ;Offset 0x106c
-    jne  Label0x4a62                    ;Offset 0x4a62
+    call GetVESAVideoModeOverrideTable  ;Offset 0x106c
+    jne  NotVESA                        ;Offset 0x4a62 ; not found, this should never happen...
     mov  ax, es
     or   ax, ax
-    jne  Label0x4a9b                    ;Offset 0x4a9b
+    jne  Exit                           ;Offset 0x4a9b
     mov  ax, cs
     mov  es, ax
-    jmp  Label0x4a9b                    ;Offset 0x4a9b
-Label0x4a62:                            ;Offset 0x4a62
-    mov  si, offset Data4a08            ;Offset 0x4a08
+    jmp  Exit                           ;Offset 0x4a9b
+NotVESA:                                ;Offset 0x4a62
+    mov  si, offset VideoModeOverrideTranslationTable1;Offset 0x4a08
     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0x489, 0x10
-    jne  Label0x4a87                    ;Offset 0x4a87
-    mov  si, offset Data4a1c            ;Offset 0x4a1c
+    jne  Done                           ;Offset 0x4a87
+    mov  si, offset VideoModeOverrideTranslationTable2;Offset 0x4a1c
     mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
     and  ah, BDA_EFBS_AdapterTypeMask   ;0xf
     cmp  ah, BDA_EFBS_MDAHiResEnhanced  ;0x3
-    je   Label0x4a87                    ;Offset 0x4a87
+    je   Done                           ;Offset 0x4a87
     cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x9
-    je   Label0x4a87                    ;Offset 0x4a87
+    je   Done                           ;Offset 0x4a87
     cmp  al, BDA_DM_80x25_Monochrome_Text;0x7
-    je   Label0x4a87                    ;Offset 0x4a87
-    mov  si, offset Data4a30            ;Offset 0x4a30
-Label0x4a87:                            ;Offset 0x4a87
-    mov  bl, al
-    xor  bh, bh
+    je   Done                           ;Offset 0x4a87
+    mov  si, offset VideoModeOverrideTranslationTable3;Offset 0x4a30
+Done:                                   ;Offset 0x4a87
+    mov  bl, al                         ;bl is video mode
+    xor  bh, bh                         ;
     mov  al, byte ptr cs:[bx + si]      ;Look up the mode in one of three tables above
-    mov  ah, 40h
+    mov  ah, 40h                        ;al
     mul  ah                             ;multiply by 64
     mov  si, ax                         ;Index of 64 x Mode
-    xor  bx, bx                         ;bx = 0 will return first element
-    call GetVideoOverrideTable          ;Offset 0x1d95
-    add  si, bx                         ;es:bx is segment:offset into video override table
-                                        ;es:si is segment:offset into video override table based on mode
-Label0x4a9b:                            ;Offset 0x4a9b
+    xor  bx, bx                         ;Video Parameter Table pointer
+    call GetVideoParameterBlockElement  ;Offset 0x1d95
+    add  si, bx                         ;es:si is segment:offset into video override table based on mode
+Exit:                                   ;Offset 0x4a9b
     pop  bx
     pop  ax
     ret
@@ -8575,7 +8736,7 @@ WindowSize32k:                          ;Offset 0x4ba4
                                         ;1Fh    BYTE    red mask size (this one is overwritten late)
     pop       di                        ;restore 0x0c
     pop       si                        ;restore pointer to that data pointed to by current VESAModeData
-    lea       ax, ds:[Func0x4cc5]       ;Offset 0x4cc5
+    lea       ax, ds:[DirectCallableCPUVideoMemoryControl];Offset 0x4cc5
     stosw                               ;0x0C = FAR Window positioning function 
     mov       ax, ds
     stosw                               ;0x0E = segment (our code segment)
@@ -8695,7 +8856,7 @@ GetCurrentSuperVGAMode PROC NEAR        ;Offset 0x4c60
     xor    ax, ax
     mov    ds, ax
     xor    bh, bh
-    mov    bl, byte ptr ds:[BDA_DisplayMode];Offset 0x449
+    mov    bl, byte ptr ds:[BDA_DisplayMode];Offset 0x449 Legacy Mode id
     push   cs
     pop    ds
     lea    si, ds:[VESAModeData]        ;Offset 0x4d82
@@ -8703,7 +8864,7 @@ GetCurrentSuperVGAMode PROC NEAR        ;Offset 0x4c60
     je     NotFound                     ;Offset 0x4c83
     lea    si, ds:[VESAVideoModeIds]    ;Offset 0x4d28
     add    si, di                       ;di is offset into VESAVideoModeIds
-    mov    bx, word ptr ds:[si]         ;Gets the legacy mode ID
+    mov    bx, word ptr ds:[si]         ;Gets the VESA mode ID
 NotFound:                               ;Offset 0x4c83
     mov    word ptr ss:[bp + 0eh], bx
     ret
@@ -8731,74 +8892,123 @@ NotFound:                               ;Offset 0x4c9b
 FindModeFromVESAModeData ENDP
 
 SaveRestoreSuperVGAVideoState PROC NEAR ;Offset 0x4c9c
-    mov  byte ptr ss:[bp + 11h], 01h
-    cmp  dl, 02h
-    ja   Label0x4cb2                    ;Offset 0x4cb2
-    mov  byte ptr ss:[bp + 11h], 00h
-    mov  ah, 1ch
+    mov  byte ptr ss:[bp + 11h], 01h    ;ah status - failure
+    cmp  dl, 02h                        ;subfunction 0x2 (the highest)
+    ja   UnknownSubfunction             ;Offset 0x4cb2
+    mov  byte ptr ss:[bp + 11h], 00h    ;ah status - success
+    mov  ah, INT10_1C_SaveRestoreVideoState;0x1c
     mov  al, dl
     int  10h
-    mov  word ptr ss:[bp + 0eh], bx
-Label0x4cb2:                            ;Offset 0x4cb2
+    mov  word ptr ss:[bp + 0eh], bx     
+UnknownSubfunction:                     ;Offset 0x4cb2
     ret
 SaveRestoreSuperVGAVideoState ENDP
 
+;inputs:
+;bh = subfunction
+;   0x00 - Select Video memory window
+;   0x01 - Get Video memory window
+;outputs:
+;dx = window address in video memory
+;bl = window index
+;   0x00 = Window A
+;   0x01 = Window B
+;ah = status
+;   0x00 = success
+;   0x01 = fail
 CPUVideoMemoryControl PROC NEAR         ;Offset 0x4cb3
-    call Func0x5123                     ;Offset 0x5123
+    call SetVideoMemoryWindow           ;Offset 0x5123
     cmp  bh, 01h
-    jne  Label0x4cbe                    ;Offset 0x4cbe
-    call Func0x5148                     ;Offset 0x5148
-Label0x4cbe:                            ;Offset 0x4cbe
+    jne  NotGetSubfunction              ;Offset 0x4cbe
+    call GetVideoMemoryWindow           ;Offset 0x5148
+NotGetSubfunction:                      ;Offset 0x4cbe
     mov  byte ptr ss:[bp + 11h], ah
     mov  word ptr ss:[bp + 0ah], dx
     ret
 CPUVideoMemoryControl ENDP
 
-Func0x4cc5 PROC FAR                     ;Offset 0x4cc5
-    call Func0x5123                     ;Offset 0x5123
+;Same as above, minus the stack return values
+DirectCallableCPUVideoMemoryControl PROC FAR;Offset 0x4cc5
+    call SetVideoMemoryWindow           ;Offset 0x5123
     cmp  bh, 01h
-    jne  Label0x4cd0                    ;Offset 0x4cd0
-    call Func0x5148                     ;Offset 0x5148
-Label0x4cd0:                            ;Offset 0x4cd0
+    jne  NotGetSubfunction              ;Offset 0x4cd0
+    call GetVideoMemoryWindow           ;Offset 0x5148
+NotGetSubfunction:                      ;Offset 0x4cd0
     retf
-Func0x4cc5 ENDP
+DirectCallableCPUVideoMemoryControl ENDP
+
+;inputs:
+;bl = subfunction 0x00 = set logical scan line length, 0x01 = get logical scan line length
+;cx = desired logical scan line length in pixels (func 0)
+;
+;outputs:
+;ah = status 0x00 = success, 0x01 = fail
+;bx = bytes per scan line
+;cx = pixels per scan line
+;dx = maximum number of scan lines
+;
+;If the desired width is not achievable, the next larger width will be set.
+;The scan line may be wider than the visible area of the screen. 
+;This function is valid in text modes, provided that pixel values are multiplied by the character cell width/height.
 
 GetSetLogicalScanLineLength PROC NEAR   ;Offset 0x4cd1
-    mov  byte ptr ss:[bp + 11h], 01h
-    cmp  bl, 01h
+    mov  byte ptr ss:[bp + 11h], 01h    ;status = 0x01 - failure
+    cmp  bl, 01h                        ;subfunction 0x01 is highest valid subfunction. 
     ja   Exit                           ;Offset 0x4cf5
     xor  ax, ax
     mov  ds, ax
     mov  bh, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     push cs
     pop  ds
-    xchg bh, bl
+    xchg bh, bl                         ;bl = current mode, bh = subfunction
     lea  si, [VESAModeData]             ;Offset 0x4d82
     call FindModeFromVESAModeData       ;Offset 0x4c87
-    je   Exit                           ;Offset 0x4cf5
-    mov  si, word ptr ds:[si + 01h]
-    call Func0x504a                     ;Offset 0x504a
+    je   Exit                           ;Offset 0x4cf5 mode not found
+    mov  si, (VESAMode ptr ds:[si]).ModeInfo
+    call GetSetLogicalScanLineLengthInternal;Offset 0x504a
 Exit:                                   ;Offset 0x4cf5
     ret
 GetSetLogicalScanLineLength ENDP
 
+;
+;info from: http://www.ctyme.com/intr/rb-0282.htm
+;
+;AX = 4F07h
+;BL = subfunction
+;00h,80h set display start
+;01h get display start
+;
+;set inputs:
+;CX = leftmost displayed pixel in scan line
+;DX = first displayed scan line
+;
+;ouputs:
+;AL = 4Fh if function supported
+;AH = status - 0x00 = success, 0x01 = failure
+;
+;other ouputs(get):
+;BH = 00h
+;CX = leftmost displayed pixel in scan line
+;DX = first displayed scan line.
+;
+;This function is valid in text modes, provided that values are multiplied by the character cell width/height.
+;Subfunction 80h waits until vertical retrace before changing the display start address (VBE v2.0+)
 GetSetDisplayStart PROC NEAR            ;Offset 0x4cf6
-    call  Func0x5177                    ;Offset 0x5177
+    call  SetDisplayStart               ;Offset 0x5177
     cmp   ah, 01h
-    jne   Label0x4d0c                   ;Offset 0x4d0c
-    call  Func0x5203                    ;Offset 0x5203
+    jne   Exit                          ;Offset 0x4d0c
+    call  GetDisplayStart               ;Offset 0x5203
     cmp   ah, 00h
-    jne   Label0x4d0c                   ;Offset 0x4d0c
-    mov   word ptr ss:[bp + 0ch], cx
-    mov   word ptr ss:[bp + 0ah], dx
-Label0x4d0c:                            ;Offset 0x4d0c
-    mov   byte ptr ss:[bp + 11h], ah
+    jne   Exit                          ;Offset 0x4d0c
+    mov   word ptr ss:[bp + 0ch], cx    ;
+    mov   word ptr ss:[bp + 0ah], dx    ;
+Exit:                                   ;Offset 0x4d0c
+    mov   byte ptr ss:[bp + 11h], ah    ;Store result 0x00 = success, 0x01 = failure
     ret
 GetSetDisplayStart ENDP
 
 ;Offset 0x4d10
-Data4d10                DB 053h, 033h, 020h, 049h, 06Eh, 063h, 06Fh, 072h, 070h, 06Fh, 072h, 061h, 074h, 065h, 064h, 02Eh
-                        DB 020h, 054h, 072h, 069h, 06Fh, 036h, 034h, 000h
+OEMName                 DB 'S3 Incorporated. Trio64', 000h
 
 ;Offset 0x4d28
 ;This list maps on to the VESAModeData list below.
@@ -8848,71 +9058,45 @@ VESAVideoModeIds        DW 00100h;0x68
                         DW 00119h
                         DW 0011Ah
                         DW 00120h
-                        DW 0FFFFh
+                        DW 0FFFFh;Except this one. Terminate
+
+VESAMode STRUCT
+    ModeId BYTE ?
+    ModeInfo WORD ?
+VESAMode ENDS
 
 ;Offset 0x4d82
-VESAModeData            DB INT10_00_68_G_640x400x256C
-                        DW offset VESAModeInfo_68_G_640x400x256C
-                        DB INT10_00_69_G_640x480x256C
-                        DW offset VESAModeInfo_69_G_640x480x256C
-                        DB INT10_00_6A_G_800x600x16C
-                        DW offset VESAModeInfo_6A_G_800x600x16C
-                        DB INT10_00_6B_G_800x600x256C
-                        DW offset VESAModeInfo_6B_G_800x600x256C
-                        DB INT10_00_6C_1024x768x16C
-                        DW offset VESAModeInfo_6C_1024x768x16C
-                        DB INT10_00_6D_1024x768x256C
-                        DW offset VESAModeInfo_6D_1024x768x256C
-                        DB INT10_00_6E_1280x1024x16C
-                        DW offset VESAModeInfo_6E_1280x1024x16C
-                        DB INT10_00_6F_1280x1024x256C
-                        DW offset VESAModeInfo_6F_1280x1024x256C
-                        DB INT10_00_55_T_132x25
-                        DW offset VESAModeInfo_55_T_132x25
-                        DB INT10_00_54_T_132x43
-                        DW offset VESAModeInfo_54_T_132x43
-                        DB INT10_00_70_640x480x32K
-                        DW offset VESAModeInfo_70_640x480x32K
-                        DB INT10_00_71_640x480x64K
-                        DW offset VESAModeInfo_71_640x480x64K
-                        DB INT10_00_72_640x480x16M
-                        DW offset VESAModeInfo_72_640x480x16M
-                        DB INT10_00_73_800x600x32K
-                        DW offset VESAModeInfo_73_800x600x32K
-                        DB INT10_00_74_800x600x64K
-                        DW offset VESAModeInfo_74_800x600x64K
-                        DB INT10_00_75_800x600x16M
-                        DW offset VESAModeInfo_75_800x600x16M
-                        DB INT10_00_76_1024x768x32K
-                        DW offset VESAModeInfo_76_1024x768x32K
-                        DB INT10_00_77_1024x768x64K
-                        DW offset VESAModeInfo_77_1024x768x64K
-                        DB INT10_00_78_1024x768x16M
-                        DW offset VESAModeInfo_78_1024x768x16M
-                        DB INT10_00_79_1280x1024x32K
-                        DW offset VESAModeInfo_79_1280x1024x32K
-                        DB INT10_00_7A_1280x1024x64K
-                        DW offset VESAModeInfo_7A_1280x1024x64K
-                        DB INT10_00_7C_1600x1200x256
-                        DW offset VESAModeInfo_7C_1600x1200x256
-                        DB 080h;maps on to 0xffff above
-                        DW 00000h
-                        DB INT10_00_49_640x480x256C
-                        DW offset VESAModeInfo_49_640x480x256C
-                        DB INT10_00_4A_800x600x16C
-                        DW offset VESAModeInfo_4A_800x600x16C
-                        DB INT10_00_4B_800x600x256C
-                        DW offset VESAModeInfo_4B_800x600x256C
-                        DB INT10_00_4C_1024x768x16C
-                        DW offset VESAModeInfo_4C_1024x768x16C
-                        DB INT10_00_4D_1024x768x256C
-                        DW offset VESAModeInfo_4D_1024x768x256C
-                        DB INT10_00_4E_1152x864x256C
-                        DW offset VESAModeInfo_4E_1152x864x256C
-                        DB INT10_00_4F_1280x1024x16C
-                        DW offset VESAModeInfo_4F_1280x1024x16C
-                        DB INT10_00_52_640x400x16M
-                        DW offset VESAModeInfo_52_640x400x16M
+VESAModeData            VESAMode < INT10_00_68_G_640x400x256C, offset VESAModeInfo_68_G_640x400x256C >
+                        VESAMode < INT10_00_69_G_640x480x256C, offset VESAModeInfo_69_G_640x480x256C >
+                        VESAMode < INT10_00_6A_G_800x600x16C, offset VESAModeInfo_6A_G_800x600x16C >
+                        VESAMode < INT10_00_6B_G_800x600x256C, offset VESAModeInfo_6B_G_800x600x256C >
+                        VESAMode < INT10_00_6C_1024x768x16C, offset VESAModeInfo_6C_1024x768x16C >
+                        VESAMode < INT10_00_6D_1024x768x256C, offset VESAModeInfo_6D_1024x768x256C >
+                        VESAMode < INT10_00_6E_1280x1024x16C, offset VESAModeInfo_6E_1280x1024x16C >
+                        VESAMode < INT10_00_6F_1280x1024x256C, offset VESAModeInfo_6F_1280x1024x256C >
+                        VESAMode < INT10_00_55_T_132x25, offset VESAModeInfo_55_T_132x25 >
+                        VESAMode < INT10_00_54_T_132x43, offset VESAModeInfo_54_T_132x43 >
+                        VESAMode < INT10_00_70_640x480x32K, offset VESAModeInfo_70_640x480x32K >
+                        VESAMode < INT10_00_71_640x480x64K, offset VESAModeInfo_71_640x480x64K >
+                        VESAMode < INT10_00_72_640x480x16M, offset VESAModeInfo_72_640x480x16M >
+                        VESAMode < INT10_00_73_800x600x32K, offset VESAModeInfo_73_800x600x32K >
+                        VESAMode < INT10_00_74_800x600x64K, offset VESAModeInfo_74_800x600x64K >
+                        VESAMode < INT10_00_75_800x600x16M, offset VESAModeInfo_75_800x600x16M >
+                        VESAMode < INT10_00_76_1024x768x32K, offset VESAModeInfo_76_1024x768x32K >
+                        VESAMode < INT10_00_77_1024x768x64K, offset VESAModeInfo_77_1024x768x64K >
+                        VESAMode < INT10_00_78_1024x768x16M, offset VESAModeInfo_78_1024x768x16M >
+                        VESAMode < INT10_00_79_1280x1024x32K, offset VESAModeInfo_79_1280x1024x32K >
+                        VESAMode < INT10_00_7A_1280x1024x64K, offset VESAModeInfo_7A_1280x1024x64K >
+                        VESAMode < INT10_00_7C_1600x1200x256, offset VESAModeInfo_7C_1600x1200x256 >
+                        VESAMode < 080h, 00000h >;maps on to 0xffff above
+                        VESAMode < INT10_00_49_640x480x256C, offset VESAModeInfo_49_640x480x256C >
+                        VESAMode < INT10_00_4A_800x600x16C, offset VESAModeInfo_4A_800x600x16C >
+                        VESAMode < INT10_00_4B_800x600x256C, offset VESAModeInfo_4B_800x600x256C >
+                        VESAMode < INT10_00_4C_1024x768x16C, offset VESAModeInfo_4C_1024x768x16C >
+                        VESAMode < INT10_00_4D_1024x768x256C, offset VESAModeInfo_4D_1024x768x256C >
+                        VESAMode < INT10_00_4E_1152x864x256C, offset VESAModeInfo_4E_1152x864x256C >
+                        VESAMode < INT10_00_4F_1280x1024x16C, offset VESAModeInfo_4F_1280x1024x16C >
+                        VESAMode < INT10_00_52_640x400x16M, offset VESAModeInfo_52_640x400x16M >
                         DB 0FFh;Terminate
 
 ;Bit(s)  Description     (Table 00081)
@@ -9015,76 +9199,76 @@ PixelData16bpp          DB 005h, 00Bh, 006h, 005h, 005h, 000h, 000h, 000h, 000h;
 PixelData24bpp          DB 008h, 010h, 008h, 008h, 008h, 000h, 000h, 000h, 000h;Offset 0x4f60
 PixelData32bpp          DB 008h, 010h, 008h, 008h, 008h, 000h, 008h, 018h, 000h;Offset 0x4f69
 
-Func0x4f72 PROC NEAR                    ;Offset 0x4f72
+VESASetDisplayPowerState PROC NEAR      ;Offset 0x4f72
     call TurnOffScreen                  ;Offset 0x47ed
-    mov  al, 18h
+    mov  al, 18h                        ;SR18 - RAMDAC/CLKSYN Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    or   ah, 20h
+    or   ah, 20h                        ;bit 5 = 1 - Power down RAMDAC
     out  dx, ax
-    mov  al, 0dh
+    mov  al, 0dh                        ;SRD - Extended Sequencer register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0fh
-    cmp  bh, 04h
-    je   Label0x4fab                    ;Offset 0x4fab
-    cmp  bh, 02h
-    je   Label0x4fb3                    ;Offset 0x4fb3
-    cmp  bh, 01h
-    je   Label0x4fbb                    ;Offset 0x4fbb
+    and  ah, 0fh                        ;Clear out HSync and VSync control bits
+    cmp  bh, 04h                        ;Display off
+    je   DisplayOff                     ;Offset 0x4fab
+    cmp  bh, 02h                        ;Display suspend
+    je   DisplaySuspend                 ;Offset 0x4fb3
+    cmp  bh, 01h                        ;Display standby
+    je   DisplayStandby                 ;Offset 0x4fbb
     cmp  bh, 00h
-    je   Label0x4f9c                    ;Offset 0x4f9c
-    jmp  Label0x4fc1                    ;Offset 0x4fc1
-Label0x4f9c:                            ;Offset 0x4f9c
-    out  dx, ax
-    mov  al, 18h
+    je   DisplayOn                      ;Offset 0x4f9c
+    jmp  Exit                           ;Offset 0x4fc1
+DisplayOn:                              ;Offset 0x4f9c
+    out  dx, ax                         ;ax still loaded with cleared out HSync and VSync control bits and SRD
+    mov  al, 18h                        ;SR18 - RAMDAC/CLKSYN Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0dfh
+    and  ah, 0dfh                       ;bit 5 = 0 - Power up RAMDAC
     out  dx, ax
     call TurnOnScreen                   ;Offset 0x4800
-    jmp  Label0x4fc1                    ;Offset 0x4fc1
-Label0x4fab:                            ;Offset 0x4fab
-    or   ah, 50h
+    jmp  Exit                           ;Offset 0x4fc1
+DisplayOff:                             ;Offset 0x4fab
+    or   ah, 50h                        ;HSync and VSync both output 0 and nothing else
     out  dx, ax
     xor  ah, ah
-    jmp  Label0x4fc1                    ;Offset 0x4fc1
-Label0x4fb3:                            ;Offset 0x4fb3
-    or   ah, 40h
+    jmp  Exit                           ;Offset 0x4fc1
+DisplaySuspend:                         ;Offset 0x4fb3
+    or   ah, 40h                        ;VSync outputs 0 and nothing else (HSync normal operation)
     out  dx, ax
     xor  ah, ah
-    jmp  Label0x4fc1                    ;Offset 0x4fc1
-Label0x4fbb:                            ;Offset 0x4fbb
-    or   ah, 10h
+    jmp  Exit                           ;Offset 0x4fc1
+DisplayStandby:                         ;Offset 0x4fbb
+    or   ah, 10h                        ;HSync outputs 0 and nothing else (VSync normal operation)
     out  dx, ax
     xor  ah, ah
-Label0x4fc1:                            ;Offset 0x4fc1
+Exit:                                   ;Offset 0x4fc1
     ret
-Func0x4f72 ENDP
+VESASetDisplayPowerState ENDP
 
-Func0x4fc2 PROC NEAR                    ;Offset 0x4fc2
-    mov  al, 0dh
+VESAGetDisplayPowerState PROC NEAR      ;Offset 0x4fc2
+    mov  al, 0dh                        ;SRD - Extended Sequencer register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0f0h
-    cmp  ah, 00h
-    je   Label0x4fde                    ;Offset 0x4fde
-    cmp  ah, 10h
-    je   Label0x4fe2                    ;Offset 0x4fe2
-    cmp  ah, 40h
-    je   Label0x4fe6                    ;Offset 0x4fe6
-    cmp  ah, 50h
-    je   Label0x4fea                    ;Offset 0x4fea
-Label0x4fde:                            ;Offset 0x4fde
+    and  ah, 0f0h                       ;Keep VSync and HSync control
+    cmp  ah, 00h                        ;both VSync and HSync are 00 - Normal operation
+    je   DisplayOn                      ;Offset 0x4fde
+    cmp  ah, 10h                        ;HSync = 01 - HSync outputs 0 (nothing else), VSync normal operation
+    je   DisplayStandby                 ;Offset 0x4fe2
+    cmp  ah, 40h                        ;VSync = 01 - VSync outputs 0 (nothing else), HSync normal operation
+    je   DisplaySuspend                 ;Offset 0x4fe6
+    cmp  ah, 50h                        ;VSync and HSync = 01 both output 0 (nothing else)
+    je   DisplayOff                     ;Offset 0x4fea
+DisplayOn:                              ;Offset 0x4fde
     xor  bh, bh
-    jmp  Label0x4fec                    ;Offset 0x4fec
-Label0x4fe2:                            ;Offset 0x4fe2
+    jmp  Exit                           ;Offset 0x4fec
+DisplayStandby:                         ;Offset 0x4fe2
     mov  bh, 01h
-    jmp  Label0x4fec                    ;Offset 0x4fec
-Label0x4fe6:                            ;Offset 0x4fe6
+    jmp  Exit                           ;Offset 0x4fec
+DisplaySuspend:                         ;Offset 0x4fe6
     mov  bh, 02h
-    jmp  Label0x4fec                    ;Offset 0x4fec
-Label0x4fea:                            ;Offset 0x4fea
+    jmp  Exit                           ;Offset 0x4fec
+DisplayOff:                             ;Offset 0x4fea
     mov  bh, 04h
-Label0x4fec:                            ;Offset 0x4fec
+Exit:                                   ;Offset 0x4fec
     ret
-Func0x4fc2 ENDP
+VESAGetDisplayPowerState ENDP
 
 ;inputs:
 ;es:di points to VESA mode information buffer
@@ -9131,57 +9315,89 @@ Done:                                   ;Offset 0x5043
     ret
 SetNumberOfImagePlanesAndModeAvailability ENDP
 
-Func0x504a PROC NEAR                    ;Offset 0x504a
-    xor  dx, dx
-    mov  ax, cx
-    cmp  bh, 01h
-    je   Label0x50af                    ;Offset 0x50af
-    push cx
-    xor  eax, eax
-    xor  edx, edx
-    xor  ecx, ecx
-    pop  cx
-    mov  al, byte ptr ds:[si + 09h]
-    cmp  al, 0fh
-    jne  Label0x5067                    ;Offset 0x5067
+;inputs:
+;si = pointer to VESA Mode Info struct
+;bl = current mode
+;bh = subfunction
+;cx = desired logical scan line length in pixels
+;
+;outputs:
+;bx = bytes per scan line
+;cx = pixels per scan line
+;dx = maximum number of scan lines
+;
+
+VESAModeInfo STRUCT
+    ModeAttributes BYTE ?                   ;0x00
+    BytesPerScanline WORD ?                 ;0x01
+    WidthInPixels WORD ?                    ;0x03
+    HeightInPixels WORD ?                   ;0x05
+    HeightOfCharacterCellInPixels BYTE ?    ;0x07
+    MemoryPlanes BYTE ?                     ;0x08
+    BitsPerPixel BYTE ?                     ;0x09
+    Banks BYTE ?                            ;0x0A
+    MemoryModelType BYTE ?                  ;0x0B
+VESAModeInfo ENDS
+
+GetSetLogicalScanLineLengthInternal PROC NEAR;Offset 0x504a
+    xor  dx, dx                         ;clear dx
+    mov  ax, cx                         ;preserve requested logical scan line length in pixels in ax
+    cmp  bh, 01h                        ;subfunction 0x01 = get
+    je   GetScanLines                   ;Offset 0x50af
+    push cx                             ;Store requested logical scan line length
+    xor  eax, eax                       ;
+    xor  edx, edx                       ;
+    xor  ecx, ecx                       ;
+    pop  cx                             ;Restore requested logical scan line length
+    mov  al, (VESAModeInfo ptr ds:[si]).BitsPerPixel
+    cmp  al, 0fh                        ;15bpp
+    jne  Not15bpp1                      ;Offset 0x5067
     inc  al
-Label0x5067:                            ;Offset 0x5067
-    mul  ecx
-    shr  eax, 03h
-    mov  dx, ax
-    shr  eax, 10h
-    xchg ax, dx
-    cmp  ax, word ptr ds:[si + 01h]
-    jae  Label0x507d                    ;Offset 0x507d
-    mov  ax, word ptr ds:[si + 01h]
-Label0x507d:                            ;Offset 0x507d
-    mov  bx, 08h
-    div  bx
-    cmp  dx, 00h
-    je   Label0x5088                    ;Offset 0x5088
-    inc  ax
-Label0x5088:                            ;Offset 0x5088
-    cmp  ah, 03h
-    jbe  Label0x5090                    ;Offset 0x5090
-    jmp  Label0x50fd                    ;Offset 0x50fd
+Not15bpp1:                              ;Offset 0x5067
+    mul  ecx                            ;eax = bits per pixel * requested scan line size in pixels
+    shr  eax, 03h                       ;divide by 8 to give requested scan line size in bytes
+    mov  dx, ax                         ;store requested bytes in dx
+    shr  eax, 10h                       ;eax = 0?
+    xchg ax, dx                         ;dx = 0?, ax = scan line size in bytes
+    cmp  ax, (VESAModeInfo ptr ds:[si]).BytesPerScanline
+    jae  GreaterThanModeBytesPerScanline;Offset 0x507d - Can't request the bytes per scan line to be less than the mode requires
+    mov  ax, (VESAModeInfo ptr ds:[si]).BytesPerScanline
+GreaterThanModeBytesPerScanline:        ;Offset 0x507d
+    mov  bx, 08h                        ;
+    div  bx                             ;ax is result / 8, dx = remainder (which stomps the value calculated above?)
+    cmp  dx, 00h                        ;check if remainder == 0x00
+    je   NoRemainder                    ;Offset 0x5088
+    inc  ax                             ;ax++
+NoRemainder:                            ;Offset 0x5088
+    cmp  ah, 03h                        ;if requested bytes per scan line is larger than 3 * 256 * 8 = 6,144
+    jbe  RequestedSizeWithinBounds      ;Offset 0x5090
+    jmp  Failure                        ;Offset 0x50fd - failure
     nop
-Label0x5090:                            ;Offset 0x5090
-    push ax
-    mov  bx, ax
+RequestedSizeWithinBounds:              ;Offset 0x5090
+    push ax                             ;Store requested scan line size in 8 byte blocks
+    mov  bx, ax                         ;also store in bx
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 13h
-    mov  ah, bl
-    out  dx, ax
-    mov  al, 51h
+    mov  al, 13h                        ;CR13 - Offset register
+    mov  ah, bl                         ;
+    out  dx, ax                         ;10-bit Value = quantity that is multiplied by:
+                                        ;               2 (word mode)
+                                        ;               4 (doubleword mode)
+                                        ;               8 (quadword mode)
+                                        ;               to specify the difference between the starting byte addresses
+                                        ;               of two consecutive scan lines.
+                                        ;               This register contains the least significant 8 bits of this value.
+                                        ;               The addressing mode is specified by bit 6 of CR14 and bit 3 of CR17.
+                                        ;               Setting bit 3 of CR31 to 1 forces doubleword mode.
+    mov  al, 51h                        ;CR 51 - Extended System Control 2 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    shl  bh, 04h
-    and  ah, 0cfh
-    or   ah, bh
-    out  dx, ax
-    pop  ax
-    shl  ax, 03h
-    jmp  Label0x50cb                    ;Offset 0x50cb
-Label0x50af:                            ;Offset 0x50af
+    shl  bh, 04h                        ;shift up the two bottom bits of bh to bits 5-4
+    and  ah, 0cfh                       ;clear out bits 5-4 (Logical screen width bits 9-8)
+    or   ah, bh                         ;set bits 5-4 (Logical screen width bits 9-8)
+    out  dx, ax                         ;
+    pop  ax                             ;restore scan line size in 8 byte blocks
+    shl  ax, 03h                        ;multiply by 8 - scan line size in bytes
+    jmp  ComputeResults                 ;Offset 0x50cb
+GetScanLines:                           ;Offset 0x50af
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
     mov  al, 13h
     call ReadDataWithIndexRegister      ;Offset 0x4640
@@ -9192,242 +9408,274 @@ Label0x50af:                            ;Offset 0x50af
     shr  ah, 04h
     mov  al, bl
     shl  ax, 03h
-    jmp  Label0x50cb                    ;Offset 0x50cb
-Label0x50cb:                            ;Offset 0x50cb
+    jmp  ComputeResults                 ;Offset 0x50cb
+ComputeResults:                         ;Offset 0x50cb
     push ax
-    cmp  byte ptr ds:[si + 0bh], 00h
-    je   Label0x50db                    ;Offset 0x50db
+    cmp  (VESAModeInfo ptr ds:[si]).MemoryModelType, 00h; 0x00 = text
+    je   IsText                         ;Offset 0x50db
     xor  bx, bx
     xor  dx, dx
-    mov  bl, byte ptr ds:[si + 08h]
-    div  bx
-Label0x50db:                            ;Offset 0x50db
-    mov  word ptr ss:[bp + 0eh], ax
-    pop  ax
-    xor  bx, bx
-    mov  bl, byte ptr ds:[si + 09h]
-    cmp  bl, 0fh
-    jne  Label0x50eb                    ;Offset 0x50eb
-    inc  bl
-Label0x50eb:                            ;Offset 0x50eb
-    xor  dx, dx
-    div  bx
-    shl  ax, 03h
-    mov  word ptr ss:[bp + 0ch], ax
-    call Func0x5102                     ;Offset 0x5102
-    mov  byte ptr ss:[bp + 11h], 00h
+    mov  bl, (VESAModeInfo ptr ds:[si]).MemoryPlanes
+    div  bx                             ;bytes per scan line / memory planes
+IsText:                                 ;Offset 0x50db
+    mov  word ptr ss:[bp + 0eh], ax     ;store result
+    pop  ax                             ;restore scan line size in bytes
+    xor  bx, bx                         ;
+    mov  bl, (VESAModeInfo ptr ds:[si]).BitsPerPixel
+    cmp  bl, 0fh                        ;15bpp
+    jne  Not15bpp2                      ;Offset 0x50eb
+    inc  bl                             ;16bpp
+Not15bpp2:                              ;Offset 0x50eb
+    xor  dx, dx                         ;
+    div  bx                             ;divide by bits per pixel
+    shl  ax, 03h                        ;multiply by 8
+    mov  word ptr ss:[bp + 0ch], ax     ;Store result
+    call CalculateMaximumNumberOfScanLines;Offset 0x5102
+    mov  byte ptr ss:[bp + 11h], 00h    ;0x00 = success
     ret
-Label0x50fd:                            ;Offset 0x50fd
-    mov  byte ptr ss:[bp + 11h], 01h
+Failure:                                ;Offset 0x50fd
+    mov  byte ptr ss:[bp + 11h], 01h    ;0x01 = failure
     ret
-Func0x504a ENDP
+GetSetLogicalScanLineLengthInternal ENDP
 
-Func0x5102 PROC NEAR                    ;Offset 0x5102
+CalculateMaximumNumberOfScanLines PROC NEAR;Offset 0x5102
     call GetInstalledMemorySizeIn4KBlocks;Offset 0x1457
-    shr  dx, 04h
-    cmp  dx, 00h
-    jne  Label0x510f                    ;Offset 0x510f
-    mov  dl, 08h
-Label0x510f:                            ;Offset 0x510f
-    xor  ax, ax
-    mov  bx, word ptr ss:[bp + 0eh]
-    cmp  byte ptr ds:[si + 0bh], 03h
-    jne  Label0x511d                    ;Offset 0x511d
-    shl  bx, 02h
-Label0x511d:                            ;Offset 0x511d
-    div  bx
-    mov  word ptr ss:[bp + 0ah], ax
+    shr  dx, 04h                        ;size in 64KiB blocks
+    cmp  dx, 00h                        ;
+    jne  IsNot05MiB                     ;Offset 0x510f
+    mov  dl, 08h                        ;8 * 64KiB = 512KiB
+IsNot05MiB:                             ;Offset 0x510f
+    xor  ax, ax                         ;dx:ax = memory in MiB
+    mov  bx, word ptr ss:[bp + 0eh]     ;Fetch result
+    cmp  (VESAModeInfo ptr ds:[si]).MemoryModelType, 03h; 0x03 = 16 color graphics
+    jne  MemoryModel3                   ;Offset 0x511d
+    shl  bx, 02h                        ;multiply by 4 - number of planes?
+MemoryModel3:                           ;Offset 0x511d
+    div  bx                             ;ax = dx:ax / bx
+    mov  word ptr ss:[bp + 0ah], ax     ;maximum number of scan lines
     ret  
-Func0x5102 ENDP
+CalculateMaximumNumberOfScanLines ENDP
 
-Func0x5123 PROC NEAR                    ;Offset 0x5123
+SetVideoMemoryWindow PROC NEAR          ;Offset 0x5123
     push dx
     push bx
-    mov  ax, 014fh
-    cmp  bh, 00h
-    jne  Label0x5145                    ;Offset 0x5145
+    mov  ax, 014fh                      ;failure return value
+    cmp  bh, 00h                        ;Subfunction 0x00 - Set Video memory window
+    jne  WrongSubfunction               ;Offset 0x5145
     mov  bx, dx
-    mov  dx, 03c4h                      ;port - 0x3c4
-    mov  al, 04h
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    mov  al, 04h                        ;SR4 - Memory Mode Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    test ah, 08h
-    jne  Label0x513f                    ;Offset 0x513f
-    shl  bx, 02h
-Label0x513f:                            ;Offset 0x513f
+    test ah, 08h                        ;Test if bit 3 = 1 - Chain 4 Mode. 
+                                        ;               This bit selects modulo 4 addressing for CPU access to display memory.
+                                        ;               A logical 1 directs the two lower order bits of the CPU address used 
+                                        ;               to select the plane in video memory to be accessed as follows:
+                                        ;A1 AO Plane Selected
+                                        ; 0  0              0
+                                        ; 0  1              1
+                                        ; 1  0              2
+                                        ; 1  1              3
+    jne  Planar                         ;Offset 0x513f
+    shl  bx, 02h                        ;Address * 4
+Planar:                                 ;Offset 0x513f
     call SetCPUUpperMemoryAddressBits   ;Offset 0x1207
-    mov  ax, 004fh
-Label0x5145:                            ;Offset 0x5145
+    mov  ax, 004fh                      ;Success
+WrongSubfunction:                       ;Offset 0x5145
     pop  bx
     pop  dx
     ret
-Func0x5123 ENDP
+SetVideoMemoryWindow ENDP
 
-Func0x5148 PROC NEAR                    ;Offset 0x5148
+GetVideoMemoryWindow PROC NEAR          ;Offset 0x5148
     push bx
-    mov  ax, 014fh
-    cmp  bh, 01h
-    jne  Label0x5175                    ;Offset 0x5175
+    mov  ax, 014fh                      ;failure return value
+    cmp  bh, 01h                        ;Not subfunction 0x01
+    jne  Exit                           ;Offset 0x5175
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 6ah
+    mov  al, 6ah                        ;CR6A - Extended System Control 4 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    mov  bl, ah
-    and  bl, 7fh
-    mov  dx, 03c4h                      ;port - 0x3c4
-    mov  al, 04h
+    mov  bl, ah                         ;Contains upper 6 bits (19-14 of the CPU base address.)
+    and  bl, 7fh                        ;And off top bit
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    mov  al, 04h                        ;SR4 - Memory Mode Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    xor  dx, dx
-    mov  dl, bl
-    test ah, 08h
-    mov  ax, 004fh
-    jne  Label0x5175                    ;Offset 0x5175
-    shr  dl, 02h
-Label0x5175:                            ;Offset 0x5175
+    xor  dx, dx                         ;
+    mov  dl, bl                         ;Store top 6 bits of CPU base address
+    test ah, 08h                        ;Test if bit 3 is set - Chain 4 mode (See SetVideoMemoryWindow for info)
+    mov  ax, 004fh                      ;Success return value
+    jne  Exit                           ;Offset 0x5175
+    shr  dl, 02h                        ;Divide by 4 if not chained
+Exit:                                   ;Offset 0x5175
     pop  bx
     ret
-Func0x5148 ENDP
+GetVideoMemoryWindow ENDP
 
-Func0x5177 PROC NEAR                    ;Offset 0x5177
-    push bx
-    mov  ax, 014fh
-    and  bl, 7fh
-    cmp  bl, 00h
-    je   Label0x5186                    ;Offset 0x5186
-    jmp  Label0x5201                    ;Offset 0x5201
+;BL = subfunction
+;00h,80h set display start
+;
+;set inputs:
+;CX = leftmost displayed pixel in scan line
+;DX = first displayed scan line
+SetDisplayStart PROC NEAR               ;Offset 0x5177
+    push bx                             ;save subfunction
+    mov  ax, 014fh                      ;result 0x01 = failure
+    and  bl, 7fh                        ;And off top bit (wait for vsync, we don't do that)
+    cmp  bl, 00h                        ;set subfunction
+    je   DoSetDisplayStart              ;Offset 0x5186
+    jmp  Exit                           ;Offset 0x5201
     nop
-Label0x5186:                            ;Offset 0x5186
-    push dx
+DoSetDisplayStart:                      ;Offset 0x5186
+    push dx                             ;Store first displayed scan line
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 13h
+    mov  al, 13h                        ;CR13 - Offset register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    mov  bl, ah
-    mov  al, 51h
+    mov  bl, ah                         ;store current value in bl
+    mov  al, 51h                        ;CR51 - Extended System Control 2 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 30h
-    shr  ah, 04h
-    mov  al, bl
-    shl  ax, 01h
-    push ax
-    mov  bx, cx
-    mov  al, 67h
+    and  ah, 30h                        ;keep bits 5-4 the msb's of the offset value
+    shr  ah, 04h                        ;shift down to 1-0
+    mov  al, bl                         ;ax = offset value
+    shl  ax, 01h                        ;* 2
+    push ax                             ;store
+    mov  bx, cx                         ;bx = left most displayed pixel
+    mov  al, 67h                        ;CR67 - Extended Miscellaneous Control 2 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0f0h
-    mov  cl, 02h
-    cmp  ah, 10h
-    jbe  Label0x51c4                    ;Offset 0x51c4
-    mov  cl, 01h
-    cmp  ah, 50h
-    jbe  Label0x51d3                    ;Offset 0x51d3
-    mov  cl, 00h
-    cmp  ah, 70h
-    je   Label0x51d3                    ;Offset 0x51d3
-    mov  cl, 00h
-    jmp  Label0x51d3                    ;Offset 0x51d3
-Label0x51c4:                            ;Offset 0x51c4
-    mov  dx, 03c4h                      ;port - 0x3c4
-    mov  al, 04h
+    and  ah, 0f0h                       ;Keep Color Mode bits
+                                        ;0000 = Mode 0: 8-bit color, 1 pixel/VCLK
+                                        ;0001 = Mode 8: 8-bit color, 2 pixels/VCLK
+                                        ;0011 = Mode 9: 15-bit color, 1 pixel/VCLK
+                                        ;0101 = Mode 10: 16-bit color, 1 pixel/VCLK
+                                        ;0111 = Mode 12: 640x480x24-bit color (packed), 1 pixel/3 DCLKs (Trio32 only)
+                                        ;1101 = Mode 13: 24-bit color, 1 pixel/VCLK
+    mov  cl, 02h                        ;divisor shr 2
+    cmp  ah, 10h                        ;Check if Mode 8
+    jbe  ModeIs8bpp                     ;Offset 0x51c4
+    mov  cl, 01h                        ;divisor shr 1
+    cmp  ah, 50h                        ;Check if Mode 10
+    jbe  DivisorSet                     ;Offset 0x51d3
+    mov  cl, 00h                        ;divisor shr 0
+    cmp  ah, 70h                        ;Mode 12
+    je   DivisorSet                     ;Offset 0x51d3
+    mov  cl, 00h                        ;divisor shr 0
+    jmp  DivisorSet                     ;Offset 0x51d3
+ModeIs8bpp:                             ;Offset 0x51c4
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    mov  al, 04h                        ;SR4 - Memory Mode Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    test ah, 08h
-    jne  Label0x51d3                    ;Offset 0x51d3
-    mov  cl, 03h
-Label0x51d3:                            ;Offset 0x51d3
-    shr  bx, cl
-    pop  ax
-    pop  dx
-    mul  dx
-    cmp  dx, 0fh
-    jbe  Label0x51e3                    ;Offset 0x51e3
-    mov  ax, 014fh
-    jmp  Label0x5201                    ;Offset 0x5201
-Label0x51e3:                            ;Offset 0x51e3
-    add  ax, bx
-    mov  bx, dx
-    jae  Label0x51ea                    ;Offset 0x51ea
-    inc  bx
-Label0x51ea:                            ;Offset 0x51ea
-    push ax
+    test ah, 08h                        ;test bit 3 = 1 - Chain 4 mode
+    jne  DivisorSet                     ;Offset 0x51d3
+    mov  cl, 03h                        ;divisor shr 3
+DivisorSet:                             ;Offset 0x51d3
+    shr  bx, cl                         ;bx = left most displayed pixel >> cl
+    pop  ax                             ;restore fetched offset * 2
+    pop  dx                             ;restore first displayed scan line
+    mul  dx                             ;dx:ax = ax * dx
+    cmp  dx, 0fh                        ;check if result less or equal to 0xf???? - Seems to me that dx:ax + bx can still overflow this
+    jbe  InBounds                       ;Offset 0x51e3
+    mov  ax, 014fh                      ;0x01 = failure
+    jmp  Exit                           ;Offset 0x5201
+InBounds:                               ;Offset 0x51e3
+    add  ax, bx                         ;start pixel to first displayed scan line * offset * 2
+    mov  bx, dx                         ;bx is upper half
+    jae  NoOverflow                     ;Offset 0x51ea
+    inc  bx                             ;increment if carry?
+NoOverflow:                             ;Offset 0x51ea
+    push ax                             ;store bottom half
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 69h
-    mov  ah, bl
+    mov  al, 69h                        ;CR69 - Extended System Control 3 register
+    mov  ah, bl                         ;set upper bit (19-16) of display start address
     out  dx, ax
-    pop  bx
-    mov  al, 0ch
-    mov  ah, bh
+    pop  bx                             ;restore bottom half
+    mov  al, 0ch                        ;CRC - Start Address High register
+    mov  ah, bh                         ;Write out bits (15-8) of display start address
     out  dx, ax
-    mov  al, 0dh
-    mov  ah, bl
+    mov  al, 0dh                        ;CRD - Start Address Low register
+    mov  ah, bl                         ;Write out bits (7-0) of display start address
     out  dx, ax
-    mov  ax, 004fh
-Label0x5201:                            ;Offset 0x5201
+    mov  ax, 004fh                      ;0x00 = success
+Exit:                                   ;Offset 0x5201
     pop  bx
     ret  
-Func0x5177 ENDP
+SetDisplayStart ENDP
 
-Func0x5203 PROC NEAR                    ;Offset 0x5203
+;input:
+;bl = subfunction 0x01 = get
+;
+;outputs:
+;CX = leftmost displayed pixel in scan line
+;DX = first displayed scan line.
+GetDisplayStart PROC NEAR               ;Offset 0x5203
     push bx
-    mov  ax, 014fh
-    cmp  bl, 01h
-    jne  Label0x5285                    ;Offset 0x5285
+    mov  ax, 014fh                      ;failure
+    cmp  bl, 01h                        ;subfunction 0x01
+    jne  Exit                           ;Offset 0x5285
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
     xor  bx, bx
-    mov  al, 69h
+    mov  al, 69h                        ;CR69 - Extended System Control 3 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 1fh
-    mov  bl, ah
-    push bx
-    mov  al, 0ch
+    and  ah, 1fh                        ;keep bottom 5 bits (documentation says only 4 bits are valid?)
+    mov  bl, ah                         ;keep in bl
+    push bx                             ;store
+    mov  al, 0ch                        ;CRC - Start Address High register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    mov  bh, ah
-    mov  al, 0dh
+    mov  bh, ah                         ;Save in bh
+    mov  al, 0dh                        ;CRD - Start Address Low register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    mov  bl, ah
-    push bx
-    mov  al, 13h
+    mov  bl, ah                         ;save in bl
+    push bx                             ;store on stack
+    mov  al, 13h                        ;CR13 - Offset register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    mov  bl, ah
-    mov  al, 51h
+    mov  bl, ah                         ;store in bl
+    mov  al, 51h                        ;CR51 - Extended System Control 2 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 30h
-    shr  ah, 04h
-    mov  al, bl
-    shl  ax, 01h
-    mov  bx, ax
-    pop  ax
-    pop  dx
-    div  bx
-    push ax
-    push dx
+    and  ah, 30h                        ;keep bits 5-4 - Logical Screen Width bits 9-8
+    shr  ah, 04h                        ;move to 1-0
+    mov  al, bl                         ;set bottom 8 bits of offset in al
+    shl  ax, 01h                        ;multiply by 2
+    mov  bx, ax                         ;store in bx
+    pop  ax                             ;Start address bottom
+    pop  dx                             ;start address top
+    div  bx                             ;ax = dx:ax / bx, dx = remainder
+    push ax                             ;store divison
+    push dx                             ;store remainder
     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    mov  al, 67h
+    mov  al, 67h                        ;CR67 - Extended Miscellaneous Control 2 register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0f0h
-    mov  cl, 02h
-    cmp  ah, 10h
-    jbe  Label0x526d                    ;Offset 0x526d
-    mov  cl, 01h
-    cmp  ah, 50h
-    jbe  Label0x527c                    ;Offset 0x527c
-    mov  cl, 00h
-    cmp  ah, 70h
-    je   Label0x527c                    ;Offset 0x527c
-    mov  cl, 00h
-    jmp  Label0x527c                    ;Offset 0x527c
-Label0x526d:                            ;Offset 0x526d
-    mov  dx, 03c4h                      ;port - 0x3c4
-    mov  al, 04h
+    and  ah, 0f0h                       ;Keep top 4 bits - Color Mode
+                                        ;0000 = Mode 0: 8-bit color, 1 pixel/VCLK
+                                        ;0001 = Mode 8: 8-bit color, 2 pixels/VCLK
+                                        ;0011 = Mode 9: 15-bit color, 1 pixel/VCLK
+                                        ;0101 = Mode 10: 16-bit color, 1 pixel/VCLK
+                                        ;0111 = Mode 12: 640x480x24-bit color (packed), 1 pixel/3 DCLKs (Trio32 only)
+                                        ;1101 = Mode 13: 24-bit color, 1 pixel/VCLK
+    mov  cl, 02h                        ;multiplier shl 2
+    cmp  ah, 10h                        ;Mode 8
+    jbe  ModeIs8bpp                     ;Offset 0x526d
+    mov  cl, 01h                        ;multiplier shl 1
+    cmp  ah, 50h                        ;Mode 10
+    jbe  MultiplierSet                  ;Offset 0x527c
+    mov  cl, 00h                        ;multiplier shl 0
+    cmp  ah, 70h                        ;Mode 12
+    je   MultiplierSet                  ;Offset 0x527c
+    mov  cl, 00h                        ;multiplier shl 0
+    jmp  MultiplierSet                  ;Offset 0x527c
+ModeIs8bpp:                             ;Offset 0x526d
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    mov  al, 04h                        ;SR4 - Memory Mode Control register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    test ah, 08h
-    jne  Label0x527c                    ;Offset 0x527c
-    mov  cl, 03h
-Label0x527c:                            ;Offset 0x527c
-    pop  ax
-    shl  ax, cl
-    mov  cx, ax
-    pop  dx
-    mov  ax, 4fh
-Label0x5285:                            ;Offset 0x5285
+    test ah, 08h                        ;test bit 3 - Chain 4 Mode
+    jne  MultiplierSet                  ;Offset 0x527c
+    mov  cl, 03h                        ;multiplier shl 3
+MultiplierSet:                          ;Offset 0x527c
+    pop  ax                             ;restore remainder
+    shl  ax, cl                         ;ax = ax << cl
+    mov  cx, ax                         ;save result in cx
+    pop  dx                             ;save division in dx
+    mov  ax, 4fh                        ;0x00 = success
+Exit:                                   ;Offset 0x5285
     pop  bx
     ret  
-Func0x5203 ENDP
+GetDisplayStart ENDP
 
 VESADDCReadEDID PROC NEAR               ;Offset 0x5287
     push bx
@@ -9930,57 +10178,79 @@ DDCSendAck PROC NEAR                    ;Offset 0x5593
     ret
 DDCSendAck ENDP
 
+;AX = 4F09h
+;BL = subfunction
+;00h set (primary) palette
+;01h get (primary) palette
+;02h set secondary palette data
+;03h get secondary palette data
+;80h set palette during vertical retrace
+;CX = number of entries to change
+;DX = starting palette index
+;ES:DI -> palette buffer, array of DAC entries (see #00086)
+
+;Return:
+;AL = 4Fh if function supported
+;AH = status
+;00h successful
+;01h failed
+;It's clear that this function does not do what it advertises
 GetSetDACPaletteControl PROC NEAR       ;Offset 0x559b
-    mov  byte ptr ss:[bp + 11h], 01h
-    cmp  bl, 01h
-    ja   Label0x55b7                    ;Offset 0x55b7
+    mov  byte ptr ss:[bp + 11h], 01h    ;Failure
+    cmp  bl, 01h                        ;
+    ja   Failure                        ;Offset 0x55b7
     mov  byte ptr ss:[bp + 0fh], 06h
-    or   bh, bh
-    jne  Label0x55b5                    ;Offset 0x55b5
+    or   bh, bh                         ;function 0x00 - set primary palette
+    jne  GoDoSomething                  ;Offset 0x55b5
     mov  byte ptr ss:[bp + 0fh], 06h
-Label0x55b0:                            ;Offset 0x55b0
-    mov  byte ptr ss:[bp + 11h], 00h
+Success:                                ;Offset 0x55b0
+    mov  byte ptr ss:[bp + 11h], 00h    ;Success
     ret
-Label0x55b5:                            ;Offset 0x55b5
-    jmp  Label0x55b0                    ;Offset 0x55b0
-Label0x55b7:                            ;Offset 0x55b7
+GoDoSomething:                          ;Offset 0x55b5
+    jmp  Success                        ;Offset 0x55b0 - We did it!
+Failure:                                ;Offset 0x55b7
     ret
 GetSetDACPaletteControl ENDP
 
 VESAPowerManagement PROC NEAR           ;Offset 0x55b8
-    mov  dx, 03c4h                      ;port - 0x3c4
-    in   al, dx
+    mov  dx, SequenceIndex              ;port - 0x3c4
+    in   al, dx                         ;Save state
     push ax
-    mov  al, 08h
+    mov  al, 08h                        ;SR8 - Unlock Extended Sequencer register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    push ax
-    mov  ah, 06h
+    push ax                             ;Save state
+    mov  ah, 06h                        ;Unlock Extended Sequencer registers
     out  dx, ax
-    mov  byte ptr ss:[bp + 11h], 01h
-    cmp  bl, 02h
-    ja   Label0x55fa                    ;Offset 0x55fa
+    mov  byte ptr ss:[bp + 11h], 01h    ;failure return value
+    cmp  bl, 02h                        ;Highest subfunction
+    ja   Exit                           ;Offset 0x55fa
     cmp  bl, 00h
-    je   Label0x55f1                    ;Offset 0x55f1
+    je   GetPMCapabilities              ;Offset 0x55f1
     cmp  bl, 01h
-    je   Label0x55e9                    ;Offset 0x55e9
+    je   SetDisplayPowerState           ;Offset 0x55e9
     cmp  bl, 02h
-    je   Label0x55de                    ;Offset 0x55de
-Label0x55de:                            ;Offset 0x55de
-    call Func0x4fc2                     ;Offset 0x4fc2
+    je   GetDisplayPowerState           ;Offset 0x55de - Unnecessary jump
+GetDisplayPowerState:                   ;Offset 0x55de
+    call VESAGetDisplayPowerState       ;Offset 0x4fc2
     mov  byte ptr ss:[bp + 0fh], bh
-    je   Label0x55f6                    ;Offset 0x55f6
-    jmp  Label0x55fa                    ;Offset 0x55fa
+    je   Success                        ;Offset 0x55f6
+    jmp  Exit                           ;Offset 0x55fa
     nop
-Label0x55e9:                            ;Offset 0x55e9
-    call Func0x4f72                     ;Offset 0x4f72
-    je   Label0x55f6                    ;Offset 0x55f6
-    jmp  Label0x55fa                    ;Offset 0x55fa
+SetDisplayPowerState:                   ;Offset 0x55e9
+    call VESASetDisplayPowerState       ;Offset 0x4f72
+    je   Success                        ;Offset 0x55f6
+    jmp  Exit                           ;Offset 0x55fa
     nop
-Label0x55f1:                            ;Offset 0x55f1
-    mov  word ptr ss:[bp + 0eh], 0710h
-Label0x55f6:                            ;Offset 0x55f6
-    mov  byte ptr ss:[bp + 11h], 00h
-Label0x55fa:                            ;Offset 0x55fa
+GetPMCapabilities:                      ;Offset 0x55f1
+    mov  word ptr ss:[bp + 0eh], 0710h  ;bits 3-0 Minor Version = 0x00
+                                        ;bits 7-4 Major Version = 0x01
+                                        ;bit 8 = 1 - Standby supported
+                                        ;bit 9 = 1 - Suspend supported
+                                        ;bit 10 = 1 - Off supported
+                                        ;bit 11 = 0 - Reduced on not supported
+Success:                                ;Offset 0x55f6
+    mov  byte ptr ss:[bp + 11h], 00h    ;success return value
+Exit:                                   ;Offset 0x55fa
     pop  ax
     out  dx, ax
     pop  ax
@@ -10001,7 +10271,7 @@ VESADisplayDataChannel PROC NEAR        ;Offset 0x55ff
 InstallationCheck:                      ;Offset 0x5617
     call      VESADDCInstallationCheck  ;Offset 0x5342
     mov       word ptr ss:[bp + 0eh], bx
-    je        Success                   ;Offset 0x5632 - Last instruction is xor dx, dx - so this always succeeds?
+    je        Success                   ;Offset 0x5632
     jmp       Exit                      ;Offset 0x5636
     nop
 ReadEDID:                               ;Offset 0x5622
@@ -10020,43 +10290,66 @@ Exit:                                   ;Offset 0x5636
     ret
 VESADisplayDataChannel ENDP
 
+;inputs:
+;es:di points to 128 byte buffer
+;
+;outputs:
+;ah = status 0 - success, 1 - failure
+;es:di buffer filled with info:
+;
+;Info comes from: http://www.ctyme.com/intr/rb-0273.htm
+;
+;Offset  Size    Description     (Table 00077)
+;00h  4 BYTEs   (ret) signature ("VESA")
+;(call) VESA 2.0 request signature ("VBE2"), required to receive
+;version 2.0 info
+;04h    WORD    VESA version number (one-digit minor version -- 0102h = v1.2)
+;06h    DWORD   pointer to OEM name
+;"761295520" for ATI
+;0Ah    DWORD   capabilities flags (see #00078)
+;0Eh    DWORD   pointer to list of supported VESA and OEM video modes
+;(list of words terminated with FFFFh)
+;12h    WORD    total amount of video memory in 64K blocks
+;---VBE v1.x ---
+;14h 236 BYTEs  reserved
+
 GetSuperVGAInfo PROC NEAR               ;Offset 0x5637
-    mov       byte ptr ss:[bp + 11h], 00h
+    mov       byte ptr ss:[bp + 11h], 00h;return value - success
     xor       ax, ax
     push      di
-    mov       cx, 0080h
+    mov       cx, 0080h                 ;clear 128 bytes
     rep stosw
     pop       di
     ;mov       dword ptr es:[di], 41534556h; "VESA" - masm encoding difference
-    DB 026h, 066h, 0C7h, 005h, 056h, 045h, 053h, 041h
+    DB 026h, 066h, 0C7h, 005h, 056h, 045h, 053h, 041h;0x00 = "VESA"
     add       di, 04h
-    mov       ax, 0102h
+    mov       ax, 0102h                 ;0x04 = VESA version number. 1.2 in this case.
     stosw
-    mov       ax, offset Data4d10       ;Offset 0x4d10
-    stosw
-    mov       ax, cs
-    stosw
-    add       di, 04h
+    mov       ax, offset OEMName        ;Offset 0x4d10
+    stosw                               ;0x06 = OEM name
+    mov       ax, cs                    ;0x08 = segment for OEM name FAR pointer
+    stosw                               ;
+    add       di, 04h                   ;Skip capabilities flags
     lea       ax, ds:[VESAVideoModeIds] ;Offset 0x4d28
-    stosw
-    mov       ax, cs
+    stosw                               ;0x0E = Pointer to list of supported VESA and OEM video modes
+    mov       ax, cs                    ;0x10 = segment for VESA mode list
     stosw
     call      GetInstalledMemorySizeIn4KBlocks;Offset 0x1457
-    mov       ax, 08h
+    mov       ax, 08h                   ;8 * 64KiB = 0.5MiB
     cmp       dh, 00h
-    je        Label0x5688               ;Offset 0x5688
-    shl       ax, 01h
+    je        Done                      ;Offset 0x5688
+    shl       ax, 01h                   ;16 * 64KiB = 1MiB
     cmp       dh, 01h
-    je        Label0x5688               ;Offset 0x5688
-    shl       ax, 01h
+    je        Done                      ;Offset 0x5688
+    shl       ax, 01h                   ;32 * 64KiB = 2MiB
     cmp       dh, 02h
-    je        Label0x5688               ;Offset 0x5688
-    shl       ax, 01h
+    je        Done                      ;Offset 0x5688
+    shl       ax, 01h                   ;64 * 64KiB = 4MiB
     cmp       dh, 04h
-    je        Label0x5688               ;Offset 0x5688
-    mov       ax, 10h
-Label0x5688:                            ;Offset 0x5688
-    mov       word ptr es:[di], ax
+    je        Done                      ;Offset 0x5688
+    mov       ax, 10h                   ;Default to 1MiB if unknown
+Done:                                   ;Offset 0x5688
+    mov       word ptr es:[di], ax      ;0x12 = total memory in 64k blocks
     ret
 GetSuperVGAInfo ENDP
 
