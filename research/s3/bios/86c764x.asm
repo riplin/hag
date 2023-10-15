@@ -181,7 +181,7 @@ BDA_VideoDisplayDataArea                EQU 0489h;Byte 0x489
     BDA_VDDA_VGA                        EQU 01h
     BDA_VDDA_GrayScale                  EQU 02h
     BDA_VDDA_MonochromeMonitor          EQU 04h
-    BDA_VDDA_DefaultPaletteDisabled     EQU 08h
+    BDA_VDDA_PaletteLoadingEnabled      EQU 08h
     BDA_VDDA_DisplaySwitchingEnabled    EQU 40h
     BDA_VDDA_LineMode350                EQU 00h
     BDA_VDDA_LineMode400                EQU 10h
@@ -898,37 +898,47 @@ VideoModeData STRUCT
     Value7 WORD ?
 VideoModeData ENDS
 
+;Flags:
+; 0 = Text
+; 1 = Always 1
+; 2 = 4bpp
+; 3 = Always 0
+; 4 = 800x600 and text modes don't have these two bits set
+; 5 = ^ Always set together...
+; 6 = Always 0
+; 7 = Always 0
+
 ;These are all VESA modes.
-VESAVideoModeData       VideoModeData < INT10_00_54_T_132x43, offset VESAVideoParameters132x43, 003h, 002h, 000h, 002h, offset ModeData132x43x8 >
-                        VideoModeData < INT10_00_55_T_132x25, offset VESAVideoParameters132x25, 033h, 002h, 000h, 002h, offset ModeData132x25x8 >
-                        VideoModeData < INT10_00_68_G_640x400x256C, offset VESAVideoParameters640x400, 036h, 003h, 000h, 00Eh, offset ModeData640x400x8 >
-                        VideoModeData < INT10_00_69_G_640x480x256C, offset VESAVideoParameters640x480, 036h, 003h, 000h, 00Eh, offset ModeData640x480x8 >
-                        VideoModeData < INT10_00_6A_G_800x600x16C, offset VESAVideoParameters800x600, 002h, 006h, 000h, 006h, offset ModeData800x600x4 >
-                        VideoModeData < INT10_00_6B_G_800x600x256C, offset VESAVideoParameters800x600, 006h, 003h, 000h, 00Eh, offset ModeData800x600x8 >
-                        VideoModeData < INT10_00_6C_1024x768x16C, offset VESAVideoParameters1024x768, 032h, 006h, 000h, 006h, offset ModeData1024x768x4 >
-                        VideoModeData < INT10_00_6D_1024x768x256C, offset VESAVideoParameters1024x768, 036h, 007h, 000h, 00Eh, offset ModeData1024x768x8 >
-                        VideoModeData < INT10_00_6E_1280x1024x16C, offset VESAVideoParameters1280x1024, 032h, 006h, 000h, 006h, offset ModeData1280x1024x4 >
-                        VideoModeData < INT10_00_6F_1280x1024x256C, offset VESAVideoParameters1280x1024, 036h, 003h, 005h, 00Eh, offset ModeData1280x1024x8 >
-                        VideoModeData < INT10_00_70_640x480x32K, offset VESAVideoParameters640x480, 036h, 003h, 001h, 00Eh, offset ModeData640x480x16 >
-                        VideoModeData < INT10_00_71_640x480x64K, offset VESAVideoParameters640x480, 036h, 003h, 002h, 00Eh, offset ModeData640x480x16 >
-                        VideoModeData < INT10_00_72_640x480x16M, offset VESAVideoParameters640x480, 036h, 003h, 004h, 00Eh, offset ModeData640x480x32 >
-                        VideoModeData < INT10_00_73_800x600x32K, offset VESAVideoParameters800x600, 006h, 003h, 001h, 00Eh, offset ModeData800x600x16 >
-                        VideoModeData < INT10_00_74_800x600x64K, offset VESAVideoParameters800x600, 006h, 003h, 002h, 00Eh, offset ModeData800x600x16 >
-                        VideoModeData < INT10_00_75_800x600x16M, offset VESAVideoParameters800x600, 006h, 003h, 004h, 00Eh, offset ModeData800x600x32 >
-                        VideoModeData < INT10_00_76_1024x768x32K, offset VESAVideoParameters1024x768, 036h, 003h, 001h, 00Eh, offset ModeData1024x768x16 >
-                        VideoModeData < INT10_00_77_1024x768x64K, offset VESAVideoParameters1024x768, 036h, 003h, 002h, 00Eh, offset ModeData1024x768x16 >
-                        VideoModeData < INT10_00_78_1024x768x16M, offset VESAVideoParameters1024x768, 036h, 003h, 004h, 00Eh, offset ModeData1024x768x32 >
-                        VideoModeData < INT10_00_79_1280x1024x32K, offset VESAVideoParameters1280x1024, 036h, 003h, 001h, 00Eh, offset ModeData1280x1024x16 >
-                        VideoModeData < INT10_00_7A_1280x1024x64K, offset VESAVideoParameters1280x1024, 036h, 003h, 002h, 00Eh, offset ModeData1280x1024x16 >
-                        VideoModeData < INT10_00_7C_1600x1200x256, offset VESAVideoParameters1600x1200, 036h, 003h, 005h, 00Eh, offset ModeData1600x1200x8 >
-                        VideoModeData < INT10_00_49_640x480x256C, offset VESAVideoParameters640x480, 036h, 003h, 000h, 00Eh, offset ModeData640x480x8xOEM >
-                        VideoModeData < INT10_00_4A_800x600x16C, offset VESAVideoParameters800x600, 002h, 007h, 000h, 00Eh, offset ModeData800x600x4xOEM >
-                        VideoModeData < INT10_00_4B_800x600x256C, offset VESAVideoParameters800x600, 006h, 007h, 000h, 00Eh, offset ModeData800x600x8xOEM >
-                        VideoModeData < INT10_00_4C_1024x768x16C, offset VESAVideoParameters1024x768, 032h, 007h, 000h, 00Eh, offset ModeData1024x768x4xOEM >
-                        VideoModeData < INT10_00_4D_1024x768x256C, offset VESAVideoParameters1024x768, 036h, 007h, 000h, 00Eh, offset ModeData1024x768x8xOEM >
-                        VideoModeData < INT10_00_4E_1152x864x256C, offset VESAVideoParameters1152x864, 036h, 007h, 000h, 00Eh, offset ModeData1152x864x8xOEM >
-                        VideoModeData < INT10_00_4F_1280x1024x16C, offset VESAVideoParameters1280x1024, 032h, 007h, 005h, 00Eh, offset ModeData1280x1024x4xOEM >
-                        VideoModeData < INT10_00_52_640x400x16M, offset VESAVideoParameters640x400, 036h, 003h, 004h, 00Eh, offset ModeData640x400x32xOEM >
+VESAVideoModeData       VideoModeData < INT10_00_54_T_132x43,       offset VESAVideoParameters132x43,   00000011b, 002h, 000h, 002h, offset ModeData132x43x8 >
+                        VideoModeData < INT10_00_55_T_132x25,       offset VESAVideoParameters132x25,   00110011b, 002h, 000h, 002h, offset ModeData132x25x8 >
+                        VideoModeData < INT10_00_68_G_640x400x256C, offset VESAVideoParameters640x400,  00110110b, 003h, 000h, 00Eh, offset ModeData640x400x8 >
+                        VideoModeData < INT10_00_69_G_640x480x256C, offset VESAVideoParameters640x480,  00110110b, 003h, 000h, 00Eh, offset ModeData640x480x8 >
+                        VideoModeData < INT10_00_6A_G_800x600x16C,  offset VESAVideoParameters800x600,  00000010b, 006h, 000h, 006h, offset ModeData800x600x4 >
+                        VideoModeData < INT10_00_6B_G_800x600x256C, offset VESAVideoParameters800x600,  00000110b, 003h, 000h, 00Eh, offset ModeData800x600x8 >
+                        VideoModeData < INT10_00_6C_1024x768x16C,   offset VESAVideoParameters1024x768, 00110010b, 006h, 000h, 006h, offset ModeData1024x768x4 >
+                        VideoModeData < INT10_00_6D_1024x768x256C,  offset VESAVideoParameters1024x768, 00110110b, 007h, 000h, 00Eh, offset ModeData1024x768x8 >
+                        VideoModeData < INT10_00_6E_1280x1024x16C,  offset VESAVideoParameters1280x1024,00110010b, 006h, 000h, 006h, offset ModeData1280x1024x4 >
+                        VideoModeData < INT10_00_6F_1280x1024x256C, offset VESAVideoParameters1280x1024,00110110b, 003h, 005h, 00Eh, offset ModeData1280x1024x8 >
+                        VideoModeData < INT10_00_70_640x480x32K,    offset VESAVideoParameters640x480,  00110110b, 003h, 001h, 00Eh, offset ModeData640x480x16 >
+                        VideoModeData < INT10_00_71_640x480x64K,    offset VESAVideoParameters640x480,  00110110b, 003h, 002h, 00Eh, offset ModeData640x480x16 >
+                        VideoModeData < INT10_00_72_640x480x16M,    offset VESAVideoParameters640x480,  00110110b, 003h, 004h, 00Eh, offset ModeData640x480x32 >
+                        VideoModeData < INT10_00_73_800x600x32K,    offset VESAVideoParameters800x600,  00000110b, 003h, 001h, 00Eh, offset ModeData800x600x16 >
+                        VideoModeData < INT10_00_74_800x600x64K,    offset VESAVideoParameters800x600,  00000110b, 003h, 002h, 00Eh, offset ModeData800x600x16 >
+                        VideoModeData < INT10_00_75_800x600x16M,    offset VESAVideoParameters800x600,  00000110b, 003h, 004h, 00Eh, offset ModeData800x600x32 >
+                        VideoModeData < INT10_00_76_1024x768x32K,   offset VESAVideoParameters1024x768, 00110110b, 003h, 001h, 00Eh, offset ModeData1024x768x16 >
+                        VideoModeData < INT10_00_77_1024x768x64K,   offset VESAVideoParameters1024x768, 00110110b, 003h, 002h, 00Eh, offset ModeData1024x768x16 >
+                        VideoModeData < INT10_00_78_1024x768x16M,   offset VESAVideoParameters1024x768, 00110110b, 003h, 004h, 00Eh, offset ModeData1024x768x32 >
+                        VideoModeData < INT10_00_79_1280x1024x32K,  offset VESAVideoParameters1280x1024,00110110b, 003h, 001h, 00Eh, offset ModeData1280x1024x16 >
+                        VideoModeData < INT10_00_7A_1280x1024x64K,  offset VESAVideoParameters1280x1024,00110110b, 003h, 002h, 00Eh, offset ModeData1280x1024x16 >
+                        VideoModeData < INT10_00_7C_1600x1200x256,  offset VESAVideoParameters1600x1200,00110110b, 003h, 005h, 00Eh, offset ModeData1600x1200x8 >
+                        VideoModeData < INT10_00_49_640x480x256C,   offset VESAVideoParameters640x480,  00110110b, 003h, 000h, 00Eh, offset ModeData640x480x8xOEM >
+                        VideoModeData < INT10_00_4A_800x600x16C,    offset VESAVideoParameters800x600,  00000010b, 007h, 000h, 00Eh, offset ModeData800x600x4xOEM >
+                        VideoModeData < INT10_00_4B_800x600x256C,   offset VESAVideoParameters800x600,  00000110b, 007h, 000h, 00Eh, offset ModeData800x600x8xOEM >
+                        VideoModeData < INT10_00_4C_1024x768x16C,   offset VESAVideoParameters1024x768, 00110010b, 007h, 000h, 00Eh, offset ModeData1024x768x4xOEM >
+                        VideoModeData < INT10_00_4D_1024x768x256C,  offset VESAVideoParameters1024x768, 00110110b, 007h, 000h, 00Eh, offset ModeData1024x768x8xOEM >
+                        VideoModeData < INT10_00_4E_1152x864x256C,  offset VESAVideoParameters1152x864, 00110110b, 007h, 000h, 00Eh, offset ModeData1152x864x8xOEM >
+                        VideoModeData < INT10_00_4F_1280x1024x16C,  offset VESAVideoParameters1280x1024,00110010b, 007h, 005h, 00Eh, offset ModeData1280x1024x4xOEM >
+                        VideoModeData < INT10_00_52_640x400x16M,    offset VESAVideoParameters640x400,  00110110b, 003h, 004h, 00Eh, offset ModeData640x400x32xOEM >
                         DB 0FFh;Terminate
 
 VideoParametersTable STRUCT ;Struct size = 64 bytes
@@ -1012,7 +1022,7 @@ Data083B                DB 001h, 0C7h, 0C8h, 081h, 0D3h, 013h, 074h, 0E0h, 000h,
                         DB 042h, 050h, 054h, 054h, 060h, 060h, 05Dh, 05Eh, 067h, 0FFh
 
 ;00 pointer to CRTC registers
-;02 upper bit is terminate flag, lower 3 bits are a filter. if it's higher than a 3 bit value from the Bios flags register, it's rejected.
+;02 bit 7 is terminate flag, bit 6  is ?bits 2-0 are a filter. if it's higher than a 3 bit value from the Bios flags register, it's rejected.
 ;03 bits 4-0 = Clock configuration index. 0x11 is a special case value.
 ;04 CR50 - Extended System Control 1 register. bit 1 is used to indicate that hsync and vsync are positive sync (MiscellaneousRead/Write)
 ;05 CR54 - Extended Memory Control 2 register value for 1MiB size.
@@ -1038,6 +1048,7 @@ VESAResolutionVariant STRUCT
 VESAResolutionVariant ENDS
 
 ;The code searches backwards through this data for every resolution/bit depth. So keep the data sitting above the labled ones together.
+;I'm starting to think that this is refresh rate data.
 
 ModeData132x43x8        VESAResolutionVariant <offset Data063B, 080h, 002h, 000h, 008h, 008h, 038h, 038h, 000h, 000h, 000h> ;Offset 0x87c
 
@@ -1779,15 +1790,15 @@ Func0x1185 PROC FAR                     ;Offset 0x1185
     xchg al, ah
     call GetVideoModeFlags              ;Offset 0x105d
     xchg al, ah
-    jne  Label0x119a                    ;Offset 0x119a
-    test ah, 01h
-    jne  Label0x119a                    ;Offset 0x119a
+    jne  Exit                           ;Offset 0x119a
+    test ah, 01h                        ;Text
+    jne  Exit                           ;Offset 0x119a
     push si
     push bx
     push cx
     push dx
     jmp  Func0x2b82                     ;Offset 0x2b82
-Label0x119a:                            ;Offset 0x119a
+Exit:                                   ;Offset 0x119a
     mov  ah, 0dh
     pop  ds
     iret
@@ -1797,14 +1808,14 @@ Func0x119e PROC FAR                     ;Offset 0x119e
     xchg al, ah
     call GetVideoModeFlags              ;Offset 0x105d
     xchg al, ah
-    jne  Label0x11b2                    ;Offset 0x11b2
-    test ah, 01h
-    jne  Label0x11b2                    ;Offset 0x11b2
+    jne  Exit                           ;Offset 0x11b2
+    test ah, 01h                        ;Text
+    jne  Exit                           ;Offset 0x11b2
     push bx
     push cx
     push dx
     jmp  Func0x2ac1                     ;Offset 0x2ac1
-Label0x11b2:                            ;Offset 0x11b2
+Exit:                                   ;Offset 0x11b2
     mov  ah, 0ch
     pop  ds
     iret
@@ -1814,11 +1825,11 @@ Func0x11b6 PROC NEAR                    ;Offset 0x11b6
     xchg al, ah
     call GetVideoModeFlags              ;Offset 0x105d
     xchg al, ah
-    jne  Label0x11c6                    ;Offset 0x11c6
-    test ah, 01h
+    jne  Exit                           ;Offset 0x11c6
+    test ah, 01h                        ;Text
     je   Func0x11dc                     ;Offset 0x11dc
     mov  ah, 03h
-Label0x11c6:                            ;Offset 0x11c6
+Exit:                                   ;Offset 0x11c6
     jmp  Func0x2715                     ;Offset 0x2715
 Func0x11b6 ENDP
 
@@ -1826,15 +1837,13 @@ Func0x11c9 PROC NEAR                    ;Offset 0x11c9
     xchg al, ah
     call GetVideoModeFlags              ;Offset 0x105d
     xchg al, ah
-    jne  Func0x11d9                     ;Offset 0x11d9
-    test ah, 01h
+    jne  Label0x11d9                    ;Offset 0x11d9
+    test ah, 01h                        ;Text
     je   Func0x11e6                     ;Offset 0x11e6
     mov  ah, 03h
-Func0x11c9 ENDP
-
-Func0x11d9 PROC NEAR                    ;Offset 0x11d9
+Label0x11d9:                            ;Offset 0x11d9
     jmp  Func0x2694                     ;Offset 0x2694
-Func0x11d9 ENDP
+Func0x11c9 ENDP
 
 Func0x11dc PROC NEAR                    ;Offset 0x11dc
     cmp  byte ptr ds:[BDA_DisplayMode], 6ah;Offset 0x449
@@ -1856,12 +1865,12 @@ Func0x11f1 PROC NEAR                    ;Offset 0x11f1
     xchg al, ah
     call GetVideoModeFlags              ;Offset 0x105d
     xchg al, ah
-    jne  Label0x1204                    ;Offset 0x1204
-    test ah, 01h
-    je   Label0x1204                    ;Offset 0x1204
+    jne  Exit                           ;Offset 0x1204
+    test ah, 01h                        ;Text
+    je   Exit                           ;Offset 0x1204
     mov  ah, 03h
     jmp  Func0x240d                     ;Offset 0x240d
-Label0x1204:                            ;Offset 0x1204
+Exit:                                   ;Offset 0x1204
     jmp  Func0x240a                     ;Offset 0x240a
 Func0x11f1 ENDP
 
@@ -2751,9 +2760,9 @@ ValidVideoMode:                         ;Offset 0x182c
     call ModeSetBDA                     ;Offset 0x18e8
     cmp  al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
     ja   IsVESAMode                     ;Offset 0x1850
-    call Func0x1a4e                     ;Offset 0x1a4e - This function seems to destroy al?
+    call SetBDACursorSize               ;Offset 0x1a4e - This function seems to destroy al?
     je   IsVESAMode                     ;Offset 0x1850
-    and  al, 0dfh
+    and  al, 0dfh                       ;bit 5 = 0
     mov  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
     call EmptyFunction3                 ;Offset 0x1380
     call SetSystemAdapterVideoMode      ;Offset 0x1acc
@@ -2767,7 +2776,7 @@ IsVESAMode:                             ;Offset 0x1850
     call ApplyVideoParameters           ;Offset 0x4829
     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call ApplyVESAOverrideData          ;Offset 0x1079
-    call Func0x4909                     ;Offset 0x4909
+    call SetPalette                     ;Offset 0x4909
     mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     cmp  al, BDA_DM_320x200_4_Color_Graphics1;0x04
@@ -2777,7 +2786,7 @@ IsVESAMode:                             ;Offset 0x1850
     cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
     jbe  Label0x18b5                    ;Offset 0x18b5
     call GetVideoModeFlags              ;Offset 0x105d
-    test al, 01h
+    test al, 01h                        ;Text
     je   Label0x18b5                    ;Offset 0x18b5
 Label0x1885:                            ;Offset 0x1885
     call Func0x1c65                     ;Offset 0x1c65
@@ -2785,7 +2794,7 @@ Label0x1885:                            ;Offset 0x1885
     mov  bx, 0008h                      ;Fetch element 3 - Alphanumeric Character Set Override pointer
     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
     jne  CharacterSetNotFound           ;Offset 0x1896
-    call Func0x1bea                     ;Offset 0x1bea
+    call ConfigureFontAndCursor         ;Offset 0x1bea
 CharacterSetNotFound:                   ;Offset 0x1896
     mov  bx, 0010h                      ;Secondary Save Pointer Table pointer (VGA)
     call GetVideoParameterBlockElement  ;Offset 0x1d95
@@ -2793,9 +2802,9 @@ CharacterSetNotFound:                   ;Offset 0x1896
     les  bx, es:[bx + 06h]              ;Pointer to Character font definition table
     mov  ax, es
     or   ax, bx
-    je   Label0x18c9                    ;Offset 0x18c9
+    je   Label0x18c9                    ;Offset 0x18c9 - No font definition found
     mov  ax, 0007h
-    call Func0x1bd1                     ;Offset 0x1bd1
+    call CheckCurrentModeExists         ;Offset 0x1bd1
     jne  Label0x18c9                    ;Offset 0x18c9
     call Func0x1c19                     ;Offset 0x1c19
     jmp  Label0x18c9                    ;Offset 0x18c9
@@ -2968,9 +2977,30 @@ Label0x1a48:                            ;Offset 0x1a48
     ret  
 ModeSetBDA ENDP
 
+    BDA_DM_40x25_BW_Text                EQU 00h
+    BDA_DM_40x25_16_Color_Text          EQU 01h
+    BDA_DM_80x25_16_Gray_Text           EQU 02h
+    BDA_DM_80x25_16_Color_Text          EQU 03h
+    BDA_DM_320x200_4_Color_Graphics1    EQU 04h
+    BDA_DM_320x200_4_Color_Graphics2    EQU 05h;?
+    BDA_DM_640x200_BW_Graphics          EQU 06h
+    BDA_DM_80x25_Monochrome_Text        EQU 07h
+    BDA_DM_Unknown1                     EQU 08h
+    BDA_DM_Unknown2                     EQU 09h
+    BDA_DM_Unknown3                     EQU 0Ah
+    BDA_DM_Reserved1                    EQU 0Bh
+    BDA_DM_Reserved2                    EQU 0Ch
+    BDA_DM_320x200_16_Color_Graphics    EQU 0Dh
+    BDA_DM_640x200_16_Color_Graphics    EQU 0Eh
+    BDA_DM_640x350_Monochrome_Graphics  EQU 0Fh
+    BDA_DM_640x350_16_Color_Graphics    EQU 10h
+    BDA_DM_640x480_BW_Graphics          EQU 11h
+    BDA_DM_640x480_16_Color_Graphics    EQU 12h
+    BDA_DM_320x200_256_Color_Graphics   EQU 13h
+
 ;inputs:
 ;al = video mode
-Func0x1a4e PROC NEAR                    ;Offset 0x1a4e
+SetBDACursorSize PROC NEAR                    ;Offset 0x1a4e
     mov  ah, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
     and  ah, BDA_DH_InitialVideoModeMask;0x30
     cmp  ah, BDA_DH_80x25Monochrome     ;0x30
@@ -2984,13 +3014,13 @@ IsColor:                                ;Offset 0x1a6a
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
     je   IsMonochrome1                  ;Offset 0x1a8f
     mov  ah, BDA_VMO_Inactive           ;0x8
-    cmp  al, 02h
-    jbe  Label0x1a7e                    ;Offset 0x1a7e
-    cmp  al, 04h
-    jae  Label0x1a7e                    ;Offset 0x1a7e
+    cmp  al, BDA_DM_80x25_16_Gray_Text  ;0x02
+    jbe  SetInactive                    ;Offset 0x1a7e
+    cmp  al, BDA_DM_320x200_4_Color_Graphics1;0x04
+    jae  SetInactive                    ;Offset 0x1a7e
     or   ah, BDA_VMO_Unknown            ;0x4
-Label0x1a7e:                            ;Offset 0x1a7e
-    or   byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487
+SetInactive:                            ;Offset 0x1a7e
+    or   byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487 - Set inactive
     mov  al, 08h                        ; al = PointHeightOfCharacterMatrix 0x8 = 8
 Label0x1a84:                            ;Offset 0x1a84
     mov  byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484, 0x18 = 24
@@ -2998,38 +3028,38 @@ Label0x1a84:                            ;Offset 0x1a84
     mov  word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
     ret
 IsMonochrome1:                          ;Offset 0x1a8f
-    cmp  al, 0fh
-    je   Label0x1aa4                    ;Offset 0x1aa4
-    cmp  al, 07h
-    je   Label0x1aa4                    ;Offset 0x1aa4
-    mov  bh, al
+    cmp  al, BDA_DM_640x350_Monochrome_Graphics;0x0f
+    je   ClearDontClearDisplay          ;Offset 0x1aa4
+    cmp  al, BDA_DM_80x25_Monochrome_Text;0x07
+    je   ClearDontClearDisplay          ;Offset 0x1aa4
+    mov  bh, al                         ;save mode
     call GetVideoModeFlags              ;Offset 0x105d
     jne  Exit                           ;Offset 0x1ac9
-    test al, 02h
-    mov  al, bh
-    jne  Exit                           ;Offset 0x1ac9
-Label0x1aa4:                            ;Offset 0x1aa4
+    test al, 02h                        ;test flag
+    mov  al, bh                         ;restore mode
+    jne  Exit                           ;Offset 0x1ac9 exit if set
+ClearDontClearDisplay:                  ;Offset 0x1aa4
     mov  al, 00h
     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
     jmp  Exit                           ;Offset 0x1ac9
 IsMonochrome2:                          ;Offset 0x1aad
-    cmp  al, 0fh
+    cmp  al, BDA_DM_640x350_Monochrome_Graphics;0x0f
     je   Exit                           ;Offset 0x1ac9
-    cmp  al, 07h
+    cmp  al, BDA_DM_80x25_Monochrome_Text;0x07
     je   Exit                           ;Offset 0x1ac9
-    mov  bh, al
+    mov  bh, al                         ;Save mode
     call GetVideoModeFlags              ;Offset 0x105d
     jne  NotFound                       ;Offset 0x1ac2
-    test al, 02h
-    mov  al, bh
-    je   Exit                           ;Offset 0x1ac9
+    test al, 02h                        ;
+    mov  al, bh                         ;restore mode
+    je   Exit                           ;Offset 0x1ac9 - exit if not set
 NotFound:                               ;Offset 0x1ac2
-    mov  al, 07h
+    mov  al, BDA_DM_80x25_Monochrome_Text;0x07
     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
 Exit:                                   ;Offset 0x1ac9
-    DB 03Ah, 0C0h                       ;cmp  al, al - masm encoding difference
+    DB 03Ah, 0C0h                       ;cmp  al, al - masm encoding difference zero flag = 1
     ret
-Func0x1a4e ENDP
+SetBDACursorSize ENDP
 
 SetSystemAdapterVideoMode PROC NEAR     ;Offset 0x1acc
     push  ds
@@ -3065,7 +3095,7 @@ SetTextModeBiosData PROC NEAR           ;Offset 0x1b05
     call      GetVideoModeFlags         ;Offset 0x105d
     jne       LegacyMode                ;Offset 0x1b2d
     mov       bx, offset LowerCharacters8x8;Offset 0x5720
-    test      al, 01h
+    test      al, 01h                   ;text
     jne       CharMapSelected           ;Offset 0x1b4b
     and       al, 70h
     je        CharMapSelected           ;Offset 0x1b4b
@@ -3179,31 +3209,33 @@ SaveDynamicParameterData ENDP
 ;if not found, it returns unmodified bx and al = 0xff
 FetchCheckedVideoParameterBlockElement PROC NEAR;Offset 0x1bc9
     call GetVideoParameterBlockElement  ;Offset 0x1d95
-    jne  Func0x1bd1                     ;Offset 0x1bd1
+    jne  CheckCurrentModeExists         ;Offset 0x1bd1
     or   al, 0ffh                       ;
     ret
 FetchCheckedVideoParameterBlockElement ENDP
 
-Func0x1bd1 PROC NEAR                    ;Offset 0x1bd1
+;inputs:
+;ax = offset in to es:bx table
+CheckCurrentModeExists PROC NEAR        ;Offset 0x1bd1
     push bx
     add  bx, ax
     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-Label0x1bd7:                            ;Offset 0x1bd7
+FindMode:                               ;Offset 0x1bd7
     mov  ah, byte ptr es:[bx]
     inc  bx
     cmp  ah, 0ffh
-    je   Label0x1be6                    ;Offset 0x1be6
+    je   NotFound                       ;Offset 0x1be6
     DB 03Ah, 0C4h                       ;cmp  ah, al - masm encoding difference
-    jne  Label0x1bd7                    ;Offset 0x1bd7
+    jne  FindMode                       ;Offset 0x1bd7
     pop  bx
     ret
-Label0x1be6:                            ;Offset 0x1be6
+NotFound:                               ;Offset 0x1be6
     or   al, 0ffh
     pop  bx
     ret
-Func0x1bd1 ENDP
+CheckCurrentModeExists ENDP
 
-Func0x1bea PROC NEAR                    ;Offset 0x1bea
+ConfigureFontAndCursor PROC NEAR        ;Offset 0x1bea
     mov  al, byte ptr es:[bx + 0ah]     ;number of character rows displayed
     push ax                             ;save that
     mov  cx, word ptr es:[bx + 02h]     ;number of characters defined
@@ -3214,22 +3246,22 @@ Func0x1bea PROC NEAR                    ;Offset 0x1bea
     xchg bl, bh                         ;bh = length of each character, bl = character generator ram bank
     and  bl, 3fh                        ;keep the lowest 6 bits
     mov  es, ax                         ;segment to character font
-    mov  al, 10h                        ;
-    call Func0x2f71                     ;Offset 0x2f71
+    mov  al, 10h                        ;SetTextFontAddressingAndCursor
+    call TextModeCharFunctionsInternal  ;Offset 0x2f71
     pop  ax
     cmp  al, 0ffh
-    je   Label0x1c18                    ;Offset 0x1c18
+    je   Failure                        ;Offset 0x1c18
     sub  al, 01h
     mov  byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
-Label0x1c18:                            ;Offset 0x1c18
+Failure:                                ;Offset 0x1c18
     ret
-Func0x1bea ENDP
+ConfigureFontAndCursor ENDP
 
 Func0x1c19 PROC NEAR                    ;Offset 0x1c19
-    mov   al, byte ptr es:[bx]
-    xor   ah, ah
+    mov   al, byte ptr es:[bx]          ;
+    xor   ah, ah                        ;
     cmp   ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    jne   Label0x1c64                   ;Offset 0x1c64
+    jne   AlreadySet                    ;Offset 0x1c64
     mov   cx, 100h
     xor   dx, dx
     mov   si, word ptr es:[bx + 03h]
@@ -3240,7 +3272,7 @@ Func0x1c19 PROC NEAR                    ;Offset 0x1c19
     mov   es, ax
     mov   al, 00h
     push  bx
-    call  Func0x2f71                    ;Offset 0x2f71
+    call  TextModeCharFunctionsInternal ;Offset 0x2f71
     mov   dx, 03c4h                     ;port - 0x3c4
     mov   al, 03h
     call  ReadDataWithIndexRegisterNext ;Offset 0x4649
@@ -3257,7 +3289,7 @@ Func0x1c19 PROC NEAR                    ;Offset 0x1c19
     or    ah, bh
     mov   al, 03h
     out   dx, ax
-Label0x1c64:                            ;Offset 0x1c64
+AlreadySet :                            ;Offset 0x1c64
     ret
 Func0x1c19 ENDP
 
@@ -3277,7 +3309,7 @@ Is8x14:                                 ;Offset 0x1c80
     jne   Label0x1c8a                   ;Offset 0x1c8a
     or    bl, 80h
 Label0x1c8a:                            ;Offset 0x1c8a
-    call  Func0x2f71                    ;Offset 0x2f71
+    call  TextModeCharFunctionsInternal ;Offset 0x2f71
     ret   
 Func0x1c65 ENDP
 
@@ -3308,7 +3340,7 @@ Func0x1cb4 PROC NEAR                    ;Offset 0x1cb4
     or    ax, bx
     je    Label0x1cce                   ;Offset 0x1cce
     mov   ax, 14h
-    call  Func0x1bd1                    ;Offset 0x1bd1
+    call  CheckCurrentModeExists        ;Offset 0x1bd1
     je    Label0x1ccf                   ;Offset 0x1ccf
 Label0x1cce:                            ;Offset 0x1cce
     ret
@@ -3395,7 +3427,7 @@ Func0x1d47 PROC NEAR
     jne       Label0x1d68
     mov       bh, 0b0h
 Label0x1d68:
-    test      bl, 01h
+    test      bl, 01h                   ;text
     jne       Label0x1d8c
     jmp       EmptyFunction2            ;Offset 0x121d Tail call.
 Label0x1d70:                            ;Offset 0x1d70
@@ -3461,7 +3493,7 @@ Label0x1dc8:                            ;Offset 0x1dc8
     je   Label0x1dea                    ;Offset 0x1dea
     call GetVideoModeFlags              ;Offset 0x105d
     jne  Label0x1e2c                    ;Offset 0x1e2c
-    test al, 01h
+    test al, 01h                        ;text
     je   Label0x1e2c                    ;Offset 0x1e2c
 Label0x1dea:                            ;Offset 0x1dea
     DB 03Ah, 0CDh                       ;cmp  ch, cl - masm encoding difference
@@ -3596,7 +3628,7 @@ SelectActiveDisplayPage PROC NEAR       ;Offset 0x1eb2
     jbe  Label0x1eda                    ;Offset 0x1eda
     call GetVideoModeFlags              ;Offset 0x105d
     jne  Label0x1eda                    ;Offset 0x1eda
-    test al, 01h
+    test al, 01h                        ;text
     je   Label0x1eda                    ;Offset 0x1eda
 Label0x1ed8:                            ;Offset 0x1ed8
     shr  bx, 01h
@@ -3650,7 +3682,7 @@ Func0x1f2d PROC NEAR                    ;Offset 0x1f2d
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call      GetVideoModeFlags         ;Offset 0x105d
     jne       Func0x1f0e                ;Offset 0x1f0e
-    test      al, 01h
+    test      al, 01h                   ;text
     mov       bl, al
     mov       ax, cx
     jne       Func0x1f79                ;Offset 0x1f79
@@ -3686,7 +3718,7 @@ Func0x1f63 PROC NEAR                    ;Offset 0x1f63
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call      GetVideoModeFlags         ;Offset 0x105d
     jne       Func0x1f5d                ;Offset 0x1f5d
-    test      al, 01h
+    test      al, 01h                   ;text
     mov       bl, al
     mov       ax, cx
     jne       Func0x1f76                ;Offset 0x1f76
@@ -5071,7 +5103,7 @@ Label0x297d:                            ;Offset 0x297d
     cmp  al, BDA_DM_320x200_256_Color_Graphics;13h
     jbe  Label0x298f                    ;Offset 0x298f
     call GetVideoModeFlags              ;Offset 0x105d
-    test al, 01h
+    test al, 01h                        ;text
     jne  Label0x29c2                    ;Offset 0x29c2
 Label0x298f:                            ;Offset 0x298f
     mov  bh, byte ptr ds:[BDA_CGAColorPaletteMaskSetting];Offset 0x466
@@ -5118,7 +5150,7 @@ Label0x29c3:                            ;Offset 0x29c3
     cmp   al, 13h
     jbe   Label0x29fd                   ;Offset 0x29fd
     call  GetVideoModeFlags             ;Offset 0x105d
-    test  al, 01h
+    test  al, 01h                       ;text
     jne   Label0x2a05                   ;Offset 0x2a05
 Label0x29fd:                            ;Offset 0x29fd
     xor   bl, bl
@@ -5534,7 +5566,7 @@ Func0x2c6a PROC NEAR                    ;Offset 0x2c6a
     jbe    Label0x2c92                  ;Offset 0x2c92
     call   GetVideoModeFlags            ;Offset 0x105d
     jne    Label0x2c92                  ;Offset 0x2c92
-    test   al, 01h
+    test   al, 01h                      ;text
     jne    Label0x2c94                  ;Offset 0x2c94
 Label0x2c92:                            ;Offset 0x2c92
     xor    bh, bh
@@ -5751,7 +5783,7 @@ NextColor:                              ;Offset 0x2de3
     mov   ah, al
     lodsb byte ptr es:[si]
     mov   cl, al
-    call  Func0x2eed                    ;Offset 0x2eed
+    call  MakeColorGreyscaleIfNeeded    ;Offset 0x2eed
     call  SetPaletteColor               ;Offset 0x47d8
     dec   di
     jne   NextColor                     ;Offset 0x2de3
@@ -5851,7 +5883,7 @@ Func0x2e89 PROC NEAR                    ;Offset 0x2e89
     mov   si, cx
 NextColor:                              ;Offset 0x2e8e
     call  GetPaletteColor               ;Offset 0x47bf
-    call  Func0x2ef4                    ;Offset 0x2ef4
+    call  MakeColorGreyscale            ;Offset 0x2ef4
     dec   bx
     call  SetPaletteColor               ;Offset 0x47d8
     dec   si
@@ -5886,7 +5918,7 @@ Label0x2ea6:                            ;Offset 0x2ea6
 Func0x2e9e ENDP
 
 Func0x2ec2 PROC NEAR                    ;Offset 0x2ec2
-    call  Func0x2eed                    ;Offset 0x2eed
+    call  MakeColorGreyscaleIfNeeded    ;Offset 0x2eed
     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     add   dl, 06h
     pushf
@@ -5914,12 +5946,12 @@ Data2ee7                DW 2666h        ; 9,830
 Data2ee9                DW 4B85h        ;19,333
 Data2eeb                DW 0E14h        ; 3,604
 
-Func0x2eed PROC NEAR                    ;offset 0x2eed
-    test byte ptr ds:[0489h], 06h       ;Offset 0x489
-    je   Func0x2f38                     ;Offset 0x2f38
-Func0x2eed ENDP
+MakeColorGreyscaleIfNeeded PROC NEAR    ;offset 0x2eed
+    test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0x489, 0x6
+    je   EmptyFunction8                 ;Offset 0x2f38
+MakeColorGreyscaleIfNeeded ENDP
 
-Func0x2ef4 PROC NEAR                    ;Offset 0x2ef4
+MakeColorGreyscale PROC NEAR            ;Offset 0x2ef4
     push bx
     push dx
     and  ax, 3f00h
@@ -5954,37 +5986,37 @@ Func0x2ef4 PROC NEAR                    ;Offset 0x2ef4
     mov  ch, dl
     pop  dx
     pop  bx
-Func0x2ef4 ENDP
+MakeColorGreyscale ENDP
 ;continue!
-Func0x2f38 PROC NEAR                    ;Offset 0x2f38
+EmptyFunction8 PROC NEAR                ;Offset 0x2f38
     ret;done
-Func0x2f38 ENDP
+EmptyFunction8 ENDP
 
-TextModeCharCallTable   DW offset SetTextFontAndAddressingMode;Offset 0x2f8f
-                        DW offset Func0x2f92;Offset 0x2f92
-                        DW offset Func0x2fa3;Offset 0x2fa3
-                        DW offset SelectCharacterFont;Offset 0x2fb4
-                        DW offset Func0x2fbd;Offset 0x2fbd
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2fce;Offset 0x2fce
-                        DW offset Func0x2fd4;Offset 0x2fd4
-                        DW offset Func0x2fe8;Offset 0x2fe8
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2ffc;Offset 0x2ffc
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x30e1;Offset 0x30e1
-                        DW offset Func0x3125;Offset 0x3125
-                        DW offset Func0x30f5;Offset 0x30f5
-                        DW offset Func0x3104;Offset 0x3104
-                        DW offset Func0x3113;Offset 0x3113
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x2f8e;Offset 0x2f8e
-                        DW offset Func0x3166;Offset 0x3166
+TextModeCharCallTable   DW offset SetTextFontAndAddressingMode;Offset 0x2f8f - 00 - TEXT-MODE CHARGEN - LOAD USER-SPECIFIED PATTERNS (PS,EGA,VGA)
+                        DW offset Set8x14TextFontAndAddressing;Offset 0x2f92 - 01 - TEXT-MODE CHARGEN - LOAD ROM MONOCHROME PATTERNS (PS,EGA,VGA)
+                        DW offset Set8x8TextFontAndAddressing;Offset 0x2fa3 - 02 - TEXT-MODE CHARGEN - LOAD ROM 8x8 DBL-DOT PATTERNS (PS,EGA,VGA)
+                        DW offset SelectCharacterFont;Offset 0x2fb4 - 03 - TEXT-MODE CHARGEN - SET BLOCK SPECIFIER (PS,EGA,VGA)
+                        DW offset Set8x16TextFontAndAddressing;Offset 0x2fbd - 04 - TEXT-MODE CHARGEN - LOAD ROM 8x16 CHARACTER SET (VGA)
+                        DW offset EmptyFunction9;Offset 0x2f8e - 05 - 
+                        DW offset EmptyFunction9;Offset 0x2f8e - 06 - 
+                        DW offset EmptyFunction9;Offset 0x2f8e - 07 - 
+                        DW offset SetTextFontAddressingAndCursor;Offset 0x2fce - 08 - TEXT-MODE CHARGEN - LOAD USER-SPECIFIED PATTERNS (PS,EGA,VGA) + Set Cursor
+                        DW offset Set8x14TextFontAddressingAndCursor;Offset 0x2fd4 - 09 - TEXT-MODE CHARGEN - LOAD ROM MONOCHROME PATTERNS (PS,EGA,VGA) + Set Cursor
+                        DW offset Set8x8TextFontAddressingAndCursor;Offset 0x2fe8 - 0A - TEXT-MODE CHARGEN - LOAD ROM 8x8 DBL-DOT PATTERNS (PS,EGA,VGA) + Set Cursor
+                        DW offset EmptyFunction9;Offset 0x2f8e - 0B - 
+                        DW offset Set8x16TextFontAddressingAndCursor;Offset 0x2ffc - 0C - TEXT-MODE CHARGEN - LOAD ROM 8x16 CHARACTER SET (VGA) + Set Cursor
+                        DW offset EmptyFunction9;Offset 0x2f8e - 0D - 
+                        DW offset EmptyFunction9;Offset 0x2f8e - 0E - 
+                        DW offset EmptyFunction9;Offset 0x2f8e - 0F - 
+                        DW offset SetUserUpper8x8Font;Offset 0x30e1 - 10 - GRAPH-MODE CHARGEN - SET USER 8x8 GRAPHICS CHARS (PS,EGA,VGA)
+                        DW offset Func0x3125;Offset 0x3125 - 11 - GRAPH-MODE CHARGEN - SET USER GRAPHICS CHARACTERS (PS,EGA,VGA)
+                        DW offset Set8x14Font;Offset 0x30f5 - 12 - GRAPH-MODE CHARGEN - SET ROM 8x14 GRAPHICS CHARS (PS,EGA,VGA)
+                        DW offset Set8x8Font;Offset 0x3104 - 13 - GRAPH-MODE CHARGEN - SET ROM 8x8 DOUBLE-DOT CHARS (PS,EGA,VGA)
+                        DW offset Set8x16Font;Offset 0x3113 - 14 - GRAPH-MODE CHARGEN - LOAD 8x16 GRAPHICS CHARS (VGA,MCGA)
+                        DW offset EmptyFunction9;Offset 0x2f8e - 15 -
+                        DW offset EmptyFunction9;Offset 0x2f8e - 16 -
+                        DW offset EmptyFunction9;Offset 0x2f8e - 17 -
+                        DW offset GetFontInfo;Offset 0x3166 - 18 - 
 
 TextModeCharFunctions PROC NEAR         ;Offset 0x2f6b
     mov  si, word ptr ss:[bp + 04h]
@@ -5993,9 +6025,10 @@ TextModeCharFunctions ENDP
 ;continue!
 
 ;inputs:
-;al = function flags
+;al = function + flag bit 4 = configure cursor
 ;bl = character generator ram bank
-Func0x2f71 PROC NEAR                    ;Offset 0x2f71
+
+TextModeCharFunctionsInternal PROC NEAR ;Offset 0x2f71
     call Func0x227                      ;Offset 0x227 ands the top 2 bits off bl if al == 55
     mov  ah, al                         ;ah is now ?
     and  al, 0fh                        ;keep bits 3-0
@@ -6003,22 +6036,22 @@ Func0x2f71 PROC NEAR                    ;Offset 0x2f71
     shr  ah, 01h                        ;now 4-3 
     or   al, ah                         ;mush together. Effectively, bit 4 and 3 overlap. If either is set, or neither is set.
     cmp  al, 19h                        ;if over 25, leave
-    jae  Func0x2f8e                     ;Offset 0x2f8e
+    jae  EmptyFunction9                 ;Offset 0x2f8e
     mov  ah, 00h
     mov  di, ax
     shl  di, 01h
     jmp  word ptr cs:[di + TextModeCharCallTable];Offset 0x2f39
-Func0x2f71 ENDP
+TextModeCharFunctionsInternal ENDP
 ;continue!
-Func0x2f8e PROC NEAR                    ;Offset 0x2f8e
+EmptyFunction9 PROC NEAR                    ;Offset 0x2f8e
     ret
-Func0x2f8e ENDP
+EmptyFunction9 ENDP
 
 SetTextFontAndAddressingMode PROC NEAR  ;Offset 0x2f8f
     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
 SetTextFontAndAddressingMode ENDP
 
-Func0x2f92 PROC NEAR                    ;Offset 0x2f92
+Set8x14TextFontAndAddressing PROC NEAR  ;Offset 0x2f92
     mov  si, offset Characters8x14      ;Offset 0x5f20
     mov  ax, cs
     mov  es, ax
@@ -6026,9 +6059,9 @@ Func0x2f92 PROC NEAR                    ;Offset 0x2f92
     mov  cx, 0100h
     mov  bh, 0eh
     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
-Func0x2f92 ENDP
+Set8x14TextFontAndAddressing ENDP
 
-Func0x2fa3 PROC NEAR                    ;Offset 0x2fa3
+Set8x8TextFontAndAddressing PROC NEAR   ;Offset 0x2fa3
     mov  si, offset LowerCharacters8x8  ;Offset 0x5720
     mov  ax, cs
     mov  es, ax
@@ -6036,7 +6069,7 @@ Func0x2fa3 PROC NEAR                    ;Offset 0x2fa3
     mov  cx, 100h
     mov  bh, 08h
     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
-Func0x2fa3 ENDP
+Set8x8TextFontAndAddressing ENDP
 
 SelectCharacterFont PROC NEAR           ;Offset 0x2fb4
     mov  al, 03h                        ;SR3 - Character Font Select register
@@ -6046,7 +6079,7 @@ SelectCharacterFont PROC NEAR           ;Offset 0x2fb4
     ret  
 SelectCharacterFont ENDP
 
-Func0x2fbd PROC NEAR                    ;Offset 0x2fbd
+Set8x16TextFontAndAddressing PROC NEAR  ;Offset 0x2fbd
     mov  si, offset Characters8x16      ;Offset 0x6e30
     mov  ax, cs
     mov  es, ax
@@ -6054,15 +6087,15 @@ Func0x2fbd PROC NEAR                    ;Offset 0x2fbd
     mov  cx, 100h
     mov  bh, 10h
     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
-Func0x2fbd ENDP
+Set8x16TextFontAndAddressing ENDP
 
-Func0x2fce PROC NEAR                    ;Offset 0x2fce
+SetTextFontAddressingAndCursor PROC NEAR;Offset 0x2fce
     call SetTextFontAndAddressing       ;Offset 0x46c2
-    jmp  Func0x3010                     ;Offset 0x3010
+    jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
     nop
-Func0x2fce ENDP
+SetTextFontAddressingAndCursor ENDP
 
-Func0x2fd4 PROC NEAR                    ;Offset 0x2fd4
+Set8x14TextFontAddressingAndCursor PROC NEAR;Offset 0x2fd4
     mov  si, offset Characters8x14      ;Offset 0x5f20
     mov  ax, cs
     mov  es, ax
@@ -6070,11 +6103,11 @@ Func0x2fd4 PROC NEAR                    ;Offset 0x2fd4
     mov  cx, 100h
     mov  bh, 0eh
     call SetTextFontAndAddressing       ;Offset 0x46c2
-    jmp  Func0x3010                     ;Offset 0x3010
+    jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
     nop
-Func0x2fd4 ENDP
+Set8x14TextFontAddressingAndCursor ENDP
 
-Func0x2fe8 PROC NEAR                    ;Offset 0x2fe8
+Set8x8TextFontAddressingAndCursor PROC NEAR;Offset 0x2fe8
     mov  si, offset LowerCharacters8x8  ;Offset 0x5720
     mov  ax, cs
     mov  es, ax
@@ -6082,11 +6115,11 @@ Func0x2fe8 PROC NEAR                    ;Offset 0x2fe8
     mov  cx, 100h
     mov  bh, 08h
     call SetTextFontAndAddressing       ;Offset 0x46c2
-    jmp  Func0x3010                     ;Offset 0x3010
+    jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
     nop
-Func0x2fe8 ENDP
+Set8x8TextFontAddressingAndCursor ENDP
 
-Func0x2ffc PROC NEAR                    ;Offset 0x2ffc
+Set8x16TextFontAddressingAndCursor PROC NEAR;Offset 0x2ffc
     mov  si, offset Characters8x16      ;Offset 0x6e30
     mov  ax, cs
     mov  es, ax
@@ -6094,147 +6127,156 @@ Func0x2ffc PROC NEAR                    ;Offset 0x2ffc
     mov  cx, 100h
     mov  bh, 10h
     call SetTextFontAndAddressing       ;Offset 0x46c2
-    jmp  Func0x3010                     ;Offset 0x3010
+    jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
     nop  
-Func0x2ffc ENDP
+Set8x16TextFontAddressingAndCursor ENDP
 
-Func0x3010 PROC NEAR                    ;Offset 0x3010
+;inputs:
+;bl = point height of character
+;
+ConfigureCursorPropertiesAndVerticalDisplayEnd PROC NEAR;Offset 0x3010
     mov  byte ptr ds:[BDA_PointHeightOfCharacterMatrix], bh;Offset 0x485
-    mov  bx, 0190h
+    mov  bx, 0190h                      ;400
     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     cmp  al, BDA_DM_640x480_BW_Graphics ;11h
-    je   Label0x306c                    ;Offset 0x306c
+    je   HeightSet                      ;Offset 0x306c
     cmp  al, BDA_DM_640x480_16_Color_Graphics;12h
-    je   Label0x306c                    ;Offset 0x306c
-    mov  bx, 0c8h
+    je   HeightSet                      ;Offset 0x306c
+    mov  bx, 0c8h                       ;200
     cmp  al, BDA_DM_320x200_256_Color_Graphics;13h
-    je   Label0x306c                    ;Offset 0x306c
+    je   HeightSet                      ;Offset 0x306c
     cmp  al, BDA_DM_320x200_4_Color_Graphics1;04h
     jb   Label0x3040                    ;Offset 0x3040
     cmp  al, BDA_DM_640x200_BW_Graphics ;06h
-    jbe  Label0x306c                    ;Offset 0x306c
+    jbe  HeightSet                      ;Offset 0x306c
     cmp  al, BDA_DM_Unknown2            ;09h
     jb   Label0x3040                    ;Offset 0x3040
     cmp  al, BDA_DM_640x200_16_Color_Graphics;0eh
-    jbe  Label0x306c                    ;Offset 0x306c
-    mov  bx, 015eh
+    jbe  HeightSet                      ;Offset 0x306c
+    mov  bx, 015eh                      ;350
     cmp  al, BDA_DM_640x350_16_Color_Graphics;10h
-    jbe  Label0x306c                    ;Offset 0x306c
+    jbe  HeightSet                      ;Offset 0x306c
 Label0x3040:                            ;Offset 0x3040
-    mov  bx, 190h
+    mov  bx, 190h                       ;400
     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0x489, 0x10
-    jne  Label0x306c                    ;Offset 0x306c
-    mov  bx, 015eh
+    jne  HeightSet                      ;Offset 0x306c
+    mov  bx, 015eh                      ;350
     test byte ptr ds:[BDA_VideoModeOptions], BDA_VDDA_GrayScale;Offset 0x487, 0x2
-    jne  Label0x306c                    ;Offset 0x306c
+    jne  HeightSet                      ;Offset 0x306c
     mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
-    and  ah, 0fh
-    cmp  ah, 03h
-    je   Label0x306c                    ;Offset 0x306c
-    cmp  ah, 09h
-    je   Label0x306c                    ;Offset 0x306c
+    and  ah, BDA_EFBS_AdapterTypeMask   ;0x0f
+    cmp  ah, BDA_EFBS_MDAHiResEnhanced  ;0x03
+    je   HeightSet                      ;Offset 0x306c
+    cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x09
+    je   HeightSet                      ;Offset 0x306c
     cmp  al, BDA_DM_80x25_Monochrome_Text;07h
-    je   Label0x306c                    ;Offset 0x306c
-    mov  bx, 0c8h
-Label0x306c:                            ;Offset 0x306c
-    mov  ax, bx
-    xor  dx, dx
-    div  word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    dec  al
-    mov  byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
-    inc  al
-    mov  cx, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
-    shl  cx, 01h
-    xor  ah, ah
-    mul  cx
-    add  ax, 100h
+    je   HeightSet                      ;Offset 0x306c
+    mov  bx, 0c8h                       ;200
+HeightSet:                              ;Offset 0x306c
+    mov  ax, bx                         ;ax = screen height
+    xor  dx, dx                         ;dx:ax = screen height
+    div  word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485 - divide by height of a character
+    dec  al                             ;decrease by 1
+    mov  byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484 - set number of rows on screen minus one.
+    inc  al                             ;restore to number of rows on screen.
+    mov  cx, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a - fetch number of screen columns
+    shl  cx, 01h                        ;two bytes per character (char + attribute)
+    xor  ah, ah                         ;ax = number of rows on screen
+    mul  cx                             ;dx:ax = screen size in bytes
+    add  ax, 100h                       ;screen size + 256
     mov  word ptr ds:[BDA_VideoBufferSize], ax;Offset 0x44c
-    mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
+    mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463 CRTC register
     mov  ah, byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    dec  ah
+    dec  ah                             ;character height minus one
     cmp  byte ptr ds:[BDA_DisplayMode], BDA_DM_80x25_Monochrome_Text;Offset 0x449, 0x7
-    jne  Label0x309f                    ;Offset 0x309f
-    mov  al, 14h
+    jne  DontSetUnderline               ;Offset 0x309f
+    mov  al, 14h                        ;CR14 - Underline Location register
     out  dx, ax
-Label0x309f:                            ;Offset 0x309f
-    mov  ch, ah
-    mov  cl, ah
-    mov  al, 09h
+DontSetUnderline:                       ;Offset 0x309f
+    mov  ch, ah                         ;character height minus one
+    mov  cl, ah                         ;character height minus one
+    mov  al, 09h                        ;CR9 - Maximum Scan Line register
     call ReadDataWithIndexRegister      ;Offset 0x4640
-    and  ah, 0e0h
-    or   ah, ch
+    and  ah, 0e0h                       ;Preserve top 3 bits
+    or   ah, ch                         ;bits 4-0 - Number of scan lines per character row minus one
     out  dx, ax
-    dec  ch
-    mov  ah, cl
-    cmp  ah, 0ch
-    jbe  Label0x30bb                    ;Offset 0x30bb
-    sub  cx, 0101h
-Label0x30bb:                            ;Offset 0x30bb
-    mov  word ptr ds:[BDA_CursorEndScanLine], cx;Offset 0x460
-    mov  al, 0ah
-    mov  ah, ch
+    dec  ch                             ;character height minus two
+    mov  ah, cl                         ;character height minus one
+    cmp  ah, 0ch                        ;if less than or equal to twelve 12
+    jbe  LessThanTwelve                 ;Offset 0x30bb
+    sub  cx, 0101h                      ;ch = character height minus three, cl = character height minus two
+LessThanTwelve:                         ;Offset 0x30bb
+    mov  word ptr ds:[BDA_CursorEndScanLine], cx;Offset 0x460 update BDA
+    mov  al, 0ah                        ;CRA - Cursor Start Scan Line register
+    mov  ah, ch                         ;character height minus two/three
     out  dx, ax
-    inc  al
-    mov  ah, cl
+    inc  al                             ;CRB - Cursor End Scan Line register
+    mov  ah, cl                         ;character height minus one/two
     out  dx, ax
-    mov  al, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
-    inc  al
-    mul  byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    cmp  bx, 0c8h
-    jne  Label0x30da                    ;Offset 0x30da
-    shl  ax, 01h
-Label0x30da:                            ;Offset 0x30da
-    dec  ax
-    mov  ah, al
-    mov  al, 12h
-    out  dx, ax
-    ret  
-Func0x3010 ENDP
+    mov  al, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484 - rows on screen minus one
+    inc  al                             ;rows on screen
+    mul  byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485 - ax = height in pixels
+    cmp  bx, 0c8h                       ;200
+    jne  Not200Height                   ;Offset 0x30da
+    shl  ax, 01h                        ;height in pixels * 2
+Not200Height:                           ;Offset 0x30da
+    dec  ax                             ;height in pixels (* 2) minus one
+    mov  ah, al                         ;lower bits
+    mov  al, 12h                        ;CR12 - Vertical Display End Register
+                                        ;11-bit value = (number of scan lines of active display) - 1. 
+                                        ;This register contains the least significant 8 bits of this value.
+    out  dx, ax                         ;
+    ret
+ConfigureCursorPropertiesAndVerticalDisplayEnd ENDP
 
-Func0x30e1 PROC NEAR                    ;Offset 0x30e1
+SetUserUpper8x8Font PROC NEAR           ;Offset 0x30e1
     mov  di, es
     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
     cli
-    mov  word ptr es:[7ch], si          ;Offset 0x7c
+    mov  word ptr es:[7ch], si          ;Offset 0x7c - SYSTEM DATA - 8x8 GRAPHICS FONT
     mov  word ptr es:[7eh], di          ;Offset 0x7e
     sti
     ret
-Func0x30e1 ENDP
+SetUserUpper8x8Font ENDP
 
-Func0x30f5 PROC NEAR                    ;Offset 0x30f5
+Set8x14Font PROC NEAR                   ;Offset 0x30f5
     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
     mov  si, offset Characters8x14      ;Offset 0x5f20
     mov  di, cs
     mov  cx, 0eh
-    jmp  Func0x312c                     ;Offset 0x312c
-Func0x30f5 ENDP
+    jmp  SetUserFont                    ;Offset 0x312c
+Set8x14Font ENDP
 
-Func0x3104 PROC NEAR                    ;Offset 0x3104
+Set8x8Font PROC NEAR                    ;Offset 0x3104
     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
     mov  si, offset LowerCharacters8x8  ;Offset 0x5720
     mov  di, cs
     mov  cx, 08h
-    jmp  Func0x312c                     ;Offset 0x312c
-Func0x3104 ENDP
+    jmp  SetUserFont                    ;Offset 0x312c
+Set8x8Font ENDP
 
-Func0x3113 PROC NEAR                    ;Offset 0x3113
+Set8x16Font PROC NEAR                   ;Offset 0x3113
     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
     mov  si, offset Characters8x16      ;Offset 0x6e30
     mov  di, cs
     mov  cx, 10h
-    jmp  Func0x312c                     ;Offset 0x312c
-Func0x3113 ENDP
+    jmp  SetUserFont                    ;Offset 0x312c
+Set8x16Font ENDP
 
-Data3122 DB 0Dh, 18h, 2Ah
+NumberOfRows DB 0Dh, 18h, 2Ah
 
 Func0x3125 PROC NEAR                    ;Offset 0x3125
     mov  di, es
     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
 Func0x3125 ENDP
 ;continue!
-Func0x312c PROC NEAR                    ;Offset 0x312c
+;inputs:
+;bl = row specifier (00 = user set)
+;dl = row count index = 01 = 14, 02 = 25, 03 = 43 or if bl == 00, any number (that's valid)
+;cx = character height
+SetUserFont PROC NEAR           ;Offset 0x312c
     cli
-    mov  word ptr es:[010ch], si        ;Offset 0x10c
+    mov  word ptr es:[010ch], si        ;Offset 0x10c - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
     mov  word ptr es:[010eh], di        ;Offset 0x10e
     sti
     cmp  bl, 04h
@@ -6246,13 +6288,13 @@ Label0x313f:                            ;Offset 0x313f
     je   Label0x314e                    ;Offset 0x314e
     dec  bl
     mov  bh, 00h
-    mov  dl, byte ptr cs:[bx + offset Data3122]
+    mov  dl, byte ptr cs:[bx + offset NumberOfRows]
 Label0x314e:                            ;Offset 0x314e
     mov  word ptr ds:[BDA_PointHeightOfCharacterMatrix], cx;Offset 0x485
     mov  byte ptr ds:[BDA_RowsOnScreen], dl;Offset 0x484
     mov  byte ptr [bp + 10h], dl
     ret
-Func0x312c ENDP
+SetUserFont ENDP
 
 ;Offset 0x315a
 Data315a                DW offset Characters8x14;Offset 0x05f20
@@ -6261,19 +6303,29 @@ Data315a                DW offset Characters8x14;Offset 0x05f20
                         DW offset Patch8x14;Offset 0x06d20
                         DW offset Characters8x16;Offset 0x06e30
                         DW offset Patch8x16;Offset 0x07e30
+;inputs:
+;bh = font index
+;     00 = Upper 8x8 graphics font
+;     01 = Current character font
+;     02 = 8x14 font
+;     03 = 8x8 character font
+;     04 = 8x8 graphics font
+;     05 = 8x14 font patch data
+;     06 = 8x16 font
+;     07 = 8x16 font patch data
 
-Func0x3166 PROC NEAR                    ;Offset 0x3166
+GetFontInfo PROC NEAR                    ;Offset 0x3166
     mov es, word ptr cs:[Data1488]      ;Offset 0x1488
     or  bh, bh
-    jne Label0x3176                     ;Offset 0x3176
-    les bx, es:[7ch]
-    jmp Label0x3197                     ;Offset 0x3197
-Label0x3176:                            ;Offset 0x3176
+    jne NotUpperFont                    ;Offset 0x3176
+    les bx, es:[7ch]                    ;Offset 0x7c - SYSTEM DATA - 8x8 GRAPHICS FONT
+    jmp ReturnFontInfo                  ;Offset 0x3197
+NotUpperFont:                           ;Offset 0x3176
     dec bh
-    jne Label0x3181                     ;Offset 0x3181
-    les bx, es:[10ch]
-    jmp Label0x3197                     ;Offset 0x3197
-Label0x3181:                            ;Offset 0x3181
+    jne NotCurrentFont                  ;Offset 0x3181
+    les bx, es:[10ch]                   ;Offset 0x10c - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
+    jmp ReturnFontInfo                  ;Offset 0x3197
+NotCurrentFont:                         ;Offset 0x3181
     dec bh
     cmp bh, 05h
     ja  Exit                            ;Offset 0x31ae
@@ -6283,7 +6335,7 @@ Label0x3181:                            ;Offset 0x3181
     mov bh, 00h
     add bx, bx
     mov bx, word ptr cs:[bx + offset Data315a];Offset 0x315a
-Label0x3197:                            ;Offset 0x3197
+ReturnFontInfo:                         ;Offset 0x3197
     mov word ptr ss:[bp + 04h], bx
     mov word ptr ss:[bp + 02h], es
     mov ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
@@ -6293,7 +6345,7 @@ Label0x3197:                            ;Offset 0x3197
     mov word ptr ss:[bp + 10h], 0000h
 Exit:                                   ;Offset 0x31ae
     ret
-Func0x3166 ENDP
+GetFontInfo ENDP
 
 ;Offset 0x31af
 AltFuncCallTable        DW offset Func0x3224;Offset 0x3224
@@ -6448,9 +6500,9 @@ Func0x32d3 PROC NEAR                    ;Offset 0x32d3
     ja    Func0x3312                    ;Offset 0x3312
     mov   al, 00h
     jne   Label0x32dd                   ;Offset 0x32dd
-    mov   al, BDA_VDDA_DefaultPaletteDisabled
+    mov   al, BDA_VDDA_PaletteLoadingEnabled
 Label0x32dd:                            ;Offset 0x32dd
-    and   byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_DefaultPaletteDisabled;Offset 0x489, 0xf7
+    and   byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_PaletteLoadingEnabled;Offset 0x489, 0xf7
     or    byte ptr ds:[BDA_VideoDisplayDataArea], al;Offset 0x489
     ret   
 Func0x32d3 ENDP
@@ -8012,6 +8064,8 @@ Func0x46b5 ENDP
 ;cx = Number of characters
 ;bh = character height
 ;bl = character generator ram bank
+;outputs:
+;nothing. all registers preserved
 SetTextFontAndAddressing PROC NEAR      ;Offset 0x46c2
     push      ax
     push      bx
@@ -8385,8 +8439,8 @@ Label0x48b6:                            ;Offset 0x48b6
     xor   ah, ah                        ;0
     mov   cx, 0010h                     ;16
     mov   dx, AttributeControllerIndex  ;port - 0x3c0
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_DefaultPaletteDisabled;Offset 0489h, 0x8
-    jne   DefaultPaletteDisabled        ;Offset 0x48cf
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x8
+    jne   UsingDefaultPalette           ;Offset 0x48cf
 WritePalette:                           ;Offset 0x48c5
     mov   al, ah                        ;
     out   dx, al                        ;Index
@@ -8394,7 +8448,7 @@ WritePalette:                           ;Offset 0x48c5
     lodsb es:[si]
     out   dx, al
     loop  WritePalette                  ;Offset 0x48c5
-DefaultPaletteDisabled:                 ;Offset 0x48cf
+UsingDefaultPalette:                    ;Offset 0x48cf
     add   ah, cl                        ;Skip over palette data, ah = 0x10
     add   si, cx                        ;Skip over palette data
     mov   cx, 0005h                     ;
@@ -8402,7 +8456,7 @@ WriteAttributeControllerRegs:           ;Offset 0x48d6
     cmp   ah, 11h                       ;
     jne   Skip17                        ;Offset 0x48e4
     inc   si
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_DefaultPaletteDisabled;Offset 0489h, 0x8
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x8
     jne   DefaultPaletteDisabled2       ;Offset 0x48f1
     dec   si
 Skip17:                                 ;Offset 0x48e4
@@ -8431,51 +8485,72 @@ WriteGraphicsControllerRegs:            ;Offset 0x48fd
     ret
 ApplyVideoParameters ENDP
 
+;    BDA_DM_40x25_BW_Text                EQU 00h
+;    BDA_DM_40x25_16_Color_Text          EQU 01h
+;    BDA_DM_80x25_16_Gray_Text           EQU 02h
+;    BDA_DM_80x25_16_Color_Text          EQU 03h
+;    BDA_DM_320x200_4_Color_Graphics1    EQU 04h
+;    BDA_DM_320x200_4_Color_Graphics2    EQU 05h;?
+;    BDA_DM_640x200_BW_Graphics          EQU 06h
+;    BDA_DM_80x25_Monochrome_Text        EQU 07h
+;    BDA_DM_Unknown1                     EQU 08h
+;    BDA_DM_Unknown2                     EQU 09h
+;    BDA_DM_Unknown3                     EQU 0Ah
+;    BDA_DM_Reserved1                    EQU 0Bh
+;    BDA_DM_Reserved2                    EQU 0Ch
+;    BDA_DM_320x200_16_Color_Graphics    EQU 0Dh
+;    BDA_DM_640x200_16_Color_Graphics    EQU 0Eh
+;    BDA_DM_640x350_Monochrome_Graphics  EQU 0Fh
+;    BDA_DM_640x350_16_Color_Graphics    EQU 10h
+;    BDA_DM_640x480_BW_Graphics          EQU 11h
+;    BDA_DM_640x480_16_Color_Graphics    EQU 12h
+;    BDA_DM_320x200_256_Color_Graphics   EQU 13h
+
 
 ;
-Func0x4909 PROC NEAR                    ;Offset 0x4909
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0489h
-    je    Label0x4911                   ;Offset 0x4911
+SetPalette PROC NEAR                    ;Offset 0x4909
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x08
+    je    PaletteLoadingEnabled         ;Offset 0x4911
     ret
-Label0x4911:                            ;Offset 0x4911
-    mov   dx, 03c6h
+PaletteLoadingEnabled:                  ;Offset 0x4911
+    mov   dx, DACMask                   ;port - 0x3c6
     in    al, dx
-    inc   al
-    je    Label0x491c                   ;Offset 0x491c
+    inc   al                            ;If DAC mask was 0xff, jump
+    je    IsFF                          ;Offset 0x491c
     mov   al, 0ffh
-    out   dx, al
-Label0x491c:                            ;Offset 0x491c
-    mov   di, 0040h
+    out   dx, al                        ;set to 0xff
+IsFF:                                   ;Offset 0x491c
+    mov   di, 0040h                     ;count 64
     xor   bx, bx
     mov   al, byte ptr ds:[BDA_DisplayMode];Offset 0449h
-    mov   si, 4371h                     ;Offset 0x4371
-    cmp   al, 07h
-    je    Func0x498e                    ;Offset 0x498e
-    cmp   al, 0fh
-    je    Func0x498e                    ;Offset 0x498e
-    cmp   al, 13h
-    je    Func0x4998                    ;Offset 0x4998
-    jb    Label0x4948                   ;Offset 0x4948
+    mov   si, offset Data4371           ;Offset 0x4371
+    cmp   al, BDA_DM_80x25_Monochrome_Text;0x07
+    je    ApplyPalette                  ;Offset 0x498e
+    cmp   al, BDA_DM_640x350_Monochrome_Graphics;0x0f
+    je    ApplyPalette                  ;Offset 0x498e
+    cmp   al, BDA_DM_320x200_256_Color_Graphics;0x13
+    je    Set248ColorPalette            ;Offset 0x4998
+    jb    LegacyMode                    ;Offset 0x4948
     mov   ah, al
     call  GetVideoModeFlags             ;Offset 0x105d
     xchg  ah, al
     test  ah, 02h
-    je    Func0x498e                    ;Offset 0x498e
+    je    ApplyPalette                  ;Offset 0x498e
     test  ah, 04h
     je    Label0x4981                   ;Offset 0x4981
-    jmp   Func0x4998                    ;Offset 0x4998
-Label0x4948:                            ;Offset 0x4948
-    cmp   al, 04h
+    jmp   Set248ColorPalette            ;Offset 0x4998
+LegacyMode:                             ;Offset 0x4948
+    cmp   al, BDA_DM_320x200_4_Color_Graphics1;0x04
     jb    Label0x495a                   ;Offset 0x495a
-    cmp   al, 06h
+    cmp   al, BDA_DM_640x200_BW_Graphics;0x06
     jbe   Label0x4972                   ;Offset 0x4972
-    cmp   al, 08h
+    cmp   al, BDA_DM_Unknown1           ;0x08
     je    Label0x4981                   ;Offset 0x4981
-    cmp   al, 0eh
+    cmp   al, BDA_DM_640x200_16_Color_Graphics;0xe
     jbe   Label0x4972                   ;Offset 0x4972
     jmp   Label0x4981                   ;Offset 0x4981
 Label0x495a:                            ;Offset 0x495a
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 10h;Offset 0489h
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0489h, 0x10
     jne   Label0x4981                   ;Offset 0x4981
     mov   ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0448h
     and   ah, 0fh
@@ -8484,85 +8559,107 @@ Label0x495a:                            ;Offset 0x495a
     cmp   ah, 09h
     je    Label0x4981                   ;Offset 0x4981
 Label0x4972:                            ;Offset 0x4972
-    mov   si, 41e9h                     ;Offset 0x41e9
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 06h;Offset 0489h
-    je    Func0x498e                    ;Offset 0x498e
-    mov   si, 425dh                     ;Offset 0x425d
-    jmp   Func0x498e                    ;Offset 0x498e
+    mov   si, offset Data41e9           ;Offset 0x41e9
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
+    je    ApplyPalette                  ;Offset 0x498e
+    mov   si, offset Data425d           ;Offset 0x425d
+    jmp   ApplyPalette                  ;Offset 0x498e
 Label0x4981:                            ;Offset 0x4981
-    mov   si, 429dh                     ;Offset 0x429d
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 06h;Offset 0489h
-    je    Func0x498e                    ;Offset 0x498e
-    mov   si, 4331h                     ;Offset 0x4331
-Func0x4909 ENDP
+    mov   si, offset Data429d           ;Offset 0x429d
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
+    je    ApplyPalette                  ;Offset 0x498e
+    mov   si, offset Data4331           ;Offset 0x4331
+SetPalette ENDP
 ;continue!
-Func0x498e PROC NEAR                    ;Offset 0x498e
-    call  Func0x49d4                    ;Offset 0x49d4
+;inputs:
+;bx = color index
+;di = count
+;si = pointer to Palette data
+ApplyPalette PROC NEAR                  ;Offset 0x498e
+    call  DecompressPaletteColor        ;Offset 0x49d4
     call  SetPaletteColor               ;Offset 0x47d8
     dec   di
-    jne   Func0x498e                    ;Offset 0x498e
+    jne   ApplyPalette                  ;Offset 0x498e
     ret
-Func0x498e ENDP
+ApplyPalette ENDP
 
-Func0x4998 PROC NEAR                    ;Offset 0x4998
-    mov   di, 0010h
-    mov   si, 43b1h                     ;Offset 0x43b1
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 06h;Offset 0489h
+Set248ColorPalette PROC NEAR            ;Offset 0x4998
+    mov   di, 0010h                     ;Count 16
+    mov   si, offset Data43b1           ;Offset 0x43b1
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
     je    Label0x49a8                   ;Offset 0x49a8
-    mov   si, 43ceh                     ;Offset 0x43ce
+    mov   si, offset Data43ce           ;Offset 0x43ce
 Label0x49a8:                            ;Offset 0x49a8
-    call  Func0x498e                    ;Offset 0x498e
-    mov   di, 0010h
-    mov   bx, 0010h
-    mov   si, 43deh                     ;Offset 0x43de
-    call  Func0x498e                    ;Offset 0x498e
-    mov   di, 00d8h
-    mov   bx, 0020h
-    mov   si, 43eeh                     ;Offset 0x43ee
-    test  byte ptr ds:[BDA_VideoDisplayDataArea], 06h;Offset 0489h
-    je    Func0x498e                    ;Offset 0x498e
-Label0x49c7:                            ;Offset 0x49c7
-    call  Func0x49d4                    ;Offset 0x49d4
-    call  Func0x2eed                    ;Offset 0x2eed
+    call  ApplyPalette                  ;Offset 0x498e
+    mov   di, 0010h                     ;count 16
+    mov   bx, 0010h                     ;color index 16
+    mov   si, offset Data43de           ;Offset 0x43de
+    call  ApplyPalette                  ;Offset 0x498e
+    mov   di, 00d8h                     ;count 216
+    mov   bx, 0020h                     ;color index 32
+    mov   si, offset Data43ee           ;Offset 0x43ee
+    test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
+    je    ApplyPalette                  ;Offset 0x498e
+ApplyGreyscalePalette:                  ;Offset 0x49c7
+    call  DecompressPaletteColor        ;Offset 0x49d4
+    call  MakeColorGreyscaleIfNeeded    ;Offset 0x2eed
     call  SetPaletteColor               ;Offset 0x47d8
     dec   di
-    jne   Label0x49c7                   ;Offset 0x49c7
+    jne   ApplyGreyscalePalette         ;Offset 0x49c7
     ret
-Func0x4998 ENDP
+Set248ColorPalette ENDP
 
-Func0x49d4 PROC NEAR                    ;Offset 0x49d4
+;inputs:
+;di = count
+;si = pointer to Palette data
+;outputs:
+;ah = red
+;ch = green
+;cl = blue
+;si = points to next palette entry
+;Palette color data is 6 bits. the top two bits are used
+;as a compression scheme. 
+;Bits in red:
+;00 = Load Green
+;01 = Green = Red
+;10 = Blue = Green = Red
+;11 = Load Green, Blue = Red
+;Bits in Green:
+;00 = Load Blue
+;01 = Blue = Green
+DecompressPaletteColor PROC NEAR        ;Offset 0x49d4
     lodsb cs:[si]
-    mov   ah, al
-    and   ah, 03fh
-    and   al, 0c0h
-    je    Label0x49f3                   ;Offset 0x49f3
-    cmp   al, 40h
-    je    Label0x4a01                   ;Offset 0x4a01
+    mov   ah, al                        ;Set red
+    and   ah, 03fh                      ;Isolate red color data
+    and   al, 0c0h                      ;Isolate compression data
+    je    LoadGreen                     ;Offset 0x49f3
+    cmp   al, 40h                       ;
+    je    GreenIsRed                    ;Offset 0x4a01
     cmp   al, 80h
-    je    Label0x49ee                   ;Offset 0x49ee
-    mov   cl, ah
+    je    GreenAndBlueIsRed             ;Offset 0x49ee
+    mov   cl, ah                        ;Else C0h - Blue is Red
     lodsb cs:[si]
-    mov   ch, al
+    mov   ch, al                        ;Load Green
     ret
-Label0x49ee:                            ;Offset 0x49ee
+GreenAndBlueIsRed:                      ;Offset 0x49ee
     mov   ch, ah
     mov   cl, ah
     ret
-Label0x49f3:                            ;Offset 0x49f3
+LoadGreen:                              ;Offset 0x49f3
     lodsb cs:[si]
     test  al, 40h
     mov   ch, al
-    je    Label0x4a03                   ;Offset 0x4a03
-    and   ch, 0bfh
-    mov   cl, ch
+    je    LoadBlue                      ;Offset 0x4a03
+    and   ch, 0bfh                      ;1011 1111
+    mov   cl, ch                        ;Blue is Green
     ret
-Label0x4a01:                            ;Offset 0x4a01
+GreenIsRed:                             ;Offset 0x4a01
     mov   ch, ah
-Label0x4a03:                            ;Offset 0x4a03
-    lodsb cs:[si]
+LoadBlue:                               ;Offset 0x4a03
+    lodsb cs:[si]                       ;Load blue
     mov   cl, al
     ret
-Func0x49d4 ENDP
+DecompressPaletteColor ENDP
 
 VideoModeOverrideTranslationTable1 DB 17h, 17h, 18h, 18h, 04h, 05h, 06h, 19h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
 VideoModeOverrideTranslationTable2 DB 13h, 14h, 15h, 16h, 04h, 05h, 06h, 07h, 08h, 09h, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 11h, 12h, 1Ah, 1Bh, 1Ch
@@ -8802,7 +8899,7 @@ Found:                                  ;Offset 0x4b71
     movsw                               ;0x02 = Window attributes (Window A and Window B)
     mov       al, bl
     call      GetVideoModeFlags         ;Offset 0x105d
-    test      al, 01h
+    test      al, 01h                   ;text
     je        WindowSize64k             ;Offset 0x4b9c
     mov       ax, 0020h                 ;Window granularity and size in KB 0x20 -> 32k
     stosw                               ;0x04 = Window Granularity in KB
