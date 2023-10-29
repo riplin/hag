@@ -6,7 +6,11 @@
 ;
 ;Interrupt list: http://www.ctyme.com/intr/int.htm
 ;S3 Trio32/Trio64 programming manual: http://www.bitsavers.org/components/s3/DB014-B_Trio32_Trio64_Graphics_Accelerators_Mar1995.pdf
+;S3VBEFIX: https://github.com/wbcbz7/S3VBEFIX
 ;VGADOC: https://pdos.csail.mit.edu/6.828/2018/readings/hardware/vgadoc/S3.TXT
+;VGA general info: https://wiki.osdev.org/VGA_Hardware
+;VGA general info: http://www.osdever.net/FreeVGA/vga/vga.htm
+;VGA general info: https://mirrors.apple2.org.za/ftp.apple.asimov.net/documentation/hardware/video/Second%20Sight%20VGA%20Registers.pdf
 ;Ports list: https://github.com/cirosantilli/ralf-brown-interrupt-list/blob/master/inter61d/PORTS.B
 ;Memory map: https://wiki.osdev.org/Memory_Map_(x86)
 ;BIOS Data Area: https://stanislavs.org/helppc/bios_data_area.html
@@ -901,9 +905,9 @@ VideoModeData ENDS
 ;Flags:
 ; 0 = Text
 ; 1 = Always 1
-; 2 = 4bpp
+; 2 = unknown
 ; 3 = Always 0
-; 4 = 800x600 and text modes don't have these two bits set
+; 4 = 800x600 modes don't have these two bits set
 ; 5 = ^ Always set together...
 ; 6 = Always 0
 ; 7 = Always 0
@@ -942,13 +946,13 @@ VESAVideoModeData       VideoModeData < INT10_00_54_T_132x43,       offset VESAV
                         DB 0FFh;Terminate
 
 VideoParametersTable STRUCT ;Struct size = 64 bytes
-    DisplayedCharacterColumns BYTE ?
-    DisplayedRowsMinus1 BYTE ?
-    CharacterMatrixHeightPoints BYTE ?
-    VideoBufferSize WORD ?
-    SequencerRegisters DWORD ?          ;SR1-SR4
-    MiscOutputRegisterValues BYTE ?
-    CRTCRegisters BYTE 25 DUP (?)       ;CR0-CR18
+    DisplayedCharacterColumns BYTE ?                    ;0x00
+    DisplayedRowsMinus1 BYTE ?                          ;0x01
+    CharacterMatrixHeightPoints BYTE ?                  ;0x02
+    VideoBufferSize WORD ?                              ;0x03
+    SequencerRegisters DWORD ?          ;SR1-SR4        ;0x05
+    MiscOutputRegisterValues BYTE ?                     ;0x09
+    CRTCRegisters BYTE 25 DUP (?)       ;CR0-CR18       ;0x10
     AttributeControllerRegs BYTE 20 DUP (?)
     GraphicsControllerRegs BYTE 9 DUP (?) ;GR0-GR8
 VideoParametersTable ENDS
@@ -2976,27 +2980,6 @@ Label0x1a48:                            ;Offset 0x1a48
     or   word ptr ds:[BDA_DetectedHardware], BDA_DH_80x25Monochrome;Offset 0x410, 0x30
     ret  
 ModeSetBDA ENDP
-
-    BDA_DM_40x25_BW_Text                EQU 00h
-    BDA_DM_40x25_16_Color_Text          EQU 01h
-    BDA_DM_80x25_16_Gray_Text           EQU 02h
-    BDA_DM_80x25_16_Color_Text          EQU 03h
-    BDA_DM_320x200_4_Color_Graphics1    EQU 04h
-    BDA_DM_320x200_4_Color_Graphics2    EQU 05h;?
-    BDA_DM_640x200_BW_Graphics          EQU 06h
-    BDA_DM_80x25_Monochrome_Text        EQU 07h
-    BDA_DM_Unknown1                     EQU 08h
-    BDA_DM_Unknown2                     EQU 09h
-    BDA_DM_Unknown3                     EQU 0Ah
-    BDA_DM_Reserved1                    EQU 0Bh
-    BDA_DM_Reserved2                    EQU 0Ch
-    BDA_DM_320x200_16_Color_Graphics    EQU 0Dh
-    BDA_DM_640x200_16_Color_Graphics    EQU 0Eh
-    BDA_DM_640x350_Monochrome_Graphics  EQU 0Fh
-    BDA_DM_640x350_16_Color_Graphics    EQU 10h
-    BDA_DM_640x480_BW_Graphics          EQU 11h
-    BDA_DM_640x480_16_Color_Graphics    EQU 12h
-    BDA_DM_320x200_256_Color_Graphics   EQU 13h
 
 ;inputs:
 ;al = video mode
@@ -8484,28 +8467,6 @@ WriteGraphicsControllerRegs:            ;Offset 0x48fd
     pop   cx
     ret
 ApplyVideoParameters ENDP
-
-;    BDA_DM_40x25_BW_Text                EQU 00h
-;    BDA_DM_40x25_16_Color_Text          EQU 01h
-;    BDA_DM_80x25_16_Gray_Text           EQU 02h
-;    BDA_DM_80x25_16_Color_Text          EQU 03h
-;    BDA_DM_320x200_4_Color_Graphics1    EQU 04h
-;    BDA_DM_320x200_4_Color_Graphics2    EQU 05h;?
-;    BDA_DM_640x200_BW_Graphics          EQU 06h
-;    BDA_DM_80x25_Monochrome_Text        EQU 07h
-;    BDA_DM_Unknown1                     EQU 08h
-;    BDA_DM_Unknown2                     EQU 09h
-;    BDA_DM_Unknown3                     EQU 0Ah
-;    BDA_DM_Reserved1                    EQU 0Bh
-;    BDA_DM_Reserved2                    EQU 0Ch
-;    BDA_DM_320x200_16_Color_Graphics    EQU 0Dh
-;    BDA_DM_640x200_16_Color_Graphics    EQU 0Eh
-;    BDA_DM_640x350_Monochrome_Graphics  EQU 0Fh
-;    BDA_DM_640x350_16_Color_Graphics    EQU 10h
-;    BDA_DM_640x480_BW_Graphics          EQU 11h
-;    BDA_DM_640x480_16_Color_Graphics    EQU 12h
-;    BDA_DM_320x200_256_Color_Graphics   EQU 13h
-
 
 ;
 SetPalette PROC NEAR                    ;Offset 0x4909
