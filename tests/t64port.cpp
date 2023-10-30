@@ -962,6 +962,18 @@ uint8_t rol(uint8_t value, uint8_t rolval);
     parm [al] [bl]  \
     value [al];
 
+uint8_t ror(uint8_t value, uint8_t rorval);
+#pragma aux ror =   \
+    "ror al, bl"    \
+    parm [al] [bl]  \
+    value [al];
+
+uint8_t rcr(uint8_t value, uint8_t rcrval);
+#pragma aux rcr =   \
+    "rcr al, bl"    \
+    parm [al] [bl]  \
+    value [al];
+
 //Data0197                DB 09h                      ;Offset 0x197 - bit 7 - Save / Restore functionality supported
 uint8_t Data0197 = 0x09;
 
@@ -1634,7 +1646,7 @@ LABEL(GetVideoModeOverrideTable, Done);
 
 //     xor  bx, bx                         ;Video Parameter Table pointer
 //     call GetVideoParameterBlockElement  ;Offset 0x1d95
-    //GetVideoParameterBlockElement(0, overrideTable); //TODO: Use internal structures instead of this.
+    //GetVideoParameterBlockElement(0, overrideTable); //Use internal structures instead of this.
 
 //     add  si, bx                         ;es:si is segment:offset into video override table based on mode
     //overrideTable += r.w.si;
@@ -1999,7 +2011,7 @@ void ApplyVideoParameters(uint8_t* overrideTable)
 //     out   dx, al
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     mov   ax, 0300h                     ;CR0 - Asynchronous and Synchronous reset (should server no function on Trio32/Trio64)
+//     mov   ax, 0300h                     ;CR0 - Asynchronous and Synchronous reset (should serve no function on Trio32/Trio64)
     r.w.ax = 0x0300;
 
 //     mov   dx, SequenceIndex             ;port - 0x3c4
@@ -4309,6 +4321,2203 @@ LABEL(ApplyVESAOverrideData, NotVESAMode);
 }
 
 // ;inputs:
+// ;si = pointer to Palette data
+// ;outputs:
+// ;ah = red
+// ;ch = green
+// ;cl = blue
+// ;si = points to next palette entry
+// ;Palette color data is 6 bits. the top two bits are used
+// ;as a compression scheme. 
+// ;Bits in red:
+// ;00 = Load Green
+// ;01 = Green = Red
+// ;10 = Blue = Green = Red
+// ;11 = Load Green, Blue = Red
+// ;Bits in Green:
+// ;00 = Load Blue
+// ;01 = Blue = Green
+void DecompressPaletteColor(uint8_t*& paletteData, uint8_t& red, uint8_t& green, uint8_t& blue)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+//     lodsb cs:[si]
+    r.h.al = *paletteData;
+    ++paletteData;
+
+//     mov   ah, al                        ;Set red
+    r.h.ah = r.h.al;
+
+//     and   ah, 03fh                      ;Isolate red color data
+    r.h.ah &= 0x3f;
+
+//     and   al, 0c0h                      ;Isolate compression data
+    r.h.al &= 0xc0;
+
+//     je    LoadGreen                     ;Offset 0x49f3
+    if (r.h.al == 0x00)
+        goto LoadGreen;
+
+//     cmp   al, 40h                       ;
+//     je    GreenIsRed                    ;Offset 0x4a01
+    if (r.h.al == 0x40)
+        goto GreenIsRed;
+
+//     cmp   al, 80h
+//     je    GreenAndBlueIsRed             ;Offset 0x49ee
+    if (r.h.al == 0x80)
+        goto GreenAndblueIsRed;
+
+//     mov   cl, ah                        ;Else C0h - Blue is Red
+    r.h.cl = r.h.ah;
+
+//     lodsb cs:[si]
+    r.h.al = *paletteData;
+    ++paletteData;
+
+//     mov   ch, al                        ;Load Green
+    r.h.ch = r.h.al;
+
+//     ret
+    red = r.h.ah;
+    green = r.h.ch;
+    blue = r.h.cl;
+    return;
+
+// GreenAndBlueIsRed:                      ;Offset 0x49ee
+LABEL(DecompressPaletteColor, GreenAndBlueIsRed);
+
+//     mov   ch, ah
+    r.h.ch = r.h.ah;
+
+//     mov   cl, ah
+    r.h.cl = r.h.al;
+
+//     ret
+    red = r.h.ah;
+    green = r.h.ch;
+    blue = r.h.cl;
+    return;
+
+// LoadGreen:                              ;Offset 0x49f3
+LABEL(DecompressPaletteColor, LoadGreen);
+
+//     lodsb cs:[si]
+    r.h.al = *paletteData;
+    ++paletteData;
+
+//     mov   ch, al
+    r.h.ch = r.h.al;
+
+//     test  al, 40h
+//     je    LoadBlue                      ;Offset 0x4a03
+    if ((r.h.al & 0x40) == 0x00)
+        goto LoadBlue;
+
+//     and   ch, 0bfh                      ;1011 1111
+    r.h.ch &= 0xbf;
+
+//     mov   cl, ch                        ;Blue is Green
+    r.h.cl = r.h.ch;
+
+//     ret
+    red = r.h.ah;
+    green = r.h.ch;
+    blue = r.h.cl;
+    return;
+
+// GreenIsRed:                             ;Offset 0x4a01
+LABEL(DecompressPaletteColor, GreenIsRed);
+
+//     mov   ch, ah
+    r.h.ch = r.h.ah;
+
+// LoadBlue:                               ;Offset 0x4a03
+LABEL(DecompressPaletteColor, LoadBlue);
+
+//     lodsb cs:[si]                       ;Load blue
+    r.h.al = *paletteData;
+    ++paletteData;
+
+//     mov   cl, al
+    r.h.cl = r.h.al;
+
+//     ret
+    red = r.h.ah;
+    green = r.h.ch;
+    blue = r.h.cl;
+
+}
+
+// ;continues!
+void SetPaletteColorInternal(uint16_t& colorIndex, uint8_t red, uint8_t green, uint8_t blue)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    r.w.bx = colorIndex;
+    r.h.ah = red;
+    r.h.ch = green;
+    r.h.cl = blue;
+
+//     mov   dx, DACWriteIndex             ;port - 03c8h
+    r.w.dx = 0x3c8;
+
+//     mov   al, bl
+    r.h.al = r.h.bl;
+
+//     out   dx, al                        ;Write color index
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     inc   dx                            ;port - 03c9h - RAMDACData
+    ++r.w.dx;
+
+//     mov   al, ah
+    r.h.al = r.h.ah;
+
+//     out   dx, al                        ;Write red
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     mov   al, ch
+    r.h.al = r.h.ch;
+
+//     out   dx, al                        ;Write green
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     mov   al, cl
+    r.h.al = r.h.cl;
+
+//     out   dx, al                        ;Write blue
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     inc   bx
+    ++colorIndex;
+
+//     popf
+    SYS_RestoreInterrupts();
+
+//     ret
+}
+
+// ;inputs:
+// ;bl = color index
+// ;ah = red
+// ;ch = green
+// ;cl = blue
+// ;outputs:
+// ;bx = bx + 1
+// ;destroys dx
+void SetPaletteColor(uint16_t& colorIndex, uint8_t red, uint8_t green, uint8_t blue)
+{
+//     pushf
+//     cli
+    SYS_ClearInterrupts();
+    SetPaletteColorInternal(colorIndex, red, green, blue);
+}
+
+// ;continue!
+// ;inputs:
+// ;bx = color index
+// ;di = count
+// ;si = pointer to Palette data
+void ApplyPalette(uint16_t& colorIndex, uint16_t count, uint8_t* paletteData)
+{
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+
+LABEL(ApplyPalette, NextColor);
+
+//     call  DecompressPaletteColor        ;Offset 0x49d4
+    DecompressPaletteColor(paletteData, red, green, blue);
+
+//     call  SetPaletteColor               ;Offset 0x47d8
+    SetPaletteColor(colorIndex, red, green, blue);
+
+//     dec   di
+//     jne   ApplyPalette                  ;Offset 0x498e
+    --count;
+    if (count != 0x0000)
+        goto NextColor;
+
+//     ret
+}
+
+uint16_t Data2ee7 = 0x2666;
+uint16_t Data2ee9 = 0x4B85;
+uint16_t Data2eeb = 0x0E14;
+
+// ;inputs:
+// ;ah = red
+// ;ch = green
+// ;cl = blue
+void MakeColorGreyscale(uint8_t& red, uint8_t& green, uint8_t& blue)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    r.h.ah = red;
+    r.h.ch = green;
+    r.h.cl = blue;
+
+//     push bx
+//     push dx
+//     and  ax, 3f00h
+    r.w.ax &= 0x3f00;
+//     xchg al, ah
+    r.h.al = r.h.ah;
+    r.h.ah = 0x00;
+
+//     mul  word ptr cs:[Data2ee7]         ;Offset 0x2ee7
+//     push dx
+//     push ax
+    uint32_t v1 = r.w.ax * Data2ee7;
+    
+//     mov  al, ch
+    r.h.al = r.h.ch;
+
+//     and  al, 3fh
+    r.h.al &= 0x3f;
+
+//     xor  ah, ah
+    r.h.ah = 0x00;
+//     mul  word ptr cs:[Data2ee9]         ;Offset 0x2ee9
+//     push dx
+//     push ax
+    uint32_t v2 = r.w.ax * Data2ee9;
+
+//     mov  al, cl
+    r.h.al = r.h.cl;
+
+//     and  al, 3fh
+    r.h.al &= 0x3f;
+
+//     xor  ah, ah
+    r.h.ah = 0x00;
+
+//     mul  word ptr cs:[Data2eeb]         ;Offset 0x2eeb
+    uint32_t v3 = r.w.ax * Data2eeb;
+
+//     pop  bx
+//     add  ax, bx
+//     pop  bx
+//     adc  dx, bx
+    v3 += v2;
+
+//     pop  bx
+//     add  ax, bx
+//     pop  bx
+//     adc  dx, bx
+    v3 += v1;
+
+//     add  ax, ax
+//     adc  dx, dx
+    v3 <<= 1;
+
+//     add  ax, 8000h
+//     adc  dx, 0
+    v3 += 0x8000;
+    v3 >>= 16;
+    v3 &= 0xff;    
+
+//     mov  ah, dl
+    red = uint8_t(v3);
+
+//     mov  cl, dl
+    blue = uint8_t(v3);
+
+//     mov  ch, dl
+    green = uint8_t(v3);
+
+//     pop  dx
+//     pop  bx
+//     ret;done
+}
+
+void MakeColorGreyscaleIfNeeded(uint8_t& red, uint8_t& green, uint8_t& blue)
+{
+//     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0x489, 0x6
+//     je   EmptyFunction8                 ;Offset 0x2f38
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) != 0x00)
+    {
+        MakeColorGreyscale(red, green, blue);
+    }
+}
+
+void Set248ColorPalette(uint16_t& colorIndex)
+{
+   REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint8_t* palettePtr = NULL;
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+ 
+ //     mov   di, 0010h                     ;Count 16
+    r.w.di = 0x0010;
+
+//     mov   si, offset Data43b1           ;Offset 0x43b1
+    palettePtr = Data43b1;
+
+//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
+//     je    Label0x49a8                   ;Offset 0x49a8
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
+        goto Label0x49a8;
+
+//     mov   si, offset Data43ce           ;Offset 0x43ce
+    palettePtr = Data43ce;
+
+// Label0x49a8:                            ;Offset 0x49a8
+LABEL(Set248ColorPalette, Label0x49a8);
+
+//     call  ApplyPalette                  ;Offset 0x498e
+    ApplyPalette(colorIndex, r.w.di, palettePtr);
+
+//     mov   di, 0010h                     ;count 16
+    r.w.di = 0x10;
+
+//     mov   bx, 0010h                     ;color index 16
+    colorIndex = 0x10;
+
+//     mov   si, offset Data43de           ;Offset 0x43de
+    palettePtr = Data43de;
+
+//     call  ApplyPalette                  ;Offset 0x498e
+    ApplyPalette(colorIndex, r.w.di, palettePtr);
+
+//     mov   di, 00d8h                     ;count 216
+    r.w.di = 0x00d8;
+
+//     mov   bx, 0020h                     ;color index 32
+    colorIndex = 0x20h
+
+//     mov   si, offset Data43ee           ;Offset 0x43ee
+    palettePtr = Data43ee;
+
+//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
+//     je    ApplyPalette                  ;Offset 0x498e
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
+    {
+        ApplyPalette(colorIndex, r.w.di, palettePtr);
+        return;
+    }
+
+// ApplyGreyscalePalette:                  ;Offset 0x49c7
+LABEL(Set248ColorPalette, ApplyGreyscalePalette);
+
+//     call  DecompressPaletteColor        ;Offset 0x49d4
+    DecompressPaletteColor(palettePtr, red, green, blue);
+
+//     call  MakeColorGreyscaleIfNeeded    ;Offset 0x2eed
+    MakeColorGreyscaleIfNeeded(red, green, blue);
+
+//     call  SetPaletteColor               ;Offset 0x47d8
+    SetPaletteColor(colorIndex, red, green, blue);
+
+//     dec   di
+    --r.w.di;
+
+//     jne   ApplyGreyscalePalette         ;Offset 0x49c7
+    if (r.w.di != 0x00)
+        goto ApplyGreyscalePalette;
+
+//     ret
+}
+
+void SetPalette()
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint8_t* palettePtr = NULL;
+    uint8_t flags = 0;
+
+//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x08
+//     je    PaletteLoadingEnabled         ;Offset 0x4911
+//     ret
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
+        return;
+        
+// PaletteLoadingEnabled:                  ;Offset 0x4911
+//     mov   dx, DACMask                   ;port - 0x3c6
+    r.w.dx = 0x3c6;
+
+//     in    al, dx
+    r.h.al = SYS_ReadPortByte(r.w.dx);
+
+//     inc   al                            ;If DAC mask was 0xff, jump
+    ++r.h.al;
+
+//     je    IsFF                          ;Offset 0x491c
+    if (r.h.al == 0x00)
+        goto IsFF;
+
+//     mov   al, 0ffh
+    r.h.al = 0xFF;
+
+//     out   dx, al                        ;set to 0xff
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+// IsFF:                                   ;Offset 0x491c
+LABEL(SetPalette, IsFF);
+
+//     mov   di, 0040h                     ;count 64
+    r.w.di = 0x0040;
+
+//     xor   bx, bx
+    r.w.bx = 0x0000;
+
+//     mov   al, byte ptr ds:[BDA_DisplayMode];Offset 0449h
+    r.h.al = Hag::System::BDA::DisplayMode::Get();
+
+//     mov   si, offset Data4371           ;Offset 0x4371
+    palettePtr = Data4371;
+
+//     cmp   al, BDA_DM_80x25_Monochrome_Text;0x07
+//     je    ApplyPalette                  ;Offset 0x498e
+    if (r.h.al == 0x07)
+    {
+        ApplyPalette(r.w.bx, r.w.di, palettePtr);
+        return;
+    }
+
+//     cmp   al, BDA_DM_640x350_Monochrome_Graphics;0x0f
+//     je    ApplyPalette                  ;Offset 0x498e
+    if (r.h.al == 0x0f)
+    {
+        ApplyPalette(r.w.bx, r.w.di, palettePtr);
+        return;
+    }
+
+//     cmp   al, BDA_DM_320x200_256_Color_Graphics;0x13
+//     je    Set248ColorPalette            ;Offset 0x4998
+    if (r.h.al == 0x13)
+    {
+        Set248ColorPalette();
+        return;
+    }
+
+//     jb    LegacyMode                    ;Offset 0x4948
+    if (r.h.al < 0x13)
+        goto LegacyMode;
+
+//     mov   ah, al
+    r.h.ah = r.h.al;
+
+//     call  GetVideoModeFlags             ;Offset 0x105d
+    GetVideoModeFlags(r.h.al, flags);
+
+//     xchg  ah, al
+    r.h.al = r.h.ah;
+    r.h.ah = flags;
+
+//     test  ah, 02h
+//     je    ApplyPalette                  ;Offset 0x498e
+    if ((r.h.ah & 0x02) == 0x00)
+    {
+        ApplyPalette(r.w.bx, r.w.di, palettePtr);
+        return;
+    }
+
+//     test  ah, 04h
+//     je    Label0x4981                   ;Offset 0x4981
+    if ((r.h.ah & 0x04) == 0x00)
+        goto Label0x4981;
+
+//     jmp   Set248ColorPalette            ;Offset 0x4998
+    Set248ColorPalette();
+    return;
+
+// LegacyMode:                             ;Offset 0x4948
+LABEL(SetPalette, LegacyMode);
+
+//     cmp   al, BDA_DM_320x200_4_Color_Graphics1;0x04
+//     jb    Label0x495a                   ;Offset 0x495a
+    if (r.h.al < 0x04)
+        goto Label0x495a;
+
+//     cmp   al, BDA_DM_640x200_BW_Graphics;0x06
+//     jbe   Label0x4972                   ;Offset 0x4972
+    if (r.h.al <= 0x06)
+        goto Label0x4972;
+
+//     cmp   al, BDA_DM_Unknown1           ;0x08
+//     je    Label0x4981                   ;Offset 0x4981
+    if (r.h.al == 0x08)
+        goto Label0x4981;
+        
+//     cmp   al, BDA_DM_640x200_16_Color_Graphics;0xe
+//     jbe   Label0x4972                   ;Offset 0x4972
+    if (r.h.al <= 0x0e)
+        goto Label0x4972;
+
+//     jmp   Label0x4981                   ;Offset 0x4981
+    goto Label0x4981
+
+// Label0x495a:                            ;Offset 0x495a
+LABEL(SetPalette, Label0x495a);
+
+//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0489h, 0x10
+//     jne   Label0x4981                   ;Offset 0x4981
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x10) != 0x00)
+        goto Label0x4981;
+
+//     mov   ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0448h
+    r.h.ah = Hag::System::BDA::EGAFeatureBitSwitches::Get();
+
+//     and   ah, 0fh
+    r.h.ah &= 0x0f;
+
+//     cmp   ah, 03h
+//     je    Label0x4981                   ;Offset 0x4981
+    if (r.h.ah == 0x03)
+        goto Label0x4981;
+
+//     cmp   ah, 09h
+//     je    Label0x4981                   ;Offset 0x4981
+    if (r.h.ah == 0x09)
+        goto Label0x4981;
+
+// Label0x4972:                            ;Offset 0x4972
+LABEL(SetPalette, Label0x4972);
+
+//     mov   si, offset Data41e9           ;Offset 0x41e9
+    palettePtr = Data41e9;
+
+//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
+//     je    ApplyPalette                  ;Offset 0x498e
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
+    {
+        ApplyPalette(r.w.bx, r.w.di, palettePtr);
+        return;
+    }
+
+//     mov   si, offset Data425d           ;Offset 0x425d
+    palettePtr = Data425d;
+
+//     jmp   ApplyPalette                  ;Offset 0x498e
+    ApplyPalette(r.w.bx, r.w.di, palettePtr);
+    return;
+
+// Label0x4981:                            ;Offset 0x4981
+LABEL(SetPalette, Label0x4972);
+
+//     mov   si, offset Data429d           ;Offset 0x429d
+    palettePtr = Data429d;
+
+//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
+//     je    ApplyPalette                  ;Offset 0x498e
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
+    {
+        ApplyPalette(r.w.bx, r.w.di, palettePtr);
+        return;
+    }
+
+//     mov   si, offset Data4331           ;Offset 0x4331
+    palettePtr = Data4331;
+
+//     jmp  ApplyPalette
+    ApplyPalette(r.w.bx, r.w.di, palettePtr);
+}
+
+// ;inputs:
+// ;al = ?
+// ;bl = character generator ram bank
+void Func0x227(uint8_t function, uint8_t& ramBank)
+{
+//     push ax
+//     cmp  al, 55h
+//     jne  Label0x22f                     ;Offset 0x22f
+//     and  bl, 3fh                        ;if al == 55h, and off the top 2 bits from bl
+    if (function == 0x55)
+        ramBank &= 0x3f;
+// Label0x22f:                             ;Offset 0x22f
+//     pop  ax
+}
+
+// ;inputs:
+// ;cx = number of lines
+// ;bh = bytes per line
+// ;dx bytes to skip in destination
+// ;ds:si = source
+// ;es:di = destination
+// ;preserves ax
+bool CopyRect(uint8_t* src, uint8_t* dst, uint16_t lines, uint8_t bytesPerLine, uint16_t skipCount)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+
+//     push      ax                        ;store ax
+// LineLoop:
+LABEL(CopyRect, LineLoop);
+
+//     push      cx                        ;Preserve line count
+//     mov       cl, bh                    ;set byte count
+//     xor       ch, ch                    ;zero out top of count
+    r.w.cx = bytesPerLine;
+
+//     rep movsb                           ;move cl bytes
+    while (r.w.cx != 0x0000)
+    {
+        *dst = *src;
+        ++src;
+        ++dst;
+        --r.w.cx;
+    }
+
+//     pop       cx                        ;restore line count
+//     add       di, dx                    ;add bytes to skip in destination
+    dst += skipCount;
+
+//     loop      LineLoop                  ;Offset 0xeaa - loop cx times
+    --lines;
+    if (lines != 0x0000)
+        goto LineLoop;
+
+//     or        al, 0ffh                  ;Set flags?
+//     pop       ax                        ;restore ax
+//     ret
+    return true;
+}
+
+// ;inputs:
+// ;bl = flags 0x80 = 8 lines, 0x40 = 7 lines
+// ;
+void PatchCharacterSet(uint8_t flags)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint8_t* dest = (uint8_t*)0xa0000;
+    uint8_t* src = NULL;
+
+//     push      ax
+//     push      cx
+//     push      di
+//     push      si
+//     push      es
+//     mov       cx, 0a000h
+//     mov       es, cx                    ;es points to video segment
+//     test      bl, 0c0h                  ;bl & 0c0h == 0 -> exit
+//     je        Exit                      ;Offset 0x4797
+    if ((flags & 0xC0) == 0x00)
+        return;
+        
+//     mov       cx, 0007h                 ;7 * 2 pixels
+    r.w.cx = 0x0007;
+
+//     mov       si, offset Patch8x14      ;Offset 0x6d20
+    src = Patch8x14;
+
+//     test      bl, 80h                   ;bit 7 set -> Start copy of 7 lines
+//     jne       NextCharacter             ;Offset 0x477f
+    if ((bl & 0x80) != 0x00)
+        goto NextCharacter;
+
+//     mov       si, offset Patch8x16      ;Offset 0x7e30
+    src = Patch8x16;
+
+//     mov       cl, 08h                   ;8 * 2 pixels
+    r.h.cl = 0x08;
+
+// NextCharacter:                          ;Offset 0x477f
+LABEL(PatchCharacterSet, NextCharacter);
+
+//     mov       ah, byte ptr cs:[si]      ;read byte
+    r.w.ah = *src;
+
+//     inc       si                        ;point to next one
+    ++src;
+
+//     or        ah, ah                    ;is ah zero? -> Exit
+//     je        Exit                      ;Offset 0x4797
+    if (r.h.ah == 0x00)
+        return;
+
+//     xor       al, al                    ;empty al
+    r.h.al = 0x00;
+
+//     shr       ax, 03h                   ;ax = ax / 8
+    r.w.ax >>= 3;
+
+//     mov       di, ax                    ;new destination
+    r.w.di = r.w.ax;
+
+//     push      cx                        ;store count
+//     cli                                 ;clear interrupts
+    SYS_ClearInterrupts();
+
+//     rep movsw es:[di], cs:[si]          ;move cx words
+    for (int i = 0; i < r.w.cx; ++i)
+    {
+        dst[r.w.di] = src[0];
+        ++r.w.di;
+        ++src;
+        dst[r.w.di] = src[0];
+        ++rw.w.di;
+        ++src;
+    }
+//     sti                                 ;restore interrupts
+    SYS_RestoreInterrupts();
+//     pop       cx                        ;restore count
+//     jmp       NextCharacter             ;Offset 0x477f
+    goto NextCharacter;
+// Exit:                                   ;Offset 0x4797
+//     pop       es
+//     pop       si
+//     pop       di
+//     pop       cx
+//     pop       ax
+//     ret       
+}
+
+void EnablePaletteBasedVideo()
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+
+//     push      dx                        ;preserve dx
+//     mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0463h = port - 0x3?4
+    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
+
+//     add       dl, 06h                   ;port - 0x3?A - Input Status 1
+    r.w.dl += 0x06;
+
+//     in        al, dx                    ;
+    r.w.al = SYS_ReadPortByte(r.w.dx);
+
+//     mov       dx, 03c0h                 ;port 0x3c0 - Attribute Controller Index
+    r.w.dx = 0x3c0;
+
+//     mov       al, 20h                   ;Enable Video Display = 1, Display video using the palette registers enabled (normal display operation).
+    r.h.al = 0x20;
+
+//     out       dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     pop       dx                        ;restore dx
+//     ret       
+}
+
+uint16_t RamBankOffset[] =
+{
+    0x2000, //(0)
+    0x6000, //(1)
+    0xA000, //(2)
+    0xE000, //(3)
+    0x0000, //(4)
+    0x4000, //(5)
+    0x8000, //(6)
+    0xC000  //(7)
+};
+
+// ;inputs:
+// ;es:si pointer to character font
+// ;dx = offset into ?
+// ;cx = Number of characters
+// ;bh = character height
+// ;bl = character generator ram bank
+// ;outputs:
+// ;nothing. all registers preserved
+void SetTextFontAndAddressing(uint8_t* font, uint16_t someOffset, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint8_t* dest = (uint8_t*)0xa0000;
+    r.w.dx = someOffset;
+    r.w.cx = numCharacters;
+    r.h.bh = charHeight;
+    r.h.bl = ramBank;
+
+//     push      ax
+//     push      bx
+//     push      cx
+//     push      dx
+//     push      di
+//     push      si
+//     push      ds
+//     push      es
+//     call      PrepareAttributeController;Offset 0x47ae
+    PrepareAttributeController();
+    
+//     push      dx                        ;Store dx //Some offset
+//     mov       dx, SequenceIndex         ;port - 0x3c4 - Sequence Index register
+    r.w.dx = 0x3c4;
+
+//     mov       ax, 0402h                 ;SR2 - Enable Write Plane Register
+    r.w.ax = 0x0402;
+
+//     out       dx, ax                    ;bit 2 = 1 - Enable plane 3 (counting from 1)
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov       ax, 0704h                 ;SR4 - Memory Mode Control register
+    r.w.ax = 0x0704;
+
+//     out       dx, ax                    ;bit 0 = 1 - Unknown, bit 1 = 1 - 256kb memory access, bit 2 = 1 - Sequential Addressing Mode
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov       dx, GraphicsControllerIndex;port - 0x3ce - Graphics Controller Index register
+    r.w.dx = 0x3ce;
+
+//     mov       ax, 0204h                 ;GR4 - Read Plane Select Register
+    r.w.ax = 0x0204;
+
+//     out       dx, ax                    ;bit 1 = 1 - Enable plane 2 (counting from 1) 
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov       ax, 0005h                 ;GR5 - Graphics Controller Mode register
+    r.w.ax = 0x0005;
+
+//     out       dx, ax                    ;bit 1-0 = 00 - Write Mode 0. Each of four video memory planes is written with the CPU data
+//                                         ;               rotated by the number of counts in the rotate register. If the Set/Reset
+//                                         ;               register is enabled for any of four planes, the corresponding plane is written
+//                                         ;               with the data stored in the set/reset register. Raster operations and bit mask 
+//                                         ;               registers are effective
+//                                         ;bit 3 = 0 - The CPU reads data from the video memory planes. The plane is selected by the
+//                                         ;            Read Plane Select register. This is called read mode 0
+//                                         ;bit 4 = 0 - Standard addressing.
+//                                         ;bit 5 = 0 - Normal shift mode
+//                                         ;bit 6 = 0 - Bit 5 in this register controls operation ofthe video shift registers
+//                                         ;
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov       ax, 0406h                 ;GR6 - Memory Map Mode Control register
+    r.w.ax = 0x0406;
+
+//     out       dx, ax                    ;bit 0 = 0 - Text mode display addressing selected
+//                                         ;bit 1 = 0 - AO address bit unchanged
+//                                         ;bit 3-2 = 01 - AOOOOH to AFFFFH (64 KBytes)
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     pop       dx                        ;Restore dx
+    r.w.dx = someOffset;
+
+//     mov       ax, es
+//     mov       ds, ax
+//     mov       ax, 0a000h                ;Video memory
+//     mov       es, ax
+//     push      bx                        ;store bh = character height, bl = character generator ram bank
+    uint16_t bxsave = r.w.bx;
+
+//     and       bl, 07h                   ;0x00           ;0x01           ;0x02           ;0x03           ;0x04           ;0x05           ;0x06           ;0x07
+    r.h.bl &= 0x07;
+
+//     ror       bl, 01h                   ;0x00 - C = 0   ;0x80 - C = 1   ;0x01 - C = 0   ;0x81 - C = 1   ;0x02 - C = 0   ;0x82 - C = 1   ;0x03 - C = 0   ;0x83 - C = 1
+//     ror       bl, 01h                   ;0x00 - C = 0   ;0x40 - C = 0   ;0x80 - C = 1   ;0xC0 - C = 1   ;0x01 - C = 0   ;0x41 - C = 0   ;0x81 - C = 1   ;0xC1 - C = 1
+//     rcr       bl, 01h                   ;0x00 - C = 0   ;0x20 - C = 0   ;0x40 - C = 0   ;0x60 - C = 0   ;0x00 - C = 1   ;0x20 - C = 1   ;0xD0 - C = 1   ;0xE0 - C = 1
+//     jae       NoCarry                   ;Offset 0x4701 - same as jnc = jump no carry
+//     add       bl, 10h                   ;0x10           ;0x30           ;0x50           ;0x70           ;               ;               ;               ;
+// NoCarry:                                ;Offset 0x4701
+//     shl       bl, 01h                   ;0x20           ;0x60           ;0xA0           ;0xE0           ;0x00           ;0x40           ;0x80           ;0xC0
+//     mov       ah, bl
+//     mov       al, 00h
+//     mov       di, ax                    ;di = 0x0000(4), 0x2000(0), 0x4000(5), 0x6000(1), 0x8000(6), 0xA000(2), 0xC000(7), 0xE000(3)
+    r.w.di = RamBankOffset[r.h.bl]; //Yeah, I'm not doing that funky math up there.
+
+//     or        dx, dx
+//     je        NoOffset                  ;Offset 0x4714
+    if (r.w.dx != 0x0000)
+    {
+//     mov       ax, 20h
+//     mul       dx
+//     add       di, ax
+    r.w.di += r.w.dx << 5;
+    }
+    
+// NoOffset:                               ;Offset 0x4714
+    dest += r.w.di;
+//     mov       dx, 20h
+    r.w.dx = 0x0020;
+//     sub       dl, bh                    ;32 - character height
+    r.h.dl -= r.h.bh;
+
+//     jcxz      CopyDone                  ;Offset 0x472c - if no characters, bail
+    if (r.w.cx != 0x0000)
+    {
+//     call      CopyRect                  ;Offset 0xea9
+//     jne       CopyDone                  ;Offset 0x472c
+        if (!CopyRect(font, dest, r.w.cx, r.h.bh, r.w.dx))//Always true.
+        {
+// Label0x4720:                            ;Offset 0x4720
+//     push      cx
+//     mov       cl, bh
+//     mov       ch, 0
+//     rep movsb
+//     add       di, dx
+//     pop       cx
+//     loop      Label0x4720               ;Offset 0x4720
+        }
+// CopyDone:                               ;Offset 0x472c
+    }
+
+//     pop       bx                        ;restore bh = character height, bl = character generator ram bank
+    r.w.bx = bxsave;
+
+//     pop       es                        ;
+//     pop       ds                        ;
+//     call      PatchCharacterSet         ;Offset 0x4760
+    PatchCharacterSet(r.w.bl);
+
+//     mov       dx, SequenceIndex         ;port - 0x3c4
+    r.w.dx = 0x3c4;
+
+//     mov       ax, 0302h                 ;SR2 - Enable Write Plane register
+//                                         ;bits 3-0 = 0011 - Enable writing to plane 0 and 1
+    r.w.ax = 0x0302;
+    
+//     out       dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+//     mov       ax, 0304h                 ;SR4 - Memory Mode Control register
+//                                         ;bit 0 = 1 - Unknown
+//                                         ;bit 1 = 1 - Allows complete memory access to 256KiB
+//                                         ;bit 2 = 0 - Sequential Addressing Mode.
+//                                         ;            Enables the odd/even addressing mode.
+//                                         ;            Even addresses access planes 0 and 2.
+//                                         ;            Odd addresses access planes 1 and 3.
+    r.w.ax = 0x0304;
+
+//     out       dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov       dx, GraphicsControllerIndex;port - 0x3ce
+    r.w.dx = 0x3ce;
+
+//     mov       ax, 0004h                 ;GR4 - Read Plane Select Register
+//                                         ;bits 1-0 = 00 - Plane 0
+    r.w.ax = 0x0004;
+
+//     out       dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov       ax, 1005h                 ;GR5 - Graphics Controller Mode register
+//                                         ;bit 4 = 1 - Odd/Even addressing mode. Even CPU addresses access plane 0 and 2,
+//                                         ;            while odd CPU addresses access plane 1 and 3. This option is useful
+//                                         ;            for emulating the CGA compatible mode. The value of this bit should be
+//                                         ;            the inverted value programmed in bit 2 of the Sequencer Memory Mode register
+//                                         ;            SR4. This bit affects reading of display memory by the CPU.
+    r.w.ax = 0x1005;
+
+//     out       dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov       ax, 0a06h                 ;GR6 - Memory Map Mode Control register
+//                                         ;bit 0 = 0 - Text mode display addressing selected
+//                                         ;bit 1 = 1 - Chain odd / even planes
+//                                         ;bits 3-2 = 10 - B0000 - B7FFF (32KiB)
+    r.w.ax = 0x0a06;
+
+//     cmp       word ptr ds:[BDA_VideoBaseIOPort], 03b4h;Offset 0463h
+//     je        Label0x4755               ;Offset 0x4755
+    if (Hag::System::BDA::VideoBaseIOPort::Get() != 0x03b4)
+    {
+
+//     mov       ah, 0eh                   ;GR6 - Memory Map Mode Control register
+//                                         ;bit 0 = 0 - Text mode display addressing selected
+//                                         ;bit 1 = 1 - Chain odd / even planes
+//                                         ;bits 3-2 = 11 - B8000 - BFFFF (32KiB)
+        r.w.ah = 0x0e;
+// Label0x4755:                            ;Offset 0x4755
+    }
+
+//     out       dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     call      EnablePaletteBasedVideo   ;Offset 0x479d
+    EnablePaletteBasedVideo();
+    
+//     pop       si
+//     pop       di
+//     pop       dx
+//     pop       cx
+//     pop       bx
+//     pop       ax
+//     ret
+}
+
+// ;inputs:
+// ;bh = point height of character
+// ;
+void ConfigureCursorPropertiesAndVerticalDisplayEnd(uint8_t characterPointHeight)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+//     mov  byte ptr ds:[BDA_PointHeightOfCharacterMatrix], bh;Offset 0x485
+    Hag::System::BDA::PointHeightOfCharacterMatrix::Get() = characterPointHeight;
+
+//     mov  bx, 0190h                      ;400
+    r.w.bx = 0x0190;
+
+//     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
+    r.h.al = Hag::System::BDA::DisplayMode::Get();
+
+//     cmp  al, BDA_DM_640x480_BW_Graphics ;11h
+//     je   HeightSet                      ;Offset 0x306c
+    if (r.h.al == 0x11)
+        goto HeightSet;
+
+//     cmp  al, BDA_DM_640x480_16_Color_Graphics;12h
+//     je   HeightSet                      ;Offset 0x306c
+    if (r.h.al == 0x12)
+        goto HeightSet;
+
+//     mov  bx, 0c8h                       ;200
+    r.w.bx = 0xC8;
+
+//     cmp  al, BDA_DM_320x200_256_Color_Graphics;13h
+//     je   HeightSet                      ;Offset 0x306c
+    if (r.h.al == 0x13)
+        goto HeightSet;
+
+//     cmp  al, BDA_DM_320x200_4_Color_Graphics1;04h
+//     jb   Label0x3040                    ;Offset 0x3040
+    if (r.h.al < 0x04)
+        goto Label0x3040;
+
+//     cmp  al, BDA_DM_640x200_BW_Graphics ;06h
+//     jbe  HeightSet                      ;Offset 0x306c
+    if (r.h.al <= 0x06)
+        goto HeightSet;
+
+//     cmp  al, BDA_DM_Unknown2            ;09h
+//     jb   Label0x3040                    ;Offset 0x3040
+    if (r.h.al < 0x09)
+        goto Label0x3040;
+
+//     cmp  al, BDA_DM_640x200_16_Color_Graphics;0eh
+//     jbe  HeightSet                      ;Offset 0x306c
+    if (r.h.al <= 0x0e)
+        goto HeightSet;
+
+//     mov  bx, 015eh                      ;350
+    r.w.bx = 0x015e;
+
+//     cmp  al, BDA_DM_640x350_16_Color_Graphics;10h
+//     jbe  HeightSet                      ;Offset 0x306c
+    if (r.h.al <= 0x10)
+        goto HeightSet;
+
+// Label0x3040:                            ;Offset 0x3040
+LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, Label0x3040);
+
+//     mov  bx, 190h                       ;400
+    r.w.bx = 0x0190;
+
+//     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0x489, 0x10
+//     jne  HeightSet                      ;Offset 0x306c
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x10) != 0x00)
+        goto HeightSet;
+
+//     mov  bx, 015eh                      ;350
+    r.w.bx = 0x015e;
+
+//     test byte ptr ds:[BDA_VideoModeOptions], BDA_VDDA_GrayScale;Offset 0x487, 0x2
+//     jne  HeightSet                      ;Offset 0x306c
+    if ((Hag::System::BDA::VideoModeOptions::Get() & 0x02) != 0x00)
+        goto HeightSet;
+
+//     mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
+    r.h.ah = Hag::System::BDA::EGAFeatureBitSwitches::Get();
+
+//     and  ah, BDA_EFBS_AdapterTypeMask   ;0x0f
+    r.h.ah &= 0x0F;
+
+//     cmp  ah, BDA_EFBS_MDAHiResEnhanced  ;0x03
+//     je   HeightSet                      ;Offset 0x306c
+    if (r.h.ah == 0x03)
+        goto HeightSet;
+
+//     cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x09
+//     je   HeightSet                      ;Offset 0x306c
+    if (r.h.ah == 0x09)
+        goto HeightSet;
+
+//     cmp  al, BDA_DM_80x25_Monochrome_Text;07h
+//     je   HeightSet                      ;Offset 0x306c
+    if (r.h.al == 0x07)
+        goto HeightSet;
+
+//     mov  bx, 0c8h                       ;200
+    r.w.bx = 0x00C8;
+
+// HeightSet:                              ;Offset 0x306c
+LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, HeightSet);
+
+//     mov  ax, bx                         ;ax = screen height
+    r.w.ax = r.w.bx;
+
+//     xor  dx, dx                         ;dx:ax = screen height
+//     div  word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485 - divide by height of a character
+    r.w.ax /= Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
+
+//     dec  al                             ;decrease by 1
+    --r.h.al;
+
+//     mov  byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484 - set number of rows on screen minus one.
+    Hag::System::BDA::RowsOnScreen::Get() = r.h.al;
+
+//     inc  al                             ;restore to number of rows on screen.
+    ++r.h.al;
+
+//     mov  cx, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a - fetch number of screen columns
+    r.w.cx = Hag::System::BDA::NumberOfScreenColumns::Get();
+
+//     shl  cx, 01h                        ;two bytes per character (char + attribute)
+    r.w.cx <<= 1;
+
+//     xor  ah, ah                         ;ax = number of rows on screen
+    r.h.ah = 0x00;
+
+//     mul  cx                             ;dx:ax = screen size in bytes
+    r.w.ax *= r.w.cx;
+
+//     add  ax, 100h                       ;screen size + 256
+    r.w.ax += 0x0100;
+
+//     mov  word ptr ds:[BDA_VideoBufferSize], ax;Offset 0x44c
+    Hag::System::BDA::VideoBufferSize::Get() = r.w.ax;
+
+//     mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463 CRTC register
+    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
+
+//     mov  ah, byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+    r.h.ah = Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
+
+//     dec  ah                             ;character height minus one
+    --r.h.ah;
+
+//     cmp  byte ptr ds:[BDA_DisplayMode], BDA_DM_80x25_Monochrome_Text;Offset 0x449, 0x7
+//     jne  DontSetUnderline               ;Offset 0x309f
+    if (Hag::System::BDA::DisplayMode::Get() != 0x07)
+        goto DontSetUnderline;
+
+//     mov  al, 14h                        ;CR14 - Underline Location register
+    r.h.al = 0x14;
+
+//     out  dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+// DontSetUnderline:                       ;Offset 0x309f
+LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, DontSetUnderline);
+
+//     mov  ch, ah                         ;character height minus one
+    r.h.ch = r.h.ah;
+
+//     mov  cl, ah                         ;character height minus one
+    r.h.cl = r.h.ah;
+
+//     mov  al, 09h                        ;CR9 - Maximum Scan Line register
+    r.h.al = 0x09;
+
+//     call ReadDataWithIndexRegister      ;Offset 0x4640
+    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
+
+//     and  ah, 0e0h                       ;Preserve top 3 bits
+    r.h.ah &= 0xe0;
+
+//     or   ah, ch                         ;bits 4-0 - Number of scan lines per character row minus one
+    r.h.ah |= r.h.ch;
+
+//     out  dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     dec  ch                             ;character height minus two
+    --r.h.ch;
+
+//     mov  ah, cl                         ;character height minus one
+    r.h.ah = r.h.cl;
+
+//     cmp  ah, 0ch                        ;if less than or equal to twelve 12
+//     jbe  LessThanTwelve                 ;Offset 0x30bb
+    if (r.h.ah <= 0x0C)
+        goto LessThanTwelve;
+
+//     sub  cx, 0101h                      ;ch = character height minus three, cl = character height minus two
+    r.w.cx -= 0x0101;
+
+// LessThanTwelve:                         ;Offset 0x30bb
+LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, LessThanTwelve);
+
+//     mov  word ptr ds:[BDA_CursorEndScanLine], cx;Offset 0x460 update BDA
+    Hag::System::BDA::CursorScanLines::Get().End = r.h.cl;
+    Hag::System::BDA::CursorScanLines::Get().Start = r.h.ch;
+
+//     mov  al, 0ah                        ;CRA - Cursor Start Scan Line register
+    r.h.al = 0x0A;
+
+//     mov  ah, ch                         ;character height minus two/three
+    r.h.ah = r.h.ch;
+
+//     out  dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     inc  al                             ;CRB - Cursor End Scan Line register
+    ++r.h.al;
+
+//     mov  ah, cl                         ;character height minus one/two
+    r.h.ah = r.h.cl;
+
+//     out  dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     mov  al, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484 - rows on screen minus one
+    r.h.al = Hag::System::BDA::RowsOnScreen::Get();
+
+//     inc  al                             ;rows on screen
+    ++r.h.al;
+
+//     mul  byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485 - ax = height in pixels
+    r.h.ah = 0x00;
+    r.w.ax *= Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
+
+//     cmp  bx, 0c8h                       ;200
+//     jne  Not200Height                   ;Offset 0x30da
+    if (r.w.bx != 0xC8)
+        goto Not200Height;
+
+//     shl  ax, 01h                        ;height in pixels * 2
+    r.w.ax <<= 1;
+
+// Not200Height:                           ;Offset 0x30da
+LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, Not200Height);
+
+//     dec  ax                             ;height in pixels (* 2) minus one
+    --r.w.ax;
+
+//     mov  ah, al                         ;lower bits
+    r.h.ah = r.h.al;
+
+//     mov  al, 12h                        ;CR12 - Vertical Display End Register
+//                                         ;11-bit value = (number of scan lines of active display) - 1. 
+//                                         ;This register contains the least significant 8 bits of this value.
+    r.h.al = 0x12;
+    
+//     out  dx, ax                         ;
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+//     ret
+}
+
+// ;inputs:
+// ;bl = character generator ram bank
+void Set8x14TextFontAndAddressing(uint8_t ramBank)
+{
+//     mov  si, offset Characters8x14      ;Offset 0x5f20
+//     mov  ax, cs
+//     mov  es, ax
+//     xor  dx, dx
+//     mov  cx, 0100h
+//     mov  bh, 0eh
+//     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
+    SetTextFontAndAddressing(Characters8x14, 0x0000, 0x0100, 0x0e, ramBank);
+}
+
+// ;inputs:
+// ;bl = character generator ram bank
+void Set8x8TextFontAndAddressing(uint8_t ramBank)
+{
+//     mov  si, offset LowerCharacters8x8  ;Offset 0x5720
+//     mov  ax, cs
+//     mov  es, ax
+//     xor  dx, dx
+//     mov  cx, 100h
+//     mov  bh, 08h
+//     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
+    SetTextFontAndAddressing(Characters8x8, 0x0000, 0x0100, 0x08, ramBank);
+}
+
+// ;inputs:
+// ;bl = character generator ram bank
+void SelectCharacterFont(uint8_t ramBank)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+
+//     mov  al, 03h                        ;SR3 - Character Font Select register
+    r.h.al = 0x03;
+
+//     mov  ah, bl
+    r.h.ah = ramBank;
+
+//     mov  dx, SequenceIndex              ;port - 0x3c4
+    r.w.dx = 0x3c4;
+
+//     out  dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+//     ret  
+}
+
+
+// ;inputs:
+// ;bl = character generator ram bank
+void Set8x16TextFontAndAddressing(uint8_t ramBank)
+{
+    // mov  si, offset Characters8x16      ;Offset 0x6e30
+    // mov  ax, cs
+    // mov  es, ax
+    // xor  dx, dx
+    // mov  cx, 100h
+    // mov  bh, 10h
+    // jmp  SetTextFontAndAddressing       ;Offset 0x46c2
+    SetTextFontAndAddressing(Characters8x16, 0x0000, 0x0100, 0x10, ramBank);
+}
+
+void SetTextFontAddressingAndCursor(uint8_t* font, uint16_t someOffset, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank)
+{
+    // call SetTextFontAndAddressing       ;Offset 0x46c2
+    SetTextFontAndAddressing(font, someOffset, numCharacters, charHeight, ramBank);
+
+    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
+    ConfigureCursorPropertiesAndVerticalDisplayEnd(charHeight);
+
+    // nop
+}
+
+void Set8x14TextFontAddressingAndCursor(uint8_t ramBank)
+ {
+    // mov  si, offset Characters8x14      ;Offset 0x5f20
+    // mov  ax, cs
+    // mov  es, ax
+    // xor  dx, dx
+    // mov  cx, 100h
+    // mov  bh, 0eh
+    // call SetTextFontAndAddressing       ;Offset 0x46c2
+    SetTextFontAddressingAndCursor(Characters8x14, 0x0000, 0x0100, 0x0E, ramBank);
+    
+    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
+    ConfigureCursorPropertiesAndVerticalDisplayEnd(0x0E);
+
+    // nop
+}
+
+void Set8x8TextFontAddressingAndCursor(uint8_t ramBank)
+ {
+    // mov  si, offset LowerCharacters8x8  ;Offset 0x5720
+    // mov  ax, cs
+    // mov  es, ax
+    // xor  dx, dx
+    // mov  cx, 100h
+    // mov  bh, 08h
+    // call SetTextFontAndAddressing       ;Offset 0x46c2
+    SetTextFontAddressingAndCursor(Characters8x8, 0x0000, 0x0100, 0x08, ramBank);
+
+    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
+    ConfigureCursorPropertiesAndVerticalDisplayEnd(0x08);
+
+    // nop
+}
+
+void Set8x16TextFontAddressingAndCursor(uint8_t ramBank)
+{
+    // mov  si, offset Characters8x16      ;Offset 0x6e30
+    // mov  ax, cs
+    // mov  es, ax
+    // xor  dx, dx
+    // mov  cx, 100h
+    // mov  bh, 10h
+    // call SetTextFontAndAddressing       ;Offset 0x46c2
+    SetTextFontAddressingAndCursor(Characters8x16, 0x0000, 0x0100, 0x10, ramBank);
+
+    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
+    ConfigureCursorPropertiesAndVerticalDisplayEnd(0x10);
+
+    // nop  
+}
+
+uint8_t NumberOfRows[] = { 0x0D, 0x18, 0x2A };
+
+
+// ;inputs:
+// ;bl = row specifier (00 = user set)
+// ;dl = row count index = 01 = 14, 02 = 25, 03 = 43 or if bl == 00, any number (that's valid)
+// ;cx = character height
+void SetUserFont(uint8_t* font, uint8_t rowSpecifier, uint8_t rowCountIndex, uint16_t charHeight)
+{
+    printf("SetUserFont - Not supported!\n"); //Let's hope the mode set doesn't use this.
+
+//     cli
+//     mov  word ptr es:[010ch], si        ;Offset 0x10c - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
+//     mov  word ptr es:[010eh], di        ;Offset 0x10e
+//     sti
+//     cmp  bl, 04h
+//     jb   Label0x313f                    ;Offset 0x313f
+//     mov  bl, 02h
+// Label0x313f:                            ;Offset 0x313f
+//     dec  dl
+//     or   bl, bl
+//     je   Label0x314e                    ;Offset 0x314e
+//     dec  bl
+//     mov  bh, 00h
+//     mov  dl, byte ptr cs:[bx + offset NumberOfRows]
+// Label0x314e:                            ;Offset 0x314e
+//     mov  word ptr ds:[BDA_PointHeightOfCharacterMatrix], cx;Offset 0x485
+//     mov  byte ptr ds:[BDA_RowsOnScreen], dl;Offset 0x484
+//     mov  byte ptr [bp + 10h], dl
+//     ret
+}
+
+void Func0x3125(uint8_t* font, uint8_t rowSpecifier, uint8_t rowCountIndex, uint16_t charHeight)
+{
+//     mov  di, es
+//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
+    SetUserFont(font, rowSpecifier, rowCountIndex, charHeight)    
+}
+
+void SetUserUpper8x8Font()
+{
+    printf("SetUserUpper8x8Font - Not supported!\n"); //Let's hope the mode set doesn't use this.
+//     mov  di, es
+//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
+//     cli
+//     mov  word ptr es:[7ch], si          ;Offset 0x7c - SYSTEM DATA - 8x8 GRAPHICS FONT
+//     mov  word ptr es:[7eh], di          ;Offset 0x7e
+//     sti
+//     ret
+}
+
+void Set8x14Font(uint8_t rowSpecifier, uint8_t rowCountIndex)
+{
+//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
+//     mov  si, offset Characters8x14      ;Offset 0x5f20
+//     mov  di, cs
+//     mov  cx, 0eh
+//     jmp  SetUserFont                    ;Offset 0x312c
+    SetUserFont(Characters8x14, rowSpecifier, rowCountIndex, 0x0E);
+}
+
+void Set8x8Font(uint8_t rowSpecifier, uint8_t rowCountIndex)
+{
+//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
+//     mov  si, offset LowerCharacters8x8  ;Offset 0x5720
+//     mov  di, cs
+//     mov  cx, 08h
+//     jmp  SetUserFont                    ;Offset 0x312c
+    SetUserFont(Characters8x8, rowSpecifier, rowCountIndex, 0x08);
+}
+
+void Set8x16Font(uint8_t rowSpecifier, uint8_t rowCountIndex)
+{
+//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
+//     mov  si, offset Characters8x16      ;Offset 0x6e30
+//     mov  di, cs
+//     mov  cx, 10h
+//     jmp  SetUserFont                    ;Offset 0x312c
+    SetUserFont(Characters8x16, rowSpecifier, rowCountIndex, 0x10);
+}
+
+// ;inputs:
+// ;bh = font index
+// ;     00 = Upper 8x8 graphics font
+// ;     01 = Current character font
+// ;     02 = 8x14 font
+// ;     03 = 8x8 character font
+// ;     04 = 8x8 graphics font
+// ;     05 = 8x14 font patch data
+// ;     06 = 8x16 font
+// ;     07 = 8x16 font patch data
+
+void GetFontInfo()
+{
+    printf("GetFontInfo - Not supported!\n"); //Let's hope the mode set doesn't use this.
+//     mov es, word ptr cs:[Data1488]      ;Offset 0x1488
+//     or  bh, bh
+//     jne NotUpperFont                    ;Offset 0x3176
+//     les bx, es:[7ch]                    ;Offset 0x7c - SYSTEM DATA - 8x8 GRAPHICS FONT
+//     jmp ReturnFontInfo                  ;Offset 0x3197
+// NotUpperFont:                           ;Offset 0x3176
+//     dec bh
+//     jne NotCurrentFont                  ;Offset 0x3181
+//     les bx, es:[10ch]                   ;Offset 0x10c - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
+//     jmp ReturnFontInfo                  ;Offset 0x3197
+// NotCurrentFont:                         ;Offset 0x3181
+//     dec bh
+//     cmp bh, 05h
+//     ja  Exit                            ;Offset 0x31ae
+//     mov ax, cs
+//     mov es, ax
+//     mov bl, bh
+//     mov bh, 00h
+//     add bx, bx
+//     mov bx, word ptr cs:[bx + offset Data315a];Offset 0x315a
+// ReturnFontInfo:                         ;Offset 0x3197
+//     mov word ptr ss:[bp + 04h], bx
+//     mov word ptr ss:[bp + 02h], es
+//     mov ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+//     mov word ptr ss:[bp + 0ch], ax
+//     mov al, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
+//     mov byte ptr ss:[bp + 0ah], al
+//     mov word ptr ss:[bp + 10h], 0000h
+// Exit:                                   ;Offset 0x31ae
+//     ret
+}
+
+// ;inputs:
+// ;al = function + flag bit 4 = configure cursor
+// ;bl = character generator ram bank
+void TextModeCharFunctionsInternal(uint8_t function, 
+    uint8_t* font, uint16_t someOffset, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank, uint8_t rowSpecifier, uint8_t rowCountIndex)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    r.h.al = function;
+    r.h.bl = ramBank
+//     call Func0x227                      ;Offset 0x227 ands the top 2 bits off bl if al == 55
+    Func0x227(r.h.al, r.h.bl);
+
+//     mov  ah, al                         ;ah is now function
+    r.h.ah = r.h.al;
+
+//     and  al, 0fh                        ;keep bits 3-0
+    r.h.al &= 0xf;
+
+//     and  ah, 30h                        ;keep bits 5-4
+    r.h.ah &= 0x30;
+
+//     shr  ah, 01h                        ;now 4-3 
+    r.h.ah >>= 1;
+//     or   al, ah                         ;mush together. Effectively, bit 4 and 3 overlap. If either is set, or neither is set.
+    r.h.al |= r.h.ah;
+
+//     cmp  al, 19h                        ;if 25 or over, leave
+//     jae  EmptyFunction9                 ;Offset 0x2f8e
+    if (r.h.al >= 0x19)
+        return;
+
+//     mov  ah, 00h
+    r.h.ah = 0x00;
+//     mov  di, ax
+//     shl  di, 01h
+//     jmp  word ptr cs:[di + TextModeCharCallTable];Offset 0x2f39
+    switch(r.h.al)
+    {
+    case 0:
+        SetTextFontAndAddressing(font, someOffset, numCharacters, charHeight, ramBank);
+        break;
+    case 1:
+        Set8x14TextFontAndAddressing(ramBank);
+        break;
+    case 2:
+        Set8x8TextFontAndAddressing(ramBank);
+        break;
+    case 3:
+        SelectCharacterFont(ramBank);
+        break;
+    case 4:
+        Set8x16TextFontAndAddressing(ramBank);
+        break;
+    case 8:
+        SetTextFontAddressingAndCursor(font, someOffset, numCharacters, charHeight, ramBank);
+        break;
+    case 9:
+        Set8x14TextFontAddressingAndCursor(ramBank);
+        break;
+    case 10:
+        Set8x8TextFontAddressingAndCursor(ramBank);
+        break;
+    case 12:
+        Set8x16TextFontAddressingAndCursor(ramBank);
+        break;
+    case 16:
+        SetUserUpper8x8Font();
+        break;
+    case 17:
+        Func0x3125(font, rowSpecifier, rowCountIndex, charHeight);
+        break;
+    case 18:
+        Set8x14Font(rowSpecifier, rowCountIndex);
+        break;
+    case 19:
+        Set8x8Font(rowSpecifier, rowCountIndex);
+        break;
+    case 20:
+        Set8x16Font(rowSpecifier, rowCountIndex);
+        break;
+    case 24:
+        GetFontInfo();
+        break;
+    default:
+    }
+}
+
+void SetFont()
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+//     xor   bl, bl
+    r.h.bl = 0x00;
+
+//     mov   al, 01h
+    r.h.al = 0x01;
+
+//     cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 0eh;Offset 0x485 8x14
+//     je    Is8x14                        ;Offset 0x1c80
+    if (Hag::System::BDA::PointHeightOfCharacterMatrix::Get() == 0x0e)
+        goto Is8x14;
+
+//     mov   al, 02h
+    r.h.al = 0x02;
+
+//     cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 08h;Offset 0x485 8x8
+//     je    Label0x1c8a                   ;Offset 0x1c8a
+    if (Hag::System::BDA::PointHeightOfCharacterMatrix::Get() == 0x08)
+        goto Label0x1c8a;
+
+//     mov   al, 04h
+    r.h.al = 0x04;
+
+//     or    bl, 40h
+    r.h.bl |= 0x40;
+
+//     jmp   Label0x1c8a                   ;Offset 0x1c8a
+    goto Label0x1c8a;
+
+// Is8x14:                                 ;Offset 0x1c80
+LABEL(Func0x1c65, Is8x14);
+
+//     cmp   byte ptr ds:[BDA_DisplayMode], 07h;Offset 0x449
+//     jne   Label0x1c8a                   ;Offset 0x1c8a
+    if (Hag::System::BDA::DisplayMode::Get() != 0x07)
+        goto Label0x1c8a;
+
+//     or    bl, 80h
+    r.h.bl |= 0x80;
+
+// Label0x1c8a:                            ;Offset 0x1c8a
+LABEL(Func0x1c65, Label0x1c8a);
+
+//     call  TextModeCharFunctionsInternal ;Offset 0x2f71
+    TextModeCharFunctionsInternal(r.h.al, NULL, 0x0000, 0x0000, 0x00, r.h.bl, 0x00, 0x00);//the 0 arguments aren't used.
+
+//     ret   
+}
+
+// ;inputs:
+// ;ax = offset in to es:bx table
+bool CheckCurrentModeExists(uint8_t* ptr, uint16_t offset)
+{
+//     push bx
+//     add  bx, ax
+    ptr += ax;
+
+//     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
+    uint8_t displayMode = Hag::System::BDA::DisplayMode::Get();
+    uint8_t mode = 0;
+// FindMode:                               ;Offset 0x1bd7
+    do
+    {
+//     mov  ah, byte ptr es:[bx]
+        mode = *ptr;
+
+//     inc  bx
+        ++ptr;
+//     cmp  ah, 0ffh
+//     je   NotFound                       ;Offset 0x1be6
+        if(ah == 0xFF)
+            return false;
+
+//     DB 03Ah, 0C4h                       ;cmp  ah, al - masm encoding difference
+//     jne  FindMode                       ;Offset 0x1bd7
+        if (mode == displayMode)
+            return true;
+
+    } while (true);
+//     pop  bx
+//     ret
+// NotFound:                               ;Offset 0x1be6
+//     or   al, 0ffh
+//     pop  bx
+//     ret
+}
+
+// ;inputs:
+// ;bx is index into video parameter table
+// ;ax sub index into pulled table
+// ;outputs:
+// ;es:bx is new pointer - can be null
+// ;al = 0xff if fail. unmodified otherwise.
+// ;
+// ;Fetches a pointer from the parameter block and then
+// ;adds ax to it. after that, it runs through until 0xff or until current video mode found
+// ;if found, it returns unmodified bx and al = video mode.
+// ;if not found, it returns unmodified bx and al = 0xff
+bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement)
+{
+//     call GetVideoParameterBlockElement  ;Offset 0x1d95
+    if (GetVideoParameterBlockElement(paramTableIdx, parameterBlockElement))
+        return CheckCurrentModeExists(parameterBlockElement, subIdx);
+//     jne  CheckCurrentModeExists         ;Offset 0x1bd1
+//     or   al, 0ffh                       ;
+//     ret
+    return false;
+}
+
+void ConfigureFontAndCursor(uint8_t* fontDefinition)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+
+//     mov  al, byte ptr es:[bx + 0ah]     ;number of character rows displayed
+    r.h.al = fontDefinition[0x0A];
+    uint16_t axtmp = r.w.ax;
+
+//     push ax                             ;save that
+//     mov  cx, word ptr es:[bx + 02h]     ;number of characters defined
+    r.h.cl = fontDefinition[0x02];
+    r.h.ch = fontDefinition[0x03];
+
+//     mov  dx, word ptr es:[bx + 04h]     ;first character code in table
+    r.h.dl = fontDefinition[0x04];
+    r.h.dh = fontDefinition[0x05];
+
+//     mov  si, word ptr es:[bx + 06h]     ;offset to character font
+//     mov  ax, word ptr es:[bx + 08h]     ;segment to character font
+//     mov  es, ax                         ;segment to character font   //I moved this line from further down.
+    uint8_t* font = ((FARPointer*)(ptr + 0x06))->ToPointer<uint8_t>();
+
+//     mov  bx, word ptr es:[bx]           ;bl = length of each character, bh = character generator ram bank
+//     xchg bl, bh                         ;bh = length of each character, bl = character generator ram bank
+    r.h.bh = fontDefinition[0x00];
+    r.h.bl = fontDefinition[0x01];
+
+//     and  bl, 3fh                        ;keep the lowest 6 bits
+    r.h.bl &= 0x3F;
+
+//     mov  al, 10h                        ;SetTextFontAddressingAndCursor
+    r.h.al = 0x10;
+
+//     call TextModeCharFunctionsInternal  ;Offset 0x2f71
+    TextModeCharFunctionsInternal(r.h.al, font, r.w.dx, r.w.cx, r.h.bh, r.h.bl, 0x00, 0x00);
+
+//     pop  ax
+    r.w.ax = axtmp;
+//     cmp  al, 0ffh
+//     je   Failure                        ;Offset 0x1c18
+    if (r.h.al != 0xFF)
+    {
+//     sub  al, 01h
+        --r.h.al;
+//     mov  byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
+        Hag::System::BDA::RowsOnScreen::Get() = r.h.al;
+    }
+// Failure:                                ;Offset 0x1c18
+//     ret
+}
+
+void ConfigureFontRamBank(uint8_t* fontDefinition)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+
+//     mov   al, byte ptr es:[bx]          ;
+    r.h.al = *fontDefinition;
+
+//     xor   ah, ah                        ;
+    r.h.ah = 0x00;
+
+//     cmp   ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+//     jne   AlreadySet                    ;Offset 0x1c64
+    if (r.w.ax == Hag::System::BDA::PointHeightOfCharacterMatrix::Get())
+        return;
+
+//     mov   cx, 100h
+    r.w.cx = 0x0100;
+
+//     xor   dx, dx
+    r.w.dx = 0x0000;
+
+//     mov   si, word ptr es:[bx + 03h]
+//     mov   ax, word ptr es:[bx + 05h]
+//     mov   es, ax
+    uint8_t* font = ((FARPointer*)(fontDefinition + 0x03))->ToPointer<uint8_t>();
+
+//     mov   bx, word ptr es:[bx]
+//     xchg  bl, bh
+    r.h.bh = fontDefinition[0x00];
+    r.h.bl = fontDefinition[0x01];
+
+//     and   bl, 3fh
+    r.h.bl &= 0x3f;
+
+//     mov   al, 00h
+    r.h.al = 0x00;
+
+//     push  bx
+//     call  TextModeCharFunctionsInternal ;Offset 0x2f71
+    TextModeCharFunctionsInternal(r.h,al, r.w.dx, r.w.cx, r.h.bh, r.h.bl, 0x00, 0x00);
+
+//     mov   dx, 03c4h                     ;port - 0x3c4
+    r.w.dx = 0x3c4;
+
+//     mov   al, 03h
+    r.h.al = 0x03;
+
+//     call  ReadDataWithIndexRegisterNext ;Offset 0x4649
+    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
+
+//     and   ah, 13h
+    r.h.ah &= 0x13;
+
+//     pop   bx
+//     mov   bh, bl
+    r.h.bh = r.h.bl;
+
+//     and   bl, 03h
+    r.h.bl &= 0x03;
+
+//     mov   cl, 02h
+    r.h.cl = 0x02;
+
+//     shl   bl, cl
+    r.h.bl <<= r.h.cl;
+
+//     and   bh, 04h
+    r.h.bh &= 0x04;
+
+//     inc   cl
+    ++r.h.cl;
+
+//     shl   bh, cl
+    r.h.bh <<= r.h.cl;
+
+//     or    ah, bl
+    r.h.ah |= r.h.bl;
+
+//     or    ah, bh
+    r.h.ah |= r.h.bh;
+
+//     mov   al, 03h
+    r.h.al = 0x03;
+
+//     out   dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax);
+
+// AlreadySet :                            ;Offset 0x1c64
+//     ret
+}
+
+void ClearScreen()
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint8_t flags = 0;
+    uint8_t* ptr = NULL;
+
+//     mov       cx, 4000h
+    r.w.cx = 0x4000;
+
+//     mov       bl, byte ptr ds:[BDA_DisplayMode];Offset 0449h
+    r.w.bl = Hag::System::BDA::DisplayMode::Get();
+
+//     cmp       bl, 13h
+//     jbe       Label0x1d70
+    if (r.w.bl <= 0x13)
+        goto Label0x1d70;
+
+//     mov       al, bl
+    r.h.al = r.h.bl;
+
+//     call      GetVideoModeFlags
+//     jne       Label0x1d70
+    if (!GetVideoModeFlags(r.h.al, flags))
+        goto Label0x1d70;
+
+//     mov       bl, al
+    r.h.bl = flags;
+
+//     mov       bh, 0b8h
+    r.h.bh = 0xB8;
+
+//     mov       ax, 0720h
+    r.w.ax = 0x720;
+
+//     test      bl, 02h
+//     jne       Label0x1d68
+    if ((r.h.bl & 0x02) != 0x00)
+        goto Label0x1d68;
+
+//     mov       bh, 0b0h
+    r.h.bh = 0xB0;
+
+// Label0x1d68:
+LABEL(ClearScreen, Label0x1d68);
+
+//     test      bl, 01h                   ;text
+//     jne       Label0x1d8c
+    if ((r.h.bl & 0x01) != 0x00)
+        goto Label0x1d8c;
+
+//     jmp       EmptyFunction2            ;Offset 0x121d Tail call.
+    return;
+
+// Label0x1d70:                            ;Offset 0x1d70
+LABEL(ClearScreen, Label0x1d70);
+
+//     mov       bh, 0b0h
+    r.h.bh = 0xB0;
+
+//     mov       ax, 0720h
+    r.w.ax = 0x720;
+
+//     cmp       bl, 07h
+//     je        Label0x1d8c
+    if (r.h.bl == 0x07)
+        goto Label0x1d8c;
+        
+//     mov       bh, 0b8h
+    r.h.bh = 0xB8;
+//     cmp       bl, 03h
+//     jbe       Label0x1d8c
+    if (r.h.bl <= 0x03)
+        goto Label0x1d8c;
+
+//     xor       ax, ax
+    r.w.ax = 0x0000;
+
+//     cmp       bl, 06h
+//     jbe       Label0x1d8c
+    if (r.h.bl <= 0x06)
+        goto Label0x1d8c;
+
+//     mov       bh, 0a0h
+    r.h.bh = 0xA0;
+
+//     mov       ch, 80h
+    r.h.ch = 0x80;
+
+// Label0x1d8c:
+LABEL(ClearScreen, Label0x1d8c);
+//     xor       bl, bl
+    r.h.bl = 0x00;
+
+//     mov       es, bx
+    ptr = (uint8_t*)(uint32_t(r.h.bx) << 4);
+
+//     xor       di, di
+//     rep       stosw
+    memset(ptr, 0, r.w.cx << 1);
+
+//     ret
+}
+
+void Func0x1cb4()
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint8_t* ptr = NULL;
+    uint8_t* ptrptr = NULL;
+    uint8_y* ptrptrptr = NULL;
+//     mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
+    r.w.bx = 0x0010;
+
+//     call  GetVideoParameterBlockElement ;Offset 0x1d95
+//     je    Label0x1cce                   ;Offset 0x1cce
+    if(!GetVideoParameterBlockElement(r.w.bx, ptr))
+//     les   bx, es:[bx + 0ah]
+//     mov   ax, es
+    ptrptr = ((FARPointer*)(ptr + 0x0A))->ToPointer();
+//     or    ax, bx
+//     je    Label0x1cce                   ;Offset 0x1cce
+    if (ptrptr == NULL)
+        return;
+
+//     mov   ax, 14h
+    r.w.ax = 0x14;
+
+//     call  CheckCurrentModeExists        ;Offset 0x1bd1
+//     je    Label0x1ccf                   ;Offset 0x1ccf
+    if (!CheckCurrentModeExists(ptrptr, r.w.ax))
+        return;
+// Label0x1cce:                            ;Offset 0x1cce
+//     ret
+// Label0x1ccf:                            ;Offset 0x1ccf
+
+//     test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0x489
+//     jne   Label0x1d2b                   ;Offset 0x1d2b
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
+        goto Label0x1d2b;
+
+//     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
+    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
+
+//     add   dx, 06h
+    r.w.dx += 0x0006;
+//     in    al, dx
+    r.h.al = SYS_ReadPortByte(r.w.dx);
+
+//     push  ds
+//     push  bx
+
+//     mov   ax, word ptr es:[bx + 0eh]
+    r.h.al = ptrptr[0x0E];
+
+//     mov   ah, al
+    r.h.ah = r.h.al;
+
+//     lds   si, es:[bx + 10h]
+    ptrptrptr = ((FARPointer*)(ptr + 0x10))->ToPointer<uint8_t>();
+
+//     mov   bx, word ptr es:[bx + 0ch]
+    r.w.bx = ptrptr[0x0C];
+
+//     or    bx, bx
+//     je    Label0x1d06                   ;Offset 0x1d06
+    if (r.w.bx == 0x0000)
+        goto Label0x1d06;
+
+//     mov   dx, 03c8h                     ;port - 0x3c8
+    r.w.dx = 0x3c8;
+
+// Label0x1cf5:                            ;Offset 0x1cf5
+LABEL(Func0x1cb4, Label0x1cf5);
+
+//     mov   al, ah
+    r.h.al = r.h.ah;
+
+//     out   dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     inc   dx
+    ++r.w.dx;
+
+//     mov   cx, 03h
+    r.w.cx = 0x0003;
+
+// Label0x1cfc:                            ;Offset 0x1cfc
+LABEL(Func0x1cb4, Label0x1cf5);
+
+//     lodsb byte ptr ds:[si]
+    r.h.al = *ptrptrptr;
+    ++ptrptrptr;
+
+//     out   dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     loop  Label0x1cfc                   ;Offset 0x1cfc
+    --r.w.cx;
+    if (r.w.cx != 0x0000)
+        goto Label0x1cfc;
+
+//     inc   ah
+    ++r.h.ah;
+
+//     dec   dx
+    --r.w.dx;
+
+//     dec   bx
+    --r.w.bx;
+
+//     jne   Label0x1cf5                   ;Offset 0x1cf5
+    if (r.w.bx != 0x0000)
+        goto Label0x1cf5;
+
+// Label0x1d06:                            ;Offset 0x1d06
+LABEL(Func0x1cb4, Label0x1d06);
+
+//     pop   bx
+//     mov   ax, word ptr es:[bx + 06h]
+    r.h.al = ptrptr[0x06];
+
+//     mov   ah, al
+    r.h.ah = r.h.al;
+
+//     lds   si, es:[bx + 08h]
+    ptrptrptr = ((FARPointer*)(ptrptr + 0x08))->ToPointer<uint8_t>();
+
+//     mov   cx, word ptr es:[bx + 04h]
+    r.w.cx = ptrptr[0x04];
+
+//     jcxz  Label0x1d2a                   ;Offset 0x1d2a
+    if (r.w.cx == 0x0000)
+        goto Label0x1d2a;
+
+//     mov   dx, 03c0h                     ;port - 0x3c0
+    r.w.dx = 0x3c0;
+
+// Label0x1d1a:                            ;Offset 0x1d1a
+LABEL(Func0x1cb4, Label0x1d1a);
+
+//     mov   al, ah
+    r.h.al = r.h.ah;
+
+//     out   dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     lodsb byte ptr ds:[si]
+    r.h.al = *ptrptrptr;
+    ++ptrptrptr;
+
+//     out   dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     inc   ah
+    ++r.h.ah;
+
+//     loop  Label0x1d1a                   ;Offset 0x1d1a
+    --r.w.cx;
+    if (r.w.cx != 0x0000)
+        goto Label0x1d1a;
+
+//     inc   ah
+    ++r.h.ah;
+
+//     mov   al, ah
+    r.h.al = r.h.ah;
+
+//     out   dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+//     lodsb byte ptr ds:[si]
+    r.h.al = *ptrptrptr;
+    ++ptrptrptr;
+    
+//     out   dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
+
+// Label0x1d2a:                            ;Offset 0x1d2a
+LABEL(Func0x1cb4, Label0x1d2a);
+
+//     pop   ds
+
+// Label0x1d2b:                            ;Offset 0x1d2b
+LABEL(Func0x1cb4, Label0x1d2b);
+
+//     mov   al, byte ptr es:[bx]
+    r.h.al = *ptr; //or is it ptrptr? 
+
+//     or    al, al
+//     je    Label0x1d46                   ;Offset 0x1d46
+    if (r.h.al == 0x00)
+        return;
+
+//     mov   ah, 1fh
+    r.h.ah = 0x1f;
+
+//     test  al, 80h
+//     jne   Label0x1d3d                   ;Offset 0x1d3d
+    if ((r.h.al & 0x80) != 0x00)
+        goto Label0x1d3d;
+
+//     mov   ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+    r.w.ax = Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
+
+//     dec   al
+    --r.h.al;
+
+//     mov   ah, al
+    r.h.ah = r.h.al;
+
+// Label0x1d3d:                            ;Offset 0x1d3d
+LABEL(Func0x1cb4, Label0x1d2b);
+//     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
+    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
+
+//     mov   al, 14h
+    r.h.al = 0x14;
+
+//     out   dx, ax
+    SYS_WritePortShort(r.w.dx, r.w.ax)
+
+// Label0x1d46:                            ;Offset 0x1d46
+//     ret
+}
+
+
+// ;inputs:
 // ;al = requested video mode
 bool SetVideoMode(uint8_t mode)
 {
@@ -4317,7 +6526,11 @@ bool SetVideoMode(uint8_t mode)
     uint32_t offset = 0;
     uint8_t* selectedFont = NULL;
     uint8_t* overrideTable = NULL;
+    uint8_t* fontDefinition = NULL;
+    uint8_t* graphicsCharacterFontDefinition = NULL;
+    uint8_t* paramBlock = NULL;
     uint8_t modeDataIndex = 0;
+    uint8_t flags = 0;
     r.h.al = mode;
 
 //     call UnlockExtendedCRTRegistersSafe ;Offset 0x1374
@@ -4407,55 +6620,139 @@ LABEL(SetVideoMode, IsVESAMode);
     ApplyVESAOverrideData(r.h.al, overrideTable, modeDataIndex);
 
 //     call SetPalette                     ;Offset 0x4909
+    SetPalette();
+
 //     mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
+    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
+
 //     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
+    r.h.al = Hag::System::BDA::DisplayMode();
+
 //     cmp  al, BDA_DM_320x200_4_Color_Graphics1;0x04
 //     jb   Label0x1885                    ;Offset 0x1885
+    if (r.h.al < 0x04)
+        goto Label0x1885;
+
 //     cmp  al, BDA_DM_80x25_Monochrome_Text;0x07
 //     je   Label0x1885                    ;Offset 0x1885
+    if (r.h.al == 0x07)
+        goto Label0x1885;
+
 //     cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
 //     jbe  Label0x18b5                    ;Offset 0x18b5
+    if (r.h.al <= 0x13)
+        goto Label0x18b5;
+
 //     call GetVideoModeFlags              ;Offset 0x105d
+    GetVideoModeFlags(r.h.al, flags);
 //     test al, 01h                        ;Text
 //     je   Label0x18b5                    ;Offset 0x18b5
+    if ((flags & 0x01) == 0x00)
+        goto Label0x18b5;
+
 // Label0x1885:                            ;Offset 0x1885
+LABEL(SetVideoMode, Label0x1885);
+
 //     call Func0x1c65                     ;Offset 0x1c65
+    SetFont();
+
 //     mov  ax, 000bh                      ;ax = sub index to mode list
+    r.w.ax = 0x000b;
+
 //     mov  bx, 0008h                      ;Fetch element 3 - Alphanumeric Character Set Override pointer
+    r.w.bx = 0x0008;
+
 //     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
 //     jne  CharacterSetNotFound           ;Offset 0x1896
+    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, fontDefinition))
+        goto CharacterSetNotFound;
+
 //     call ConfigureFontAndCursor         ;Offset 0x1bea
+    ConfigureFontAndCursor(fontDefinition);
+
 // CharacterSetNotFound:                   ;Offset 0x1896
+LABEL(SetVideoMode, CharacterSetNotFound);
+
 //     mov  bx, 0010h                      ;Secondary Save Pointer Table pointer (VGA)
+    r.w.bx = 0x0010;
+
 //     call GetVideoParameterBlockElement  ;Offset 0x1d95
 //     je   Label0x18c9                    ;Offset 0x18c9
+    if (!GetVideoParameterBlockElement(r.w.bx, paramBlock))
+        goto Label0x18c9;
+
 //     les  bx, es:[bx + 06h]              ;Pointer to Character font definition table
 //     mov  ax, es
+    fontDefinition = ((FARPointer*)(paramBlock + 0x06))->ToPointer<uint8_t>();
+
 //     or   ax, bx
 //     je   Label0x18c9                    ;Offset 0x18c9 - No font definition found
+    if (fontDefinition == NULL)
+        goto Label0x18c9;
+
 //     mov  ax, 0007h
+    r.w.ax = 0x0007;
+
 //     call CheckCurrentModeExists         ;Offset 0x1bd1
 //     jne  Label0x18c9                    ;Offset 0x18c9
+    if (!CheckCurrentModeExists(fontDefinition, r.w.ax))
+        goto Label0x18c9;
+
 //     call Func0x1c19                     ;Offset 0x1c19
+    ConfigureFontRamBank();
+
 //     jmp  Label0x18c9                    ;Offset 0x18c9
+    goto Label0x18c9;
+
 // Label0x18b5:                            ;Offset 0x18b5
+LABEL(SetVideoMode, Label0x18b5);
 //     mov  word ptr ds:[BDA_CursorEndScanLine], 00h;Offset 0x460
+    Hag::System::BDA::CursorScanLines::Get().End = 0x00;
+    Hag::System::BDA::CursorScanLines::Get().Start = 0x00;
+
 //     mov  ax, 0007h                      ;ax = sub index to mode list
+    r.w.ax = 0x0007;
+
 //     mov  bx, 000ch                      ;Fetch element 4 - Graphics Character Set Override pointer
+    r.w.bx = 0x000C;
+
 //     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
 //     jne  Label0x18c9                    ;Offset 0x18c9
+    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, graphicsCharacterFontDefinition))
+        goto Label0x18c9;
+
 //     call SetGraphicsCharacterFont       ;Offset 0x1c8e
+    //SetGraphicsCharacterFont(graphicsCharacterFontDefinition); //Sets the pointer in the interrupt table.
+
 // Label0x18c9:                            ;Offset 0x18c9
+LABEL(SetVideoMode, Label0x18c9);
+
 //     test byte ptr ds:[BDA_VideoModeOptions], 80h;Offset 0x487
 //     jne  Label0x18da                    ;Offset 0x18da
+    if ((Hag::System::BDA::VideoModeOptions::Get() & 0x80) != 0x00)
+        goto Label0x18da;
+
 //     mov  ax, word ptr ds:[BDA_VideoBufferSize];Offset 0x44c
+    r.w.ax = Hag::System::BDA::VideoBufferSize::Get();
+
 //     or   ax, ax
 //     je   Label0x18da                    ;Offset 0x18da
-//     call Func0x1d47                     ;Offset 0x1d47
+    if (r.w.ax == 0x0000)
+        goto Label0x18da;
+
+//     call ClearScreen                     ;Offset 0x1d47
+    ClearScreen();
+
 // Label0x18da:                            ;Offset 0x18da
+LABEL(SetVideoMode, Label0x18da);
+
 //     call Func0x1cb4                     ;Offset 0x1cb4
+    Func0x1cb4();
+
 //     call EnablePaletteBasedVideo        ;Offset 0x479d
+
 //     call TurnOnScreen                   ;Offset 0x4800
+
 //     pop  cx
 //     call EmptyFunction3                 ;Offset 0x1380
 //     ret  

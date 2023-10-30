@@ -25,12 +25,16 @@
 *.la
 *.a
 *.lib
+*.bin
 
 # Executables
 *.exe
 *.out
 *.app
 *.com
+*.bat
+*.000
+*.sys
 
 # Mac junk
 **/.DS_Store
@@ -39,3 +43,4 @@
 *.bin
 *.zip
 *.err
+*.txt
