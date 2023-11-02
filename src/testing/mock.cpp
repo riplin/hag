@@ -13,6 +13,10 @@
 #define VERBOSE(s)
 #endif
 
+#if 1
+#define PRINTRAW
+#endif
+
 uint8_t Internal_ReadPortByte(uint16_t reg);
 #pragma aux Internal_ReadPortByte = \
     "in al, dx"                     \
@@ -668,10 +672,14 @@ struct VerifyPaVContext
     uint16_t* readPortsAndValues;
     PortAndIndexAndValue* modifiedIndexedPortsAndValues;
     PortAndIndex* readIndexedPortsAndValues;
+    uint16_t* ignorePorts;
+    PortAndIndex* ignoreIndexedPorts;
     int modifiedCount;
     int readCount;
     int modifiedIndexedCount;
     int readIndexedCount;
+    int ignorePortsCount;
+    int ignoreIndexedCount;
     int verifiedCount;
 };
 
@@ -680,20 +688,32 @@ void VerifyPortsAndValuesCallback(uint16_t port, uint8_t modifiedValue, uint8_t 
     VerifyPaVContext& context = *(VerifyPaVContext*)ctx;
     bool found = false;
 
-    for (int i = 0; i < context.modifiedCount; ++i)
+    for (int i = 0; i < context.ignorePortsCount; ++i)
     {
-        if (context.modifiedPortsAndValues[i].Port == port)
+        if (context.ignorePorts[i] == port)
         {
-            if (context.modifiedPortsAndValues[i].Value == modifiedValue)
-            {
-                found = true;
-                context.verifiedCount++;
-            }
-            else
-            {
-                printf("Port 0x%04X modified value should be 0x%02X but is 0x%02X\n", port, context.modifiedPortsAndValues[i].Value, modifiedValue);
-            }
+            found = true;
             break;
+        }
+    }
+
+    if (!found)
+    {
+        for (int i = 0; i < context.modifiedCount; ++i)
+        {
+            if (context.modifiedPortsAndValues[i].Port == port)
+            {
+                if (context.modifiedPortsAndValues[i].Value == modifiedValue)
+                {
+                    found = true;
+                    context.verifiedCount++;
+                }
+                else
+                {
+                    printf("Port 0x%04X modified value should be 0x%02X but is 0x%02X\n", port, context.modifiedPortsAndValues[i].Value, modifiedValue);
+                }
+                break;
+            }
         }
     }
 
@@ -719,14 +739,24 @@ void VerifyPortsAndValuesCallback(uint16_t port, uint8_t modifiedValue, uint8_t 
 
     if (!found)
     {
+#ifndef PRINTRAW
         printf("Port 0x%04X not found in test data. Original: 0x%02X", port, originalValue);
+#endif
         if (originalValue != modifiedValue)
         {
+#ifdef PRINTRAW
+            printf("{ 0x%04X, 0x%02X },\n", port, modifiedValue);
+#else
             printf(", modified: 0x%02X\n", modifiedValue);
+#endif
         }
         else
         {
+#ifdef PRINTRAW
+            printf("0x%04X,\n", port);
+#else
             printf("\n");
+#endif
         }
     }
 }
@@ -736,24 +766,36 @@ void VerifyPortsAndValuesIndexedCallback(uint16_t port, uint8_t index, uint8_t m
     VerifyPaVContext& context = *(VerifyPaVContext*)ctx;
     bool found = false;
 
-    for (int i = 0; i < context.modifiedIndexedCount; ++i)
+    for (int i = 0; i < context.ignoreIndexedCount; ++i)
     {
-        if (context.modifiedIndexedPortsAndValues[i].Port == port &&
-            context.modifiedIndexedPortsAndValues[i].Index == index)
+        if (context.ignoreIndexedPorts[i].Port == port &&
+            context.ignoreIndexedPorts[i].Index == index)
         {
-            if (context.modifiedIndexedPortsAndValues[i].Value == modifiedValue)
-            {
-                found = true;
-                context.verifiedCount++;
-            }
-            else
-            {
-                printf("Port 0x%04X:0x%02X modified value should be 0x%02X but is 0x%02X\n", port, index, context.modifiedIndexedPortsAndValues[i].Value, modifiedValue);
-            }
+            found = true;
             break;
         }
     }
 
+    if (!found)
+    {
+        for (int i = 0; i < context.modifiedIndexedCount; ++i)
+        {
+            if (context.modifiedIndexedPortsAndValues[i].Port == port &&
+                context.modifiedIndexedPortsAndValues[i].Index == index)
+            {
+                if (context.modifiedIndexedPortsAndValues[i].Value == modifiedValue)
+                {
+                    found = true;
+                    context.verifiedCount++;
+                }
+                else
+                {
+                    printf("Port 0x%04X:0x%02X modified value should be 0x%02X but is 0x%02X\n", port, index, context.modifiedIndexedPortsAndValues[i].Value, modifiedValue);
+                }
+                break;
+            }
+        }
+    }
     if (!found)
     {
         for (int i = 0; i < context.readIndexedCount; ++i)
@@ -777,14 +819,24 @@ void VerifyPortsAndValuesIndexedCallback(uint16_t port, uint8_t index, uint8_t m
 
     if (!found)
     {
+#ifndef PRINTRAW
         printf("Port 0x%04X:0x%02X not found in test data. Original: 0x%02X", port, index, originalValue);
+#endif
         if (originalValue != modifiedValue)
         {
+#ifdef PRINTRAW
+            printf("{ 0x%04X, 0x%02X, 0x%02X },\n", port, index, modifiedValue);
+#else
             printf(", modified: 0x%02X\n", modifiedValue);
+#endif
         }
         else
         {
+#ifdef PRINTRAW
+            printf("{ 0x%04X, 0x%02X },\n", port, index);
+#else
             printf("\n");
+#endif
         }
     }
 }
@@ -792,7 +844,9 @@ void VerifyPortsAndValuesIndexedCallback(uint16_t port, uint8_t index, uint8_t m
 int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int modifiedCount,
                          uint16_t* readPortsAndValues, int readCount,
                          PortAndIndexAndValue* modifiedIndexedPortsAndValues, int modifiedIndexedCount,
-                         PortAndIndex* readIndexedPortsAndValues, int readIndexedCount)
+                         PortAndIndex* readIndexedPortsAndValues, int readIndexedCount,
+                         uint16_t* ignorePorts, int ignorePortsCount,
+                         PortAndIndex* ignoreIndexedPorts, int ignoreIndexedCount)
 {
     if (s_Instance0.Allocator == NULL)
         return 0;
@@ -803,10 +857,14 @@ int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int
         readPortsAndValues,
         modifiedIndexedPortsAndValues,
         readIndexedPortsAndValues,
+        ignorePorts,
+        ignoreIndexedPorts,
         modifiedCount,
         readCount,
         modifiedIndexedCount,
         readIndexedCount,
+        ignorePortsCount,
+        ignoreIndexedCount,
         0
     };
 
@@ -1296,7 +1354,7 @@ void Write16(uint16_t port, uint16_t value)
 
 void Write8(uint16_t port, uint8_t valueLo, uint8_t valueHi)
 {
-    uint16_t val16 = (uint16_t(valueHi) << 16) || valueLo;
+    uint16_t val16 = (uint16_t(valueHi) << 8) | valueLo;
     Write16(port, val16);
 }
 

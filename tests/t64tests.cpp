@@ -26,22 +26,22 @@ bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer);
 void GetVideoModeOverrideTable(uint8_t mode, uint8_t*& overrideTable, uint8_t& modeDataIndex);
 void GetCurrentVideoModeOverrideTable(uint8_t*& overrideTable, uint8_t& modeDataIndex);
 void SetTextModeBiosData(uint8_t mode, uint8_t*& selectedFont, uint8_t*& overrideTable, uint8_t& modeDataIndex);
-
 void ApplyVideoParameters(uint8_t* overrideTable);
 void SaveDynamicParameterData(uint8_t* overrideTable);
 void PrepareAttributeController();
 uint8_t ReadDataWithIndexRegister(uint16_t port, uint8_t index);
 uint8_t FetchBusSpecificSystemConfig(uint16_t crtcPort);
-void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint8_t crtcPort);
-void WaitGraphicsEngineReady();
-void ClearMemory();
-void ReadDeviceIDAndRevision(uint8_t& deviceId, uint8_t& revision);
-void ConfigureDCLKAndMCLK(uint8_t idx, uint8_t* data);
+void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint16_t crtcPort);
 void SetupClocks(uint8_t clockConfig);
+void ConfigureDCLKAndMCLK(uint8_t idx, uint8_t* data);
+void WaitGraphicsEngineReady();
+void ReadDeviceIDAndRevision(uint8_t& deviceId, uint8_t& revision);
 bool FindModeFromVESAModeData(uint8_t mode, uint8_t*& vesaModeData, uint16_t& vesaVideoModeIdsOffset);
 void ConfigureExtraVESAModeSettings(uint16_t crtc, uint8_t* modeData);
 void EnableOver256KAddressingAndSetAddressWindow(uint8_t mode, uint16_t crtcReg);
 void SetColorMode(uint8_t mode);
+
+void ClearMemory();
 void ApplyVESAOverrideData(uint8_t mode, uint8_t* overrideTable, uint8_t modeDataIndex);
 bool SetVideoMode(uint8_t mode);
 ////////////////////////////////////////////////////////////////////////////////
@@ -569,33 +569,23 @@ int SetTextModeBiosDataTest()
     return ret + Hag::Testing::Mock::Shutdown();
 }
 
-Hag::Testing::Mock::PortAndValue ApplyVideoParametersTest_modifiedPorts[] =
-{
-    {
-        0,
-        0
-    }
-};
+extern Hag::Testing::Mock::PortAndValue* ApplyVideoParametersTest_modifiedPorts[];
+extern int ApplyVideoParametersTest_modifiedPortsCount[];
+extern uint16_t ApplyVideoParametersTest_readPorts[];
+extern int ApplyVideoParametersTest_readPortsCount;
+extern Hag::Testing::Mock::PortAndIndexAndValue* ApplyVideoParametersTest_modifiedIndexedPorts[];
+extern int ApplyVideoParametersTest_modifiedIndexedPortsCount[];
+extern Hag::Testing::Mock::PortAndIndex* ApplyVideoParametersTest_readIndexedPorts[];
+extern int ApplyVideoParametersTest_readIndexedPortsCount[];
 
-uint16_t ApplyVideoParametersTest_readPorts[] =
-{
-    0
-};
-
-Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts[] =
-{
-    {
-        0,
-        0,
-        0
-    }
-};
-
-Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts[] = { {0, 0} };
+extern uint16_t ApplyVideoParametersTest_ignorePorts[];
+extern uint16_t ApplyVideoParametersTest_ignorePortsCount;
+extern Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_ignoreIndexedPorts[];
+extern uint16_t ApplyVideoParametersTest_ignoreIndexedPortsCount;
 
 int ApplyVideoParametersTest()
 {
-    int ret = 0;
+    int ret = 2284;
 
     Support::Allocator allocator;
     Hag::Testing::Mock::Initialize(allocator);
@@ -606,7 +596,6 @@ int ApplyVideoParametersTest()
     {
         uint8_t mode = modes[i];
 
-        printf("\n%i: 0x%02X\n", i, mode);
         //The following code replicates parts of the SetVideoMode function
 
         if (!UnlockExtendedCRTRegistersSafe())
@@ -639,8 +628,18 @@ int ApplyVideoParametersTest()
 
         ApplyVideoParameters(overrideTable);
 
-        ret -= VERIFYPORTCONTENT(0, ApplyVideoParametersTest_modifiedPorts, ApplyVideoParametersTest_readPorts,
-                                 ApplyVideoParametersTest_modifiedIndexedPorts, ApplyVideoParametersTest_readIndexedPorts);
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, ApplyVideoParametersTest_modifiedPorts[i], 
+                                                           ApplyVideoParametersTest_modifiedPortsCount[i],
+                                                           ApplyVideoParametersTest_readPorts,
+                                                           ApplyVideoParametersTest_readPortsCount,
+                                                           ApplyVideoParametersTest_modifiedIndexedPorts[i],
+                                                           ApplyVideoParametersTest_modifiedIndexedPortsCount[i],
+                                                           ApplyVideoParametersTest_readIndexedPorts[i],
+                                                           ApplyVideoParametersTest_readIndexedPortsCount[i],
+                                                           ApplyVideoParametersTest_ignorePorts,
+                                                           ApplyVideoParametersTest_ignorePortsCount,
+                                                           ApplyVideoParametersTest_ignoreIndexedPorts,
+                                                           ApplyVideoParametersTest_ignoreIndexedPortsCount);
 
         Hag::Testing::Mock::Reset();
     }
@@ -648,35 +647,303 @@ int ApplyVideoParametersTest()
     return ret + Hag::Testing::Mock::Shutdown();   
 }
 
-/*
+extern uint8_t PCISystemConfig;
+extern uint8_t VLBSystemConfig;
 
+int FetchBusSpecificSystemConfigTest()
+{
+    int ret = 2;
 
+    Support::Allocator allocator;
+    Hag::Testing::Mock::Initialize(allocator);
+    S3Trio64MockConfigSetup();
 
-    for (uint8_t i = 0; i < sizeof(modes) / sizeof(uint8_t); ++i)
+    uint16_t crtcPort = GetCRTControllerIndexRegister();
+    uint8_t val = ReadDataWithIndexRegister(crtcPort, 0x36);
+    uint8_t pciVal = (val & (~0x03)) | 0x02;
+    uint8_t vlbVal = (val & (~0x03)) | 0x01;
+    
+    SYS_WritePortBytes(crtcPort, 0x36, pciVal);
+
+    if (FetchBusSpecificSystemConfig(crtcPort) == PCISystemConfig)
+        --ret;
+    else printf("PCI fail.\n");
+
+    SYS_WritePortBytes(crtcPort, 0x36, vlbVal);
+
+    if (FetchBusSpecificSystemConfig(crtcPort) == VLBSystemConfig)
+        --ret;
+    else printf("VLB fail.\n");
+
+    return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+extern uint8_t CRTControllerInitData[];
+
+extern Hag::Testing::Mock::PortAndValue CRTControllerInitData_modifiedPorts[];
+extern int CRTControllerInitData_modifiedPortsCount;
+extern uint16_t CRTControllerInitData_readPorts[];
+extern int CRTControllerInitData_readPortsCount;
+extern Hag::Testing::Mock::PortAndIndexAndValue CRTControllerInitData_modifiedIndexedPorts[];
+extern int CRTControllerInitData_modifiedIndexedPortsCount;
+extern Hag::Testing::Mock::PortAndIndex CRTControllerInitData_readIndexedPorts[];
+extern int CRTControllerInitData_readIndexedPortsCount;
+extern uint16_t CRTControllerInitData_ignorePorts[];
+extern int CRTControllerInitData_ignorePortsCount;
+
+int InitializeCRTControllerAndSequencerTest()
+{
+    int ret = 32;
+
+    Support::Allocator allocator;
+    Hag::Testing::Mock::Initialize(allocator);
+    S3Trio64MockConfigSetup();
+
+    uint16_t crtcPort = GetCRTControllerIndexRegister();
+
+    InitializeCRTControllerAndSequencer(CRTControllerInitData, crtcPort);
+
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, CRTControllerInitData_modifiedPorts, 
+                                                           CRTControllerInitData_modifiedPortsCount,
+                                                           CRTControllerInitData_readPorts,
+                                                           CRTControllerInitData_readPortsCount,
+                                                           CRTControllerInitData_modifiedIndexedPorts,
+                                                           CRTControllerInitData_modifiedIndexedPortsCount,
+                                                           CRTControllerInitData_readIndexedPorts,
+                                                           CRTControllerInitData_readIndexedPortsCount,
+                                                           CRTControllerInitData_ignorePorts,
+                                                           CRTControllerInitData_ignorePortsCount,
+                                                           NULL,
+                                                           0);
+
+    return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+extern uint8_t ModeData[][12];
+
+extern Hag::Testing::Mock::PortAndIndexAndValue* SetupClocksTest_modifiedIndexedPorts[];
+extern int SetupClocksTest_modifiedIndexedPortsCount[];
+
+extern uint16_t SetupClocksTest_ignorePorts[];
+extern uint16_t SetupClocksTest_ignorePortsCount;
+extern Hag::Testing::Mock::PortAndIndex SetupClocksTest_ignoreIndexedPorts[];
+extern uint16_t SetupClocksTest_ignoreIndexedPortsCount;
+
+int SetupClocksTest()
+{
+    int ret = 250;
+
+    Support::Allocator allocator;
+    Hag::Testing::Mock::Initialize(allocator);
+    S3Trio64MockConfigSetup();
+
+    for (uint8_t i = 0; i < modesCount; ++i)
     {
-        printf("\n----------------------------------------\n");
         uint8_t mode = modes[i];
-        Hag::Testing::Mock::SelectInstance(1);
+        uint8_t* overrideTable = NULL;
+        uint8_t modeDataIndex = 0;
 
-        //uint32_t offset = 0;
-        //bool ret1 = FindVideoModeData(mode, offset);
-        //printf("FindVideoModeData(0x%02X) returned %s, %i\n", mode, ret1 ? "true" : "false", offset);
+        GetVideoModeOverrideTable(mode, overrideTable, modeDataIndex);
 
-        //uint8_t flags = 0;
-        //bool ret2 = GetVideoModeFlags(mode, flags);
-        //printf("GetVideoModeFlags(0x%02X) returned %s, 0x%02X\n", mode, ret2 ? "true" : "false", flags);
-
-        //uint8_t newMode = mode;
-        //bool ret3 = SetBDACursorSize(newMode);
-        //printf("SetBDACursorSize(0x%02X) returned %s, 0x%02X\n", mode, ret3 ? "true" : "false", newMode);
+        uint8_t* modeData = ModeData[modeDataIndex];
+        SetupClocks(modeData[0x03]);
 
 
-        bool ret = SetVideoMode(mode);
-        printf("SetVideoMode(0x%02X) returned: %s\n", mode, ret ? "true" : "false");
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                                                           0,
+                                                           NULL,
+                                                           0,
+                                                           SetupClocksTest_modifiedIndexedPorts[i],
+                                                           SetupClocksTest_modifiedIndexedPortsCount[i],
+                                                           NULL,
+                                                           0,
+                                                           SetupClocksTest_ignorePorts,
+                                                           SetupClocksTest_ignorePortsCount,
+                                                           SetupClocksTest_ignoreIndexedPorts,
+                                                           SetupClocksTest_ignoreIndexedPortsCount
+                                                           );
 
-        if (Hag::Testing::Mock::HasDifferences())
-            Hag::Testing::Mock::Report();
-        
         Hag::Testing::Mock::Reset();
     }
-*/
+
+    return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+extern Hag::Testing::Mock::PortAndValue* ConfigureExtraVESAModeSettingsTest_modifiedPorts[];
+extern int ConfigureExtraVESAModeSettingsTest_modifiedPortsCount[];
+extern Hag::Testing::Mock::PortAndIndexAndValue* ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts[];
+extern int ConfigureExtraVESAModeSettingsTest_modifiedIndexedPortsCount[];
+extern Hag::Testing::Mock::PortAndIndex* ConfigureExtraVESAModeSettingsTest_readIndexedPorts[];
+extern int ConfigureExtraVESAModeSettingsTest_readIndexedPortsCount[];
+extern uint16_t ConfigureExtraVESAModeSettingsTest_ignorePorts[];
+extern uint16_t ConfigureExtraVESAModeSettingsTest_ignorePortsCount;
+
+int ConfigureExtraVESAModeSettingsTest()
+{
+    int ret = 1674;
+
+    Support::Allocator allocator;
+    Hag::Testing::Mock::Initialize(allocator);
+    S3Trio64MockConfigSetup();
+
+    uint16_t crtcPort = GetCRTControllerIndexRegister();
+    Hag::Testing::Mock::Reset();
+    int idx = 0;
+    for (uint8_t i = 0; i < vesaModesOnlyCount; ++i)
+    {
+        uint8_t mode = vesaModesOnly[i];
+
+        uint8_t* overrideTable = NULL;
+        uint8_t modeDataIndex = 0;
+
+        GetVideoModeOverrideTable(mode, overrideTable, modeDataIndex);
+        uint8_t* modeData = NULL;
+        uint8_t baseIdx = modeDataIndex;
+        do
+        {
+            modeData = ModeData[modeDataIndex];
+
+            ConfigureExtraVESAModeSettings(crtcPort, modeData);
+            
+            ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, ConfigureExtraVESAModeSettingsTest_modifiedPorts[idx],
+                                                            ConfigureExtraVESAModeSettingsTest_modifiedPortsCount[idx],
+                                                            NULL,
+                                                            0,
+                                                            ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts[idx],
+                                                            ConfigureExtraVESAModeSettingsTest_modifiedIndexedPortsCount[idx],
+                                                            ConfigureExtraVESAModeSettingsTest_readIndexedPorts[idx],
+                                                            ConfigureExtraVESAModeSettingsTest_readIndexedPortsCount[idx],
+                                                            ConfigureExtraVESAModeSettingsTest_ignorePorts,
+                                                            ConfigureExtraVESAModeSettingsTest_ignorePortsCount,
+                                                            NULL,
+                                                            0
+                                                            ); 
+
+            Hag::Testing::Mock::Reset();
+
+            ++idx;
+            ++modeDataIndex;
+            //modeData points to progressively lower frequency versions. top bit of byte 2 is terminate.
+        } while ((modeData[0x02] & 0x80) == 0x00);
+
+    }
+    return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+extern Hag::Testing::Mock::PortAndIndex* EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPorts[];
+extern int EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPortsCount[];
+extern uint16_t EnableOver256KAddressingAndSetAddressWindowTest_ignorePorts[];
+extern int EnableOver256KAddressingAndSetAddressWindowTest_ignorePortsCount;
+
+int EnableOver256KAddressingAndSetAddressWindowTest()
+{
+    int ret = 230;
+
+    Support::Allocator allocator;
+    Hag::Testing::Mock::Initialize(allocator);
+    S3Trio64MockConfigSetup();
+
+    uint16_t crtcPort = GetCRTControllerIndexRegister();
+    Hag::Testing::Mock::Reset();
+
+    for (uint8_t i = 0; i < modesCount; ++i)
+    {
+        uint8_t mode = modes[i];
+
+        EnableOver256KAddressingAndSetAddressWindow(mode, crtcPort);
+
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                                                        0,
+                                                        NULL,
+                                                        0,
+                                                        NULL,
+                                                        0,
+                                                        EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPorts[i],
+                                                        EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPortsCount[i],
+                                                        EnableOver256KAddressingAndSetAddressWindowTest_ignorePorts,
+                                                        EnableOver256KAddressingAndSetAddressWindowTest_ignorePortsCount,
+                                                        NULL,
+                                                        0
+                                                        ); 
+
+        Hag::Testing::Mock::Reset();
+    }
+
+    return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+extern Hag::Testing::Mock::PortAndIndexAndValue* SetColorModeTest_modifiedIndexedPorts[];
+extern int SetColorModeTest_modifiedIndexedPortsCount[];
+extern Hag::Testing::Mock::PortAndIndex* SetColorModeTest_readIndexedPorts[];
+extern int SetColorModeTest_readIndexedPortsCount[];
+extern uint16_t SetColorModeTest_ignorePorts[];
+extern int SetColorModeTest_ignorePortsCount;
+
+int SetColorModeTest()
+{
+    int ret = 200;
+
+    Support::Allocator allocator;
+    Hag::Testing::Mock::Initialize(allocator);
+    S3Trio64MockConfigSetup();
+
+    for (uint8_t i = 0; i < modesCount; ++i)
+    {
+        uint8_t mode = modes[i];
+
+        SetColorMode(mode);
+
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                                                        0,
+                                                        NULL,
+                                                        0,
+                                                        SetColorModeTest_modifiedIndexedPorts[i],
+                                                        SetColorModeTest_modifiedIndexedPortsCount[i],
+                                                        SetColorModeTest_readIndexedPorts[i],
+                                                        SetColorModeTest_readIndexedPortsCount[i],
+                                                        SetColorModeTest_ignorePorts,
+                                                        SetColorModeTest_ignorePortsCount,
+                                                        NULL,
+                                                        0
+                                                        ); 
+
+        Hag::Testing::Mock::Reset();
+    }
+
+    return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+int ClearMemoryTest()
+{
+    int ret = 200;
+
+    Support::Allocator allocator;
+    Hag::Testing::Mock::Initialize(allocator);
+    S3Trio64MockConfigSetup();
+
+    ClearMemory();
+
+    ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                                                    0,
+                                                    NULL,
+                                                    0,
+                                                    NULL,
+                                                    0,
+                                                    NULL,
+                                                    0,
+                                                    NULL,
+                                                    0,
+                                                    NULL,
+                                                    0
+                                                    ); 
+
+    Hag::Testing::Mock::Reset();
+
+    return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+int ApplyVESAOverrideDataTest()
+{
+    //void ApplyVESAOverrideData(uint8_t mode, uint8_t* overrideTable, uint8_t modeDataIndex);
+    return 0;
+}

@@ -80,7 +80,9 @@ struct PortAndIndex
 int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int modifiedCount,
                          uint16_t* readPorts, int readCount,
                          PortAndIndexAndValue* modifiedIndexedPortsAndValues, int modifiedIndexedCount,
-                         PortAndIndex* readIndexedPorts, int readIndexedCount);
+                         PortAndIndex* readIndexedPorts, int readIndexedCount,
+                         uint16_t* ignorePorts = NULL, int ignorePortsCount = 0,
+                         PortAndIndex* ignoreIndexedPorts = NULL, int ignoreIndexedCount = NULL);
 
 struct BDAFieldsAndValues
 {

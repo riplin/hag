@@ -13,7 +13,13 @@ int ModeSetBDATest();
 int VerifyBDAOrDeactivateTest();
 int SetTextModeBiosDataTest();
 int ApplyVideoParametersTest();
-
+int FetchBusSpecificSystemConfigTest();
+int InitializeCRTControllerAndSequencerTest();
+int SetupClocksTest();
+int ConfigureExtraVESAModeSettingsTest();
+int EnableOver256KAddressingAndSetAddressWindowTest();
+int SetColorModeTest();
+int ClearMemoryTest();
 
 #define TESTFUNCTION(F)                             \
 {                                                   \
@@ -57,6 +63,13 @@ int main(void)
     TESTFUNCTION(VerifyBDAOrDeactivateTest);
     TESTFUNCTION(SetTextModeBiosDataTest);
     TESTFUNCTION(ApplyVideoParametersTest);
+    TESTFUNCTION(FetchBusSpecificSystemConfigTest);
+    TESTFUNCTION(InitializeCRTControllerAndSequencerTest);
+    TESTFUNCTION(SetupClocksTest);
+    TESTFUNCTION(ConfigureExtraVESAModeSettingsTest);
+    TESTFUNCTION(EnableOver256KAddressingAndSetAddressWindowTest);
+    TESTFUNCTION(SetColorModeTest);
+    TESTFUNCTION(ClearMemoryTest);
 
     return ret;
 }
