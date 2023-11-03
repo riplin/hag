@@ -14,8 +14,6 @@ namespace Register
 
 enum
 {
-    GraphicsControllerIndex = 0x3CE,                        //GRC_ADR
-    GraphicsControllerData = 0x3CF,                         //GRC_DATA
     SetupOptionSelect = 0x102,                              //SETUP_MD
     VideoSubsystemEnableS3 = 0x46E8,                        //SETUP_MD // Original VGA this is 0x3C3
     SubsystemStatus = 0x42E8,                               //SUBSYS_STAT

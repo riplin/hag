@@ -16,6 +16,7 @@ Hag::VGA::Register_t Registers[] =
     Hag::VGA::Register::InputStatus0,
     Hag::VGA::Register::FeatureControlR,
     Hag::VGA::Register::MiscellaneousR,
+    Hag::VGA::Register::InputStatus1B,
     Hag::VGA::Register::InputStatus1D,
     Hag::VGA::Register::VideoSubsystemEnable,
     Hag::VGA::Register::DACMask,

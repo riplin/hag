@@ -56,11 +56,13 @@ struct Instance
         , Ports(NULL)
         , MemoryMap(NULL)
         , Memory(NULL)
+        , DefaultPortValues(NULL)
+        , DefaultPortValuesCount(0)
     {
 
     }
 
-    void Initialize(IAllocator& allocator);
+    void Initialize(IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount);
     void Reset();
 
     void Shutdown();
@@ -69,6 +71,8 @@ struct Instance
 
     void CachePort8(uint16_t port);
     void CachePort16(uint16_t port);
+
+    void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size);
 
     bool MarkMemory(uint32_t offset);
 
@@ -81,9 +85,13 @@ struct Instance
 
     uint8_t* MemoryMap;
     uint8_t* Memory;
+    uint8_t* DefaultMemory;
+
+    PortAndValue* DefaultPortValues;
+    uint16_t DefaultPortValuesCount;
 };
 
-void Instance::Initialize(IAllocator& allocator)
+void Instance::Initialize(IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount)
 {
     if (Allocator != NULL)
         Shutdown();
@@ -97,8 +105,13 @@ void Instance::Initialize(IAllocator& allocator)
 
     Ports = allocator.AllocateAs<uint8_t>(portsSize);
     PortMap = allocator.AllocateAs<uint8_t>(portMapSize);//64Kib / 8 - One bit per byte.
+    DefaultMemory = allocator.AllocateAs<uint8_t>(memorySize);
+    memset(DefaultMemory, 0, memorySize);
     Memory = allocator.AllocateAs<uint8_t>(memorySize);
     MemoryMap = allocator.AllocateAs<uint8_t>(memoryMapSize);//1MiB / 8 - One bit per byte.
+
+    DefaultPortValues = defaultValues;
+    DefaultPortValuesCount = defaultValuesCount;
 
     Reset();
 }
@@ -145,6 +158,9 @@ void Instance::Shutdown()
     Allocator->Free(Memory);
     Memory = NULL;
 
+    Allocator->Free(DefaultMemory);
+    DefaultMemory = NULL;
+
     Allocator->Free(MemoryMap);
     MemoryMap = NULL;
 
@@ -172,7 +188,21 @@ void Instance::CachePort8(uint16_t port)
     uint8_t bit = 1 << (port & 0x0007);
     if (MarkPort(port))
     {
-        Ports[port] = Internal_ReadPortByte(port);
+        bool found = false;
+        for (uint16_t i = 0; i < DefaultPortValuesCount; ++i)
+        {
+            if (DefaultPortValues[i].Port == port)
+            {
+                Ports[port] = DefaultPortValues[i].Value;
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+        {
+            Ports[port] = Internal_ReadPortByte(port);
+            printf("Port 0x%04X not in default list.\n", port);
+        }
     }
 }
 
@@ -180,14 +210,14 @@ void Instance::CachePort16(uint16_t port)
 {
     if (Allocator == NULL)
         return;
+    
+    CachePort8(port);
+    CachePort8(port + 1);
+}
 
-    if (MarkPort(port))
-        Ports[port] = Internal_ReadPortByte(port);
-
-    ++port;
-
-    if (MarkPort(port))
-        Ports[port] = Internal_ReadPortByte(port);
+void Instance::SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size)
+{
+    memcpy(DefaultMemory + offset, memory, size);
 }
 
 bool Instance::MarkMemory(uint32_t offset)
@@ -210,11 +240,10 @@ uint8_t& Instance::CacheMemory(uint32_t offset, uint16_t size, uint16_t count)
     if (Allocator == NULL)
         return dummy[0];
 
-    uint8_t* realMem = (uint8_t*)0x00000000;
     for (uint16_t i = 0; i < size * count; ++i)
     {
         if (MarkMemory(offset + i))
-            Memory[offset + i] = realMem[offset + i];
+            Memory[offset + i] = DefaultMemory[offset + i];
     }
     return Memory[offset];
 }
@@ -229,13 +258,14 @@ const uint32_t CustomPortHandler::s_ID = 0x62947393;
 class IndexedPort : public CustomPortHandler
 {
 public:
-    inline IndexedPort(IAllocator& allocator, const char* name, uint16_t indexPort, uint16_t dataPort, uint16_t regCount, uint8_t indexMask)
+    inline IndexedPort(IAllocator& allocator, const char* name, uint16_t indexPort, uint16_t dataPort, uint16_t regCount, uint8_t indexMask, uint8_t* defaultValues)
         : CustomPortHandler(name)
         , m_Allocator(&allocator)
         , m_IndexPort(indexPort)
         , m_DataPort(dataPort)
         , m_RegisterCount(regCount)
         , m_IndexMask(indexMask)
+        , m_DefaultValues(defaultValues)
     {
         m_Data = m_Allocator->AllocateAs<uint8_t>(regCount);
         m_DataMask = m_Allocator->AllocateAs<uint8_t>(regCount >> 3);
@@ -274,12 +304,15 @@ public:
             if ((m_DataMask[blockIndex] & bitMask) == 0x00)
             {
                 m_DataMask[blockIndex] |= bitMask;
+                m_Data[index] = m_DefaultValues[index];
+                /*
                 uint8_t oldValue = Internal_ReadPortByte(port - 1);
                 Internal_WritePortByte(port - 1, index);
 
                 m_Data[index] = Internal_ReadPortByte(port);
 
                 Internal_WritePortByte(port - 1, oldValue);
+                */
             }
             VERBOSE(printf("%s port read 0x%04X:0x%02X = 0x%02X\n", GetName(), port, index, m_Data[index]));
             return m_Data[index];
@@ -340,7 +373,7 @@ public:
 
     void FetchModifiedIndexedRegisters(IndexedRegisterCheckCallback_t callback, void* context)
     {
-        uint8_t oldValue = Internal_ReadPortByte(m_IndexPort);
+        //uint8_t oldValue = Internal_ReadPortByte(m_IndexPort);
         
         for (uint32_t i = 0; i < m_RegisterCount; ++i)
         {
@@ -348,13 +381,14 @@ public:
             uint8_t bits = 1 << (uint8_t(i) & 0x07);
             if ((m_DataMask[index] & bits) != 0)
             {
-                Internal_WritePortByte(m_IndexPort, i);
-                uint8_t originalValue = Internal_ReadPortByte(m_DataPort);
+                //Internal_WritePortByte(m_IndexPort, i);
+                //uint8_t originalValue = Internal_ReadPortByte(m_DataPort);
+                uint8_t originalValue = m_DefaultValues[i];
                 callback(m_DataPort, uint8_t(i), m_Data[i], originalValue, context);
             }
         }
 
-        Internal_WritePortByte(m_IndexPort, oldValue);
+        //Internal_WritePortByte(m_IndexPort, oldValue);
     }
 
     virtual bool HasDifferences(CustomPortHandler* instance1)
@@ -416,7 +450,6 @@ public:
         }
     }
 
-
 protected:
     template<typename T> friend T* customporthandler_cast(CustomPortHandler* ptr);
     virtual CustomPortHandler* CheckTypeId(uint32_t id)
@@ -433,6 +466,7 @@ private:
     uint8_t m_IndexMask;
     uint8_t* m_Data;
     uint8_t* m_DataMask;
+    uint8_t* m_DefaultValues;
 
     uint8_t GetIndex()
     {
@@ -444,20 +478,16 @@ private:
 class AttributePortHandler : public CustomPortHandler
 {
 public:
-    AttributePortHandler(IAllocator& allocator)
+    AttributePortHandler(IAllocator& allocator, uint8_t* defaultValues)
         : CustomPortHandler("Attribute Ports")
         , m_Allocator(allocator)
         , Mask(NULL)
         , Data(NULL)
-        , m_InputStatus1(Hag::VGA::Register::InputStatus1D)
+        , DefaultValues(NULL)
         , m_OriginalIndex(0)
         , m_CurrentIndex(0)
         , m_IsIndex(true)
     {
-        if ((Internal_ReadPortByte(Hag::VGA::Register::MiscellaneousR) & 
-             Hag::VGA::MiscellaneousOutput::IOAddressSelect) == 0x00)
-             m_InputStatus1 = Hag::VGA::Register::InputStatus1B;
-
         m_OriginalIndex = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerIndex);
         m_CurrentIndex = m_OriginalIndex;
 
@@ -481,7 +511,8 @@ public:
 
     void SyncToIndex()
     {
-        Internal_ReadPortByte(m_InputStatus1);
+        Internal_ReadPortByte(Hag::VGA::Register::InputStatus1B);
+        Internal_ReadPortByte(Hag::VGA::Register::InputStatus1D);
     }
 
     bool MarkPort(uint8_t index)
@@ -497,18 +528,22 @@ public:
     {
         if (MarkPort(index))
         {
+            Data[index] = DefaultValues[index];
+            /*
             SyncToIndex();
             uint8_t orgIndex = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerIndex);
             Internal_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, (orgIndex & (~0x1f)) | (index & 0x1f));
             Data[index] = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerDataR);
             SyncToIndex();
             Internal_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, orgIndex);
+            */
         }
     }
 
     virtual bool CanHandle(uint16_t port)
     {
-        return port == m_InputStatus1 ||
+        return port == Hag::VGA::Register::InputStatus1B ||
+               port == Hag::VGA::Register::InputStatus1D ||
                port == Hag::VGA::Register::AttributeControllerIndex ||
                port == Hag::VGA::Register::AttributeControllerDataR;
     }
@@ -521,7 +556,8 @@ public:
 
     virtual uint8_t Read8(uint16_t port)
     {
-        if (port == m_InputStatus1)
+        if (port == Hag::VGA::Register::InputStatus1B ||
+            port == Hag::VGA::Register::InputStatus1D)
         {
             m_IsIndex = true;
             return 0;
@@ -581,7 +617,7 @@ public:
 
     void FetchModifiedIndexedRegisters(IndexedRegisterCheckCallback_t callback, void* context)
     {
-        uint8_t oldValue = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerIndex);
+        //uint8_t oldValue = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerIndex);
         
         for (uint32_t i = 0; i < 32; ++i)
         {
@@ -589,15 +625,16 @@ public:
             uint8_t bits = 1 << (uint8_t(i) & 0x07);
             if ((Mask[index] & bits) != 0)
             {
-                SyncToIndex();
-                Internal_WritePortByte(Hag::VGA::Register::AttributeControllerDataW, i);
-                uint8_t originalValue = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerDataR);
+                //SyncToIndex();
+                //Internal_WritePortByte(Hag::VGA::Register::AttributeControllerDataW, i);
+                //uint8_t originalValue = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerDataR);
+                uint8_t originalValue = DefaultValues[i];
                 callback(Hag::VGA::Register::AttributeControllerDataW, uint8_t(i), Data[i], originalValue, context);
             }
         }
 
-        SyncToIndex();
-        Internal_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, oldValue);
+        //SyncToIndex();
+        //Internal_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, oldValue);
     }
 
     virtual void Report(CustomPortHandler* instance1)
@@ -628,42 +665,54 @@ private:
     Hag::IAllocator& m_Allocator;
     uint8_t* Mask;
     uint8_t* Data;
-    Hag::VGA::Register_t m_InputStatus1;
+    uint8_t* DefaultValues;
     uint8_t m_OriginalIndex;
     uint8_t m_CurrentIndex;
     bool m_IsIndex;
 };
 
-void Initialize(IAllocator& allocator)
+void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters)
 {
-    s_Instance0.Initialize(allocator);
-    s_Instance1.Initialize(allocator);
+    s_Instance0.Initialize(allocator, defaultPortsAndValues, defaultPortsAndValuesCount);
+    s_Instance1.Initialize(allocator, defaultPortsAndValues, defaultPortsAndValuesCount);
 
     AttributePortHandler* attr0 = ::new(s_Instance0.Allocator->Allocate(sizeof(AttributePortHandler))) 
-        AttributePortHandler(allocator);
+        AttributePortHandler(allocator, attributeControllerRegisters);
     attr0->SetNext(s_Instance0.PortHandlers);
     s_Instance0.PortHandlers = attr0;
 
     AttributePortHandler* attr1 = ::new(s_Instance0.Allocator->Allocate(sizeof(AttributePortHandler))) 
-        AttributePortHandler(allocator);
+        AttributePortHandler(allocator, attributeControllerRegisters);
     attr1->SetNext(s_Instance1.PortHandlers);
     s_Instance1.PortHandlers = attr1;
 }
 
-void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount)
+void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues)
 {
     if (s_Instance0.Allocator == NULL)
         return;
 
     IndexedPort* port0 = ::new(s_Instance0.Allocator->Allocate(sizeof(IndexedPort))) 
-        IndexedPort(*s_Instance0.Allocator, name, indexPort, dataPort, regCount, indexMask);
+        IndexedPort(*s_Instance0.Allocator, name, indexPort, dataPort, regCount, indexMask, defaultValues);
     port0->SetNext(s_Instance0.PortHandlers);
     s_Instance0.PortHandlers = port0;
 
     IndexedPort* port1 = ::new(s_Instance1.Allocator->Allocate(sizeof(IndexedPort))) 
-        IndexedPort(*s_Instance1.Allocator, name, indexPort, dataPort, regCount, indexMask);
+        IndexedPort(*s_Instance1.Allocator, name, indexPort, dataPort, regCount, indexMask, defaultValues);
     port1->SetNext(s_Instance1.PortHandlers);
     s_Instance1.PortHandlers = port1;
+}
+
+void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size)
+{
+    if (s_Instance0.Allocator == NULL)
+        return;
+
+    if (offset + size > 1024 * 1024)
+        return;
+
+    s_Instance0.SetDefaultMemory(memory, offset, size);
+    s_Instance1.SetDefaultMemory(memory, offset, size);
 }
 
 struct VerifyPaVContext
@@ -912,7 +961,34 @@ void FetchModifiedRegisters(int instance, RegisterCheckCallback_t callback, void
         uint8_t bits = 1 << (uint8_t(i) & 0x07);
         if ((inst->PortMap[blockIndex] & bits) != 0x00)
         {
-            uint8_t orgValue = Internal_ReadPortByte(uint16_t(i));
+            uint8_t orgValue = 0xFF;
+            bool found = false;
+            for (uint32_t j = 0; j < inst->DefaultPortValuesCount; ++j)
+            {
+                if (inst->DefaultPortValues[j].Port == i)
+                {
+                    orgValue = inst->DefaultPortValues[j].Value;
+                    found = true;
+                    break;
+                }
+            }
+
+            //Hack
+            if (i == Hag::VGA::Register::AttributeControllerIndex ||
+                i == Hag::VGA::Register::AttributeControllerDataR ||
+                i == Hag::VGA::Register::GraphicsControllerIndex ||
+                i == Hag::VGA::Register::GraphicsControllerData ||
+                i == Hag::VGA::Register::CRTControllerIndexB ||
+                i == Hag::VGA::Register::CRTControllerIndexD ||
+                i == Hag::VGA::Register::CRTControllerDataB ||
+                i == Hag::VGA::Register::CRTControllerDataD)
+                continue;
+
+            if (!found)
+            {
+                printf("Was not able to locate default value for port 0x%04X\n", i);
+            }
+            //uint8_t orgValue = Internal_ReadPortByte(uint16_t(i));
             callback(uint16_t(i), inst->Ports[i], orgValue, context);
         }
     }
@@ -1028,14 +1104,14 @@ void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* con
     if (s_Instance0.Allocator == NULL)
         return;
 
-    uint8_t* realMem = (uint8_t*)0x00000000;
+    //uint8_t* realMem = (uint8_t*)0x00000000;
     for (uint32_t i = 0x400; i < 0x500; ++i)
     {
         uint16_t blockIndex = uint16_t(i >> 3);
         uint8_t bits = 1 << (uint8_t(i) & 0x07);
         if ((s_CurrentInstance->MemoryMap[blockIndex] & bits) != 0x00)
         {
-            callback(i,  s_CurrentInstance->Memory[i], realMem[i], context);
+            callback(i,  s_CurrentInstance->Memory[i], s_CurrentInstance->DefaultMemory[i], context);
         }
     }
 }

@@ -49,20 +49,22 @@ template<typename T> T* customporthandler_cast(CustomPortHandler* ptr)
     return (T*)(ptr != NULL ? ptr->CheckTypeId(T::s_ID) : NULL);
 }
 
-void Initialize(IAllocator& allocator);
-void SelectInstance(int instance);
-
-void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount);
-
-typedef void (*IndexedRegisterCheckCallback_t)(uint16_t port, uint8_t index, uint8_t modifiedValue, uint8_t originalValue, void* context);
-typedef void (*RegisterCheckCallback_t)(uint16_t port, uint8_t modifiedValue, uint8_t originalValue, void* context);
-typedef void (*BDAFieldCallback_t)(uint8_t field, uint8_t modifiedValue, uint8_t originalValue, void* context);
-
 struct PortAndValue
 {
     uint16_t Port;
     uint8_t Value;
 };
+
+void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters);
+void SelectInstance(int instance);
+
+void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues);
+void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size);
+
+typedef void (*IndexedRegisterCheckCallback_t)(uint16_t port, uint8_t index, uint8_t modifiedValue, uint8_t originalValue, void* context);
+typedef void (*RegisterCheckCallback_t)(uint16_t port, uint8_t modifiedValue, uint8_t originalValue, void* context);
+typedef void (*BDAFieldCallback_t)(uint8_t field, uint8_t modifiedValue, uint8_t originalValue, void* context);
+
 
 struct PortAndIndexAndValue
 {
