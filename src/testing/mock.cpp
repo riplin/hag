@@ -56,6 +56,7 @@ struct Instance
         , Ports(NULL)
         , MemoryMap(NULL)
         , Memory(NULL)
+        , DefaultMemory(NULL)
         , DefaultPortValues(NULL)
         , DefaultPortValuesCount(0)
     {
@@ -64,6 +65,8 @@ struct Instance
 
     void Initialize(IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount);
     void Reset();
+    void Snapshot();
+    void Rollback();
 
     void Shutdown();
 
@@ -82,10 +85,13 @@ struct Instance
     CustomPortHandler* PortHandlers;
     uint8_t* PortMap; //1 bit for every port in a 64k address range.
     uint8_t* Ports;
+    uint8_t* SnapshotPortMap;
+    uint8_t* SnapshotPorts;
 
     uint8_t* MemoryMap;
     uint8_t* Memory;
     uint8_t* DefaultMemory;
+    uint8_t* SnapshotMemory;
 
     PortAndValue* DefaultPortValues;
     uint16_t DefaultPortValuesCount;
@@ -105,8 +111,11 @@ void Instance::Initialize(IAllocator& allocator, PortAndValue* defaultValues, ui
 
     Ports = allocator.AllocateAs<uint8_t>(portsSize);
     PortMap = allocator.AllocateAs<uint8_t>(portMapSize);//64Kib / 8 - One bit per byte.
+    SnapshotPorts = allocator.AllocateAs<uint8_t>(portsSize);
+    SnapshotPortMap = allocator.AllocateAs<uint8_t>(portMapSize);
     DefaultMemory = allocator.AllocateAs<uint8_t>(memorySize);
     memset(DefaultMemory, 0, memorySize);
+    SnapshotMemory = allocator.AllocateAs<uint8_t>(memorySize);
     Memory = allocator.AllocateAs<uint8_t>(memorySize);
     MemoryMap = allocator.AllocateAs<uint8_t>(memoryMapSize);//1MiB / 8 - One bit per byte.
 
@@ -114,6 +123,72 @@ void Instance::Initialize(IAllocator& allocator, PortAndValue* defaultValues, ui
     DefaultPortValuesCount = defaultValuesCount;
 
     Reset();
+}
+
+void Instance::Snapshot()
+{
+    uint32_t portsSize = 0x10000;
+    uint32_t portMapSize = portsSize >> 3;
+    uint32_t memorySize = 1024 * 1024;
+    uint32_t memoryMapSize = memorySize >> 3;
+
+    for (uint32_t i = 0; i < portsSize; ++i)
+    {
+        uint16_t index = i >> 3;
+        uint8_t bit = 1 << (i & 0x0007);
+        if ((PortMap[index] & bit) != 0x00)
+        {
+            SnapshotPortMap[index] |= bit;
+            SnapshotPorts[i] = Ports[i];
+        }
+    }
+    memset(PortMap, 0, portMapSize);
+    memset(Ports, 0, portsSize);
+
+    for (uint32_t i = 0; i < memoryMapSize; ++i)
+    {
+        if (MemoryMap[i] != 0x00)
+        {
+            for (uint32_t j = 0; j < 8; ++j)
+            {
+                uint8_t bit = 1 << j;
+                if ((MemoryMap[i] & bit) != 0x00)
+                {
+                    uint32_t index = (i << 3) + j;
+                    SnapshotMemory[index] = Memory[index];
+                }
+            }
+        }
+    }
+    memset(MemoryMap, 0, memoryMapSize);
+    memset(Memory, 0, memorySize);
+
+    CustomPortHandler* ptr = PortHandlers;
+    while (ptr != NULL)
+    {
+        ptr->Snapshot();
+        ptr = ptr->GetNext();
+    }
+}
+
+void Instance::Rollback()
+{
+    uint32_t portsSize = 0x10000;
+    uint32_t portMapSize = portsSize >> 3;
+    uint32_t memorySize = 1024 * 1024;
+    uint32_t memoryMapSize = memorySize >> 3;
+
+    memset(PortMap, 0, portMapSize);
+    memset(Ports, 0, portsSize);
+    memset(MemoryMap, 0, memoryMapSize);
+    memset(Memory, 0, memorySize);
+
+    CustomPortHandler* ptr = PortHandlers;
+    while (ptr != NULL)
+    {
+        ptr->Rollback();
+        ptr = ptr->GetNext();
+    }
 }
 
 void Instance::Reset()
@@ -125,8 +200,19 @@ void Instance::Reset()
 
     memset(PortMap, 0, portMapSize);
     memset(Ports, 0, portsSize);
+    memset(SnapshotPortMap, 0, portMapSize);
+    memset(SnapshotPorts, 0, portsSize);
     memset(MemoryMap, 0, memoryMapSize);
     memset(Memory, 0, memorySize);
+    memcpy(SnapshotMemory, DefaultMemory, memorySize);
+
+    for (int i = 0; i < DefaultPortValuesCount; ++i)
+    {
+        uint16_t index = DefaultPortValues[i].Port >> 3;
+        uint8_t bit = 1 << (DefaultPortValues[i].Port & 0x0007);
+        SnapshotPortMap[index] |= bit;
+        SnapshotPorts[DefaultPortValues[i].Port] = DefaultPortValues[i].Value;
+    }
 
     CustomPortHandler* ptr = PortHandlers;
     while (ptr != NULL)
@@ -155,11 +241,19 @@ void Instance::Shutdown()
     Allocator->Free(PortMap);
     PortMap = NULL;
     
+    Allocator->Free(SnapshotPorts);
+    SnapshotPorts = NULL;
+
+    Allocator->Free(SnapshotPortMap);
+    SnapshotPortMap = NULL;
+
     Allocator->Free(Memory);
     Memory = NULL;
 
     Allocator->Free(DefaultMemory);
     DefaultMemory = NULL;
+
+    Allocator->Free(SnapshotMemory);
 
     Allocator->Free(MemoryMap);
     MemoryMap = NULL;
@@ -188,17 +282,11 @@ void Instance::CachePort8(uint16_t port)
     uint8_t bit = 1 << (port & 0x0007);
     if (MarkPort(port))
     {
-        bool found = false;
-        for (uint16_t i = 0; i < DefaultPortValuesCount; ++i)
+        if ((SnapshotPortMap[index] & bit) != 0x00)
         {
-            if (DefaultPortValues[i].Port == port)
-            {
-                Ports[port] = DefaultPortValues[i].Value;
-                found = true;
-                break;
-            }
+            Ports[port] = SnapshotPorts[port];
         }
-        if (!found)
+        else
         {
             Ports[port] = Internal_ReadPortByte(port);
             printf("Port 0x%04X not in default list.\n", port);
@@ -218,6 +306,7 @@ void Instance::CachePort16(uint16_t port)
 void Instance::SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size)
 {
     memcpy(DefaultMemory + offset, memory, size);
+    memcpy(SnapshotMemory + offset, memory, size);
 }
 
 bool Instance::MarkMemory(uint32_t offset)
@@ -243,7 +332,7 @@ uint8_t& Instance::CacheMemory(uint32_t offset, uint16_t size, uint16_t count)
     for (uint16_t i = 0; i < size * count; ++i)
     {
         if (MarkMemory(offset + i))
-            Memory[offset + i] = DefaultMemory[offset + i];
+            Memory[offset + i] = SnapshotMemory[offset + i];
     }
     return Memory[offset];
 }
@@ -255,6 +344,103 @@ Instance* s_CurrentInstance = &s_Instance0;
 
 const uint32_t CustomPortHandler::s_ID = 0x62947393;
 
+class ReadOnlyPort : public CustomPortHandler
+{
+public:
+    inline ReadOnlyPort(const char* name, uint16_t port)
+        : CustomPortHandler(name)
+        , m_Port(port)
+    {
+    }
+
+    virtual ~ReadOnlyPort()
+    {
+    }
+
+    virtual bool CanHandle(uint16_t port)
+    {
+        return port == m_Port;
+    }
+
+    virtual bool HasHandled(uint16_t port)
+    {
+        return port == m_Port;
+    }
+
+    virtual uint8_t Read8(uint16_t port)
+    {
+        s_CurrentInstance->CachePort8(port);
+        return s_CurrentInstance->Ports[port];
+    }
+
+    virtual uint16_t Read16(uint16_t port)
+    {
+        uint16_t lo = Hag::Testing::Mock::Port::Read8(port);
+        uint16_t hi = Hag::Testing::Mock::Port::Read8(port + 1);
+        return lo | (hi << 8);
+    }
+
+    virtual void Write8(uint16_t port, uint8_t value)
+    {
+        //Intentionally left blank.
+    }
+
+    virtual void Write8(uint16_t port, uint8_t valueLo, uint8_t valueHi)
+    {
+        //drop low byte, forward hi byte.
+        Hag::Testing::Mock::Port::Write8(port + 1, valueHi);
+    }
+
+    virtual void Write16(uint16_t port, uint16_t value)
+    {
+        //drop low byte, forward hi byte.
+        Hag::Testing::Mock::Port::Write8(port + 1, uint8_t(value >> 8));
+    }
+
+    virtual void Report(CustomPortHandler* instance1)
+    {
+
+    }
+
+    virtual bool HasDifferences(CustomPortHandler* instance1)
+    {
+        return false;
+    }
+
+    virtual void Reset()
+    {
+        //Nothing to do.
+    }
+
+    virtual void Snapshot()
+    {
+        //Nothing to do.
+    }
+
+    virtual void Rollback()
+    {
+        //Nothing to do.
+    }
+
+protected:
+    template<typename T> friend T* customporthandler_cast(CustomPortHandler* ptr);
+    virtual CustomPortHandler* CheckTypeId(uint32_t id)
+    {
+        return id == s_ID ? this : CustomPortHandler::CheckTypeId(id);
+    }
+    static const uint32_t s_ID = 0x0285fd7a;
+
+private:
+    uint16_t m_Port;
+};
+
+//I don't want to use a vector because that means I have to enable exceptions. bleh.
+struct ReadOnlyReg
+{
+    uint8_t Reg;
+    ReadOnlyReg* Next;
+};
+
 class IndexedPort : public CustomPortHandler
 {
 public:
@@ -265,10 +451,15 @@ public:
         , m_DataPort(dataPort)
         , m_RegisterCount(regCount)
         , m_IndexMask(indexMask)
+        , m_Data(NULL)
+        , m_DataMask(NULL)
+        , m_SnapshotValues(NULL)
         , m_DefaultValues(defaultValues)
+        , m_ReadOnlyRegisters(NULL)
     {
         m_Data = m_Allocator->AllocateAs<uint8_t>(regCount);
         m_DataMask = m_Allocator->AllocateAs<uint8_t>(regCount >> 3);
+        m_SnapshotValues = m_Allocator->AllocateAs<uint8_t>(regCount);
         Reset();
     }
 
@@ -276,8 +467,61 @@ public:
     {
         m_Allocator->Free(m_DataMask);
         m_DataMask = NULL;
+
         m_Allocator->Free(m_Data);
         m_Data = NULL;
+
+        m_Allocator->Free(m_SnapshotValues);
+        m_SnapshotValues = NULL;
+
+        while (m_ReadOnlyRegisters != NULL)
+        {
+            ReadOnlyReg* reg = m_ReadOnlyRegisters;
+            m_ReadOnlyRegisters = reg->Next;
+            m_Allocator->Free(reg);
+        }
+    }
+
+    virtual void Reset()
+    {
+        uint16_t dataMaskCount = m_RegisterCount >> 3;
+        if ((m_RegisterCount & 0x7) != 0x00)
+            ++dataMaskCount;
+
+        memset(m_Data, 0, m_RegisterCount);
+        memset(m_DataMask, 0, dataMaskCount);
+        memcpy(m_SnapshotValues, m_DefaultValues, m_RegisterCount);
+    }
+
+    virtual void Snapshot()
+    {
+        for (uint32_t i = 0; i < m_RegisterCount; ++i)
+        {
+            uint32_t blockIndex = i >> 3;
+            uint8_t bitMask = 1 << (i & 0x07);
+            if ((m_DataMask[blockIndex] & bitMask) != 0x00)
+            {
+                m_SnapshotValues[i] = m_Data[i];
+            }
+        }
+
+        uint16_t dataMaskCount = m_RegisterCount >> 3;
+        if ((m_RegisterCount & 0x7) != 0x00)
+            ++dataMaskCount;
+
+        memset(m_Data, 0, m_RegisterCount);
+        memset(m_DataMask, 0, dataMaskCount);
+    }
+
+    virtual void Rollback()
+    {
+        memset(m_Data, 0, m_RegisterCount);
+
+        uint16_t dataMaskCount = m_RegisterCount >> 3;
+        if ((m_RegisterCount & 0x7) != 0x00)
+            ++dataMaskCount;
+
+        memset(m_DataMask, 0, dataMaskCount);
     }
 
     virtual bool CanHandle(uint16_t port)
@@ -304,15 +548,7 @@ public:
             if ((m_DataMask[blockIndex] & bitMask) == 0x00)
             {
                 m_DataMask[blockIndex] |= bitMask;
-                m_Data[index] = m_DefaultValues[index];
-                /*
-                uint8_t oldValue = Internal_ReadPortByte(port - 1);
-                Internal_WritePortByte(port - 1, index);
-
-                m_Data[index] = Internal_ReadPortByte(port);
-
-                Internal_WritePortByte(port - 1, oldValue);
-                */
+                m_Data[index] = m_SnapshotValues[index];
             }
             VERBOSE(printf("%s port read 0x%04X:0x%02X = 0x%02X\n", GetName(), port, index, m_Data[index]));
             return m_Data[index];
@@ -338,6 +574,15 @@ public:
             uint8_t index = GetIndex();
             if (index >= m_RegisterCount)
                 return;
+            
+            ReadOnlyReg* ptr = m_ReadOnlyRegisters;
+            while (ptr != NULL)
+            {
+                if (index == ptr->Reg)
+                    return;
+
+                ptr = ptr->Next;
+            }
 
             uint8_t blockIndex = index >> 3;
             uint8_t bitMask = 1 << (index & 0x07);
@@ -365,30 +610,18 @@ public:
         Write8(port + 1, uint8_t(value >> 8));
     }
 
-    virtual void Reset()
-    {
-        memset(m_Data, 0, m_RegisterCount);
-        memset(m_DataMask, 0, m_RegisterCount >> 3);
-    }
-
     void FetchModifiedIndexedRegisters(IndexedRegisterCheckCallback_t callback, void* context)
     {
-        //uint8_t oldValue = Internal_ReadPortByte(m_IndexPort);
-        
         for (uint32_t i = 0; i < m_RegisterCount; ++i)
         {
             uint16_t index = i >> 3;
             uint8_t bits = 1 << (uint8_t(i) & 0x07);
             if ((m_DataMask[index] & bits) != 0)
             {
-                //Internal_WritePortByte(m_IndexPort, i);
-                //uint8_t originalValue = Internal_ReadPortByte(m_DataPort);
-                uint8_t originalValue = m_DefaultValues[i];
+                uint8_t originalValue = m_SnapshotValues[i];
                 callback(m_DataPort, uint8_t(i), m_Data[i], originalValue, context);
             }
         }
-
-        //Internal_WritePortByte(m_IndexPort, oldValue);
     }
 
     virtual bool HasDifferences(CustomPortHandler* instance1)
@@ -450,6 +683,16 @@ public:
         }
     }
 
+    inline void AddReadOnlyRegister(uint8_t reg)
+    {
+        ReadOnlyReg* ptr = ::new(m_Allocator->Allocate(sizeof(ReadOnlyReg))) ReadOnlyReg();
+        ptr->Next = m_ReadOnlyRegisters;
+        m_ReadOnlyRegisters = ptr;
+        ptr->Reg = reg;
+    }
+
+    inline uint16_t GetIndexPort() {return m_IndexPort; }
+
 protected:
     template<typename T> friend T* customporthandler_cast(CustomPortHandler* ptr);
     virtual CustomPortHandler* CheckTypeId(uint32_t id)
@@ -466,7 +709,9 @@ private:
     uint8_t m_IndexMask;
     uint8_t* m_Data;
     uint8_t* m_DataMask;
+    uint8_t* m_SnapshotValues;
     uint8_t* m_DefaultValues;
+    ReadOnlyReg* m_ReadOnlyRegisters;
 
     uint8_t GetIndex()
     {
@@ -483,7 +728,8 @@ public:
         , m_Allocator(allocator)
         , Mask(NULL)
         , Data(NULL)
-        , DefaultValues(NULL)
+        , SnapshotValues(NULL)
+        , DefaultValues(defaultValues)
         , m_OriginalIndex(0)
         , m_CurrentIndex(0)
         , m_IsIndex(true)
@@ -494,6 +740,7 @@ public:
         uint8_t size = 32;
         Mask = m_Allocator.AllocateAs<uint8_t>(size >> 3);
         Data = m_Allocator.AllocateAs<uint8_t>(size);
+        SnapshotValues = m_Allocator.AllocateAs<uint8_t>(size);
         
         Reset();
     }
@@ -507,12 +754,38 @@ public:
         if (Data != NULL)
             m_Allocator.Free(Data);
         Data = NULL;
+
+        if (SnapshotValues != NULL)
+            m_Allocator.Free(SnapshotValues);
+        SnapshotValues = NULL;
     }
 
-    void SyncToIndex()
+    virtual void Reset()
     {
-        Internal_ReadPortByte(Hag::VGA::Register::InputStatus1B);
-        Internal_ReadPortByte(Hag::VGA::Register::InputStatus1D);
+        memset(Mask, 0, 32 >> 3);
+        memset(Data, 0, 32);
+        memcpy(SnapshotValues, DefaultValues, 32);
+    }
+
+    virtual void Snapshot()
+    {
+        for (uint8_t i = 0; i < 32; ++i)
+        {
+            uint8_t blockIndex = i >> 3;
+            uint8_t bits = 1 << (i & 0x07);
+            if ((Mask[blockIndex] & bits) != 0x00)
+            {
+                SnapshotValues[i] = Data[i];
+            }
+        }
+        memset(Mask, 0, 32 >> 3);
+        memset(Data, 0, 32);
+    }
+
+    virtual void Rollback()
+    {
+        memset(Mask, 0, 32 >> 3);
+        memset(Data, 0, 32);
     }
 
     bool MarkPort(uint8_t index)
@@ -528,15 +801,7 @@ public:
     {
         if (MarkPort(index))
         {
-            Data[index] = DefaultValues[index];
-            /*
-            SyncToIndex();
-            uint8_t orgIndex = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerIndex);
-            Internal_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, (orgIndex & (~0x1f)) | (index & 0x1f));
-            Data[index] = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerDataR);
-            SyncToIndex();
-            Internal_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, orgIndex);
-            */
+            Data[index] = SnapshotValues[index];
         }
     }
 
@@ -617,24 +882,16 @@ public:
 
     void FetchModifiedIndexedRegisters(IndexedRegisterCheckCallback_t callback, void* context)
     {
-        //uint8_t oldValue = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerIndex);
-        
         for (uint32_t i = 0; i < 32; ++i)
         {
             uint16_t index = i >> 3;
             uint8_t bits = 1 << (uint8_t(i) & 0x07);
             if ((Mask[index] & bits) != 0)
             {
-                //SyncToIndex();
-                //Internal_WritePortByte(Hag::VGA::Register::AttributeControllerDataW, i);
-                //uint8_t originalValue = Internal_ReadPortByte(Hag::VGA::Register::AttributeControllerDataR);
-                uint8_t originalValue = DefaultValues[i];
+                uint8_t originalValue = SnapshotValues[i];
                 callback(Hag::VGA::Register::AttributeControllerDataW, uint8_t(i), Data[i], originalValue, context);
             }
         }
-
-        //SyncToIndex();
-        //Internal_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, oldValue);
     }
 
     virtual void Report(CustomPortHandler* instance1)
@@ -645,12 +902,6 @@ public:
     virtual bool HasDifferences(CustomPortHandler* instance1)
     {
         return false;
-    }
-
-    virtual void Reset()
-    {
-        memset(Mask, 0, 32 >> 3);
-        memset(Data, 0, 32);
     }
 
 protected:
@@ -665,13 +916,217 @@ private:
     Hag::IAllocator& m_Allocator;
     uint8_t* Mask;
     uint8_t* Data;
+    uint8_t* SnapshotValues;
     uint8_t* DefaultValues;
     uint8_t m_OriginalIndex;
     uint8_t m_CurrentIndex;
     bool m_IsIndex;
 };
 
-void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters)
+class RAMDACPortHandler : public CustomPortHandler
+{
+public:
+    RAMDACPortHandler(IAllocator& allocator, uint8_t* defaultValues)
+        : CustomPortHandler("RAMDAC Ports")
+        , m_Allocator(allocator)
+        , Mask(NULL)
+        , Data(NULL)
+        , SnapshotValues(NULL)
+        , DefaultValues(defaultValues)
+        , ReadIndex(0)
+        , WriteIndex(0)
+    {
+        uint16_t size = 256 * 3;
+        Mask = m_Allocator.AllocateAs<uint8_t>(size >> 3);
+        Data = m_Allocator.AllocateAs<uint8_t>(size);
+        SnapshotValues = m_Allocator.AllocateAs<uint8_t>(size);
+        
+        Reset();
+    }
+
+    virtual ~RAMDACPortHandler()
+    {
+        if (Mask != NULL)
+            m_Allocator.Free(Mask);
+        Mask = NULL;
+
+        if (Data != NULL)
+            m_Allocator.Free(Data);
+        Data = NULL;
+
+        if (SnapshotValues != NULL)
+            m_Allocator.Free(SnapshotValues);
+        SnapshotValues = NULL;
+    }
+
+    virtual void Reset()
+    {
+        uint16_t size = 256 * 3;
+        memset(Mask, 0, size >> 3);
+        memset(Data, 0, size);
+        memcpy(SnapshotValues, DefaultValues, size);
+    }
+
+    virtual void Snapshot()
+    {
+        uint16_t size = 256 * 3;
+        for (uint16_t i = 0; i < size; ++i)
+        {
+            uint16_t blockIndex = i >> 3;
+            uint8_t bits = 1 << (i & 0x07);
+            if ((Mask[blockIndex] & bits) != 0x00)
+            {
+                SnapshotValues[i] = Data[i];
+            }
+        }
+        memset(Mask, 0, size >> 3);
+        memset(Data, 0, size);
+    }
+
+    virtual void Rollback()
+    {
+        uint16_t size = 256 * 3;
+        memset(Mask, 0, size >> 3);
+        memset(Data, 0, size);
+    }
+
+    bool MarkPort(uint16_t index)
+    {
+        uint16_t blockIndex = index >> 3;
+        uint8_t bits = uint8_t(1 << (index & 0x07));
+        bool ret = (Mask[blockIndex] & bits) == 0x00;
+        Mask[blockIndex] |= bits;
+        return ret;
+    }
+
+    void CacheRegister(uint16_t index)
+    {
+        if (MarkPort(index))
+        {
+            Data[index] = SnapshotValues[index];
+        }
+    }
+
+    virtual bool CanHandle(uint16_t port)
+    {
+        return port == Hag::VGA::Register::DACReadIndex ||
+               port == Hag::VGA::Register::DACWriteIndex ||
+               port == Hag::VGA::Register::RAMDACData;
+    }
+
+    virtual bool HasHandled(uint16_t port)
+    {
+        return port == Hag::VGA::Register::DACReadIndex ||
+               port == Hag::VGA::Register::DACWriteIndex ||
+               port == Hag::VGA::Register::RAMDACData;
+    }
+
+    virtual uint8_t Read8(uint16_t port)
+    {
+        if (port == Hag::VGA::Register::RAMDACData)
+        {
+            CacheRegister(ReadIndex);
+            uint8_t ret = Data[ReadIndex];
+            ++ReadIndex;
+            return ret;
+        }
+        
+        if (port == Hag::VGA::Register::DACReadIndex)
+        {
+            return uint8_t(ReadIndex / 3);
+        }
+
+        if (port == Hag::VGA::Register::DACWriteIndex)
+        {
+            return uint8_t(WriteIndex / 3);
+        }
+
+        return 0;
+    }
+
+    virtual uint16_t Read16(uint16_t port)
+    {
+        uint16_t lo = Hag::Testing::Mock::Port::Read8(port);
+        uint16_t hi = Hag::Testing::Mock::Port::Read8(port + 1);
+        return lo | (hi << 8);
+    }
+
+    virtual void Write8(uint16_t port, uint8_t value)
+    {
+        if (port == Hag::VGA::Register::RAMDACData)
+        {
+            MarkPort(WriteIndex);
+            Data[WriteIndex] = value;
+            ++WriteIndex;
+        }
+        
+        if (port == Hag::VGA::Register::DACReadIndex)
+        {
+            ReadIndex = value * 3;
+        }
+
+        if (port == Hag::VGA::Register::DACWriteIndex)
+        {
+            WriteIndex = value * 3;
+        }
+    }
+
+    virtual void Write8(uint16_t port, uint8_t valueLo, uint8_t valueHi)
+    {
+        Hag::Testing::Mock::Port::Write8(port, valueLo);
+        Hag::Testing::Mock::Port::Write8(port + 1, valueHi);
+    }
+
+    virtual void Write16(uint16_t port, uint16_t value)
+    {
+        Hag::Testing::Mock::Port::Write8(port, uint8_t(value));
+        Hag::Testing::Mock::Port::Write8(port + 1, uint8_t(value >> 8));
+    }
+
+    void FetchModifiedIndexedRegisters(IndexedRegisterCheckCallback_t callback, void* context)
+    {
+        uint16_t size = 256 * 3;
+        for (uint32_t i = 0; i < size; ++i)
+        {
+            uint16_t index = i >> 3;
+            uint8_t bits = 1 << (uint8_t(i) & 0x07);
+            if ((Mask[index] & bits) != 0)
+            {
+                uint8_t originalValue = SnapshotValues[i];
+                callback(Hag::VGA::Register::DACReadIndex, uint16_t(i), Data[i], originalValue, context);
+            }
+        }
+    }
+
+    virtual void Report(CustomPortHandler* instance1)
+    {
+
+    }
+
+    virtual bool HasDifferences(CustomPortHandler* instance1)
+    {
+        return false;
+    }
+
+protected:
+    template<typename T> friend T* customporthandler_cast(CustomPortHandler* ptr);
+    virtual CustomPortHandler* CheckTypeId(uint32_t id)
+    {
+        return id == s_ID ? this : CustomPortHandler::CheckTypeId(id);
+    }
+    static const uint32_t s_ID = 0x275b2e8f;
+
+private:
+    Hag::IAllocator& m_Allocator;
+    uint8_t* Mask;
+    uint8_t* Data;
+    uint8_t* SnapshotValues;
+    uint8_t* DefaultValues;
+    uint16_t ReadIndex;
+    uint16_t WriteIndex;
+};
+
+void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters, uint8_t* ramdacRegisters)
 {
     s_Instance0.Initialize(allocator, defaultPortsAndValues, defaultPortsAndValuesCount);
     s_Instance1.Initialize(allocator, defaultPortsAndValues, defaultPortsAndValuesCount);
@@ -685,6 +1140,32 @@ void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint
         AttributePortHandler(allocator, attributeControllerRegisters);
     attr1->SetNext(s_Instance1.PortHandlers);
     s_Instance1.PortHandlers = attr1;
+
+    RAMDACPortHandler* ramdac0 = ::new(s_Instance0.Allocator->Allocate(sizeof(RAMDACPortHandler))) 
+        RAMDACPortHandler(allocator, ramdacRegisters);
+    ramdac0->SetNext(s_Instance0.PortHandlers);
+    s_Instance0.PortHandlers = ramdac0;
+
+    RAMDACPortHandler* ramdac1 = ::new(s_Instance0.Allocator->Allocate(sizeof(RAMDACPortHandler))) 
+        RAMDACPortHandler(allocator, ramdacRegisters);
+    ramdac1->SetNext(s_Instance1.PortHandlers);
+    s_Instance1.PortHandlers = ramdac1;
+}
+
+void AddReadOnlyPort(const char* name, uint16_t port)
+{
+    if (s_Instance0.Allocator == NULL)
+        return;
+
+    ReadOnlyPort* port0 = ::new(s_Instance0.Allocator->Allocate(sizeof(ReadOnlyPort))) 
+        ReadOnlyPort(name, port);
+    port0->SetNext(s_Instance0.PortHandlers);
+    s_Instance0.PortHandlers = port0;
+
+    ReadOnlyPort* port1 = ::new(s_Instance1.Allocator->Allocate(sizeof(ReadOnlyPort))) 
+        ReadOnlyPort(name, port);
+    port1->SetNext(s_Instance1.PortHandlers);
+    s_Instance1.PortHandlers = port1;
 }
 
 void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues)
@@ -701,6 +1182,33 @@ void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uin
         IndexedPort(*s_Instance1.Allocator, name, indexPort, dataPort, regCount, indexMask, defaultValues);
     port1->SetNext(s_Instance1.PortHandlers);
     s_Instance1.PortHandlers = port1;
+}
+
+void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg)
+{
+    CustomPortHandler* ptr = s_Instance0.PortHandlers;
+    while (ptr != NULL)
+    {
+        IndexedPort* idxPort = customporthandler_cast<IndexedPort>(ptr);
+        if (idxPort != NULL && idxPort->GetIndexPort() == port)
+        {
+            idxPort->AddReadOnlyRegister(reg);
+            break;
+        }
+        ptr = ptr->GetNext();
+    }
+
+    ptr = s_Instance1.PortHandlers;
+    while (ptr != NULL)
+    {
+        IndexedPort* idxPort = customporthandler_cast<IndexedPort>(ptr);
+        if (idxPort != NULL && idxPort->GetIndexPort())
+        {
+            idxPort->AddReadOnlyRegister(reg);
+            break;
+        }
+        ptr = ptr->GetNext();
+    }
 }
 
 void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size)
@@ -810,7 +1318,7 @@ void VerifyPortsAndValuesCallback(uint16_t port, uint8_t modifiedValue, uint8_t 
     }
 }
 
-void VerifyPortsAndValuesIndexedCallback(uint16_t port, uint8_t index, uint8_t modifiedValue, uint8_t originalValue, void* ctx)
+void VerifyPortsAndValuesIndexedCallback(uint16_t port, uint16_t index, uint8_t modifiedValue, uint8_t originalValue, void* ctx)
 {
     VerifyPaVContext& context = *(VerifyPaVContext*)ctx;
     bool found = false;
@@ -874,7 +1382,7 @@ void VerifyPortsAndValuesIndexedCallback(uint16_t port, uint8_t index, uint8_t m
         if (originalValue != modifiedValue)
         {
 #ifdef PRINTRAW
-            printf("{ 0x%04X, 0x%02X, 0x%02X },\n", port, index, modifiedValue);
+            printf("{ 0x%04X, 0x%04X, 0x%02X },\n", port, index, modifiedValue);
 #else
             printf(", modified: 0x%02X\n", modifiedValue);
 #endif
@@ -882,7 +1390,7 @@ void VerifyPortsAndValuesIndexedCallback(uint16_t port, uint8_t index, uint8_t m
         else
         {
 #ifdef PRINTRAW
-            printf("{ 0x%04X, 0x%02X },\n", port, index);
+            printf("{ 0x%04X, 0x%04X },\n", port, index);
 #else
             printf("\n");
 #endif
@@ -918,6 +1426,9 @@ int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int
     };
 
     FetchModifiedRegisters(instance, VerifyPortsAndValuesCallback, &context);
+#ifdef PRINTRAW
+    //printf("\n");
+#endif
     FetchModifiedIndexedRegisters(instance, VerifyPortsAndValuesIndexedCallback, &context);
 
     return context.verifiedCount;
@@ -945,6 +1456,12 @@ void FetchModifiedIndexedRegisters(int instance, IndexedRegisterCheckCallback_t 
             attr->FetchModifiedIndexedRegisters(callback, context);
         }
 
+        RAMDACPortHandler* ramdac = customporthandler_cast<RAMDACPortHandler>(ptr);
+        if (ramdac != NULL)
+        {
+            ramdac->FetchModifiedIndexedRegisters(callback, context);
+        }
+
         ptr = ptr->GetNext();
     }
 }
@@ -963,14 +1480,11 @@ void FetchModifiedRegisters(int instance, RegisterCheckCallback_t callback, void
         {
             uint8_t orgValue = 0xFF;
             bool found = false;
-            for (uint32_t j = 0; j < inst->DefaultPortValuesCount; ++j)
+
+            if ((inst->SnapshotPortMap[blockIndex] & bits) != 0x00)
             {
-                if (inst->DefaultPortValues[j].Port == i)
-                {
-                    orgValue = inst->DefaultPortValues[j].Value;
-                    found = true;
-                    break;
-                }
+                orgValue = inst->SnapshotPorts[i];
+                found = true;
             }
 
             //Hack
@@ -1111,7 +1625,7 @@ void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* con
         uint8_t bits = 1 << (uint8_t(i) & 0x07);
         if ((s_CurrentInstance->MemoryMap[blockIndex] & bits) != 0x00)
         {
-            callback(i,  s_CurrentInstance->Memory[i], s_CurrentInstance->DefaultMemory[i], context);
+            callback(i,  s_CurrentInstance->Memory[i], s_CurrentInstance->SnapshotMemory[i], context);
         }
     }
 }
@@ -1119,6 +1633,18 @@ void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* con
 void SelectInstance(int instance)
 {
     s_CurrentInstance = (instance & 1) == 0 ? &s_Instance0 : &s_Instance1;
+}
+
+void Snapshot()
+{
+    s_Instance0.Snapshot();
+    s_Instance1.Snapshot();
+}
+
+void Rollback()
+{
+    s_Instance0.Rollback();
+    s_Instance1.Rollback();
 }
 
 void Reset()

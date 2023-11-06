@@ -20,6 +20,8 @@ int ConfigureExtraVESAModeSettingsTest();
 int EnableOver256KAddressingAndSetAddressWindowTest();
 int SetColorModeTest();
 int ClearMemoryTest();
+int ApplyVESAOverrideDataTest();
+int SetPaletteTest();
 
 #define TESTFUNCTION(F)                             \
 {                                                   \
@@ -70,6 +72,8 @@ int main(void)
     TESTFUNCTION(EnableOver256KAddressingAndSetAddressWindowTest);
     TESTFUNCTION(SetColorModeTest);
     TESTFUNCTION(ClearMemoryTest);
+    TESTFUNCTION(ApplyVESAOverrideDataTest);
+    TESTFUNCTION(SetPaletteTest);
 
     return ret;
 }

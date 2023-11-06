@@ -2827,7 +2827,7 @@ Label0x18c9:                            ;Offset 0x18c9
     je   Label0x18da                    ;Offset 0x18da
     call Func0x1d47                     ;Offset 0x1d47
 Label0x18da:                            ;Offset 0x18da
-    call Func0x1cb4                     ;Offset 0x1cb4
+    call SetPaletteProfile              ;Offset 0x1cb4
     call EnablePaletteBasedVideo        ;Offset 0x479d
     call TurnOnScreen                   ;Offset 0x4800
     pop  cx
@@ -3314,71 +3314,73 @@ SetGraphicsCharacterFont PROC NEAR      ;Offset 0x1c8e
     ret
 SetGraphicsCharacterFont ENDP
 
-Func0x1cb4 PROC NEAR                    ;Offset 0x1cb4
+SetPaletteProfile PROC NEAR             ;Offset 0x1cb4
     mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
     call  GetVideoParameterBlockElement ;Offset 0x1d95
-    je    Label0x1cce                   ;Offset 0x1cce
-    les   bx, es:[bx + 0ah]
+    je    NotFound                      ;Offset 0x1cce
+    les   bx, es:[bx + 0ah]             ;pointer to user palette profile table  (VGA)
     mov   ax, es
     or    ax, bx
-    je    Label0x1cce                   ;Offset 0x1cce
-    mov   ax, 14h
+    je    NotFound                      ;Offset 0x1cce
+    mov   ax, 14h                       ;array of applicable video modes for this font
     call  CheckCurrentModeExists        ;Offset 0x1bd1
     je    Label0x1ccf                   ;Offset 0x1ccf
-Label0x1cce:                            ;Offset 0x1cce
+NotFound:                               ;Offset 0x1cce
     ret
 Label0x1ccf:                            ;Offset 0x1ccf
     test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0x489
     jne   Label0x1d2b                   ;Offset 0x1d2b
     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    add   dx, 06h
+    add   dx, 06h                       ;0x3?A - Feature Control
     in    al, dx
     push  ds
     push  bx
-    mov   ax, word ptr es:[bx + 0eh]
-    mov   ah, al
-    lds   si, es:[bx + 10h]
-    mov   bx, word ptr es:[bx + 0ch]
-    or    bx, bx
-    je    Label0x1d06                   ;Offset 0x1d06
-    mov   dx, 03c8h                     ;port - 0x3c8
-Label0x1cf5:                            ;Offset 0x1cf5
+    mov   ax, word ptr es:[bx + 0eh]    ;first video DAC color register number
+    mov   ah, al                        ;
+    lds   si, es:[bx + 10h]             ;video DAC color register table pointer
+    mov   bx, word ptr es:[bx + 0ch]    ;count of video DAC color registers in table
+    or    bx, bx                        ;
+    je    NoColorData                   ;Offset 0x1d06
+    mov   dx, DACWriteIndex             ;port - 0x3c8 - DACWriteIndex
+NextColor:                              ;Offset 0x1cf5
     mov   al, ah
+    out   dx, al                        ;index
+    inc   dx                            ;port - 0x3c9 - RAMDACData
+    mov   cx, 03h                       ;3 colors
+WriteColors:                            ;Offset 0x1cfc
+    lodsb byte ptr ds:[si]              ;write out R, G, B
     out   dx, al
-    inc   dx
-    mov   cx, 03h
-Label0x1cfc:                            ;Offset 0x1cfc
-    lodsb byte ptr ds:[si]
-    out   dx, al
-    loop  Label0x1cfc                   ;Offset 0x1cfc
+    loop  WriteColors                   ;Offset 0x1cfc
     inc   ah
     dec   dx
     dec   bx
-    jne   Label0x1cf5                   ;Offset 0x1cf5
-Label0x1d06:                            ;Offset 0x1d06
+    jne   NextColor                     ;Offset 0x1cf5
+NoColorData:                            ;Offset 0x1d06
     pop   bx
-    mov   ax, word ptr es:[bx + 06h]
+    mov   ax, word ptr es:[bx + 06h]    ;first attribute controller register number
     mov   ah, al
-    lds   si, es:[bx + 08h]
-    mov   cx, word ptr es:[bx + 04h]
-    jcxz  Label0x1d2a                   ;Offset 0x1d2a
-    mov   dx, 03c0h                     ;port - 0x3c0
-Label0x1d1a:                            ;Offset 0x1d1a
+    lds   si, es:[bx + 08h]             ;pointer to attribute controller reg table
+    mov   cx, word ptr es:[bx + 04h]    ;count of attribute controller regs in table
+    jcxz  NoAttributes                  ;Offset 0x1d2a
+    mov   dx, AttributeControllerIndex  ;port - 0x3c0
+NextAttribute:                          ;Offset 0x1d1a
     mov   al, ah
     out   dx, al
     lodsb byte ptr ds:[si]
     out   dx, al
     inc   ah
-    loop  Label0x1d1a                   ;Offset 0x1d1a
+    loop  NextAttribute                 ;Offset 0x1d1a
     inc   ah
     mov   al, ah
     out   dx, al
     lodsb byte ptr ds:[si]
     out   dx, al
-Label0x1d2a:                            ;Offset 0x1d2a
+NoAttributes:                           ;Offset 0x1d2a
     pop   ds
 Label0x1d2b:                            ;Offset 0x1d2b
-    mov   al, byte ptr es:[bx]
+    mov   al, byte ptr es:[bx]          ;1 - enable underlining in all alphanumeric modes
+		                                ;0 - enable underlining in monochrome alpha modes
+		                                ;-1 - disable underlining in all alpha modes
     or    al, al
     je    Label0x1d46                   ;Offset 0x1d46
     test  al, 80h
@@ -3393,7 +3395,7 @@ Label0x1d3d:                            ;Offset 0x1d3d
     out   dx, ax
 Label0x1d46:                            ;Offset 0x1d46
     ret
-Func0x1cb4 ENDP 
+SetPaletteProfile ENDP 
 
 Func0x1d47 PROC NEAR
     mov       cx, 4000h

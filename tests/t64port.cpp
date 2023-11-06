@@ -4465,7 +4465,7 @@ LABEL(DecompressPaletteColor, GreenAndBlueIsRed);
     r.h.ch = r.h.ah;
 
 //     mov   cl, ah
-    r.h.cl = r.h.al;
+    r.h.cl = r.h.ah;
 
 //     ret
     red = r.h.ah;
@@ -4520,10 +4520,8 @@ LABEL(DecompressPaletteColor, LoadBlue);
     red = r.h.ah;
     green = r.h.ch;
     blue = r.h.cl;
-
 }
 
-// ;continues!
 void SetPaletteColorInternal(uint16_t& colorIndex, uint8_t red, uint8_t green, uint8_t blue)
 {
     REGPACK r;
@@ -6591,228 +6589,236 @@ LABEL(ClearScreen, Label0x1d8c);
 //     ret
 }
 
-void Func0x1cb4()
+void SetPaletteProfile()
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
-    uint8_t* ptr = NULL;
-    uint8_t* ptrptr = NULL;
-    uint8_t* ptrptrptr = NULL;
-//     mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
-    r.w.bx = 0x0010;
+    uint8_t* secondarySavePointerTable = NULL;
+    uint8_t* paletteProfile = NULL;
+    uint8_t* paletteColors = NULL;
+    uint8_t* attributeRegisters = NULL;
+    uint8_t t = 0;
 
-//     call  GetVideoParameterBlockElement ;Offset 0x1d95
-//     je    Label0x1cce                   ;Offset 0x1cce
-    if(!GetVideoParameterBlockElement(r.w.bx, ptr))
-//     les   bx, es:[bx + 0ah]
-//     mov   ax, es
-    ptrptr = ((FARPointer*)(ptr + 0x0A))->ToPointer<uint8_t>();
-//     or    ax, bx
-//     je    Label0x1cce                   ;Offset 0x1cce
-    if (ptrptr == NULL)
+    //     mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
+    r.w.bx = 0x10;
+
+    //     call  GetVideoParameterBlockElement ;Offset 0x1d95
+    if (!GetVideoParameterBlockElement(r.w.bx, secondarySavePointerTable))
         return;
 
-//     mov   ax, 14h
-    r.w.ax = 0x14;
-
-//     call  CheckCurrentModeExists        ;Offset 0x1bd1
-//     je    Label0x1ccf                   ;Offset 0x1ccf
-    if (!CheckCurrentModeExists(ptrptr, r.w.ax))
+    //     je    NotFound                      ;Offset 0x1cce
+    //     les   bx, es:[bx + 0ah]             ;pointer to user palette profile table  (VGA)
+    //     mov   ax, es
+    //     or    ax, bx
+    //     je    NotFound                      ;Offset 0x1cce
+    paletteProfile = ((FARPointer*)secondarySavePointerTable + 0x0A)->ToPointer<uint8_t>();
+    if (paletteProfile == NULL)
         return;
-// Label0x1cce:                            ;Offset 0x1cce
-//     ret
-// Label0x1ccf:                            ;Offset 0x1ccf
+        
+    //     mov   ax, 14h                       ;array of applicable video modes for this font
+    //     call  CheckCurrentModeExists        ;Offset 0x1bd1
+    if (!CheckCurrentModeExists(paletteProfile, 0x14))
+        return;
 
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0x489
-//     jne   Label0x1d2b                   ;Offset 0x1d2b
+    //     je    Label0x1ccf                   ;Offset 0x1ccf
+    // NotFound:                               ;Offset 0x1cce
+    //     ret
+    // Label0x1ccf:                            ;Offset 0x1ccf
+    //     test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0x489 //BDA_VDDA_PaletteLoadingEnabled
+    //     jne   Label0x1d2b                   ;Offset 0x1d2b
     if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
         goto Label0x1d2b;
 
-//     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
+    //     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
 
-//     add   dx, 06h
-    r.w.dx += 0x0006;
-//     in    al, dx
+    //     add   dx, 06h                       ;0x3?A - InputStatus1 - reset attribute controller register flip flop
+    r.w.dx += 0x06;
+
+    //     in    al, dx
     r.h.al = SYS_ReadPortByte(r.w.dx);
 
-//     push  ds
-//     push  bx
+    //     push  ds
+    //     push  bx
+    //     mov   ax, word ptr es:[bx + 0eh]    ;first video DAC color register number
+    r.h.al = paletteProfile[0x0e];
 
-//     mov   ax, word ptr es:[bx + 0eh]
-    r.h.al = ptrptr[0x0E];
-
-//     mov   ah, al
+    //     mov   ah, al                        ;
     r.h.ah = r.h.al;
 
-//     lds   si, es:[bx + 10h]
-    ptrptrptr = ((FARPointer*)(ptr + 0x10))->ToPointer<uint8_t>();
+    //     lds   si, es:[bx + 10h]             ;video DAC color register table pointer
+    paletteColors = ((FARPointer*)paletteProfile + 0x10)->ToPointer<uint8_t>();
 
-//     mov   bx, word ptr es:[bx + 0ch]
-    r.w.bx = ptrptr[0x0C];
+    //     mov   bx, word ptr es:[bx + 0ch]    ;count of video DAC color registers in table
+    r.h.bl = paletteProfile[0x0c];
+    r.h.bh = paletteProfile[0x0d];
 
-//     or    bx, bx
-//     je    Label0x1d06                   ;Offset 0x1d06
-    if (r.w.bx == 0x0000)
-        goto Label0x1d06;
+    //     or    bx, bx                        ;
+    //     je    NoColorData                   ;Offset 0x1d06
+    if (r.h.bh == 0x0000)
+        goto NoColorData;
 
-//     mov   dx, 03c8h                     ;port - 0x3c8
-    r.w.dx = 0x3c8;
+    //     mov   dx, DACWriteIndex             ;port - 0x3c8 - DACWriteIndex
+    r.w.dx = Hag::VGA::Register::DACWriteIndex;
 
-// Label0x1cf5:                            ;Offset 0x1cf5
-LABEL(Func0x1cb4, Label0x1cf5);
+    // NextColor:                              ;Offset 0x1cf5
+LABEL(SetPaletteProfile, NextColor);
 
-//     mov   al, ah
+    //     mov   al, ah
     r.h.al = r.h.ah;
 
-//     out   dx, al
+    //     out   dx, al                        ;index
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     inc   dx
+    //     inc   dx                            ;port - 0x3c9 - RAMDACData
     ++r.w.dx;
 
-//     mov   cx, 03h
-    r.w.cx = 0x0003;
+    //     mov   cx, 03h                       ;3 colors
+    r.w.cx = 0x03;
 
-// Label0x1cfc:                            ;Offset 0x1cfc
-LABEL(Func0x1cb4, Label0x1cfc);
+    // WriteColors:                            ;Offset 0x1cfc
+LABEL(SetPaletteProfile, WriteColors);
 
-//     lodsb byte ptr ds:[si]
-    r.h.al = *ptrptrptr;
-    ++ptrptrptr;
+    //     lodsb byte ptr ds:[si]              ;write out R, G, B
+    r.h.al = *paletteColors;
+    ++paletteColors;
 
-//     out   dx, al
+    //     out   dx, al
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     loop  Label0x1cfc                   ;Offset 0x1cfc
+    //     loop  WriteColors                   ;Offset 0x1cfc
     --r.w.cx;
     if (r.w.cx != 0x0000)
-        goto Label0x1cfc;
+        goto WriteColors;
 
-//     inc   ah
+    //     inc   ah
     ++r.h.ah;
 
-//     dec   dx
+    //     dec   dx
     --r.w.dx;
 
-//     dec   bx
+    //     dec   bx
     --r.w.bx;
 
-//     jne   Label0x1cf5                   ;Offset 0x1cf5
+    //     jne   NextColor                     ;Offset 0x1cf5
     if (r.w.bx != 0x0000)
-        goto Label0x1cf5;
+        goto NextColor;
 
-// Label0x1d06:                            ;Offset 0x1d06
-LABEL(Func0x1cb4, Label0x1d06);
+    // NoColorData:                            ;Offset 0x1d06
+LABEL(SetPaletteProfile, NoColorData);
+    //     pop   bx
+    //     mov   ax, word ptr es:[bx + 06h]    ;first attribute controller register number
+    r.h.al = paletteProfile[0x06];
 
-//     pop   bx
-//     mov   ax, word ptr es:[bx + 06h]
-    r.h.al = ptrptr[0x06];
-
-//     mov   ah, al
+    //     mov   ah, al
     r.h.ah = r.h.al;
 
-//     lds   si, es:[bx + 08h]
-    ptrptrptr = ((FARPointer*)(ptrptr + 0x08))->ToPointer<uint8_t>();
+    //     lds   si, es:[bx + 08h]             ;pointer to attribute controller reg table
+    attributeRegisters = ((FARPointer*)paletteProfile + 0x08)->ToPointer<uint8_t>();
 
-//     mov   cx, word ptr es:[bx + 04h]
-    r.w.cx = ptrptr[0x04];
+    //     mov   cx, word ptr es:[bx + 04h]    ;count of attribute controller regs in table
+    r.h.cl = paletteProfile[0x04];
+    r.h.ch = paletteProfile[0x05];
 
-//     jcxz  Label0x1d2a                   ;Offset 0x1d2a
+    //     jcxz  NoAttributes                  ;Offset 0x1d2a
     if (r.w.cx == 0x0000)
-        goto Label0x1d2a;
+        goto NoAttributes;
+        
+    //     mov   dx, AttributeControllerIndex  ;port - 0x3c0
+    r.w.dx = 0x03c0;
 
-//     mov   dx, 03c0h                     ;port - 0x3c0
-    r.w.dx = 0x3c0;
+    // NextAttribute:                          ;Offset 0x1d1a
+LABEL(SetPaletteProfile, NextAttribute);
 
-// Label0x1d1a:                            ;Offset 0x1d1a
-LABEL(Func0x1cb4, Label0x1d1a);
-
-//     mov   al, ah
+    //     mov   al, ah
     r.h.al = r.h.ah;
 
-//     out   dx, al
+    //     out   dx, al
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     lodsb byte ptr ds:[si]
-    r.h.al = *ptrptrptr;
-    ++ptrptrptr;
+    //     lodsb byte ptr ds:[si]
+    r.h.al = *attributeRegisters;
+    ++attributeRegisters;
 
-//     out   dx, al
+    //     out   dx, al
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     inc   ah
+    //     inc   ah
     ++r.h.ah;
 
-//     loop  Label0x1d1a                   ;Offset 0x1d1a
+    //     loop  NextAttribute                 ;Offset 0x1d1a
     --r.w.cx;
     if (r.w.cx != 0x0000)
-        goto Label0x1d1a;
+        goto NextAttribute;
 
-//     inc   ah
+    //     inc   ah
     ++r.h.ah;
 
-//     mov   al, ah
+    //     mov   al, ah
     r.h.al = r.h.ah;
 
-//     out   dx, al
+    //     out   dx, al
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     lodsb byte ptr ds:[si]
-    r.h.al = *ptrptrptr;
-    ++ptrptrptr;
+    //     lodsb byte ptr ds:[si]
+    r.h.al = *attributeRegisters;
+    ++attributeRegisters;
+
+    //     out   dx, al
+    SYS_WritePortByte(r.w.dx, r.h.al);
     
-//     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
+    // NoAttributes:                           ;Offset 0x1d2a
+LABEL(SetPaletteProfile, NoAttributes);
 
-// Label0x1d2a:                            ;Offset 0x1d2a
-LABEL(Func0x1cb4, Label0x1d2a);
+    //     pop   ds
+    // Label0x1d2b:                            ;Offset 0x1d2b
+LABEL(SetPaletteProfile, Label0x1d2b);
 
-//     pop   ds
+    //     mov   al, byte ptr es:[bx]          ;1 - enable underlining in all alphanumeric modes
+    // 		                                   ;0 - enable underlining in monochrome alpha modes
+    // 		                                   ;-1 - disable underlining in all alpha modes
+    r.h.al = paletteProfile[0x00];
 
-// Label0x1d2b:                            ;Offset 0x1d2b
-LABEL(Func0x1cb4, Label0x1d2b);
-
-//     mov   al, byte ptr es:[bx]
-    r.h.al = *ptr; //or is it ptrptr? 
-
-//     or    al, al
-//     je    Label0x1d46                   ;Offset 0x1d46
+    //     or    al, al
+    //     je    Label0x1d46                   ;Offset 0x1d46
     if (r.h.al == 0x00)
-        return;
+        goto Label0x1d46;
 
-//     mov   ah, 1fh
-    r.h.ah = 0x1f;
+    //     test  al, 80h
+    t = r.h.al;
+    r.h.al = 0x1f;
 
-//     test  al, 80h
-//     jne   Label0x1d3d                   ;Offset 0x1d3d
-    if ((r.h.al & 0x80) != 0x00)
+    //     mov   al, 1fh
+    //     jne   Label0x1d3d                   ;Offset 0x1d3d
+    if ((t & 0x80) != 0x00)
         goto Label0x1d3d;
 
-//     mov   ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+    //     mov   ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
     r.w.ax = Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
 
-//     dec   al
+    //     dec   al
     --r.h.al;
 
-//     mov   ah, al
-    r.h.ah = r.h.al;
+    // Label0x1d3d:                            ;Offset 0x1d3d
+LABEL(SetPaletteProfile, Label0x1d3d);
 
-// Label0x1d3d:                            ;Offset 0x1d3d
-LABEL(Func0x1cb4, Label0x1d3d);
-//     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
+    //     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
 
-//     mov   al, 14h
-    r.h.al = 0x14;
+    //     mov   ah, al
+    r.h.ah = r.h.al;
 
-//     out   dx, ax
+    //     mov   al, 14h
+    r.h.al = 0x4;
+    
+    //     out   dx, ax
     SYS_WritePortShort(r.w.dx, r.w.ax);
 
-// Label0x1d46:                            ;Offset 0x1d46
-//     ret
+    // Label0x1d46:                            ;Offset 0x1d46
+LABEL(SetPaletteProfile, Label0x1d46);
+    
+    //     ret
 }
-
 
 // ;inputs:
 // ;al = requested video mode
@@ -7044,7 +7050,7 @@ LABEL(SetVideoMode, Label0x18c9);
 LABEL(SetVideoMode, Label0x18da);
 
 //     call Func0x1cb4                     ;Offset 0x1cb4
-    Func0x1cb4();
+    SetPaletteProfile();
 
 //     call EnablePaletteBasedVideo        ;Offset 0x479d
     EnablePaletteBasedVideo();

@@ -29,6 +29,8 @@ public:
     virtual void Report(CustomPortHandler* instance1) = 0;
     virtual bool HasDifferences(CustomPortHandler* instance1) = 0;
     virtual void Reset() = 0;
+    virtual void Snapshot() = 0;
+    virtual void Rollback() = 0;
 
     inline const char* GetName() { return m_Name; }
     inline CustomPortHandler* GetNext() { return m_Next; }
@@ -55,28 +57,32 @@ struct PortAndValue
     uint8_t Value;
 };
 
-void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters);
+void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters, uint8_t* ramdacRegisters);
 void SelectInstance(int instance);
 
+void Snapshot();
+void Rollback();
+
+void AddReadOnlyPort(const char* name, uint16_t port);
 void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues);
+void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg);
 void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size);
 
-typedef void (*IndexedRegisterCheckCallback_t)(uint16_t port, uint8_t index, uint8_t modifiedValue, uint8_t originalValue, void* context);
+typedef void (*IndexedRegisterCheckCallback_t)(uint16_t port, uint16_t index, uint8_t modifiedValue, uint8_t originalValue, void* context);
 typedef void (*RegisterCheckCallback_t)(uint16_t port, uint8_t modifiedValue, uint8_t originalValue, void* context);
 typedef void (*BDAFieldCallback_t)(uint8_t field, uint8_t modifiedValue, uint8_t originalValue, void* context);
-
 
 struct PortAndIndexAndValue
 {
     uint16_t Port;
-    uint8_t Index;
+    uint16_t Index;
     uint8_t Value;
 };
 
 struct PortAndIndex
 {
     uint16_t Port;
-    uint8_t Index;
+    uint16_t Index;
 };
 
 int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int modifiedCount,

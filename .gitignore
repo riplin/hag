@@ -39,6 +39,9 @@
 # Mac junk
 **/.DS_Store
 
+# VS Code junk
+**/.vscode
+
 # Build folder
 *.bin
 *.zip
