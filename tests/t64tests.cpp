@@ -35,13 +35,20 @@ void SetColorMode(uint8_t mode);
 void ClearMemory();
 void ApplyVESAOverrideData(uint8_t mode, uint8_t* overrideTable, uint8_t modeDataIndex);
 void SetPalette();
-
 void SetFont();
 void PatchCharacterSet(uint8_t flags);
+
+void SetPaletteProfile();
 void EnablePaletteBasedVideo();
 void SetTextFontAndAddressing(uint8_t* font, uint16_t someOffset, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank);
 void ConfigureCursorPropertiesAndVerticalDisplayEnd(uint8_t characterPointHeight);
-bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement);
+bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement, uint16_t size = sizeof(FARPointer));
+bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer));
+void SetGraphicsCharacterFont(uint8_t* graphicsCharacterFontDefinition);
+void ClearScreen();
+void TurnOnScreen();
+void SaveDynamicParameterData(uint8_t* overrideTable);
+bool CheckCurrentModeExists(uint8_t* ptr, uint16_t offset);
 void ConfigureFontAndCursor(uint8_t* fontDefinition);
 void ConfigureFontRamBank(uint8_t* fontDefinition);
 bool SetVideoMode(uint8_t mode);
@@ -1097,4 +1104,278 @@ int SetPaletteTest()
     }
 
     return ret + Hag::Testing::Mock::Shutdown();   
+}
+
+struct SFT_VerifyCallback
+{
+    Hag::Testing::Mock::MemoryAccess* MemoryAccesses;
+    uint32_t MemoryAccessesCount;
+    int Verified;
+};
+
+void SetFontTest_VerifyCallback(uint32_t offset, uint32_t size, void* ctx)
+{
+    SFT_VerifyCallback& context = *(SFT_VerifyCallback*)ctx;
+    for (uint32_t i = 0; i < context.MemoryAccessesCount; ++i)
+    {
+        if (context.MemoryAccesses[i].Offset == offset &&
+            context.MemoryAccesses[i].Size == size)
+        {
+            ++context.Verified;
+            return;
+        }
+    }
+    printf("Unknown memory access offset 0x%08X, size 0x%08X\n", offset, size);
+}
+
+extern Hag::Testing::Mock::MemoryAccess SetFontTest_memoryAccess0[];
+extern int SetFontTest_memoryAccessCount0;
+extern Hag::Testing::Mock::MemoryAccess SetFontTest_memoryAccess1[];
+extern int SetFontTest_memoryAccessCount1;
+extern Hag::Testing::Mock::PortAndIndex* SetFontTest_readIndexedPorts[];
+extern int SetFontTest_readIndexedPortsCount[];
+extern Hag::Testing::Mock::PortAndIndexAndValue* SetFontTest_modifiedIndexedPorts[];
+extern int SetFontTest_modifiedIndexedPortsCount[];
+
+extern uint16_t SetFontTest_ignorePorts[];
+extern uint16_t SetFontTest_ignorePortsCount;
+extern Hag::Testing::Mock::PortAndIndex SetFontTest_ignoreIndexedPorts[];
+extern uint16_t SetFontTest_ignoreIndexedPortsCount;
+
+int SetFontTest()
+{
+    int ret = 121;
+
+    Support::Allocator allocator;
+    S3Trio64MockConfigSetup(allocator, SetPaletteTest_RAMDACRegisters);
+    int idx = 0;
+    for (uint8_t i = 0; i < modesCount; ++i)
+    {
+        uint8_t mode = modes[i];
+        //The following code replicates parts of the SetVideoMode function
+
+        if (!UnlockExtendedCRTRegistersSafe())
+            continue;
+        
+        uint32_t offset = 0x00;
+        if (mode > 0x13 && !FindVideoModeData(mode, offset))
+            continue; //Failure.
+
+        //Reset clear screen on mode switch flag.
+        Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
+
+        ModeSetBDA(mode);
+
+        if (mode <= 0x13 && !VerifyBDAOrDeactivate(mode))
+            continue; //Failure.
+
+        Hag::System::BDA::DisplayMode::Get() = mode;
+
+        uint8_t* selectedFont = NULL;
+        uint8_t* overrideTable = NULL;
+        uint8_t modeDataIndex = 0;
+        SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
+
+        Hag::System::BDA::VideoModeOptions::Get() &= 
+                    ~(Hag::System::BDA::VideoModeOptions::Unknown |
+                    Hag::System::BDA::VideoModeOptions::Inactive);
+
+        //SaveDynamicParameterData(overrideTable);
+
+        ApplyVideoParameters(overrideTable);
+
+        ApplyVESAOverrideData(mode, overrideTable, modeDataIndex);
+
+        SetPalette();
+
+        uint16_t crtReg = Hag::System::BDA::VideoBaseIOPort::Get();
+
+        uint8_t flags = 0;
+        if ((mode < 0x04) ||
+            (mode == 0x07) ||
+            (mode > 0x13 && GetVideoModeFlags(mode, flags) && ((flags & 0x01) == 0x01)))
+        {
+            Hag::Testing::Mock::Snapshot();
+            
+            SFT_VerifyCallback context =
+            {
+                mode == 0x54 ? SetFontTest_memoryAccess1 : SetFontTest_memoryAccess0,
+                mode == 0x54 ? SetFontTest_memoryAccessCount1 : SetFontTest_memoryAccessCount0,
+                0
+            };
+
+            Hag::Testing::Mock::SetMemoryAccessCallback(SetFontTest_VerifyCallback, &context);
+            SetFont();
+            Hag::Testing::Mock::SetMemoryAccessCallback(NULL, NULL);
+            ret -= context.Verified;
+
+            ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                                                            0,
+                                                            NULL,
+                                                            0,
+                                                            SetFontTest_modifiedIndexedPorts[idx],
+                                                            SetFontTest_modifiedIndexedPortsCount[idx],
+                                                            SetFontTest_readIndexedPorts[idx],
+                                                            SetFontTest_readIndexedPortsCount[idx],
+                                                            SetFontTest_ignorePorts,
+                                                            SetFontTest_ignorePortsCount,
+                                                            SetFontTest_ignoreIndexedPorts,
+                                                            SetFontTest_ignoreIndexedPortsCount);
+            ++idx;
+        }
+
+        Hag::Testing::Mock::Reset();
+    }
+
+    return ret + Hag::Testing::Mock::Shutdown();
+}
+
+void SetVideoModeInternalsTest_callback(uint32_t offset, uint32_t size, void* ctx)
+{
+    printf("Memory access offset: 0x%08X, size: 0x%08X\n", offset, size);
+}
+
+int SetVideoModeInternalsTest()
+{
+    int ret = 0;
+
+    Support::Allocator allocator;
+    S3Trio64MockConfigSetup(allocator, SetPaletteTest_RAMDACRegisters);
+    for (uint8_t i = 0; i < modesCount; ++i)
+    {
+        uint8_t mode = modes[i];
+        //printf("\n%i: 0x%02X\n", i, mode);
+
+        if (!UnlockExtendedCRTRegistersSafe())
+            continue;
+        
+        uint32_t offset = 0x00;
+        if (mode > 0x13 && !FindVideoModeData(mode, offset))
+            continue; //Failure.
+
+        //Reset clear screen on mode switch flag.
+        Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
+
+        ModeSetBDA(mode);
+
+        if (mode <= 0x13 && !VerifyBDAOrDeactivate(mode))
+            continue; //Failure.
+
+        Hag::System::BDA::DisplayMode::Get() = mode;
+
+        uint8_t* selectedFont = NULL;
+        uint8_t* overrideTable = NULL;
+        uint8_t modeDataIndex = 0;
+        SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
+
+        Hag::System::BDA::VideoModeOptions::Get() &= 
+                    ~(Hag::System::BDA::VideoModeOptions::Unknown |
+                    Hag::System::BDA::VideoModeOptions::Inactive);
+
+        SaveDynamicParameterData(overrideTable);
+        ApplyVideoParameters(overrideTable);
+        ApplyVESAOverrideData(mode, overrideTable, modeDataIndex);
+        SetPalette();
+
+        uint16_t crtReg = Hag::System::BDA::VideoBaseIOPort::Get();
+
+        uint8_t flags = 0;
+        if ((mode < 0x04) ||
+            (mode == 0x07) ||
+            (mode > 0x13 && GetVideoModeFlags(mode, flags) && ((flags & 0x01) == 0x01)))
+        {
+            SetFont();
+
+            uint8_t* fontDefinition = NULL;
+            if (FetchCheckedVideoParameterBlockElement(8, 11, fontDefinition, 0x0B + 0x14))
+            {
+                ConfigureFontAndCursor(fontDefinition);
+            }
+
+            uint8_t* paramBlock = NULL;
+            if (GetVideoParameterBlockElement(0x0010, paramBlock, 0x20) &&
+                !((FARPointer*)(paramBlock + 0x06))->IsNull())
+            {
+
+                fontDefinition = ((FARPointer*)(paramBlock + 0x06))->ToPointer<uint8_t>(0x0B + 0x14);//there's a 0xFF terminated list of modes. max is 14h
+                if (CheckCurrentModeExists(fontDefinition, 7))
+                    ConfigureFontRamBank(fontDefinition);
+            }
+        }
+        else
+        {
+            Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
+            
+            uint8_t* graphicsCharacterFontDefinition = NULL;
+            if (FetchCheckedVideoParameterBlockElement(12, 7, graphicsCharacterFontDefinition, 0x07 + 0x14))
+                SetGraphicsCharacterFont(graphicsCharacterFontDefinition); //Sets the pointer in the interrupt table.
+        }
+        Hag::Testing::Mock::Snapshot();
+
+        //Hag::Testing::Mock::SetMemoryAccessCallback(SetVideoModeInternalsTest_callback, NULL);
+
+        if (((Hag::System::BDA::VideoModeOptions::Get() & 0x80) == 0x00) &&
+            (Hag::System::BDA::VideoBufferSize::Get() != 0x0000))
+            ClearScreen();
+
+        SetPaletteProfile();
+        EnablePaletteBasedVideo();
+        TurnOnScreen();
+        
+        //Hag::Testing::Mock::SetMemoryAccessCallback(NULL, NULL);
+
+/*
+        ret -= context.Verified;
+
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                                                        0,
+                                                        NULL,
+                                                        0,
+                                                        SetFontTest_modifiedIndexedPorts[idx],
+                                                        SetFontTest_modifiedIndexedPortsCount[idx],
+                                                        SetFontTest_readIndexedPorts[idx],
+                                                        SetFontTest_readIndexedPortsCount[idx],
+                                                        SetFontTest_ignorePorts,
+                                                        SetFontTest_ignorePortsCount,
+                                                        SetFontTest_ignoreIndexedPorts,
+                                                        SetFontTest_ignoreIndexedPortsCount);
+*/
+        Hag::Testing::Mock::Reset();
+    }
+
+    return ret + Hag::Testing::Mock::Shutdown();
+}
+
+int SetVideoModeTest()
+{
+    int ret = 0;
+
+    Support::Allocator allocator;
+    S3Trio64MockConfigSetup(allocator, SetPaletteTest_RAMDACRegisters);
+    for (uint8_t i = 0; i < modesCount; ++i)
+    {
+        uint8_t mode = modes[i];
+        printf("\n%i: 0x%02X\n", i, mode);
+
+        SetVideoMode(mode);
+/*
+        ret -= context.Verified;
+
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                                                        0,
+                                                        NULL,
+                                                        0,
+                                                        SetFontTest_modifiedIndexedPorts[idx],
+                                                        SetFontTest_modifiedIndexedPortsCount[idx],
+                                                        SetFontTest_readIndexedPorts[idx],
+                                                        SetFontTest_readIndexedPortsCount[idx],
+                                                        SetFontTest_ignorePorts,
+                                                        SetFontTest_ignorePortsCount,
+                                                        SetFontTest_ignoreIndexedPorts,
+                                                        SetFontTest_ignoreIndexedPortsCount);
+*/
+        Hag::Testing::Mock::Reset();
+    }
+
+    return ret + Hag::Testing::Mock::Shutdown();
 }

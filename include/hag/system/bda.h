@@ -3,10 +3,11 @@
 #pragma once
 
 #include <hag/types.h>
+#include <hag/farptr.h>
 #include <hag/drivers/vga/vidmodes.h>
 #include <hag/testing/mock.h>
 
-//This API handles the interrupt table and BIOS Data Area
+//This API handles the BIOS Data Area
 
 #pragma pack(push, 1);
 
@@ -121,6 +122,9 @@ namespace Hag { namespace System { namespace BDA
 
     struct EndStart
     {
+        inline EndStart() : End(0), Start(0) {}
+        inline EndStart(uint8_t end, uint8_t start) : End(end), Start(start) {}
+
         uint8_t End;
         uint8_t Start;
     };

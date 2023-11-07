@@ -71,6 +71,13 @@ void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size);
 typedef void (*IndexedRegisterCheckCallback_t)(uint16_t port, uint16_t index, uint8_t modifiedValue, uint8_t originalValue, void* context);
 typedef void (*RegisterCheckCallback_t)(uint16_t port, uint8_t modifiedValue, uint8_t originalValue, void* context);
 typedef void (*BDAFieldCallback_t)(uint8_t field, uint8_t modifiedValue, uint8_t originalValue, void* context);
+typedef void (*MemoryAccessCallback_t)(uint32_t offset, uint32_t size, void* context);
+
+struct MemoryAccess
+{
+    uint32_t Offset;
+    uint32_t Size;
+};
 
 struct PortAndIndexAndValue
 {
@@ -106,6 +113,8 @@ void FetchModifiedIndexedRegisters(int instance, IndexedRegisterCheckCallback_t 
 void FetchModifiedRegisters(int instance, RegisterCheckCallback_t callback, void* context);
 void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* context);
 
+void SetMemoryAccessCallback(MemoryAccessCallback_t callback, void* context);
+
 void Report();
 bool HasDifferences();
 void Reset();
@@ -123,9 +132,9 @@ namespace Port
 
 namespace Memory
 {
-    uint8_t& Ref(uint16_t offset, uint16_t size, uint16_t count = 1);
+    uint8_t& Ref(uint32_t offset, uint32_t size, uint32_t count = 1);
 
-    template<typename Type, uint16_t offset> Type& RefAs(uint16_t count = 1)
+    template<typename Type, uint32_t offset> Type& RefAs(uint32_t count = 1)
     {
         return (Type&)Ref(offset, sizeof(Type), count);
     }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <hag/types.h>
+#include <hag/farptr.h>
 
 #pragma pack(push, 1);
 

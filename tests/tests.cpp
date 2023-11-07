@@ -22,6 +22,9 @@ int SetColorModeTest();
 int ClearMemoryTest();
 int ApplyVESAOverrideDataTest();
 int SetPaletteTest();
+int SetFontTest();
+int SetVideoModeInternalsTest();
+int SetVideoModeTest();
 
 #define TESTFUNCTION(F)                             \
 {                                                   \
@@ -74,6 +77,9 @@ int main(void)
     TESTFUNCTION(ClearMemoryTest);
     TESTFUNCTION(ApplyVESAOverrideDataTest);
     TESTFUNCTION(SetPaletteTest);
+    TESTFUNCTION(SetFontTest);
+    TESTFUNCTION(SetVideoModeInternalsTest);
+    TESTFUNCTION(SetVideoModeTest);
 
     return ret;
 }

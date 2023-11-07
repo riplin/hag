@@ -9004,8 +9004,6 @@ int SetPaletteTest_modifiedIndexedPortsCount[] =
     sizeof(SetPaletteTest_modifiedIndexedPorts4) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue)   //49
 };
 
-
-
 uint8_t SetPaletteTest_RAMDACRegisters[] =
 {
     0xFF, 0xFF, 0xFF,
@@ -9265,6 +9263,147 @@ uint8_t SetPaletteTest_RAMDACRegisters[] =
     0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF
 };
+
+
+Hag::Testing::Mock::MemoryAccess SetFontTest_memoryAccess0[] =
+{
+    { 0x000A2000, 8192 },
+    { 0x000A03A0, 16 },
+    { 0x000A0440, 16 },
+    { 0x000A0560, 16 },
+    { 0x000A05A0, 16 },
+    { 0x000A09A0, 16 },
+    { 0x000A0A80, 16 },
+    { 0x000A0AE0, 16 },
+    { 0x000A0B40, 16 },
+    { 0x000A0B60, 16 },
+    { 0x000A0BA0, 16 },
+    { 0x000A0DA0, 16 },
+    { 0x000A0EE0, 16 },
+    { 0x000A1220, 16 },
+    { 0x000A13A0, 16 },
+    { 0x000A13C0, 16 },
+    { 0x000A1E20, 16 },
+    { 0x000A1EC0, 16 }
+};
+
+int SetFontTest_memoryAccessCount0 = sizeof(SetFontTest_memoryAccess0) / sizeof(Hag::Testing::Mock::MemoryAccess);
+
+Hag::Testing::Mock::MemoryAccess SetFontTest_memoryAccess1[] =
+{
+    { 0x000A2000, 8192 }
+};
+
+int SetFontTest_memoryAccessCount1 = sizeof(SetFontTest_memoryAccess1) / sizeof(Hag::Testing::Mock::MemoryAccess);
+
+Hag::Testing::Mock::PortAndIndex SetFontTest_readIndexedPorts0[] =
+{
+    { 0x03C5, 0x0002 },
+    { 0x03CF, 0x0004 },
+    { 0x03CF, 0x0005 },
+    { 0x03CF, 0x0006 }
+};
+
+Hag::Testing::Mock::PortAndIndex SetFontTest_readIndexedPorts1[] =
+{
+    { 0x03C5, 0x0002 },
+    { 0x03CF, 0x0004 },
+    { 0x03CF, 0x0005 }
+};
+
+Hag::Testing::Mock::PortAndIndex SetFontTest_readIndexedPorts2[] =
+{
+    { 0x03C5, 0x0002 },
+    { 0x03C5, 0x0004 },
+    { 0x03CF, 0x0004 },
+    { 0x03CF, 0x0005 },
+    { 0x03CF, 0x0006 }
+};
+
+Hag::Testing::Mock::PortAndIndex* SetFontTest_readIndexedPorts[] =
+{
+    SetFontTest_readIndexedPorts0,      //0x01
+    SetFontTest_readIndexedPorts0,      //0x02
+    SetFontTest_readIndexedPorts0,      //0x03
+    SetFontTest_readIndexedPorts1,      //0x07
+    SetFontTest_readIndexedPorts2,      //0x54
+    SetFontTest_readIndexedPorts2,      //0x55
+};
+
+int SetFontTest_readIndexedPortsCount[] =
+{
+    sizeof(SetFontTest_readIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndex),      //0x01
+    sizeof(SetFontTest_readIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndex),      //0x02
+    sizeof(SetFontTest_readIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndex),      //0x03
+    sizeof(SetFontTest_readIndexedPorts1) / sizeof(Hag::Testing::Mock::PortAndIndex),      //0x07
+    sizeof(SetFontTest_readIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndex),      //0x54
+    sizeof(SetFontTest_readIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndex)       //0x55
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue SetFontTest_modifiedIndexedPorts0[] =
+{
+    { 0, 0, 0, }
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue SetFontTest_modifiedIndexedPorts1[] =
+{
+    { 0x03C5, 0x0004, 0x03 }
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue SetFontTest_modifiedIndexedPorts2[] =
+{
+    { 0x03C5, 0x0004, 0x03 },
+    { 0x03CF, 0x0006, 0x0A }
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue* SetFontTest_modifiedIndexedPorts[] =
+{
+    SetFontTest_modifiedIndexedPorts1,      //0x01
+    SetFontTest_modifiedIndexedPorts1,      //0x02
+    SetFontTest_modifiedIndexedPorts1,      //0x03
+    SetFontTest_modifiedIndexedPorts2,      //0x07
+    SetFontTest_modifiedIndexedPorts0,      //0x54
+    SetFontTest_modifiedIndexedPorts0       //0x55
+};
+
+int SetFontTest_modifiedIndexedPortsCount[] =
+{
+    sizeof(SetFontTest_modifiedIndexedPorts1) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),    //0x01
+    sizeof(SetFontTest_modifiedIndexedPorts1) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),    //0x02
+    sizeof(SetFontTest_modifiedIndexedPorts1) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),    //0x03
+    sizeof(SetFontTest_modifiedIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),    //0x07
+    sizeof(SetFontTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),    //0x54
+    sizeof(SetFontTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue)     //0x55
+};
+
+uint16_t SetFontTest_ignorePorts[] =
+{ 
+    Hag::VGA::Register::CRTControllerIndexB,
+    Hag::VGA::Register::CRTControllerDataB,
+    Hag::VGA::Register::InputStatus1B,
+    Hag::VGA::Register::AttributeControllerIndex,
+    Hag::VGA::Register::SequencerIndex,
+    Hag::VGA::Register::SequencerData,
+    Hag::VGA::Register::MiscellaneousR,
+    Hag::VGA::Register::CRTControllerIndexD,
+    Hag::VGA::Register::CRTControllerDataD,
+    Hag::VGA::Register::InputStatus1D,
+    Hag::VGA::Register::GraphicsControllerIndex,
+    Hag::VGA::Register::GraphicsControllerData,
+    Hag::VGA::Register::DACReadIndex,
+    Hag::VGA::Register::DACWriteIndex,
+    Hag::VGA::Register::RAMDACData,
+};
+
+uint16_t SetFontTest_ignorePortsCount = sizeof(SetFontTest_ignorePorts) / sizeof(uint16_t);
+
+Hag::Testing::Mock::PortAndIndex SetFontTest_ignoreIndexedPorts[] =
+{
+    { 0x03D5, 0x0E },
+    { 0x03D5, 0x0F }
+};
+
+uint16_t SetFontTest_ignoreIndexedPortsCount = sizeof(SetFontTest_ignoreIndexedPorts) / sizeof(Hag::Testing::Mock::PortAndIndex);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                            S3 Trio64 86C764X rev 20                                        //

@@ -31,13 +31,3 @@ typedef unsigned int uint20_t;
 typedef unsigned int uint32_t;
 //    typedef long long int uint64_t;
 
-struct FARPointer
-{
-    inline FARPointer(uint16_t seg, uint16_t offs) : Offset(offs), Segment(seg){}
-    inline bool IsNull() { return (Offset == 0x0000) && (Segment == 0x0000);}
-
-    template<typename T> T*ToPointer() { return (T*)((uint32_t(Segment) << 4) + Offset);}
-
-    uint16_t Offset;
-    uint16_t Segment;
-};

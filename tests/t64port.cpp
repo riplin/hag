@@ -1528,19 +1528,23 @@ LABEL(VerifyBDAOrDeactivate, Exit);
 
 //;input:
 //;bx = offset into Video Parameter Control Block
-bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer)
+bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer))
 {
+    returnPointer = NULL;
 //    push di
 //    les  di, ds:[BDA_VideoParameterControlBlockPointer];Offset 0x4a8 load segment:offset of video parameter control block into es:di
         Hag::System::BDA::VideoParameterControlBlockPointer_t& controlBlockPointer = Hag::System::BDA::VideoParameterControlBlockPointer::Get();
-        FARPointer* realControlBlockPointer = controlBlockPointer.ToPointer<FARPointer>();
+        FARPointer* realControlBlockPointer = controlBlockPointer.ToPointer<FARPointer>(0x1D);
+        bool ret = !realControlBlockPointer->IsNull();
 //    les  bx, es:[bx + di]               ;Load segment:offset from video override table into es:bx
-        returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>();
+        if (!ret)
+            returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>(size);
+        ret = !realControlBlockPointer[index].IsNull();
 //    mov  di, es                         ;
 //    or   di, bx                         ;or together segment and offset (not null test?)
 //    pop  di
 //    ret                                 ;return, es:bx is now offset to table.
-    return returnPointer != NULL;
+    return ret;
 }
 
 uint8_t VideoModeOverrideTranslationTable1[] =
@@ -1905,7 +1909,7 @@ void SaveDynamicParameterData(uint8_t* overrideTable)
 //     call      GetVideoParameterBlockElement;Offset 0x1d95
 //     pop       ds
 //     je        Exit                      ;Offset 0x1bc5
-    if (!GetVideoParameterBlockElement(1, savePointer))
+    if (!GetVideoParameterBlockElement(1, savePointer, 0x100))
         goto Exit;
 
 //     add       si, 23h
@@ -2011,7 +2015,7 @@ void ApplyVideoParameters(uint8_t* overrideTable)
 //     out   dx, al
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     mov   ax, 0300h                     ;CR0 - Asynchronous and Synchronous reset (should serve no function on Trio32/Trio64)
+//     mov   ax, 0300h                     ;SR0 - Asynchronous and Synchronous reset (should serve no function on Trio32/Trio64)
     r.w.ax = 0x0300;
 
 //     mov   dx, SequenceIndex             ;port - 0x3c4
@@ -2163,14 +2167,14 @@ LABEL(ApplyVideoParameters, Label0x48b6);
     r.h.ah = 0x00;
 
 //     mov   cx, 0010h                     ;16
-    r.w.cx = 0x16;
+    r.w.cx = 0x0010;
 
 //     mov   dx, AttributeControllerIndex  ;port - 0x3c0
     r.w.dx = 0x3c0;
 
 //     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x8
 //     jne   UsingDefaultPalette           ;Offset 0x48cf
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08)!= 0x00)
+    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
         goto UsingDefaultPalette;
 
 // WritePalette:                           ;Offset 0x48c5
@@ -2263,7 +2267,7 @@ LABEL(ApplyVideoParameters, DefaultPaletteDisabled2);
 
 //     loop  WriteAttributeControllerRegs  ;Offset 0x48d6 loop 5 bytes
     --r.w.cx;
-    if (r.w.cx == 0x0000)
+    if (r.w.cx != 0x0000)
         goto WriteAttributeControllerRegs;
 
 //     xor   al, al                        ;0
@@ -2283,7 +2287,6 @@ LABEL(ApplyVideoParameters, WriteGraphicsControllerRegs);
 
 //     inc   si
     ++overrideTable;
-
 //     out   dx, ax
     SYS_WritePortShort(r.w.dx, r.w.ax);
 
@@ -2292,7 +2295,7 @@ LABEL(ApplyVideoParameters, WriteGraphicsControllerRegs);
 
 //     loop  WriteGraphicsControllerRegs   ;Offset 0x48fd write out GR0-GR8
     --r.w.cx;
-    if (r.w.cx == 0x0000)
+    if (r.w.cx != 0x0000)
         goto WriteGraphicsControllerRegs;
 
 //     pop   dx
@@ -2357,7 +2360,7 @@ void TurnOnScreen()
 //     mov   al, 01h                       ;SR1 - Clocking Mode register
 //     call  ReadDataWithIndexRegister     ;Offset 0x4640
 //     and   ah, 0dfh                      ;Turn on screen
-    uint8_t tmp = ReadDataWithIndexRegister(0x3c4, 0x01) & 0x20;
+    uint8_t tmp = ReadDataWithIndexRegister(0x3c4, 0x01) & ~0x20;
 
 //     out   dx, ax                        ;Write
     SYS_WritePortShort(0x3c4, (uint16_t(tmp) << 8) | 0x01);
@@ -2457,10 +2460,12 @@ void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint16_t crtcPor
 //     push  bx
 //     push  cx
 //     lodsb cs:[si]                       ;Load count
-//     mov   cl, al
-//     xor   ch, ch
-    r.w.cx = CRTCInitData[0];
+    r.h.al = CRTCInitData[0];
     ++CRTCInitData;
+//     mov   cl, al
+    r.h.cl = r.h.al;
+//     xor   ch, ch
+    r.h.ch = 0x00;
 
 // LoopCRTCData:                           ;Loop over CRT data and output.
 LABEL(InitializeCRTControllerAndSequencer, LoopCRTCData);
@@ -5192,7 +5197,6 @@ bool CopyRect(uint8_t* src, uint8_t* dst, uint16_t lines, uint8_t bytesPerLine, 
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
-
 //     push      ax                        ;store ax
 // LineLoop:
 LABEL(CopyRect, LineLoop);
@@ -5278,7 +5282,7 @@ void PatchCharacterSet(uint8_t flags)
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
-    uint8_t* dst = (uint8_t*)0xa0000;
+    FARPointer dst(0xA000, 0x0000);
     uint8_t* src = NULL;
 
 //     push      ax
@@ -5293,13 +5297,13 @@ void PatchCharacterSet(uint8_t flags)
     if ((flags & 0xC0) == 0x00)
         return;
         
-//     mov       cx, 0007h                 ;7 * 2 pixels
+//     mov       cx, 0007h                 ;8x14
     r.w.cx = 0x0007;
 
 //     mov       si, offset Patch8x14      ;Offset 0x6d20
     src = Patch8x14;
 
-//     test      bl, 80h                   ;bit 7 set -> Start copy of 7 lines
+//     test      bl, 80h                   ;bit 7 set -> Start copy of 8x14 patch
 //     jne       NextCharacter             ;Offset 0x477f
     if ((r.h.bl & 0x80) != 0x00)
         goto NextCharacter;
@@ -5307,7 +5311,7 @@ void PatchCharacterSet(uint8_t flags)
 //     mov       si, offset Patch8x16      ;Offset 0x7e30
     src = Patch8x16;
 
-//     mov       cl, 08h                   ;8 * 2 pixels
+//     mov       cl, 08h                   ;8x16
     r.h.cl = 0x08;
 
 // NextCharacter:                          ;Offset 0x477f
@@ -5338,13 +5342,15 @@ LABEL(PatchCharacterSet, NextCharacter);
     SYS_ClearInterrupts();
 
 //     rep movsw es:[di], cs:[si]          ;move cx words
+    dst.Offset = r.w.di;
+    uint8_t* dstPtr = dst.ToPointer<uint8_t>(r.w.cx << 1);
     for (int i = 0; i < r.w.cx; ++i)
     {
-        dst[r.w.di] = src[0];
-        ++r.w.di;
+        *dstPtr = *src;
+        ++dstPtr;
         ++src;
-        dst[r.w.di] = src[0];
-        ++r.w.di;
+        *dstPtr = *src;
+        ++dstPtr;
         ++src;
     }
 //     sti                                 ;restore interrupts
@@ -5391,14 +5397,14 @@ void EnablePaletteBasedVideo()
 
 uint16_t RamBankOffset[] =
 {
-    0x2000, //(0)
-    0x6000, //(1)
-    0xA000, //(2)
-    0xE000, //(3)
-    0x0000, //(4)
-    0x4000, //(5)
-    0x8000, //(6)
-    0xC000  //(7)
+    0x0000, //(0)
+    0x4000, //(1)
+    0x8000, //(2)
+    0xC000, //(3)
+    0x2000, //(4)
+    0x6000, //(5)
+    0xA000, //(6)
+    0xE000  //(7)
 };
 
 // ;inputs:
@@ -5413,7 +5419,7 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t someOffset, uint16_t numCh
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
-    uint8_t* dest = (uint8_t*)0xa0000;
+    FARPointer dest(0xA000, 0x0000);
     r.w.dx = someOffset;
     r.w.cx = numCharacters;
     r.h.bh = charHeight;
@@ -5502,7 +5508,7 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t someOffset, uint16_t numCh
 //     mov       ah, bl
 //     mov       al, 00h
 //     mov       di, ax                    ;di = 0x0000(4), 0x2000(0), 0x4000(5), 0x6000(1), 0x8000(6), 0xA000(2), 0xC000(7), 0xE000(3)
-    r.w.di = RamBankOffset[r.h.bl]; //Yeah, I'm not doing that funky math up there.
+    r.w.di = RamBankOffset[r.h.bl]; //Yeah, I'm not doing that funky math up there. Also, my math was apparently wrong. darn ror's.
 
 //     or        dx, dx
 //     je        NoOffset                  ;Offset 0x4714
@@ -5515,9 +5521,11 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t someOffset, uint16_t numCh
     }
     
 // NoOffset:                               ;Offset 0x4714
-    dest += r.w.di;
+    dest.Offset = r.w.di;
+
 //     mov       dx, 20h
     r.w.dx = 0x0020;
+
 //     sub       dl, bh                    ;32 - character height
     r.h.dl -= r.h.bh;
 
@@ -5526,7 +5534,7 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t someOffset, uint16_t numCh
     {
 //     call      CopyRect                  ;Offset 0xea9
 //     jne       CopyDone                  ;Offset 0x472c
-        if (!CopyRect(font, dest, r.w.cx, r.h.bh, r.w.dx))//Always true.
+        if (!CopyRect(font, dest.ToPointer<uint8_t>(0x2000), r.w.cx, r.h.bh, r.w.dx))//Always true.
         {
 // Label0x4720:                            ;Offset 0x4720
 //     push      cx
@@ -6262,7 +6270,7 @@ void SetFont()
     goto Label0x1c8a;
 
 // Is8x14:                                 ;Offset 0x1c80
-LABEL(Func0x1c65, Is8x14);
+LABEL(SetFont, Is8x14);
 
 //     cmp   byte ptr ds:[BDA_DisplayMode], 07h;Offset 0x449
 //     jne   Label0x1c8a                   ;Offset 0x1c8a
@@ -6273,7 +6281,7 @@ LABEL(Func0x1c65, Is8x14);
     r.h.bl |= 0x80;
 
 // Label0x1c8a:                            ;Offset 0x1c8a
-LABEL(Func0x1c65, Label0x1c8a);
+LABEL(SetFont, Label0x1c8a);
 
 //     call  TextModeCharFunctionsInternal ;Offset 0x2f71
     TextModeCharFunctionsInternal(r.h.al, NULL, 0x0000, 0x0000, 0x00, r.h.bl, 0x00, 0x00);//the 0 arguments aren't used.
@@ -6330,10 +6338,10 @@ bool CheckCurrentModeExists(uint8_t* ptr, uint16_t offset)
 // ;adds ax to it. after that, it runs through until 0xff or until current video mode found
 // ;if found, it returns unmodified bx and al = video mode.
 // ;if not found, it returns unmodified bx and al = 0xff
-bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement)
+bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement, uint16_t size = sizeof(FARPointer))
 {
 //     call GetVideoParameterBlockElement  ;Offset 0x1d95
-    if (GetVideoParameterBlockElement(paramTableIdx, parameterBlockElement))
+    if (GetVideoParameterBlockElement(paramTableIdx, parameterBlockElement, size))
         return CheckCurrentModeExists(parameterBlockElement, subIdx);
 //     jne  CheckCurrentModeExists         ;Offset 0x1bd1
 //     or   al, 0ffh                       ;
@@ -6359,15 +6367,16 @@ void ConfigureFontAndCursor(uint8_t* fontDefinition)
     r.h.dl = fontDefinition[0x04];
     r.h.dh = fontDefinition[0x05];
 
-//     mov  si, word ptr es:[bx + 06h]     ;offset to character font
-//     mov  ax, word ptr es:[bx + 08h]     ;segment to character font
-//     mov  es, ax                         ;segment to character font   //I moved this line from further down.
-    uint8_t* font = ((FARPointer*)(fontDefinition + 0x06))->ToPointer<uint8_t>();
-
+//These lines sat below the font pointer fetching code, but i needed the character length for the size.
 //     mov  bx, word ptr es:[bx]           ;bl = length of each character, bh = character generator ram bank
 //     xchg bl, bh                         ;bh = length of each character, bl = character generator ram bank
     r.h.bh = fontDefinition[0x00];
     r.h.bl = fontDefinition[0x01];
+
+//     mov  si, word ptr es:[bx + 06h]     ;offset to character font
+//     mov  ax, word ptr es:[bx + 08h]     ;segment to character font
+//     mov  es, ax                         ;segment to character font   //I moved this line from further down.
+    uint8_t* font = ((FARPointer*)(fontDefinition + 0x06))->ToPointer<uint8_t>(r.h.bh * r.w.cx);
 
 //     and  bl, 3fh                        ;keep the lowest 6 bits
     r.h.bl &= 0x3F;
@@ -6415,15 +6424,15 @@ void ConfigureFontRamBank(uint8_t* fontDefinition)
 //     xor   dx, dx
     r.w.dx = 0x0000;
 
-//     mov   si, word ptr es:[bx + 03h]
-//     mov   ax, word ptr es:[bx + 05h]
-//     mov   es, ax
-    uint8_t* font = ((FARPointer*)(fontDefinition + 0x03))->ToPointer<uint8_t>();
-
 //     mov   bx, word ptr es:[bx]
 //     xchg  bl, bh
     r.h.bh = fontDefinition[0x00];
     r.h.bl = fontDefinition[0x01];
+
+//     mov   si, word ptr es:[bx + 03h]
+//     mov   ax, word ptr es:[bx + 05h]
+//     mov   es, ax
+    uint8_t* font = ((FARPointer*)(fontDefinition + 0x03))->ToPointer<uint8_t>(r.h.bh * r.w.cx);
 
 //     and   bl, 3fh
     r.h.bl &= 0x3f;
@@ -6490,7 +6499,7 @@ void ClearScreen()
     REGPACK r;
     memset(&r, 0, sizeof(r));
     uint8_t flags = 0;
-    uint8_t* ptr = NULL;
+    uint16_t* ptr = NULL;
 
 //     mov       cx, 4000h
     r.w.cx = 0x4000;
@@ -6580,11 +6589,16 @@ LABEL(ClearScreen, Label0x1d8c);
     r.h.bl = 0x00;
 
 //     mov       es, bx
-    ptr = (uint8_t*)(uint32_t(r.w.bx) << 4);
+    ptr = FARPointer(r.w.bx, 0x0000).ToPointer<uint16_t>(r.w.cx << 1);
 
 //     xor       di, di
 //     rep       stosw
-    memset(ptr, 0, r.w.cx << 1);
+    do
+    {
+        *ptr = r.w.ax;
+        ++ptr;
+        --r.w.cx;
+    } while (r.w.cx != 0x0000);
 
 //     ret
 }
@@ -6603,7 +6617,7 @@ void SetPaletteProfile()
     r.w.bx = 0x10;
 
     //     call  GetVideoParameterBlockElement ;Offset 0x1d95
-    if (!GetVideoParameterBlockElement(r.w.bx, secondarySavePointerTable))
+    if (!GetVideoParameterBlockElement(r.w.bx, secondarySavePointerTable, 0x20))
         return;
 
     //     je    NotFound                      ;Offset 0x1cce
@@ -6611,10 +6625,10 @@ void SetPaletteProfile()
     //     mov   ax, es
     //     or    ax, bx
     //     je    NotFound                      ;Offset 0x1cce
-    paletteProfile = ((FARPointer*)secondarySavePointerTable + 0x0A)->ToPointer<uint8_t>();
-    if (paletteProfile == NULL)
+    if (((FARPointer*)secondarySavePointerTable + 0x0A)->IsNull())
         return;
-        
+    paletteProfile = ((FARPointer*)secondarySavePointerTable + 0x0A)->ToPointer<uint8_t>(0x14 + 0x14);
+
     //     mov   ax, 14h                       ;array of applicable video modes for this font
     //     call  CheckCurrentModeExists        ;Offset 0x1bd1
     if (!CheckCurrentModeExists(paletteProfile, 0x14))
@@ -6646,12 +6660,12 @@ void SetPaletteProfile()
     //     mov   ah, al                        ;
     r.h.ah = r.h.al;
 
-    //     lds   si, es:[bx + 10h]             ;video DAC color register table pointer
-    paletteColors = ((FARPointer*)paletteProfile + 0x10)->ToPointer<uint8_t>();
-
     //     mov   bx, word ptr es:[bx + 0ch]    ;count of video DAC color registers in table
     r.h.bl = paletteProfile[0x0c];
     r.h.bh = paletteProfile[0x0d];
+
+    //     lds   si, es:[bx + 10h]             ;video DAC color register table pointer
+    paletteColors = ((FARPointer*)paletteProfile + 0x10)->ToPointer<uint8_t>(r.w.cx);
 
     //     or    bx, bx                        ;
     //     je    NoColorData                   ;Offset 0x1d06
@@ -6713,12 +6727,12 @@ LABEL(SetPaletteProfile, NoColorData);
     //     mov   ah, al
     r.h.ah = r.h.al;
 
-    //     lds   si, es:[bx + 08h]             ;pointer to attribute controller reg table
-    attributeRegisters = ((FARPointer*)paletteProfile + 0x08)->ToPointer<uint8_t>();
-
     //     mov   cx, word ptr es:[bx + 04h]    ;count of attribute controller regs in table
     r.h.cl = paletteProfile[0x04];
     r.h.ch = paletteProfile[0x05];
+
+    //     lds   si, es:[bx + 08h]             ;pointer to attribute controller reg table
+    attributeRegisters = ((FARPointer*)paletteProfile + 0x08)->ToPointer<uint8_t>(r.w.cx);
 
     //     jcxz  NoAttributes                  ;Offset 0x1d2a
     if (r.w.cx == 0x0000)
@@ -6820,6 +6834,38 @@ LABEL(SetPaletteProfile, Label0x1d46);
     //     ret
 }
 
+void SetGraphicsCharacterFont(uint8_t* graphicsCharacterFontDefinition)
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    // mov   al, byte ptr es:[bx]          ;number of displayed character rows
+    r.h.al = graphicsCharacterFontDefinition[0];
+
+    // dec   al
+    --r.h.al;
+
+    // mov   byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
+    Hag::System::BDA::RowsOnScreen::Get() = r.h.al;
+
+    // mov   ax, word ptr es:[bx + 01h]    ;length of character definition in bytes
+    r.h.al = graphicsCharacterFontDefinition[1];
+    r.h.ah = graphicsCharacterFontDefinition[2];
+
+    // mov   word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
+    Hag::System::BDA::PointHeightOfCharacterMatrix::Get() = r.w.ax;
+    
+    // mov   ax, word ptr es:[bx + 03h]    ;offset of character font
+    // mov   bx, word ptr es:[bx + 05h]    ;segment of character font
+    // mov   es, word ptr cs:[Data1488]    ;Offset 0x1488
+    // mov   di, 010ch                     ;Offset 0x10c int 0x43 - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
+    // cli
+    // stosw word ptr es:[di]
+    // mov   ax, bx
+    // stosw word ptr es:[di]
+    // sti
+    // ret
+}
+
 // ;inputs:
 // ;al = requested video mode
 bool SetVideoMode(uint8_t mode)
@@ -6877,7 +6923,6 @@ LABEL(SetVideoMode, ValidVideoMode);
 
 //     call ModeSetBDA                     ;Offset 0x18e8
     ModeSetBDA(r.h.al);
-    printf("ModeSetBDA: al = 0x%02X\n", r.h.al);
 //     cmp  al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
 //     ja   IsVESAMode                     ;Offset 0x1850
     if (r.h.al > 0x13)
@@ -6887,8 +6932,6 @@ LABEL(SetVideoMode, ValidVideoMode);
 //     je   IsVESAMode                     ;Offset 0x1850
     if (VerifyBDAOrDeactivate(r.h.al))
         goto IsVESAMode;
-
-        printf("Failure. al = 0x%02X\n", r.h.al);
 
 //     and  al, 0dfh                       ;bit 5 = 0
 //     mov  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
@@ -6944,14 +6987,14 @@ LABEL(SetVideoMode, IsVESAMode);
 //     cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
 //     jbe  Label0x18b5                    ;Offset 0x18b5
     if (r.h.al <= 0x13)
-        goto Label0x18b5;
+        goto IsGraphicsMode;
 
 //     call GetVideoModeFlags              ;Offset 0x105d
     GetVideoModeFlags(r.h.al, flags);
 //     test al, 01h                        ;Text
 //     je   Label0x18b5                    ;Offset 0x18b5
     if ((flags & 0x01) == 0x00)
-        goto Label0x18b5;
+        goto IsGraphicsMode;
 
 // Label0x1885:                            ;Offset 0x1885
 LABEL(SetVideoMode, Label0x1885);
@@ -6967,7 +7010,7 @@ LABEL(SetVideoMode, Label0x1885);
 
 //     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
 //     jne  CharacterSetNotFound           ;Offset 0x1896
-    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, fontDefinition))
+    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, fontDefinition, 0x0B + 0x14))
         goto CharacterSetNotFound;
 
 //     call ConfigureFontAndCursor         ;Offset 0x1bea
@@ -6981,17 +7024,17 @@ LABEL(SetVideoMode, CharacterSetNotFound);
 
 //     call GetVideoParameterBlockElement  ;Offset 0x1d95
 //     je   Label0x18c9                    ;Offset 0x18c9
-    if (!GetVideoParameterBlockElement(r.w.bx, paramBlock))
+    if (!GetVideoParameterBlockElement(r.w.bx, paramBlock, 0x20))
+        goto Label0x18c9;
+
+//     or   ax, bx
+//     je   Label0x18c9                    ;Offset 0x18c9 - No font definition found
+    if (((FARPointer*)(paramBlock + 0x06))->IsNull())
         goto Label0x18c9;
 
 //     les  bx, es:[bx + 06h]              ;Pointer to Character font definition table
 //     mov  ax, es
-    fontDefinition = ((FARPointer*)(paramBlock + 0x06))->ToPointer<uint8_t>();
-
-//     or   ax, bx
-//     je   Label0x18c9                    ;Offset 0x18c9 - No font definition found
-    if (fontDefinition == NULL)
-        goto Label0x18c9;
+    fontDefinition = ((FARPointer*)(paramBlock + 0x06))->ToPointer<uint8_t>(0x0B + 0x14);//there's a 0xFF terminated list of modes. max is 14h
 
 //     mov  ax, 0007h
     r.w.ax = 0x0007;
@@ -7008,7 +7051,7 @@ LABEL(SetVideoMode, CharacterSetNotFound);
     goto Label0x18c9;
 
 // Label0x18b5:                            ;Offset 0x18b5
-LABEL(SetVideoMode, Label0x18b5);
+LABEL(SetVideoMode, IsGraphicsMode);
 //     mov  word ptr ds:[BDA_CursorEndScanLine], 00h;Offset 0x460
     Hag::System::BDA::CursorScanLines::Get().End = 0x00;
     Hag::System::BDA::CursorScanLines::Get().Start = 0x00;
@@ -7021,11 +7064,11 @@ LABEL(SetVideoMode, Label0x18b5);
 
 //     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
 //     jne  Label0x18c9                    ;Offset 0x18c9
-    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, graphicsCharacterFontDefinition))
+    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, graphicsCharacterFontDefinition, 0x07 + 0x14))
         goto Label0x18c9;
 
 //     call SetGraphicsCharacterFont       ;Offset 0x1c8e
-    //SetGraphicsCharacterFont(graphicsCharacterFontDefinition); //Sets the pointer in the interrupt table.
+    SetGraphicsCharacterFont(graphicsCharacterFontDefinition); //Sets the pointer in the interrupt table.
 
 // Label0x18c9:                            ;Offset 0x18c9
 LABEL(SetVideoMode, Label0x18c9);

@@ -8367,7 +8367,7 @@ ApplyVideoParameters PROC NEAR          ;Offset 0x4829
     mov   al, byte ptr es:[si + 04h]    ;Load MiscOutputRegisterValues
     mov   dx, MiscellaneousWrite        ;port - 0x3c2
     out   dx, al
-    mov   ax, 0300h                     ;CR0 - Asynchronous and Synchronous reset (should server no function on Trio32/Trio64)
+    mov   ax, 0300h                     ;SR0 - Asynchronous and Synchronous reset (should server no function on Trio32/Trio64)
     mov   dx, SequenceIndex             ;port - 0x3c4
     out   dx, ax
     sti

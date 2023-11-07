@@ -79,7 +79,7 @@ struct Instance
 
     bool MarkMemory(uint32_t offset);
 
-    uint8_t& CacheMemory(uint32_t offset, uint16_t size, uint16_t count);
+    uint8_t& CacheMemory(uint32_t offset, uint32_t size, uint32_t count);
 
     IAllocator* Allocator;
     CustomPortHandler* PortHandlers;
@@ -324,12 +324,12 @@ bool Instance::MarkMemory(uint32_t offset)
 
 uint8_t dummy[16] = { 0 };
 
-uint8_t& Instance::CacheMemory(uint32_t offset, uint16_t size, uint16_t count)
+uint8_t& Instance::CacheMemory(uint32_t offset, uint32_t size, uint32_t count)
 {
     if (Allocator == NULL)
         return dummy[0];
 
-    for (uint16_t i = 0; i < size * count; ++i)
+    for (uint32_t i = 0; i < size * count; ++i)
     {
         if (MarkMemory(offset + i))
             Memory[offset + i] = SnapshotMemory[offset + i];
@@ -339,8 +339,9 @@ uint8_t& Instance::CacheMemory(uint32_t offset, uint16_t size, uint16_t count)
 
 Instance s_Instance0;
 Instance s_Instance1;
-
 Instance* s_CurrentInstance = &s_Instance0;
+MemoryAccessCallback_t s_MemoryAccessCallback = NULL;
+void* s_MemoryAccessContext = NULL;
 
 const uint32_t CustomPortHandler::s_ID = 0x62947393;
 
@@ -1630,6 +1631,12 @@ void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* con
     }
 }
 
+void SetMemoryAccessCallback(MemoryAccessCallback_t callback, void* context)
+{
+    s_MemoryAccessCallback = callback;
+    s_MemoryAccessContext = context;
+}
+
 void SelectInstance(int instance)
 {
     s_CurrentInstance = (instance & 1) == 0 ? &s_Instance0 : &s_Instance1;
@@ -1964,12 +1971,15 @@ void Write8(uint16_t port, uint8_t valueLo, uint8_t valueHi)
 
 namespace Memory
 {
-    uint8_t& Ref(uint16_t offset, uint16_t size, uint16_t count)
+    uint8_t& Ref(uint32_t offset, uint32_t size, uint32_t count)
     {
         if (s_Instance0.Allocator == NULL)
             return dummy[0];
 
-        VERBOSE(printf("Memory access 0x%04X, size %i\n", offset, size * count));
+        if (s_MemoryAccessCallback != NULL)
+            s_MemoryAccessCallback(offset, size * count, s_MemoryAccessContext);
+
+        VERBOSE(printf("Memory access 0x%08X, size %i\n", offset, size * count));
         return s_CurrentInstance->CacheMemory(offset, size, count);
     }
 }
