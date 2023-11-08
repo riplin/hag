@@ -586,7 +586,7 @@ extern uint16_t ApplyVideoParametersTest_ignoreIndexedPortsCount;
 
 int ApplyVideoParametersTest()
 {
-    int ret = 2699;
+    int ret = 2993;
 
     Support::Allocator allocator;
     S3Trio64MockConfigSetup(allocator);
@@ -1196,7 +1196,9 @@ int SetFontTest()
             (mode > 0x13 && GetVideoModeFlags(mode, flags) && ((flags & 0x01) == 0x01)))
         {
             Hag::Testing::Mock::Snapshot();
-            
+
+            //printf("\n%i: 0x%02X\n", idx, mode);
+
             SFT_VerifyCallback context =
             {
                 mode == 0x54 ? SetFontTest_memoryAccess1 : SetFontTest_memoryAccess0,
@@ -1232,7 +1234,7 @@ int SetFontTest()
 
 void SetVideoModeInternalsTest_callback(uint32_t offset, uint32_t size, void* ctx)
 {
-    printf("Memory access offset: 0x%08X, size: 0x%08X\n", offset, size);
+    //printf("Memory access offset: 0x%08X, size: 0x%08X\n", offset, size);
 }
 
 int SetVideoModeInternalsTest()
@@ -1355,7 +1357,7 @@ int SetVideoModeTest()
     for (uint8_t i = 0; i < modesCount; ++i)
     {
         uint8_t mode = modes[i];
-        printf("\n%i: 0x%02X\n", i, mode);
+        //printf("\n%i: 0x%02X\n", i, mode);
 
         SetVideoMode(mode);
 /*

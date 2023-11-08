@@ -1128,7 +1128,8 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x08 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts2[] =
@@ -1157,7 +1158,8 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x08 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts3[] =
@@ -1198,7 +1200,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x03 },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x30 },
+    { 0x03CF, 0x06, 0x0F },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts4[] =
@@ -1235,7 +1240,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x01 },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x0D },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts5[] =
@@ -1267,7 +1275,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x08 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x06, 0x0A },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts6[] =
@@ -1301,7 +1311,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts7[] =
@@ -1350,7 +1362,11 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x00 },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x00 },
+    { 0x03CF, 0x07, 0x00 },
+    { 0x03CF, 0x08, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts8[] =
@@ -1397,7 +1413,8 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts9[] =
@@ -1432,7 +1449,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
     { 0x03C0, 0x15, 0x00 },
-    { 0x03C0, 0x16, 0x0F }
+    { 0x03C0, 0x16, 0x0F },
+    { 0x03CF, 0x02, 0x0F },
+    { 0x03CF, 0x05, 0x08 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts10[] =
@@ -1474,7 +1494,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts11[] =
@@ -1511,7 +1533,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts12[] =
@@ -1554,7 +1578,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x05 },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 },
+    { 0x03CF, 0x07, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts13[] =
@@ -1595,7 +1622,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts14[] =
@@ -1638,7 +1667,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 },
+    { 0x03CF, 0x07, 0x01 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts15[] =
@@ -1681,7 +1713,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts16[] =
@@ -1717,7 +1751,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x40 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts17[] =
@@ -1762,7 +1798,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x40 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts18[] =
@@ -1810,7 +1848,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts19[] =
@@ -1857,7 +1897,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts20[] =
@@ -1905,7 +1947,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts21[] =
@@ -1953,7 +1997,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts22[] =
@@ -1990,7 +2036,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x40 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts23[] =
@@ -2033,7 +2081,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x90 },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts24[] =
@@ -2069,7 +2119,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x90 },
+    { 0x03CF, 0x07, 0x00 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexedPorts25[] =
@@ -2116,7 +2168,9 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVideoParametersTest_modifiedIndexe
     { 0x03C0, 0x12, 0x0F },
     { 0x03C0, 0x13, 0x00 },
     { 0x03C0, 0x14, 0x00 },
-    { 0x03C0, 0x15, 0x00 }
+    { 0x03C0, 0x15, 0x00 },
+    { 0x03CF, 0x05, 0x00 },
+    { 0x03CF, 0x06, 0x05 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue* ApplyVideoParametersTest_modifiedIndexedPorts[] =
@@ -2255,7 +2309,14 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts1[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x05 },
+    { 0x03CF, 0x06 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts2[] =
@@ -2288,7 +2349,14 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts2[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x05 },
+    { 0x03CF, 0x06 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts3[] =
@@ -2309,7 +2377,12 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts3[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts4[] =
@@ -2334,7 +2407,12 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts4[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts5[] =
@@ -2366,7 +2444,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts5[] =
     { 0x03B5, 0x17 },
     { 0x03B5, 0x18 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x05 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts6[] =
@@ -2394,7 +2478,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts6[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts7[] =
@@ -2407,7 +2497,11 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts7[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts8[] =
@@ -2422,7 +2516,14 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts8[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x05 },
+    { 0x03CF, 0x06 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts9[] =
@@ -2450,6 +2551,11 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts9[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts10[] =
@@ -2469,7 +2575,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts10[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts11[] =
@@ -2490,7 +2602,12 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts11[] =
     { 0x03B5, 0x13 },
     { 0x03B5, 0x18 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts12[] =
@@ -2511,7 +2628,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts12[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts13[] =
@@ -2530,7 +2653,12 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts13[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts14[] =
@@ -2556,7 +2684,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts14[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts15[] =
@@ -2573,7 +2707,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts15[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts16[] =
@@ -2587,7 +2727,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts16[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts17[] =
@@ -2602,7 +2748,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts17[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts18[] =
@@ -2627,7 +2779,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts18[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts19[] =
@@ -2646,7 +2804,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts19[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x06 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts20[] =
@@ -2672,7 +2836,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts20[] =
     { 0x03D5, 0x38 },
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x06 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts21[] =
@@ -2690,7 +2860,13 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts21[] =
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
     { 0x03C0, 0x13 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 },
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts22[] =
@@ -2706,7 +2882,69 @@ Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts22[] =
     { 0x03D5, 0x39 },
     { 0x03C0, 0x11 },
     { 0x03C0, 0x13 },
-    { 0x03C0, 0x16 }
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
+};
+
+Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts23[] =
+{
+    { 0x03C5, 0x03 },
+    { 0x03CF, 0x00 },
+    { 0x03D5, 0x00 },
+    { 0x03D5, 0x01 },
+    { 0x03D5, 0x02 },
+    { 0x03D5, 0x03 },
+    { 0x03D5, 0x08 },
+    { 0x03D5, 0x0C },
+    { 0x03D5, 0x0D },
+    { 0x03D5, 0x13 },
+    { 0x03D5, 0x18 },
+    { 0x03D5, 0x38 },
+    { 0x03D5, 0x39 },
+    { 0x03C0, 0x11 },
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
+};
+
+Hag::Testing::Mock::PortAndIndex ApplyVideoParametersTest_readIndexedPorts24[] =
+{
+    { 0x03C5, 0x03 },
+    { 0x03CF, 0x00 },
+    { 0x03D5, 0x00 },
+    { 0x03D5, 0x01 },
+    { 0x03D5, 0x02 },
+    { 0x03D5, 0x03 },
+    { 0x03D5, 0x06 },
+    { 0x03D5, 0x07 },
+    { 0x03D5, 0x08 },
+    { 0x03D5, 0x0C },
+    { 0x03D5, 0x0D },
+    { 0x03D5, 0x10 },
+    { 0x03D5, 0x12 },
+    { 0x03D5, 0x13 },
+    { 0x03D5, 0x15 },
+    { 0x03D5, 0x16 },
+    { 0x03D5, 0x18 },
+    { 0x03D5, 0x38 },
+    { 0x03D5, 0x39 },
+    { 0x03C0, 0x11 },
+    { 0x03C0, 0x16 },
+    { 0x03CF, 0x01 },
+    { 0x03CF, 0x02 },
+    { 0x03CF, 0x03 },
+    { 0x03CF, 0x04 },
+    { 0x03CF, 0x07 },
+    { 0x03CF, 0x08 }
 };
 
 Hag::Testing::Mock::PortAndIndex* ApplyVideoParametersTest_readIndexedPorts[] =
@@ -2725,11 +2963,11 @@ Hag::Testing::Mock::PortAndIndex* ApplyVideoParametersTest_readIndexedPorts[] =
     ApplyVideoParametersTest_readIndexedPorts9, //11
     ApplyVideoParametersTest_readIndexedPorts9, //12
     ApplyVideoParametersTest_readIndexedPorts10, //13
-    ApplyVideoParametersTest_readIndexedPorts4, //14
+    ApplyVideoParametersTest_readIndexedPorts24, //14
     ApplyVideoParametersTest_readIndexedPorts11, //15
     ApplyVideoParametersTest_readIndexedPorts12, //16
     ApplyVideoParametersTest_readIndexedPorts13, //17
-    ApplyVideoParametersTest_readIndexedPorts13, //18
+    ApplyVideoParametersTest_readIndexedPorts23, //18
     ApplyVideoParametersTest_readIndexedPorts14, //19
     ApplyVideoParametersTest_readIndexedPorts15, //20
     ApplyVideoParametersTest_readIndexedPorts16, //21
@@ -2779,11 +3017,11 @@ int ApplyVideoParametersTest_readIndexedPortsCount[] =
     sizeof(ApplyVideoParametersTest_readIndexedPorts9) / sizeof(Hag::Testing::Mock::PortAndIndex), //11
     sizeof(ApplyVideoParametersTest_readIndexedPorts9) / sizeof(Hag::Testing::Mock::PortAndIndex), //12
     sizeof(ApplyVideoParametersTest_readIndexedPorts10) / sizeof(Hag::Testing::Mock::PortAndIndex), //13
-    sizeof(ApplyVideoParametersTest_readIndexedPorts4) / sizeof(Hag::Testing::Mock::PortAndIndex), //14
+    sizeof(ApplyVideoParametersTest_readIndexedPorts24) / sizeof(Hag::Testing::Mock::PortAndIndex), //14
     sizeof(ApplyVideoParametersTest_readIndexedPorts11) / sizeof(Hag::Testing::Mock::PortAndIndex), //15
     sizeof(ApplyVideoParametersTest_readIndexedPorts12) / sizeof(Hag::Testing::Mock::PortAndIndex), //16
     sizeof(ApplyVideoParametersTest_readIndexedPorts13) / sizeof(Hag::Testing::Mock::PortAndIndex), //17
-    sizeof(ApplyVideoParametersTest_readIndexedPorts13) / sizeof(Hag::Testing::Mock::PortAndIndex), //18
+    sizeof(ApplyVideoParametersTest_readIndexedPorts23) / sizeof(Hag::Testing::Mock::PortAndIndex), //18
     sizeof(ApplyVideoParametersTest_readIndexedPorts14) / sizeof(Hag::Testing::Mock::PortAndIndex), //19
     sizeof(ApplyVideoParametersTest_readIndexedPorts15) / sizeof(Hag::Testing::Mock::PortAndIndex), //20
     sizeof(ApplyVideoParametersTest_readIndexedPorts16) / sizeof(Hag::Testing::Mock::PortAndIndex), //21
@@ -9267,7 +9505,7 @@ uint8_t SetPaletteTest_RAMDACRegisters[] =
 
 Hag::Testing::Mock::MemoryAccess SetFontTest_memoryAccess0[] =
 {
-    { 0x000A2000, 8192 },
+    { 0x000A0000, 8192 },
     { 0x000A03A0, 16 },
     { 0x000A0440, 16 },
     { 0x000A0560, 16 },
@@ -9291,7 +9529,7 @@ int SetFontTest_memoryAccessCount0 = sizeof(SetFontTest_memoryAccess0) / sizeof(
 
 Hag::Testing::Mock::MemoryAccess SetFontTest_memoryAccess1[] =
 {
-    { 0x000A2000, 8192 }
+    { 0x000A0000, 8192 }
 };
 
 int SetFontTest_memoryAccessCount1 = sizeof(SetFontTest_memoryAccess1) / sizeof(Hag::Testing::Mock::MemoryAccess);
@@ -9316,7 +9554,6 @@ Hag::Testing::Mock::PortAndIndex SetFontTest_readIndexedPorts2[] =
     { 0x03C5, 0x0002 },
     { 0x03C5, 0x0004 },
     { 0x03CF, 0x0004 },
-    { 0x03CF, 0x0005 },
     { 0x03CF, 0x0006 }
 };
 
@@ -9342,7 +9579,7 @@ int SetFontTest_readIndexedPortsCount[] =
 
 Hag::Testing::Mock::PortAndIndexAndValue SetFontTest_modifiedIndexedPorts0[] =
 {
-    { 0, 0, 0, }
+    { 0x03CF, 0x0005, 0x10 },
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue SetFontTest_modifiedIndexedPorts1[] =
