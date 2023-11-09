@@ -75,4 +75,15 @@ void SYS_WritePortShort(uint16_t reg, uint16_t val);
     "out dx, ax"        \
     parm [dx] [ax];
 
+void SYS_WritePortDouble(uint16_t reg, uint32_t val);
+#pragma aux SYS_WritePortDouble = \
+    "out dx, eax"       \
+    parm [dx] [eax];
+
+uint32_t SYS_ReadPortDouble(uint16_t reg);
+#pragma aux SYS_ReadPortDouble = \
+    "in eax, dx"        \
+    parm [dx]           \
+    value [eax];
+
 #endif
