@@ -45,6 +45,16 @@ inline void SYS_WritePortShort(uint16_t reg, uint16_t val)
     Hag::Testing::Mock::Port::Write16(reg, val);
 }
 
+inline void SYS_WritePortDouble(uint16_t reg, uint32_t val)
+{
+    SYS_WritePortShort(reg, uint16_t(val));
+    SYS_WritePortShort(reg + 2, uint16_t(val >> 16));
+}
+
+inline uint32_t SYS_ReadPortDouble(uint16_t reg)
+{
+    return uint32_t(SYS_ReadPortShort(reg)) | (uint32_t(SYS_ReadPortShort(reg + 2)) << 16);
+}
 
 #else
 

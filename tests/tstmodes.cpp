@@ -2,10 +2,12 @@
 
 #include <stdio.h>
 #include <hag/types.h>
+#include <hag/farptr.h>
 #include <i86.h>
 #include <string.h>
 #include <hag/system/pci.h>
 #include <hag/system/sysasm.h>
+#include <hag/support/allocatr.h>
 #include <hag/drivers/vga/vidmodes.h>
 #include <hag/drivers/vga/crtc/verrtcen.h>
 #include <hag/drivers/vga/sqrc/enwrtpl.h>
@@ -165,18 +167,18 @@ void drawTestPattern1bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     uint16_t pixelWidth = width >> 3;
     uint16_t divisor = pixelWidth >> 2;//4 color bands
-    for (uint16_t y = 0; y < height; ++y)
+    for (uint32_t y = 0; y < height; ++y)
     {
         uint16_t realY = y >> 1;
         uint8_t* realMemory = (y & 1) == 0x00 ? videoMemory : videoMemory + 0x2000;
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0xFF : borderColorY;
-        borderColorY = y == height - 1 ? 0xFF : borderColorY;
-        for (uint16_t x = 0; x < pixelWidth; ++x)
+        borderColorY = y == (height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x80 : 0x00;
-            borderColor |= x == pixelWidth - 1 ? 0x01 : 0x00;
+            borderColor |= x == (pixelWidth - 1) ? 0x01 : 0x00;
             uint8_t color = 0;
             switch((x / divisor) & 0x0003)
             {
@@ -201,18 +203,18 @@ void drawTestPattern2bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     uint16_t pixelWidth = width >> 2;
     uint16_t divisor = pixelWidth >> 2;//4 color bands
-    for (uint16_t y = 0; y < height; ++y)
+    for (uint32_t y = 0; y < height; ++y)
     {
         uint16_t realY = y >> 1;
         uint8_t* realMemory = (y & 1) == 0x00 ? videoMemory : videoMemory + 0x2000;
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0xFF : borderColorY;
-        borderColorY = y == height - 1 ? 0xFF : borderColorY;
-        for (uint16_t x = 0; x < pixelWidth; ++x)
+        borderColorY = y == (height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0xC0 : 0x00;
-            borderColor |= x == pixelWidth - 1 ? 0x03 : 0x00;
+            borderColor |= x == (pixelWidth - 1) ? 0x03 : 0x00;
             uint8_t color = x / divisor;
             color |= color << 2;
             color |= color << 4;
@@ -225,16 +227,16 @@ void drawTestPattern4bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     uint16_t pixelWidth = width >> 3;
     uint16_t divisor = pixelWidth >> 4;//16 color bands
-    for (uint16_t y = 0; y < height; ++y)
+    for (uint32_t y = 0; y < height; ++y)
     {
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0xFF : borderColorY;
-        borderColorY = y == height - 1 ? 0xFF : borderColorY;
-        for (uint16_t x = 0; x < pixelWidth; ++x)
+        borderColorY = y == (height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x80 : 0x00;
-            borderColor |= x == pixelWidth - 1 ? 0x01 : 0x00;
+            borderColor |= x == (pixelWidth - 1) ? 0x01 : 0x00;
             uint8_t color = x / divisor;
             uint8_t plane0 = ((color & 1) == 0 ? 0x00 : 0xFF) | borderColor;
             uint8_t plane1 = ((color & 2) == 0 ? 0x00 : 0xFF) | borderColor;
@@ -258,16 +260,16 @@ void drawTestPattern4bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void drawTestPattern8bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    for (uint16_t y = 0; y < height; ++y)
+    for (uint32_t y = 0; y < height; ++y)
     {
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0x0F : borderColorY;
-        borderColorY = y == height - 1 ? 0x0F : borderColorY;
-        for (uint16_t x = 0; x < width; ++x)
+        borderColorY = y == (height - 1) ? 0x0F : borderColorY;
+        for (uint32_t x = 0; x < width; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x0F : 0x00;
-            borderColor |= x == width - 1 ? 0x0F : 0x00;
+            borderColor |= x == (width - 1) ? 0x0F : 0x00;
             uint8_t color = borderColor == 0x00 ? uint8_t(x) : borderColor;
             videoMemory[y * width + x] = color;
         }
@@ -333,7 +335,7 @@ void drawTestPatternText(uint16_t width, uint16_t height, uint8_t* videoMemory)
     screen[(height - 1) * width].Attr = 0x1E;
     screen[(height - 1) * width + (width - 1)].Char = 0xBC;
     screen[(height - 1) * width + (width - 1)].Attr = 0x1E;
-    for (uint16_t x = 1; x < width - 1; ++x)
+    for (uint32_t x = 1; x < width - 1; ++x)
     {
         screen[x].Char = 0xCD;
         screen[x].Attr = 0x1E;
@@ -341,7 +343,7 @@ void drawTestPatternText(uint16_t width, uint16_t height, uint8_t* videoMemory)
         screen[(height - 1) * width + x].Attr = 0x1E;
     }
 
-    for (uint16_t y = 1; y < height - 1; ++y)
+    for (uint32_t y = 1; y < height - 1; ++y)
     {
         screen[y * width].Char = 0xBA;
         screen[y * width].Attr = 0x1E;
@@ -349,9 +351,9 @@ void drawTestPatternText(uint16_t width, uint16_t height, uint8_t* videoMemory)
         screen[y * width + (width - 1)].Attr = 0x1E;
     }
 
-    for (uint16_t y = 1; y < height - 1; ++y)
+    for (uint32_t y = 1; y < height - 1; ++y)
     {
-        for (uint16_t x = 1; x < width - 1; ++x)
+        for (uint32_t x = 1; x < width - 1; ++x)
         {
             uint8_t ch = (width - 2) * (y - 1) + (x - 1);
             uint8_t fcolor = x / divisor;
@@ -365,18 +367,69 @@ void drawTestPatternText(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void drawTestPattern15bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
+    uint16_t* mem = (uint16_t*)videoMemory;
+
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint16_t borderColorY = 0x0000;
+        borderColorY = y == 0 ? 0x7FFF : borderColorY;
+        borderColorY = y == (height - 1) ? 0x7FFF : borderColorY;
+        for (uint32_t x = 0; x < width; ++x)
+        {
+            uint16_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0x7FFF : 0x00;
+            borderColor |= x == (width - 1) ? 0x7FFF : 0x00;
+            uint32_t blue = ((y + 1) * 0x1F) / height;
+            uint32_t red = 0x1f - blue;
+            uint32_t green = ((x + 1) * 0x1F) / width;
+            uint16_t color = uint16_t(blue << 10) | uint16_t(green << 5) | uint16_t(red);
+            mem[y * width + x] = borderColor == 0x0000 ? color : borderColor;
+        }
+    }
 }
 
 void drawTestPattern16bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-}
-
-void drawTestPattern24bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
-{
+    uint16_t* mem = (uint16_t*)videoMemory;
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint16_t borderColorY = 0x0000;
+        borderColorY = y == 0 ? 0xFFFF : borderColorY;
+        borderColorY = y == (height - 1) ? 0xFFFF : borderColorY;
+        for (uint32_t x = 0; x < width; ++x)
+        {
+            uint16_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0xFFFF : 0x00;
+            borderColor |= x == (width - 1) ? 0xFFFF : 0x00;
+            uint32_t blue = ((y + 1) * 0x1F) / height;
+            uint32_t red = 0x1f - blue;
+            uint32_t green = ((x + 1) * 0x3F) / width;
+            uint16_t color = uint16_t(blue << 11) | uint16_t(green << 5) | uint16_t(red);
+            mem[y * width + x] = borderColor == 0x0000 ? color : borderColor;
+        }
+    }
 }
 
 void drawTestPattern32bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
+    uint32_t* mem = (uint32_t*)videoMemory;
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint32_t borderColorY = 0x00000000;
+        borderColorY = y == 0 ? 0xFFFFFFFF : borderColorY;
+        borderColorY = y == (height - 1) ? 0xFFFFFFFF : borderColorY;
+        for (uint32_t x = 0; x < width; ++x)
+        {
+            uint32_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0xFFFFFFFF : 0x00;
+            borderColor |= x == (width - 1) ? 0xFFFFFFFF : 0x00;
+            uint32_t blue = ((y + 1) * 0xFF) / height;
+            uint32_t red = 0xFF - blue;
+            uint32_t green = ((x + 1) * 0xFF) / width;
+            uint32_t color = (blue << 16) | (green << 8) | (red);
+            mem[y * width + x] = borderColor == 0x0000 ? color : borderColor;
+        }
+    }
 }
 
 typedef void (*TestPatternFunc)(uint16_t width, uint16_t height, uint8_t* videoMemory);
@@ -384,6 +437,7 @@ typedef void (*TestPatternFunc)(uint16_t width, uint16_t height, uint8_t* videoM
 struct ModeTest
 {
     uint8_t mode;
+    uint16_t vesaMode;
     uint16_t width;
     uint16_t height;
     uint8_t* address;
@@ -428,107 +482,134 @@ struct ModeTest
 
 ModeTest modeTests[] =
 {
-    /*
-    {Hag::VGA::VideoMode::T40x25x16C, 40, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::VGA::VideoMode::T80x25x16G, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::VGA::VideoMode::T80x25x16C, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::VGA::VideoMode::T80x25x2M, 80, 25, (uint8_t*)0xB0000, drawTestPatternText},
-    {Hag::VGA::VideoMode::G320x200x4C, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
-    {Hag::VGA::VideoMode::G320x200x4G, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
-    {Hag::VGA::VideoMode::G640x200x2M, 640, 200, (uint8_t*)0xB8000, drawTestPattern1bpp},
-    {Hag::VGA::VideoMode::G320x200x16C, 320, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::VGA::VideoMode::G640x200x16C, 640, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    //{Hag::VGA::VideoMode::G640x350x2M, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
-    {Hag::VGA::VideoMode::G640x350x4C, 640, 350, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    //{Hag::VGA::VideoMode::G640x480x2M, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
-    {Hag::VGA::VideoMode::G640x480x16C, 640, 480, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::VGA::VideoMode::G320x200x256C, 320, 200, (uint8_t*)0xA0000, drawTestPattern8bpp}
-    */
-    {Hag::S3::VideoMode::P640x480x256C, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
-    {Hag::S3::VideoMode::P800x600x16C, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
-    {Hag::S3::VideoMode::P800x600x256C, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
-    {Hag::S3::VideoMode::P1024x768x16C, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
-    {Hag::S3::VideoMode::P1024x768x256C, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
-    {Hag::S3::VideoMode::P1152x864x256C, 1152, 864, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x207
-    {Hag::S3::VideoMode::P1280x1024x16C, 1280, 1024, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x208
-    {Hag::S3::VideoMode::P640x400x16M, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
-    {Hag::S3::VideoMode::T132x43x16C, 132, 43, NULL, drawTestPatternText}, //VESA Mode 0x10A
-    {Hag::S3::VideoMode::T132x25x16C, 132, 25, NULL, drawTestPatternText}, //VESA Mode 0x109
-    {Hag::S3::VideoMode::G640x400x256C, 640, 400, NULL, drawTestPattern8bpp}, //VESA Mode 0x100
-    {Hag::S3::VideoMode::G640x480x256C, 640, 480, NULL, drawTestPattern8bpp}, //VESA Mode 0x101
-    {Hag::S3::VideoMode::G800x600x16C, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
-    {Hag::S3::VideoMode::G800x600x256C, 800, 600, NULL, drawTestPattern8bpp}, //VESA Mode 0x103
-    {Hag::S3::VideoMode::G1024x768x16C, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
-    {Hag::S3::VideoMode::G1024x768x256C, 1024, 768, NULL, drawTestPattern8bpp}, //VESA Mode 0x105
-    {Hag::S3::VideoMode::G1280x1024x16C, 1280, 1024, NULL, drawTestPattern4bpp}, //VESA Mode 0x106
-    {Hag::S3::VideoMode::G1280x1024x256C, 1280, 1024, NULL, drawTestPattern8bpp}, //VESA Mode 0x107
-    {Hag::S3::VideoMode::G640x480x32K, 640, 480, NULL, drawTestPattern15bpp}, //VESA Mode 0x110
-    {Hag::S3::VideoMode::G640x480x64K, 640, 480, NULL, drawTestPattern16bpp}, //VESA Mode 0x111
-    {Hag::S3::VideoMode::G640x480x16M, 640, 480, NULL, drawTestPattern32bpp}, //VESA Mode 0x112
-    {Hag::S3::VideoMode::G800x600x32K, 800, 600, NULL, drawTestPattern15bpp}, //VESA Mode 0x113
-    {Hag::S3::VideoMode::G800x600x64K, 800, 600, NULL, drawTestPattern16bpp}, //VESA Mode 0x114
-    {Hag::S3::VideoMode::G800x600x16M, 800, 600, NULL, drawTestPattern32bpp}, //VESA Mode 0x115
-    {Hag::S3::VideoMode::G1024x768x32K, 1024, 768, NULL, drawTestPattern15bpp}, //VESA Mode 0x116
-    {Hag::S3::VideoMode::G1024x768x64K, 1024, 768, NULL, drawTestPattern16bpp}, //VESA Mode 0x117
-    {Hag::S3::VideoMode::G1024x768x16M, 1024, 768, NULL, drawTestPattern32bpp}, //VESA Mode 0x118
-    {Hag::S3::VideoMode::G1280x1024x32K, 1280, 1024, NULL, drawTestPattern15bpp}, //VESA Mode 0x119
-    {Hag::S3::VideoMode::G1280x1024x64K, 1280, 1024, NULL, drawTestPattern16bpp}, //VESA Mode 0x11A
-    {Hag::S3::VideoMode::P1600x1200x256C, 1600, 1200, NULL, drawTestPattern8bpp} //VESA Mode 0x120
+    //Legacy modes:
+    {Hag::VGA::VideoMode::T40x25x16C, 0x00, 40, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::VGA::VideoMode::T80x25x16G, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::VGA::VideoMode::T80x25x16C, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::VGA::VideoMode::T80x25x2M, 0x00, 80, 25, (uint8_t*)0xB0000, drawTestPatternText},
+    {Hag::VGA::VideoMode::G320x200x4C, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
+    {Hag::VGA::VideoMode::G320x200x4G, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
+    {Hag::VGA::VideoMode::G640x200x2M, 0x00, 640, 200, (uint8_t*)0xB8000, drawTestPattern1bpp},
+    {Hag::VGA::VideoMode::G320x200x16C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::VGA::VideoMode::G640x200x16C, 0x00, 640, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    //{Hag::VGA::VideoMode::G640x350x2M, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::VGA::VideoMode::G640x350x4C, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    //{Hag::VGA::VideoMode::G640x480x2M, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::VGA::VideoMode::G640x480x16C, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::VGA::VideoMode::G320x200x256C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern8bpp},
+
+    //VESA modes:
+    {Hag::S3::VideoMode::G640x400x256C, 0x100, 640, 400, NULL, drawTestPattern8bpp}, //VESA Mode 0x100
+    {Hag::S3::VideoMode::G640x480x256C, 0x101, 640, 480, NULL, drawTestPattern8bpp}, //VESA Mode 0x101
+    //{Hag::S3::VideoMode::G800x600x16C, 0x102, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
+    {Hag::S3::VideoMode::G800x600x256C, 0x103, 800, 600, NULL, drawTestPattern8bpp}, //VESA Mode 0x103
+    //{Hag::S3::VideoMode::G1024x768x16C, 0x104, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
+    {Hag::S3::VideoMode::G1024x768x256C, 0x105, 1024, 768, NULL, drawTestPattern8bpp}, //VESA Mode 0x105
+    //{Hag::S3::VideoMode::G1280x1024x16C, 0x106, 1280, 1024, NULL, drawTestPattern4bpp}, //VESA Mode 0x106
+    //{Hag::S3::VideoMode::G1280x1024x256C, 0x107, 1280, 1024, NULL, drawTestPattern8bpp}, //VESA Mode 0x107
+    {Hag::S3::VideoMode::T132x43x16C, 0x10A, 132, 43, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x10A
+    //Doesn't work? {Hag::S3::VideoMode::T132x25x16C, 0x109, 132, 25, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x109
+    {Hag::S3::VideoMode::G640x480x32K, 0x110, 640, 480, NULL, drawTestPattern15bpp}, //VESA Mode 0x110
+    {Hag::S3::VideoMode::G640x480x64K, 0x111, 640, 480, NULL, drawTestPattern16bpp}, //VESA Mode 0x111
+    {Hag::S3::VideoMode::G640x480x16M, 0x112, 640, 480, NULL, drawTestPattern32bpp}, //VESA Mode 0x112
+    {Hag::S3::VideoMode::G800x600x32K, 0x113, 800, 600, NULL, drawTestPattern15bpp}, //VESA Mode 0x113
+    {Hag::S3::VideoMode::G800x600x64K, 0x114, 800, 600, NULL, drawTestPattern16bpp}, //VESA Mode 0x114
+    {Hag::S3::VideoMode::G800x600x16M, 0x115, 800, 600, NULL, drawTestPattern32bpp}, //VESA Mode 0x115
+    {Hag::S3::VideoMode::G1024x768x32K, 0x116, 1024, 768, NULL, drawTestPattern15bpp}, //VESA Mode 0x116
+    {Hag::S3::VideoMode::G1024x768x64K, 0x117, 1024, 768, NULL, drawTestPattern16bpp}, //VESA Mode 0x117
+    // Not enough memory {Hag::S3::VideoMode::G1024x768x16M, 0x118, 1024, 768, NULL, drawTestPattern32bpp}, //VESA Mode 0x118
+    // Not enough memory {Hag::S3::VideoMode::G1280x1024x32K, 0x119, 1280, 1024, NULL, drawTestPattern15bpp}, //VESA Mode 0x119
+    // Not enough memory {Hag::S3::VideoMode::G1280x1024x64K, 0x11A, 1280, 1024, NULL, drawTestPattern16bpp}, //VESA Mode 0x11A
+
+    //Proprietary modes:
+    //Out of range {Hag::S3::VideoMode::P1600x1200x256C, 0x120, 1600, 1200, NULL, drawTestPattern8bpp}, //VESA Mode 0x120
+    //Corrupt rendering? {Hag::S3::VideoMode::P640x480x256C, 0x201, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
+    //{Hag::S3::VideoMode::P800x600x16C, 0x202, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
+    //{Hag::S3::VideoMode::P800x600x256C, 0x203, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
+    //{Hag::S3::VideoMode::P1024x768x16C, 0x204, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
+    //{Hag::S3::VideoMode::P1024x768x256C, 0x205, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
+    //{Hag::S3::VideoMode::P1152x864x256C, 0x207, 1152, 864, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x207
+    //{Hag::S3::VideoMode::P1280x1024x16C, 0x208, 1280, 1024, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x208
+    //{Hag::S3::VideoMode::P640x400x16M, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
 };
 
-void scanbuscallback(uint8_t bus, uint8_t slot, void* context)
+uint8_t* GetLinearFrameBuffer(uint16_t vendorId, uint16_t deviceId)
 {
-    uint16_t vendorId = Hag::System::PCI::GetVendorId(bus, slot, 0);
-    uint16_t deviceId = Hag::System::PCI::GetDeviceId(bus, slot, 0);
-    printf("VendorId: 0x%04X, DeviceId: 0x%04X\n", vendorId, deviceId);
+    uint8_t* linearFrameBuffer = 0x00000000;
+    uint8_t bus = 0xFF;
+    uint8_t slot = 0xFF;
+    uint8_t function = 0xFF;
+    if (Hag::System::PCI::FindDevice(vendorId, deviceId, bus, slot, function))
+        linearFrameBuffer = (uint8_t*)Hag::System::PCI::Read32(bus, slot, function, Hag::System::PCI::Header0::BaseAddress0);
 
-    if (vendorId == 0x5333 && (deviceId == 0x8810 || deviceId == 0x8811))
-    {
-        for (uint16_t i = 0; i < 0x10; ++i)
-        {
-            uint32_t val = Hag::System::PCI::Read32(bus, slot, 0, i << 2);
-            printf("    reg %2i, offset 0x%02X, value 0x%08X", i, i << 2, val);
-        }
-    }
+    return linearFrameBuffer;
 }
 
 int main(void)
 {
-    //regdump("start.txt");
-    //memdump("start.bin");
+    uint8_t* linearFrameBuffer = GetLinearFrameBuffer(0x5333, 0x8811);
+    if (linearFrameBuffer == NULL)
+        linearFrameBuffer = GetLinearFrameBuffer(0x5333, 0x8810);
 
-    Hag::System::PCI::ScanBus(0, scanbuscallback, NULL);
-
-    /*
-    REGS r;
+    REGPACK r;
     memset(&r, 0, sizeof(r));
-    
+    char filename[50];
     for (uint16_t i = 0; i < sizeof(modeTests) / sizeof(ModeTest); ++i)
     {
-        SetVideoMode(modeTests[i].mode);
-        //r.w.ax = modeTests[i].mode;
-        //int386(0x10, &r, &r);
-        //regdump("bios13.txt");
-        //memdump("bios13.bin");
+        /*
+        r.w.ax = 0x0003;
+        intr(0x10, &r);
 
-        modeTests[i].DrawTestPattern(modeTests[i].width, modeTests[i].height, modeTests[i].address);
+        if (modeTests[i].vesaMode == 0x00)
+        {
+            r.h.ah = 0x00;
+            r.h.al = modeTests[i].mode;
+            intr(0x10, &r);
+        }
+        else
+        {
+            r.w.ax = 0x4f02;
+            r.w.bx = modeTests[i].vesaMode;
+            intr(0x10, &r);
+        }
+        sprintf(filename, "bios%02X.txt", modeTests[i].mode);
+        regdump(filename);
+
+        r.w.ax = 0x0003;
+        intr(0x10, &r);
+
+        SetVideoMode(modeTests[i].mode);
+
+        sprintf(filename, "me%02X.txt", modeTests[i].mode);
+        regdump(filename);
+        */
+
+
+        uint8_t* address = modeTests[i].address;
+        if (modeTests[i].address == NULL)
+            address = linearFrameBuffer;
+        
+        if (address == NULL)
+            continue;
+
+        if (modeTests[i].vesaMode == 0x00)
+            continue;
+
+        r.w.ax = 0x4f02;
+        r.w.bx = modeTests[i].vesaMode;
+        intr(0x10, &r);
+
+        //SetVideoMode(modeTests[i].mode);
+        modeTests[i].DrawTestPattern(modeTests[i].width, modeTests[i].height, address);
         getchar();
     }
 
-    r.w.ax = 0x0003;
-    int386(0x10, &r, &r);
-    */
-    //regdump("bios03.txt");
-    //memdump("bios03.bin");
-
-    //SetVideoMode(0x13);//320x200x256C
-    //regdump("me13.txt");
-    //memdump("me13.bin");
-
+    //SetVideoMode(Hag::S3::VideoMode::G1024x768x64K);
+    //drawTestPattern16bpp(1024, 768, linearFrameBuffer);
     //getchar();
 
-    //SetVideoMode(0x03);//80x25x16C
-    //regdump("me03.txt");
-    //memdump("me03.bin");
+    //r.w.ax = 0x0003;
+    //intr(0x10, &r);
 
+    SetVideoMode(0x03);//80x25x16C
 }

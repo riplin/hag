@@ -370,8 +370,10 @@ inline uint8_t GetHeader1SecondaryBus(uint8_t bus, uint8_t device, uint8_t funct
     return Read8(bus, device, function, Header1::SecondaryBus);
 }
 
-typedef void (*ScanBusCallback_t)(uint8_t bus, uint8_t slot, void* context);
+typedef bool (*ScanBusCallback_t)(uint8_t bus, uint8_t slot, uint8_t function, void* context);
 
 void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context);
+
+bool FindDevice(uint16_t vendorId, uint16_t deviceId, uint8_t& bus, uint8_t& slot, uint8_t& function);
 
 }}}

@@ -528,6 +528,7 @@ int SetTextModeBiosDataTest()
     for (uint8_t i = 0; i < modesCount; ++i)
     {
         uint8_t mode = modes[i];
+        //printf("\n%i: 0x%02X\n", i, mode);
 
         //The following code replicates parts of the SetVideoMode function
         
@@ -555,7 +556,12 @@ int SetTextModeBiosDataTest()
             SetTextModeBiosDataTest_Verify[i].modeDataIndex == modeDataIndex)
             --ret;
         else
-        printf("SetTextModeBiosDataTest failed! 0x%02X", mode);
+        {
+            printf("SetTextModeBiosDataTest failed! 0x%02X\n", mode);
+            printf("font: 0x%08X - 0x%08X\n", SetTextModeBiosDataTest_Verify[i].font, selectedFont);
+            printf("overrideTable: 0x%08X - 0x%08X\n", SetTextModeBiosDataTest_Verify[i].overrideTable, overrideTable);
+            printf("modeDataIndex: %i - %i\n", SetTextModeBiosDataTest_Verify[i].modeDataIndex, modeDataIndex);
+        }
 
         uint8_t modeIdx = SetTextModeBiosDataTest_idxToData[i];
 
@@ -777,7 +783,7 @@ extern uint16_t ConfigureExtraVESAModeSettingsTest_ignorePortsCount;
 
 int ConfigureExtraVESAModeSettingsTest()
 {
-    int ret = 1674;
+    int ret = 1756;
 
     Support::Allocator allocator;
     S3Trio64MockConfigSetup(allocator);
@@ -799,6 +805,8 @@ int ConfigureExtraVESAModeSettingsTest()
         {
             modeData = ModeData[modeDataIndex];
 
+            //printf("\n%i: 0x%02X, idx: %i\n", i, mode, idx);
+
             ConfigureExtraVESAModeSettings(crtcPort, modeData);
             
             ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, ConfigureExtraVESAModeSettingsTest_modifiedPorts[idx],
@@ -818,7 +826,7 @@ int ConfigureExtraVESAModeSettingsTest()
             Hag::Testing::Mock::Reset();
 
             ++idx;
-            ++modeDataIndex;
+            --modeDataIndex;
             //modeData points to progressively lower frequency versions. top bit of byte 2 is terminate.
         } while ((modeData[0x02] & 0x80) == 0x00);
 
@@ -962,7 +970,7 @@ extern uint16_t ApplyVESAOverrideDataTest_ignoreIndexedPortsCount;
 
 int ApplyVESAOverrideDataTest()
 {
-    int ret = 3400;
+    int ret = 3392;
 
     Support::Allocator allocator;
     S3Trio64MockConfigSetup(allocator);
