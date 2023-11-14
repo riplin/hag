@@ -58,53 +58,6 @@ namespace VerticalRetraceEnd
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::VerticalRetraceEnd, CRTControllerData_t(value));
     }
 
-    inline uint4_t GetVerticalRetraceEndCount(VerticalRetraceEnd_t value)
-    {
-        return (value & VerticalRetraceEndCount) >> Shift::VerticalRetraceEndCount;
-    }
-
-    inline uint1_t GetClearVerticalRetraceInterrupt(VerticalRetraceEnd_t value)
-    {
-        return (value & ClearVerticalRetraceInterrupt) >> Shift::ClearVerticalRetraceInterrupt;
-    }
-
-    inline uint1_t GetDisableVerticalInterrupt(VerticalRetraceEnd_t value)
-    {
-        return (value & DisableVerticalInterrupt) >> Shift::DisableVerticalInterrupt;
-    }
-
-    inline uint1_t GetRefreshCycleSelect(VerticalRetraceEnd_t value)
-    {
-        return (value & RefreshCycleSelect) >> Shift::RefreshCycleSelect;
-    }
-
-    inline uint1_t GetLockWritesToCRTController(VerticalRetraceEnd_t value)
-    {
-        return (value & LockWritesToCRTController) >> Shift::LockWritesToCRTController;
-    }
-    
-    inline VerticalRetraceEnd_t SetVerticalRetraceEndCount(uint4_t value)
-    {
-        return (value << Shift::VerticalRetraceEndCount) & VerticalRetraceEndCount;
-    }
-    
-    inline VerticalRetraceEnd_t SetClearVerticalRetraceInterrupt(uint1_t value)
-    {
-        return (value << Shift::ClearVerticalRetraceInterrupt) & ClearVerticalRetraceInterrupt;
-    }
-    inline VerticalRetraceEnd_t SetDisableVerticalInterrupt(uint1_t value)
-    {
-        return (value << Shift::DisableVerticalInterrupt) & DisableVerticalInterrupt;
-    }
-    inline VerticalRetraceEnd_t SetRefreshCycleSelect(uint1_t value)
-    {
-        return (value << Shift::RefreshCycleSelect) & RefreshCycleSelect;
-    }
-    inline VerticalRetraceEnd_t SetLockWritesToCRTController(uint1_t value)
-    {
-        return (value << Shift::LockWritesToCRTController) & LockWritesToCRTController;
-    }
-
     inline VerticalRetraceEnd_t Unlock(Register_t controllerIndexRegister)
     {
         VerticalRetraceEnd_t value = Read(controllerIndexRegister);

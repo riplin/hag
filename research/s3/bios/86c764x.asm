@@ -952,9 +952,9 @@ VideoParametersTable STRUCT ;Struct size = 64 bytes
     VideoBufferSize WORD ?                              ;0x03
     SequencerRegisters DWORD ?          ;SR1-SR4        ;0x05
     MiscOutputRegisterValues BYTE ?                     ;0x09
-    CRTCRegisters BYTE 25 DUP (?)       ;CR0-CR18       ;0x10
-    AttributeControllerRegs BYTE 20 DUP (?)
-    GraphicsControllerRegs BYTE 9 DUP (?) ;GR0-GR8
+    CRTCRegisters BYTE 25 DUP (?)       ;CR0-CR18       ;0x0A
+    AttributeControllerRegs BYTE 20 DUP (?)             ;0x23
+    GraphicsControllerRegs BYTE 9 DUP (?) ;GR0-GR8      ;0x37
 VideoParametersTable ENDS
 
 VESAVideoParameters132x43 VideoParametersTable <>

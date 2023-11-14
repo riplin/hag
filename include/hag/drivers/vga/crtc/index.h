@@ -35,16 +35,6 @@ namespace CRTControllerIndex
         SYS_WritePortByte(controllerIndexRegister, value);
     }
 
-    inline uint8_t GetCRTCRegisterIndex(CRTControllerIndex_t value)
-    {
-        return (value & CRTCRegisterIndex) >> Shift::CRTCRegisterIndex;
-    }
-
-    inline CRTControllerIndex_t SetCRTCRegisterIndex(uint8_t value)
-    {
-        return CRTControllerIndex_t((value << Shift::CRTCRegisterIndex) & CRTCRegisterIndex);
-    }
-    
 }
 
 }}

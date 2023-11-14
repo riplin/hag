@@ -95,55 +95,6 @@ namespace GraphicsControllerMode
         GraphicsControllerData::Write(GraphicsControllerRegister::GraphicsControllerMode, GraphicsControllerData_t(value));
     }
 
-    inline uint2_t GetSelectWriteMode(GraphicsControllerMode_t value)
-    {
-        return (value & SelectWriteMode) >> Shift::SelectWriteMode;
-    }
-
-    inline uint1_t GetEnableReadCompare(GraphicsControllerMode_t value)
-    {
-        return (value & EnableReadCompare) >> Shift::EnableReadCompare;
-    }
-
-    inline uint1_t GetOddEvenAddressing(GraphicsControllerMode_t value)
-    {
-        return (value & OddEvenAddressing) >> Shift::OddEvenAddressing;
-    }
-
-    inline uint1_t GetSelectEvenOddShiftMode(GraphicsControllerMode_t value)
-    {
-        return (value & SelectEvenOddShiftMode) >> Shift::SelectEvenOddShiftMode;
-    }
-
-    inline uint1_t GetSelect256ColorShiftMode(GraphicsControllerMode_t value)
-    {
-        return (value & Select256ColorShiftMode) >> Shift::Select256ColorShiftMode;
-    }
-
-    inline GraphicsControllerMode_t SetSelectWriteMode(uint2_t value)
-    {
-        return GraphicsControllerMode_t(value << Shift::SelectWriteMode) & SelectWriteMode;
-    }
-
-    inline GraphicsControllerMode_t SetEnableReadCompare(uint1_t value)
-    {
-        return GraphicsControllerMode_t(value << Shift::EnableReadCompare) & EnableReadCompare;
-    }
-
-    inline GraphicsControllerMode_t SetOddEvenAddressing(uint1_t value)
-    {
-        return GraphicsControllerMode_t(value << Shift::OddEvenAddressing) & OddEvenAddressing;
-    }
-
-    inline GraphicsControllerMode_t SetSelectEvenOddShiftMode(uint1_t value)
-    {
-        return GraphicsControllerMode_t(value << Shift::SelectEvenOddShiftMode) & SelectEvenOddShiftMode;
-    }
-
-    inline GraphicsControllerMode_t SetSelect256ColorShiftMode(uint1_t value)
-    {
-        return GraphicsControllerMode_t(value << Shift::Select256ColorShiftMode) & Select256ColorShiftMode;
-    }
 }
 
 }}}

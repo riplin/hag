@@ -63,7 +63,7 @@ namespace Hardware
 
     ChipId_t IdentifyChip();
     Driver_t DriverToUse(ChipId_t chipId);
-    inline bool InColorMode() { return VGA::MiscellaneousOutput::GetIOAddressSelect(VGA::MiscellaneousOutput::Read()) != 0; }
+    inline bool InColorMode() { return (VGA::MiscellaneousOutput::Read() & VGA::MiscellaneousOutput::IOAddressSelect) != 0; }
 }
 
 /*

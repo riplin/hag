@@ -32,11 +32,6 @@ namespace InputStatus0
         return InputStatus0_t(SYS_ReadPortByte(Register::InputStatus0));
     }
 
-    inline uint1_t GetMonitorSenseStatus(InputStatus0_t value)
-    {
-        return (value & MonitorSenseStatus) >> Shift::MonitorSenseStatus;
-    }
-    
 }
 
 }}

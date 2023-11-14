@@ -42,56 +42,6 @@ namespace ClockingMode
         SequencerData::Write(SequencerRegister::ClockingMode, SequencerData_t(value));
     }
 
-    inline uint1_t GetDotClockSelect(ClockingMode_t value)
-    {
-        return (value & DotClockSelect) >> Shift::DotClockSelect;
-    }
-
-    inline uint1_t GetLoadSerializersEverySecondCharacterClock(ClockingMode_t value)
-    {
-        return (value & LoadSerializersEverySecondCharacterClock) >> Shift::LoadSerializersEverySecondCharacterClock;
-    }
-
-    inline uint1_t GetInternalCharacterClock(ClockingMode_t value)
-    {
-        return (value & InternalCharacterClock) >> Shift::InternalCharacterClock;
-    }
-    
-    inline uint1_t GetLoadSerializersEveryFourthCharacterClock(ClockingMode_t value)
-    {
-        return (value & LoadSerializersEveryFourthCaracterClock) >> Shift::LoadSerializersEveryFourthCaracterClock;
-    }
-    
-    inline uint1_t GetScreenOff(ClockingMode_t value)
-    {
-        return (value & ScreenOff) >> Shift::ScreenOff;
-    }
-
-    inline ClockingMode_t SetDotClockSelect(uint1_t value)
-    {
-        return ClockingMode_t((value << Shift::DotClockSelect) & DotClockSelect);
-    }
-    
-    inline ClockingMode_t SetLoadSerializersEverySecondCharacterClock(uint1_t value)
-    {
-        return ClockingMode_t((value << Shift::LoadSerializersEverySecondCharacterClock) & LoadSerializersEverySecondCharacterClock);
-    }
-    
-    inline ClockingMode_t SetInternalCharacterClock(uint1_t value)
-    {
-        return ClockingMode_t((value << Shift::InternalCharacterClock) & InternalCharacterClock);
-    }
-    
-    inline ClockingMode_t SetLoadSerializersEveryFourthCharacterClock(uint1_t value)
-    {
-        return ClockingMode_t((value << Shift::LoadSerializersEveryFourthCaracterClock) & LoadSerializersEveryFourthCaracterClock);
-    }
-    
-    inline ClockingMode_t SetScreenOff(uint1_t value)
-    {
-        return ClockingMode_t((value << Shift::ScreenOff) & ScreenOff);
-    }
-
     inline void TurnScreenOff()
     {
         ClockingMode_t value = Read();

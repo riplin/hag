@@ -36,16 +36,6 @@ namespace VerticalRetraceStart
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::VerticalRetraceStart, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetVerticalRetraceStartLow(VerticalRetraceStart_t value)
-    {
-        return (value & VerticalRetraceStartLow) >> Shift::VerticalRetraceStartLow;
-    }
-    
-    inline VerticalRetraceStart_t SetVerticalRetraceStartLow(uint8_t value)
-    {
-        return (value << Shift::VerticalRetraceStartLow) & VerticalRetraceStartLow;
-    }
-
 }
 
 }}}

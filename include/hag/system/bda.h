@@ -180,10 +180,10 @@ namespace Hag { namespace System { namespace BDA
     {
         enum
         {
-            Blue = 0x00,
-            Green = 0x01,
-            Red = 0x02,
-            BorderAndBackgroundColorIntensity = 0x04, //intensified border color (mode 2) and background color (mode 5)
+            Blue = 0x01,
+            Green = 0x02,
+            Red = 0x04,
+            BorderAndBackgroundColorIntensity = 0x08, //intensified border color (mode 2) and background color (mode 5)
             BackgroundColor = 0x10, //0 = normal bg color, 1 = intensified bg color
             ForgroundColorSelect = 0x20, //0 = Green/Red/Yellow, 1 = Cyan/Magenta/White
         };

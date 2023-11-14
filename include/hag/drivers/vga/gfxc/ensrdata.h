@@ -40,15 +40,6 @@ namespace EnableSetResetData
         GraphicsControllerData::Write(GraphicsControllerRegister::EnableSetResetData, GraphicsControllerData_t(value));
     }
 
-    inline uint4_t GetEnableSetResetData(EnableSetResetData_t value)
-    {
-        return (value & EnableSetReset) >> Shift::EnableSetReset;
-    }
-
-    inline EnableSetResetData_t SetEnableSetResetData(uint4_t value)
-    {
-        return EnableSetResetData_t(value << Shift::EnableSetReset) & EnableSetReset;
-    }
 }
 
 }}}

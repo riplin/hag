@@ -44,25 +44,6 @@ namespace PixelPadding
         AttributeControllerData::Write(AttributeControllerRegister::PixelPadding, AttributeControllerData_t(value));
     }
 
-    inline uint2_t GetPaddingV5V4(PixelPadding_t value)
-    {
-        return (value & PaddingV5V4) >> Shift::PaddingV5V4;
-    }
-
-    inline uint2_t GetPaddingV7V6(PixelPadding_t value)
-    {
-        return (value & PaddingV7V6) >> Shift::PaddingV7V6;
-    }
-
-    inline PixelPadding_t SetPaddingV5V4(uint2_t value)
-    {
-        return PixelPadding_t(value << Shift::PaddingV5V4) & PaddingV5V4;
-    }
-
-    inline PixelPadding_t SetPaddingV7V6(uint2_t value)
-    {
-        return PixelPadding_t(value << Shift::PaddingV7V6) & PaddingV7V6;
-    }
 }
 
 }}}

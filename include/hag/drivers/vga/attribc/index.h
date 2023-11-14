@@ -56,25 +56,6 @@ namespace AttributeControllerIndex
         InputStatus1::Read(inputStatus1);
     }
 
-    inline uint5_t GetAttributeControllerIndexIndex(AttributeControllerIndex_t value)
-    {
-        return (value & AttributeControllerIndexIndex) >> Shift::AttributeControllerIndexIndex;
-    }
-
-    inline uint1_t GetEnableVideoDisplay(AttributeControllerIndex_t value)
-    {
-        return (value & EnableVideoDisplay) >> Shift::EnableVideoDisplay;
-    }
-
-    inline AttributeControllerIndex_t SetAttributeControllerIndexIndex(uint5_t value)
-    {
-        return AttributeControllerIndex_t((value << Shift::AttributeControllerIndexIndex) & AttributeControllerIndexIndex);
-    }
-
-    inline AttributeControllerIndex_t SetEnableVideoDisplay(uint1_t value)
-    {
-        return AttributeControllerIndex_t((value << Shift::EnableVideoDisplay) & EnableVideoDisplay);
-    }
 }
 
 }}

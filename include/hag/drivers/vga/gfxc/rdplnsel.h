@@ -42,15 +42,6 @@ namespace ReadPlaneSelect
         GraphicsControllerData::Write(GraphicsControllerRegister::ReadPlaneSelect, GraphicsControllerData_t(value));
     }
 
-    inline uint2_t GetReadPlane(ReadPlaneSelect_t value)
-    {
-        return (value & ReadPlane) >> Shift::ReadPlane;
-    }
-
-    inline ReadPlaneSelect_t SetEnableSetResetData(uint2_t value)
-    {
-        return ReadPlaneSelect_t(value << Shift::ReadPlane) & ReadPlane;
-    }
 }
 
 }}}

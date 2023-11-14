@@ -41,15 +41,6 @@ namespace SetResetData
         GraphicsControllerData::Write(GraphicsControllerRegister::SetResetData, GraphicsControllerData_t(value));
     }
 
-    inline uint4_t GetSetReset(SetResetData_t value)
-    {
-        return (value & SetReset) >> Shift::SetReset;
-    }
-
-    inline SetResetData_t SetSetReset(uint4_t value)
-    {
-        return SetResetData_t(value << Shift::SetReset) & SetReset;
-    }
 }
 
 }}}

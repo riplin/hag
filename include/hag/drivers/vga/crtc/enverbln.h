@@ -44,16 +44,6 @@ namespace EndVerticalBlank
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::EndVerticalBlank, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetEndVerticalBlankLow(EndVerticalBlank_t value)
-    {
-        return (value & EndVerticalBlankLow) >> Shift::EndVerticalBlankLow;
-    }
-    
-    inline EndVerticalBlank_t SetEndVerticalBlankLow(uint8_t value)
-    {
-        return EndVerticalBlank_t((value << Shift::EndVerticalBlankLow) & EndVerticalBlankLow);
-    }
-    
 }
 
 }}}

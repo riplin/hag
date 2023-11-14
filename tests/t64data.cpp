@@ -3134,7 +3134,6 @@ Hag::Testing::Mock::PortAndIndexAndValue SetupClocksTest_modifiedIndexedPorts0[]
     { 0x03D5, 0x42, 0x00 }
 };
 
-
 Hag::Testing::Mock::PortAndIndexAndValue SetupClocksTest_modifiedIndexedPorts1[] =
 {
     { 0x03C5, 0x08, 0x06 },
@@ -3218,26 +3217,6 @@ Hag::Testing::Mock::PortAndIndexAndValue SetupClocksTest_modifiedIndexedPorts9[]
 
 Hag::Testing::Mock::PortAndIndexAndValue* SetupClocksTest_modifiedIndexedPorts[] =
 {
-    SetupClocksTest_modifiedIndexedPorts0, //0
-    SetupClocksTest_modifiedIndexedPorts0, //1
-    SetupClocksTest_modifiedIndexedPorts0, //2
-    SetupClocksTest_modifiedIndexedPorts0, //3
-    SetupClocksTest_modifiedIndexedPorts0, //4
-    SetupClocksTest_modifiedIndexedPorts0, //5
-    SetupClocksTest_modifiedIndexedPorts0, //6
-    SetupClocksTest_modifiedIndexedPorts0, //7
-    SetupClocksTest_modifiedIndexedPorts0, //8
-    SetupClocksTest_modifiedIndexedPorts0, //9
-    SetupClocksTest_modifiedIndexedPorts0, //10
-    SetupClocksTest_modifiedIndexedPorts0, //11
-    SetupClocksTest_modifiedIndexedPorts0, //12
-    SetupClocksTest_modifiedIndexedPorts0, //13
-    SetupClocksTest_modifiedIndexedPorts0, //14
-    SetupClocksTest_modifiedIndexedPorts0, //15
-    SetupClocksTest_modifiedIndexedPorts0, //16
-    SetupClocksTest_modifiedIndexedPorts0, //17
-    SetupClocksTest_modifiedIndexedPorts0, //18
-    SetupClocksTest_modifiedIndexedPorts0, //19
     SetupClocksTest_modifiedIndexedPorts1, //20
     SetupClocksTest_modifiedIndexedPorts2, //21
     SetupClocksTest_modifiedIndexedPorts2, //22
@@ -3272,26 +3251,6 @@ Hag::Testing::Mock::PortAndIndexAndValue* SetupClocksTest_modifiedIndexedPorts[]
 
 int SetupClocksTest_modifiedIndexedPortsCount[] =
 {
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //0
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //1
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //2
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //3
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //4
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //5
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //6
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //7
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //8
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //9
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //10
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //11
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //12
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //13
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //14
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //15
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //16
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //17
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //18
-    sizeof(SetupClocksTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //19
     sizeof(SetupClocksTest_modifiedIndexedPorts1) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //20
     sizeof(SetupClocksTest_modifiedIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //21
     sizeof(SetupClocksTest_modifiedIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //22
@@ -3361,8 +3320,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x54, 0xF8 },
@@ -3373,8 +3334,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x54, 0x88 },
@@ -3385,7 +3348,8 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3398,7 +3362,8 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3411,7 +3376,8 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3423,7 +3389,8 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3435,10 +3402,12 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
-    { 0x03D5, 0x3C, 0x2F },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
+    { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x02 },
     { 0x03D5, 0x54, 0x48 },
     { 0x03D5, 0x60, 0xFF }
@@ -3448,8 +3417,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x54, 0x48 },
@@ -3460,8 +3431,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x90 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x01 },
@@ -3471,9 +3444,11 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 
 Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts9[] =
 {
+    { 0x03D5, 0x02, 0x4F },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3486,9 +3461,11 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 
 Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts10[] =
 {
+    { 0x03D5, 0x02, 0x4F },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3500,9 +3477,11 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 
 Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts11[] =
 {
+    { 0x03D5, 0x02, 0x4F },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3514,9 +3493,11 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 
 Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts12[] =
 {
+    { 0x03D5, 0x02, 0x4F },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3530,11 +3511,14 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x02, 0x51 },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x40 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x70 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x08 },
     { 0x03D5, 0x60, 0xFF },
     { 0x03D5, 0x67, 0xD0 }
@@ -3544,7 +3528,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x42 },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3556,8 +3540,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x50 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x40 },
@@ -3569,7 +3555,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x32 },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3583,8 +3569,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x64 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x82 },
@@ -3597,8 +3585,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x64 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x80 },
@@ -3610,7 +3600,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x40 },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3624,7 +3614,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x40 },
     { 0x03D5, 0x34, 0x10 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
@@ -3637,8 +3627,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x02 },
@@ -3651,8 +3643,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x54, 0x48 },
@@ -3664,8 +3658,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xA0 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0xC2 },
@@ -3679,8 +3675,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xA0 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0xC0 },
@@ -3694,8 +3692,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xA0 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0xC0 },
@@ -3709,8 +3709,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xA0 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0xC0 },
@@ -3723,8 +3725,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xA0 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x50 },
@@ -3737,8 +3741,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xA0 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x50 },
@@ -3752,11 +3758,14 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x02, 0x51 },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x40 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x70 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x30 },
     { 0x03D5, 0x60, 0xFF },
     { 0x03D5, 0x67, 0xD0 }
@@ -3767,11 +3776,14 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x02, 0x51 },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x40 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x70 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x30 },
     { 0x03D5, 0x60, 0x19 },
     { 0x03D5, 0x67, 0xD0 }
@@ -3782,11 +3794,14 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x02, 0x51 },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x40 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x70 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x38 },
     { 0x03D5, 0x60, 0x1C },
     { 0x03D5, 0x67, 0xD0 }
@@ -3796,10 +3811,12 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xC8 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
-    { 0x03D5, 0x3C, 0xAF },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
+    { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0x92 },
     { 0x03D5, 0x54, 0x38 },
     { 0x03D5, 0x5D, 0x01 },
@@ -3811,8 +3828,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xC8 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0x92 },
@@ -3827,11 +3846,14 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x02, 0x51 },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x90 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0xB2 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x5D, 0x08 },
     { 0x03D5, 0x60, 0xFF },
     { 0x03D5, 0x67, 0xD0 }
@@ -3842,11 +3864,14 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x02, 0x51 },
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x90 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0xB2 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x10 },
     { 0x03D5, 0x5D, 0x08 },
     { 0x03D5, 0x60, 0xFF },
@@ -3858,10 +3883,13 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
     { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0x12 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x10 },
     { 0x03D5, 0x5D, 0x5D },
     { 0x03D5, 0x60, 0xFF },
@@ -3873,10 +3901,13 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
     { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0x10 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x10 },
     { 0x03D5, 0x5D, 0x7D },
     { 0x03D5, 0x60, 0xFF },
@@ -3888,10 +3919,13 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
     { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0x10 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x18 },
     { 0x03D5, 0x5D, 0x7D },
     { 0x03D5, 0x60, 0xFF },
@@ -3903,10 +3937,13 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
     { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0x10 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x28 },
     { 0x03D5, 0x5D, 0x75 },
     { 0x03D5, 0x60, 0xFF },
@@ -3919,10 +3956,13 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
     { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0x2F },
     { 0x03D5, 0x50, 0x30 },
+    { 0x03D5, 0x51, 0x20 },
     { 0x03D5, 0x54, 0x38 },
     { 0x03D5, 0x60, 0xFF },
     { 0x03D5, 0x67, 0xD0 }
@@ -3932,11 +3972,14 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0x40 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0xD0 },
+    { 0x03D5, 0x51, 0x10 },
     { 0x03D5, 0x54, 0x10 },
     { 0x03D5, 0x5D, 0x7F },
     { 0x03D5, 0x60, 0xFF },
@@ -3947,8 +3990,10 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
 {
     { 0x03D5, 0x04, 0x57 },
     { 0x03D5, 0x05, 0x83 },
-    { 0x03D5, 0x13, 0x00 },
+    { 0x03D5, 0x13, 0xC8 },
+    { 0x03D5, 0x31, 0x09 },
     { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x15 },
     { 0x03D5, 0x3B, 0x58 },
     { 0x03D5, 0x3C, 0xAF },
     { 0x03D5, 0x50, 0x81 },
@@ -3957,6 +4002,75 @@ Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modi
     { 0x03D5, 0x67, 0x10 }
 };
 
+Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts43[] =
+{
+    { 0x03D5, 0x04, 0x57 },
+    { 0x03D5, 0x05, 0x83 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
+    { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3B, 0x58 },
+    { 0x03D5, 0x3C, 0x2F },
+    { 0x03D5, 0x50, 0x00 },
+    { 0x03D5, 0x54, 0xF8 },
+    { 0x03D5, 0x60, 0xFF }
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts44[] =
+{
+    { 0x03D5, 0x04, 0x57 },
+    { 0x03D5, 0x05, 0x83 },
+    { 0x03D5, 0x13, 0x80 },
+    { 0x03D5, 0x31, 0x0F },
+    { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x05 },
+    { 0x03D5, 0x3B, 0x58 },
+    { 0x03D5, 0x3C, 0x2F },
+    { 0x03D5, 0x54, 0xF8 },
+    { 0x03D5, 0x60, 0xFF }
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts45[] =
+{
+    { 0x03D5, 0x04, 0x57 },
+    { 0x03D5, 0x05, 0x83 },
+    { 0x03D5, 0x13, 0x32 },
+    { 0x03D5, 0x31, 0x05 },
+    { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x05 },
+    { 0x03D5, 0x3B, 0x58 },
+    { 0x03D5, 0x3C, 0x2F },
+    { 0x03D5, 0x54, 0xF8 },
+    { 0x03D5, 0x60, 0xFF }
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts46[] =
+{
+    { 0x03D5, 0x04, 0x57 },
+    { 0x03D5, 0x05, 0x83 },
+    { 0x03D5, 0x13, 0x40 },
+    { 0x03D5, 0x31, 0x05 },
+    { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x05 },
+    { 0x03D5, 0x3B, 0x58 },
+    { 0x03D5, 0x3C, 0x2F },
+    { 0x03D5, 0x54, 0xF8 },
+    { 0x03D5, 0x60, 0xFF }
+};
+
+Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts47[] =
+{
+    { 0x03D5, 0x04, 0x57 },
+    { 0x03D5, 0x05, 0x83 },
+    { 0x03D5, 0x13, 0x50 },
+    { 0x03D5, 0x31, 0x05 },
+    { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3A, 0x05 },
+    { 0x03D5, 0x3B, 0x58 },
+    { 0x03D5, 0x3C, 0x2F },
+    { 0x03D5, 0x54, 0xF8 },
+    { 0x03D5, 0x60, 0xFF }
+};
 
 Hag::Testing::Mock::PortAndIndexAndValue* ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts[] =
 {
@@ -3966,14 +4080,14 @@ Hag::Testing::Mock::PortAndIndexAndValue* ConfigureExtraVESAModeSettingsTest_mod
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts2, //3
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts2, //4
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts2, //5
-    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //6
+    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts43, //6
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //7
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //8
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //9
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //10
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts3, //11
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts4, //12
-    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //13
+    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts44, //13
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts5, //14
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts6, //15
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts7, //16
@@ -3994,20 +4108,20 @@ Hag::Testing::Mock::PortAndIndexAndValue* ConfigureExtraVESAModeSettingsTest_mod
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts16, //31
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts16, //32
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts16, //33
-    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //34
+    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts45, //34
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts17, //35
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts17, //36
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts17, //37
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts18, //38
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts19, //39
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts20, //40
-    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //41
-    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //42
+    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts46, //41
+    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts46, //42
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts21, //43
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts22, //44
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //45
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //46
-    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0, //47
+    ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts47, //47
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts23, //48
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts24, //49
     ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts25, //50
@@ -4052,14 +4166,14 @@ int ConfigureExtraVESAModeSettingsTest_modifiedIndexedPortsCount[] =
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //3
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //4
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts2) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //5
-    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //6
+    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts43) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //6
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //7
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //8
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //9
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //10
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts3) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //11
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts4) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //12
-    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //13
+    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts44) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //13
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts5) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //14
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts6) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //15
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts7) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //16
@@ -4080,20 +4194,20 @@ int ConfigureExtraVESAModeSettingsTest_modifiedIndexedPortsCount[] =
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts16) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //31
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts16) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //32
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts16) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //33
-    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //34
+    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts45) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //34
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts17) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //35
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts17) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //36
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts17) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //37
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts18) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //38
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts19) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //39
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts20) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //40
-    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //41
-    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //42
+    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts46) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //41
+    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts46) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //42
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts21) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //43
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts22) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //44
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //45
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //46
-    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //47
+    sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts47) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //47
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts23) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //48
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts24) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //49
     sizeof(ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts25) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue), //50
@@ -5329,7 +5443,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts1[] =
 
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts2[] =
 {
-    { 0x4AE8, 0x10 },
+    { 0x4AE8, 0x03 },
     { 0x82E8, 0x00 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
@@ -5346,7 +5460,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts2[] =
 
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts3[] =
 {
-    { 0x4AE8, 0xFA },
+    { 0x4AE8, 0x07 },
     { 0x82E8, 0x00 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
@@ -5364,6 +5478,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts3[] =
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts4[] =
 {
     { 0x03C2, 0x27 },
+    { 0x4AE8, 0x07 },
     { 0x82E8, 0x00 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
@@ -5381,6 +5496,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts4[] =
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts5[] =
 {
     { 0x82E8, 0x00 },
+    { 0x4AE8, 0x07 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
     { 0x86E9, 0x00 },
@@ -5397,7 +5513,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts5[] =
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts6[] =
 {
     { 0x03C2, 0x27 },
-    { 0x4AE8, 0x01 },
+    { 0x4AE8, 0x07 },
     { 0x82E8, 0x00 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
@@ -5414,7 +5530,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts6[] =
 
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts7[] =
 {
-    { 0x4AE8, 0x40 },
+    { 0x4AE8, 0x02 },
     { 0x82E8, 0x00 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
@@ -5431,7 +5547,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts7[] =
 
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts8[] =
 {
-    { 0x4AE8, 0x20 },
+    { 0x4AE8, 0x02 },
     { 0x82E8, 0x00 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
@@ -5448,7 +5564,7 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts8[] =
 
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts9[] =
 {
-    { 0x4AE8, 0x01 },
+    { 0x4AE8, 0x06 },
     { 0x82E8, 0x00 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
@@ -5466,8 +5582,60 @@ Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts9[] =
 Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts10[] =
 {
     { 0x03C2, 0x27 },
-    { 0x4AE8, 0xFA },
+    { 0x4AE8, 0x03 },
     { 0x82E8, 0x00 },
+    { 0x82E9, 0x00 },
+    { 0x86E8, 0x00 },
+    { 0x86E9, 0x00 },
+    { 0x96E9, 0x0F },
+    { 0x9AE8, 0xB3 },
+    { 0x9AE9, 0x40 },
+    { 0xAAE8, 0xFF },
+    { 0xAAE9, 0xFF },
+    { 0xBAE8, 0x27 },
+    { 0xBAE9, 0x00 },
+    { 0xBEE9, 0x0F }
+};
+
+Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts11[] =
+{
+    { 0x4AE8, 0x03 },
+    { 0x82E8, 0x00 },
+    { 0x82E9, 0x00 },
+    { 0x86E8, 0x00 },
+    { 0x86E9, 0x00 },
+    { 0x96E9, 0x0F },
+    { 0x9AE8, 0xB3 },
+    { 0x9AE9, 0x40 },
+    { 0xAAE8, 0xFF },
+    { 0xAAE9, 0xFF },
+    { 0xBAE8, 0x27 },
+    { 0xBAE9, 0x00 },
+    { 0xBEE9, 0x0F }
+};
+
+Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts12[] =
+{
+    { 0x03C2, 0x27 },
+    { 0x4AE8, 0x06 },
+    { 0x82E8, 0x00 },
+    { 0x82E9, 0x00 },
+    { 0x86E8, 0x00 },
+    { 0x86E9, 0x00 },
+    { 0x96E9, 0x0F },
+    { 0x9AE8, 0xB3 },
+    { 0x9AE9, 0x40 },
+    { 0xAAE8, 0xFF },
+    { 0xAAE9, 0xFF },
+    { 0xBAE8, 0x27 },
+    { 0xBAE9, 0x00 },
+    { 0xBEE9, 0x0F }
+};
+
+Hag::Testing::Mock::PortAndValue ApplyVESAOverrideDataTest_modifiedPorts13[] =
+{
+    { 0x82E8, 0x00 },
+    { 0x4AE8, 0x03 },
     { 0x82E9, 0x00 },
     { 0x86E8, 0x00 },
     { 0x86E9, 0x00 },
@@ -5515,24 +5683,24 @@ Hag::Testing::Mock::PortAndValue* ApplyVESAOverrideDataTest_modifiedPorts[] =
     ApplyVESAOverrideDataTest_modifiedPorts8,    //29
     ApplyVESAOverrideDataTest_modifiedPorts2,    //30
     ApplyVESAOverrideDataTest_modifiedPorts2,    //31
-    ApplyVESAOverrideDataTest_modifiedPorts3,    //32
-    ApplyVESAOverrideDataTest_modifiedPorts3,    //33
-    ApplyVESAOverrideDataTest_modifiedPorts4,    //34
+    ApplyVESAOverrideDataTest_modifiedPorts9,    //32
+    ApplyVESAOverrideDataTest_modifiedPorts11,    //33
+    ApplyVESAOverrideDataTest_modifiedPorts12,    //34
     ApplyVESAOverrideDataTest_modifiedPorts4,    //35
     ApplyVESAOverrideDataTest_modifiedPorts9,    //36
-    ApplyVESAOverrideDataTest_modifiedPorts6,    //37
+    ApplyVESAOverrideDataTest_modifiedPorts10,    //37
     ApplyVESAOverrideDataTest_modifiedPorts2,    //38
     ApplyVESAOverrideDataTest_modifiedPorts2,    //39
     ApplyVESAOverrideDataTest_modifiedPorts2,    //40
     ApplyVESAOverrideDataTest_modifiedPorts10,   //41
     ApplyVESAOverrideDataTest_modifiedPorts10,   //42
     ApplyVESAOverrideDataTest_modifiedPorts10,   //43
-    ApplyVESAOverrideDataTest_modifiedPorts4,    //44
-    ApplyVESAOverrideDataTest_modifiedPorts4,    //45
-    ApplyVESAOverrideDataTest_modifiedPorts5,    //46
-    ApplyVESAOverrideDataTest_modifiedPorts9,    //47
-    ApplyVESAOverrideDataTest_modifiedPorts9,    //48
-    ApplyVESAOverrideDataTest_modifiedPorts5     //49
+    ApplyVESAOverrideDataTest_modifiedPorts10,    //44
+    ApplyVESAOverrideDataTest_modifiedPorts10,    //45
+    ApplyVESAOverrideDataTest_modifiedPorts13,    //46
+    ApplyVESAOverrideDataTest_modifiedPorts2,    //47
+    ApplyVESAOverrideDataTest_modifiedPorts2,    //48
+    ApplyVESAOverrideDataTest_modifiedPorts13     //49
 };
 
 int ApplyVESAOverrideDataTest_modifiedPortsCount[] =
@@ -5569,24 +5737,24 @@ int ApplyVESAOverrideDataTest_modifiedPortsCount[] =
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts8) / sizeof(Hag::Testing::Mock::PortAndValue), //29
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts2) / sizeof(Hag::Testing::Mock::PortAndValue), //30
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts2) / sizeof(Hag::Testing::Mock::PortAndValue), //31
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts3) / sizeof(Hag::Testing::Mock::PortAndValue), //32
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts3) / sizeof(Hag::Testing::Mock::PortAndValue), //33
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts4) / sizeof(Hag::Testing::Mock::PortAndValue), //34
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts9) / sizeof(Hag::Testing::Mock::PortAndValue), //32
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts11) / sizeof(Hag::Testing::Mock::PortAndValue), //33
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts12) / sizeof(Hag::Testing::Mock::PortAndValue), //34
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts4) / sizeof(Hag::Testing::Mock::PortAndValue), //35
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts9) / sizeof(Hag::Testing::Mock::PortAndValue), //36
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts6) / sizeof(Hag::Testing::Mock::PortAndValue), //37
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts10) / sizeof(Hag::Testing::Mock::PortAndValue), //37
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts2) / sizeof(Hag::Testing::Mock::PortAndValue), //38
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts2) / sizeof(Hag::Testing::Mock::PortAndValue), //39
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts2) / sizeof(Hag::Testing::Mock::PortAndValue), //40
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts10) / sizeof(Hag::Testing::Mock::PortAndValue),//41
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts10) / sizeof(Hag::Testing::Mock::PortAndValue),//42
     sizeof(ApplyVESAOverrideDataTest_modifiedPorts10) / sizeof(Hag::Testing::Mock::PortAndValue),//43
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts4) / sizeof(Hag::Testing::Mock::PortAndValue), //44
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts4) / sizeof(Hag::Testing::Mock::PortAndValue), //45
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts5) / sizeof(Hag::Testing::Mock::PortAndValue), //46
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts9) / sizeof(Hag::Testing::Mock::PortAndValue), //47
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts9) / sizeof(Hag::Testing::Mock::PortAndValue), //48
-    sizeof(ApplyVESAOverrideDataTest_modifiedPorts5) / sizeof(Hag::Testing::Mock::PortAndValue)  //49
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts10) / sizeof(Hag::Testing::Mock::PortAndValue), //44
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts10) / sizeof(Hag::Testing::Mock::PortAndValue), //45
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts13) / sizeof(Hag::Testing::Mock::PortAndValue), //46
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts2) / sizeof(Hag::Testing::Mock::PortAndValue), //47
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts2) / sizeof(Hag::Testing::Mock::PortAndValue), //48
+    sizeof(ApplyVESAOverrideDataTest_modifiedPorts13) / sizeof(Hag::Testing::Mock::PortAndValue)  //49
 };
 
 Hag::Testing::Mock::PortAndIndex ApplyVESAOverrideDataTest_readIndexedPorts0[] =
@@ -6521,7 +6689,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts2[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x61 },
     { 0x03C5, 0x13, 0x28 },
@@ -6543,7 +6711,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts3[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x48 },
     { 0x03C5, 0x13, 0x63 },
@@ -6566,7 +6734,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts4[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x48 },
     { 0x03C5, 0x13, 0x63 },
@@ -6588,30 +6756,30 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts5[] =
 {
-    { 0x03C5, 0x0004, 0x0F },
-    { 0x03C5, 0x0008, 0x00 },
-    { 0x03C5, 0x0012, 0x42 },
-    { 0x03C5, 0x0013, 0x30 },
-    { 0x03C5, 0x0015, 0x02 },
-    { 0x03C5, 0x0018, 0x40 },
-    { 0x03D5, 0x0004, 0x83 },
-    { 0x03D5, 0x0005, 0x19 },
-    { 0x03D5, 0x0031, 0x0F },
-    { 0x03D5, 0x0034, 0x10 },
-    { 0x03D5, 0x003B, 0x93 },
-    { 0x03D5, 0x003C, 0x4D },
-    { 0x03D5, 0x0040, 0xD1 },
-    { 0x03D5, 0x0042, 0x20 },
-    { 0x03D5, 0x0045, 0x00 },
-    { 0x03D5, 0x0054, 0xC0 },
-    { 0x03D5, 0x0060, 0xFF },
-    { 0x03D5, 0x0061, 0x80 },
-    { 0x03D5, 0x0062, 0xA1 }
+    { 0x03C5, 0x04, 0x0E },
+    { 0x03C5, 0x08, 0x00 },
+    { 0x03C5, 0x12, 0x42 },
+    { 0x03C5, 0x13, 0x30 },
+    { 0x03C5, 0x15, 0x02 },
+    { 0x03C5, 0x18, 0x40 },
+    { 0x03D5, 0x04, 0x83 },
+    { 0x03D5, 0x05, 0x19 },
+    { 0x03D5, 0x31, 0x0F },
+    { 0x03D5, 0x34, 0x10 },
+    { 0x03D5, 0x3B, 0x93 },
+    { 0x03D5, 0x3C, 0x4D },
+    { 0x03D5, 0x40, 0xD1 },
+    { 0x03D5, 0x42, 0x20 },
+    { 0x03D5, 0x45, 0x00 },
+    { 0x03D5, 0x54, 0xC0 },
+    { 0x03D5, 0x60, 0xFF },
+    { 0x03D5, 0x61, 0x80 },
+    { 0x03D5, 0x62, 0xA1 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts6[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x30 },
@@ -6633,7 +6801,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts7[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x22 },
     { 0x03C5, 0x13, 0x2B },
@@ -6656,7 +6824,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts8[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x20 },
     { 0x03C5, 0x13, 0x13 },
@@ -6681,7 +6849,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts9[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x61 },
     { 0x03C5, 0x13, 0x28 },
@@ -6708,7 +6876,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts10[] =
 {
-    { 0x03C5, 0x04, 0x03 },
+    { 0x03C5, 0x04, 0x02 },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x2B },
@@ -6728,7 +6896,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts11[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x61 },
     { 0x03C5, 0x13, 0x28 },
@@ -6751,7 +6919,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts12[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x61 },
     { 0x03C5, 0x13, 0x28 },
@@ -6775,7 +6943,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts13[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x06 },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x48 },
     { 0x03C5, 0x13, 0x63 },
@@ -6798,7 +6966,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts14[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x48 },
     { 0x03C5, 0x13, 0x63 },
@@ -6822,7 +6990,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts15[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x06 },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x30 },
@@ -6845,7 +7013,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts16[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x06 },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x20 },
     { 0x03C5, 0x13, 0x13 },
@@ -6868,7 +7036,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts17[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x20 },
     { 0x03C5, 0x13, 0x13 },
@@ -6893,7 +7061,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts18[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x61 },
     { 0x03C5, 0x13, 0x28 },
@@ -6927,7 +7095,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts19[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x61 },
     { 0x03C5, 0x13, 0x28 },
@@ -6961,7 +7129,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts20[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x61 },
     { 0x03C5, 0x13, 0x28 },
@@ -6988,7 +7156,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts21[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x2B },
@@ -7023,7 +7191,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts22[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x2B },
@@ -7058,7 +7226,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts23[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x2B },
@@ -7091,7 +7259,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts24[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x30 },
@@ -7125,7 +7293,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts25[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x30 },
@@ -7159,7 +7327,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts26[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x42 },
     { 0x03C5, 0x13, 0x30 },
@@ -7186,7 +7354,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts27[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x22 },
     { 0x03C5, 0x13, 0x2B },
@@ -7219,7 +7387,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts28[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x22 },
     { 0x03C5, 0x13, 0x2B },
@@ -7252,7 +7420,7 @@ Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndex
 
 Hag::Testing::Mock::PortAndIndexAndValue ApplyVESAOverrideDataTest_modifiedIndexedPorts29[] =
 {
-    { 0x03C5, 0x04, 0x0F },
+    { 0x03C5, 0x04, 0x0E },
     { 0x03C5, 0x08, 0x00 },
     { 0x03C5, 0x12, 0x24 },
     { 0x03C5, 0x13, 0x6B },
@@ -9290,7 +9458,6 @@ Hag::Testing::Mock::PortAndIndex SetFontTest_readIndexedPorts1[] =
 Hag::Testing::Mock::PortAndIndex SetFontTest_readIndexedPorts2[] =
 {
     { 0x03C5, 0x0002 },
-    { 0x03C5, 0x0004 },
     { 0x03CF, 0x0004 },
     { 0x03CF, 0x0006 }
 };
@@ -9317,7 +9484,8 @@ int SetFontTest_readIndexedPortsCount[] =
 
 Hag::Testing::Mock::PortAndIndexAndValue SetFontTest_modifiedIndexedPorts0[] =
 {
-    { 0x03CF, 0x0005, 0x10 },
+    { 0x03C5, 0x0004, 0x03 },
+    { 0x03CF, 0x0005, 0x10 }
 };
 
 Hag::Testing::Mock::PortAndIndexAndValue SetFontTest_modifiedIndexedPorts1[] =

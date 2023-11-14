@@ -38,7 +38,7 @@ namespace VideoModeError
     };
 }
 
-struct VESAVideoParametersTable
+struct VideoParameters
 {
     uint8_t DisplayedCharacterColumns;
     uint8_t DisplayedRowsMinus1;
@@ -49,6 +49,50 @@ struct VESAVideoParametersTable
     VGA::CRTControllerData_t CRTCRegisters[25];//CR0-CR18
     VGA::AttributeControllerData_t AttributeControllerRegs[20];
     VGA::GraphicsControllerData_t GraphicsControllerRegs[9];//GR0-GR8
+};
+
+typedef uint8_t VESAModeAttributes_t;
+namespace VESAModeAttributes
+{
+    enum
+    {
+        Supported = 0x01,               // bit 0 = Mode supported by present hardware configuration
+        OptionalInfoAvailable = 0x02,   // bit 1 = Optional information available (must be =1 for VBE 1.2+)
+        BIOSOutputSupported = 0x04,     // bit 2 = BIOS output supported
+        Color = 0x08,                   // bit 3 = Set if color, clear if monochrome
+        Graphics = 0x10,                // bit 4 = Set if graphics mode, clear if text mode
+    };
+}
+
+typedef uint8_t VESAModeMemoryModel_t;
+namespace VESAModeMemoryModel
+{
+    enum
+    {
+        Text = 0x00,                        // 00h    text
+        CGAGraphics = 0x01,                 // 01h    CGA graphics
+        HGCGraphics = 0x02,                 // 02h    HGC graphics
+        EGA16ColorGraphics = 0x03,          // 03h    16-color (EGA) graphics
+        PackedPixelGraphics = 0x04,         // 04h    packed pixel graphics
+        Sequ256NonChain4Graphics = 0x05,    // 05h    "sequ 256" (non-chain 4) graphics
+        DirectColor24bitGraphics = 0x06,    // 06h    direct color (HiColor, 24-bit color)
+        YUVGraphics = 0x07                  // 07h    YUV (luminance-chrominance, also called YIQ)
+        // 08h-0Fh reserved for VESA
+        // 10h-FFh OEM memory models
+    };
+}
+
+struct VESAModeInfo
+{
+    VESAModeAttributes_t ModeAttributes;
+    uint16_t BytesPerScanline;
+    uint16_t WidthInPixels;
+    uint16_t HeightInPixels;
+    uint8_t HeightOfCharacterCellInPixels;
+    uint8_t MemoryPlanes;
+    uint8_t BitsPerPixel;
+    uint8_t Banks;
+    VESAModeMemoryModel_t MemoryModelType;
 };
 
 typedef uint8_t VESAFlagsAndFilter_t;
@@ -117,8 +161,9 @@ namespace VESAVideoModeFlags
 
 struct VESAVideoModeData
 {
-    VESAVideoParametersTable* OverrideTable;
+    VideoParameters* OverrideTable;
     VESAResolutionVariant* VariantData;
+    VESAModeInfo* ModeInfo;
     VideoMode_t Mode;
     VESAVideoModeFlags_t Flags;    //bit 0 - Window granularity and size: 0 = 32k, 1 = 64k
     AdvancedFunctionControlLower_t AdvancedFunction;
@@ -153,15 +198,12 @@ public:
 
     virtual ~TrioBase();
 
-protected:
-    VideoMode_t ConvertVesaModeToLegacy(Vesa::VideoMode_t mode) const;
-    VideoModeError_t CheckValidVideoMode(VideoMode_t mode) const;
-    void SetBDAVideoMode(VideoMode_t mode) const;
+//protected:
+    static VideoMode_t ConvertVesaModeToLegacy(Vesa::VideoMode_t mode);
+    static VideoModeError_t CheckValidVideoMode(VideoMode_t mode);
 
-    bool FindVideoModeData(VideoMode_t mode, VESAVideoModeData*& videoModeData) const;
-    bool GetVideoModeFlags(VideoMode_t mode, VESAVideoModeFlags_t& flags) const;
-    void SetupBDAColor(System::BDA::EGAFeatureBitSwitches_t featureBitSwitches) const;
-
+    static VESAVideoModeData* FindVideoModeData(VideoMode_t mode);
+    static bool GetVideoModeFlags(VideoMode_t mode, VESAVideoModeFlags_t& flags);
 
     struct VideoModeTranslation
     {
@@ -170,8 +212,18 @@ protected:
     };
 
     static VideoModeTranslation m_VideoModeTranslation[];
-    static VESAVideoModeData m_VideoModeData[];
+    static VESAVideoModeData m_VesaVideoModes[];
+    static VideoParameters* m_VesaResolutions[];
+    static VideoParameters m_LegacyVideoModes[];
     static FirmwareFlag_t m_FirmwareFlag;
+
+    static uint8_t m_VideoModeOverrideTranslationTable1[];
+    static uint8_t m_VideoModeOverrideTranslationTable2[];
+    static uint8_t m_VideoModeOverrideTranslationTable3[];
+
+    static uint8_t m_Characters8x8[];
+    static uint8_t m_Characters8x14[];
+    static uint8_t m_Characters8x16[];
 };
 
 template<Register_t CrtControllerIndex>
@@ -236,7 +288,7 @@ VideoModeError_t Trio<CrtControllerIndex>::SetLegacyVideoMode(VideoMode_t mode)
         return VideoModeError::Success;
 
     //Prepare the BDA for the new video mode.
-    SetBDAVideoMode(actualMode);
+    //SetBDAVideoMode(actualMode);
 
 
 
@@ -263,7 +315,7 @@ VideoModeError_t Trio<CrtControllerIndex>::SetVesaVideoMode(Vesa::VideoMode_t mo
     if ((mode & Vesa::VideoMode::DontClearDisplay) == Vesa::VideoMode::DontClearDisplay)
         legacyMode |= VideoMode::DontClearDisplay;
     
-    return SetVideoMode(legacyMode);
+    return VideoModeError::Success;//SetVideoMode(legacyMode);
 }
 
 }}

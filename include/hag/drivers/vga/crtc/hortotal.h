@@ -34,16 +34,6 @@ namespace HorizontalTotal
     inline void Write(Register_t controllerIndexRegister, HorizontalTotal_t value)
     {
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::HorizontalTotal, CRTControllerData_t(value));
-        }
-
-    inline uint8_t GetHorizontalTotalLow(HorizontalTotal_t value)
-    {
-        return (value & HorizontalTotalLow) >> Shift::HorizontalTotalLow;
-    }
-
-    inline HorizontalTotal_t SetHorizontalTotalLow(uint8_t value)
-    {
-        return HorizontalTotal_t((value << Shift::HorizontalTotalLow) & HorizontalTotalLow);
     }
 
 }

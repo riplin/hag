@@ -51,25 +51,6 @@ namespace RasterOperationRotateCount
         GraphicsControllerData::Write(GraphicsControllerRegister::RasterOperationRotateCount, GraphicsControllerData_t(value));
     }
 
-    inline uint3_t GetRotateCount(RasterOperationRotateCount_t value)
-    {
-        return (value & RotateCount) >> Shift::RotateCount;
-    }
-
-    inline uint2_t GetRasterOperation(RasterOperationRotateCount_t value)
-    {
-        return (value & RasterOperation) >> Shift::RasterOperation;
-    }
-
-    inline RasterOperationRotateCount_t SetRotateCount(uint3_t value)
-    {
-        return RasterOperationRotateCount_t(value << Shift::RotateCount) & RotateCount;
-    }
-
-    inline RasterOperationRotateCount_t SetRasterOperation(uint2_t value)
-    {
-        return RasterOperationRotateCount_t(value << Shift::RasterOperation) &RasterOperation;
-    }
 }
 
 }}}

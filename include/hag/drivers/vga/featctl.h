@@ -38,16 +38,6 @@ namespace FeatureControl
         SYS_WritePortByte(featureControl, value);
     }
 
-    inline uint1_t GetVerticalSyncTypeSelect(FeatureControl_t value)
-    {
-        return (value & VerticalSyncTypeSelect) >> Shift::VerticalSyncTypeSelect;
-    }
-
-    inline FeatureControl_t SetVerticalSyncTypeSelect(uint1_t value)
-    {
-        return FeatureControl_t((value << Shift::VerticalSyncTypeSelect) & VerticalSyncTypeSelect);
-    }
-
 }
 
 }}

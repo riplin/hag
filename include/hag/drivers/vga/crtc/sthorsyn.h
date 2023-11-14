@@ -36,16 +36,6 @@ namespace StartHorizontalSyncPosition
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartHorizontalSyncPosition, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetStartHorizontalSyncPositionLow(StartHorizontalSyncPosition_t value)
-    {
-        return (value & StartHorizontalSyncPositionLow) >> Shift::StartHorizontalSyncPositionLow;
-    }
-    
-    inline StartHorizontalSyncPosition_t SetStartHorizontalSyncPositionLow(uint8_t value)
-    {
-        return StartHorizontalSyncPosition_t((value << Shift::StartHorizontalSyncPositionLow) & StartHorizontalSyncPositionLow);
-    }
-
 }
 
 }}}

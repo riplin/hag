@@ -36,16 +36,6 @@ namespace StartHorizontalBlank
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartHorizontalBlank, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetStartHorizontalBlankLow(StartHorizontalBlank_t value)
-    {
-        return (value & StartHorizontalBlankLow) >> Shift::StartHorizontalBlankLow;
-    }
-
-    inline StartHorizontalBlank_t SetStartHorizontalBlankLow(uint8_t value)
-    {
-        return StartHorizontalBlank_t((value << Shift::StartHorizontalBlankLow) & StartHorizontalBlankLow);
-    }
-
 }
 
 }}}

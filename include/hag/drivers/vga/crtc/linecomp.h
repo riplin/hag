@@ -46,16 +46,6 @@ namespace LineCompare
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::LineCompare, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetLineComparePosition(LineCompare_t value)
-    {
-        return (value & LineComparePosition) >> Shift::LineComparePosition;
-    }
-    
-    inline LineCompare_t SetLineComparePosition(uint8_t value)
-    {
-        return LineCompare_t((value << Shift::LineComparePosition) & LineComparePosition);
-    }
-    
 }
 
 }}}

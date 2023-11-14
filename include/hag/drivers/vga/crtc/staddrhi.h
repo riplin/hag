@@ -36,16 +36,6 @@ namespace StartAddressHigh
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartAddressHigh, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetDisplayStartAddressHigh(StartAddressHigh_t value)
-    {
-        return (value & DisplayStartAddressHigh) >> Shift::DisplayStartAddressHigh;
-    }
-    
-    inline StartAddressHigh_t SetDisplayStartAddressHigh(uint8_t value)
-    {
-        return StartAddressHigh_t((value << Shift::DisplayStartAddressHigh) & DisplayStartAddressHigh);
-    }
-
 }
 
 }}}

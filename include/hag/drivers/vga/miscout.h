@@ -49,66 +49,6 @@ namespace MiscellaneousOutput
         SYS_WritePortByte(Register::MiscellaneousW, value);
     }
 
-    inline uint1_t GetIOAddressSelect(MiscellaneousOutput_t value)
-    {
-        return (value & IOAddressSelect) >> Shift::IOAddressSelect;
-    }
-    
-    inline uint1_t GetEnableCPUDisplayMemoryAddress(MiscellaneousOutput_t value)
-    {
-        return (value & EnableCPUDisplayMemoryAccess) >> Shift::EnableCPUDisplayMemoryAccess;
-    }
-    
-    inline uint2_t GetClockSelect(MiscellaneousOutput_t value)
-    {
-        return (value & ClockSelect) >> Shift::ClockSelect;
-    }
-    
-    inline uint1_t GetPageSelect(MiscellaneousOutput_t value)
-    {
-        return (value & PageSelect) >> Shift::PageSelect;
-    }
-    
-    inline uint1_t GetSelectNegativeHorizontalSyncPulse(MiscellaneousOutput_t value)
-    {
-        return (value & SelectNegativeHorizontalSyncPulse) >> Shift::SelectNegativeHorizontalSyncPulse;
-    }
-    
-    inline uint1_t GetSelectNegativeVerticalSyncPulse(MiscellaneousOutput_t value)
-    {
-        return (value & SelectNegativeVerticalSyncPulse) >> Shift::SelectNegativeVerticalSyncPulse;
-    }
-    
-    inline MiscellaneousOutput_t SetIOAddressSelect(uint1_t value)
-    {
-        return MiscellaneousOutput_t((value << Shift::IOAddressSelect) & IOAddressSelect);
-    }
-    
-    inline MiscellaneousOutput_t SetEnableCPUDisplayMemoryAddress(uint1_t value)
-    {
-        return MiscellaneousOutput_t((value << Shift::EnableCPUDisplayMemoryAccess) & EnableCPUDisplayMemoryAccess);
-    }
-    
-    inline MiscellaneousOutput_t SetClockSelect(uint2_t value)
-    {
-        return MiscellaneousOutput_t((value << Shift::ClockSelect) & ClockSelect);
-    }
-    
-    inline MiscellaneousOutput_t SetPageSelect(uint1_t value)
-    {
-        return MiscellaneousOutput_t((value << Shift::PageSelect) & PageSelect);
-    }
-    
-    inline MiscellaneousOutput_t SetSelectNegativeHorizontalSyncPulse(uint1_t value)
-    {
-        return MiscellaneousOutput_t((value << Shift::SelectNegativeHorizontalSyncPulse) & SelectNegativeHorizontalSyncPulse);
-    }
-    
-    inline MiscellaneousOutput_t SetSelectNegativeVerticalSyncPulse(uint1_t value)
-    {
-        return MiscellaneousOutput_t((value << Shift::SelectNegativeVerticalSyncPulse) & SelectNegativeVerticalSyncPulse);
-    }
-
 }
 
 }}

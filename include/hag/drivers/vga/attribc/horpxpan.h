@@ -58,15 +58,6 @@ namespace HorizontalPixelPanning
         AttributeControllerData::Write(AttributeControllerRegister::HorizontalPixelPanning, AttributeControllerData_t(value));
     }
 
-    inline uint4_t GetNumberOfPanShift(HorizontalPixelPanning_t value)
-    {
-        return (value & NumberOfPanShift) >> Shift::NumberOfPanShift;
-    }
-
-    inline HorizontalPixelPanning_t SetNumberOfPanShift(uint4_t value)
-    {
-        return HorizontalPixelPanning_t(value << Shift::NumberOfPanShift) & NumberOfPanShift;
-    }
 }
 
 }}}

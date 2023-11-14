@@ -43,46 +43,6 @@ namespace MaximumScanLine
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::MaximumScanLine, CRTControllerData_t(value));
     }
 
-    inline uint5_t GetMaximumScanLineCount(MaximumScanLine_t value)
-    {
-        return (value & MaximumScanLineCount) >> Shift::MaximumScanLineCount;
-    }
-
-    inline uint1_t GetStartVerticalBlankHigh(MaximumScanLine_t value)
-    {
-        return (value & StartVerticalBlankHigh) >> Shift::StartVerticalBlankHigh;
-    }
-
-    inline uint1_t GetLineCompareHigh(MaximumScanLine_t value)
-    {
-        return (value & LineCompareHigh) >> Shift::LineCompareHigh;
-    }
-
-    inline uint1_t GetDoubleScan(MaximumScanLine_t value)
-    {
-        return (value & DoubleScan) >> Shift::DoubleScan;
-    }
-
-    inline MaximumScanLine_t SetMaximumScanLineCount(uint5_t value)
-    {
-        return MaximumScanLine_t((value << Shift::MaximumScanLineCount) & MaximumScanLineCount);
-    }
-
-    inline MaximumScanLine_t SetStartVerticalBlankHigh(uint1_t value)
-    {
-        return MaximumScanLine_t((value << Shift::StartVerticalBlankHigh) & StartVerticalBlankHigh);
-    }
-
-    inline MaximumScanLine_t SetLineCompareHigh(uint1_t value)
-    {
-        return MaximumScanLine_t((value << Shift::LineCompareHigh) & LineCompareHigh);
-    }
-
-    inline MaximumScanLine_t SetDoubleScan(uint1_t value)
-    {
-        return MaximumScanLine_t((value << Shift::DoubleScan) & DoubleScan);
-    }
-
 }
 
 }}}

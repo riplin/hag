@@ -36,16 +36,6 @@ namespace CursorLocationAddressHigh
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CursorLocationAddressHigh, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetCursorAddressHigh(CursorLocationAddressHigh_t value)
-    {
-        return (value & CursorAddressHigh) >> Shift::CursorAddressHigh;
-    }
-    
-    inline CursorLocationAddressHigh_t SetCursorAddressHigh(uint8_t value)
-    {
-        return CursorLocationAddressHigh_t((value << Shift::CursorAddressHigh) & CursorAddressHigh);
-    }
-
 }
 
 }}}

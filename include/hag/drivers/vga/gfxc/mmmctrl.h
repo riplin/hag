@@ -55,35 +55,6 @@ namespace MemoryMapModeControl
         GraphicsControllerData::Write(GraphicsControllerRegister::MemoryMapModeControl, GraphicsControllerData_t(value));
     }
 
-    inline uint1_t GetSelectTextGraphicsMode(MemoryMapModeControl_t value)
-    {
-        return (value & SelectTextGraphicsMode) >> Shift::SelectTextGraphicsMode;
-    }
-
-    inline uint1_t GetChainOddEvenPlanes(MemoryMapModeControl_t value)
-    {
-        return (value & ChainOddEvenPlanes) >> Shift::ChainOddEvenPlanes;
-    }
-
-    inline uint2_t GetMemoryMapMode(MemoryMapModeControl_t value)
-    {
-        return (value & MemoryMapMode) >> Shift::MemoryMapMode;
-    }
-
-    inline MemoryMapModeControl_t SetSelectTextGraphicsMode(uint1_t value)
-    {
-        return MemoryMapModeControl_t(value << Shift::SelectTextGraphicsMode) & SelectTextGraphicsMode;
-    }
-
-    inline MemoryMapModeControl_t SetChainOddEvenPlanes(uint1_t value)
-    {
-        return MemoryMapModeControl_t(value << Shift::ChainOddEvenPlanes) & ChainOddEvenPlanes;
-    }
-
-    inline MemoryMapModeControl_t SetMemoryMapMode(uint2_t value)
-    {
-        return MemoryMapModeControl_t(value << Shift::MemoryMapMode) & MemoryMapMode;
-    }
 }
 
 }}}

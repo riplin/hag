@@ -41,26 +41,6 @@ namespace Palette
         AttributeControllerData::Write(AttributeControllerRegister::Palette0 + index, AttributeControllerData_t(value));
     }
 
-    inline uint3_t GetPrimaryRGB(Palette_t value)
-    {
-        return (value & PrimaryRGB) >> Shift::PrimaryRGB;
-    }
-
-    inline uint3_t GetSecondaryRGB(Palette_t value)
-    {
-        return (value & SecondaryRGB) >> Shift::SecondaryRGB;
-    }
-    
-    inline Palette_t SetPrimaryRGB(uint3_t value)
-    {
-        return Palette_t((value << Shift::PrimaryRGB) & PrimaryRGB);
-    }
-
-    inline Palette_t SetSecondaryRGB(uint3_t value)
-    {
-        return Palette_t((value << Shift::SecondaryRGB) & SecondaryRGB);
-    }
-    
 }
 
 }}}

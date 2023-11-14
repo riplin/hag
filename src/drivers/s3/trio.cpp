@@ -3,6 +3,7 @@
 //https://projectf.io/posts/video-timings-vga-720p-1080p/
 
 #include <hag/drivers/s3/trio.h>
+#include <stdio.h>
 
 namespace Hag { namespace S3
 {
@@ -46,7 +47,7 @@ TrioBase::VideoModeTranslation TrioBase::m_VideoModeTranslation[] =
     { VesaVideoMode::P640x400x16M, VideoMode::P640x400x16M }
 };
 
-VESAVideoParametersTable VESAVideoParameters132x43 =
+VideoParameters VESAVideoParameters132x43 =
 {
     0x84,
     0x2A,
@@ -122,7 +123,7 @@ VESAVideoParametersTable VESAVideoParameters132x43 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters132x25 =
+VideoParameters VESAVideoParameters132x25 =
 {
     0x84,
     0x18,
@@ -198,7 +199,7 @@ VESAVideoParametersTable VESAVideoParameters132x25 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters640x400 =
+VideoParameters VESAVideoParameters640x400 =
 {
     0x50,
     0x18,
@@ -274,7 +275,7 @@ VESAVideoParametersTable VESAVideoParameters640x400 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters640x480 =
+VideoParameters VESAVideoParameters640x480 =
 {
     0x50,
     0x1D,
@@ -350,7 +351,7 @@ VESAVideoParametersTable VESAVideoParameters640x480 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters800x600 =
+VideoParameters VESAVideoParameters800x600 =
 {
     0x64,
     0x4A,
@@ -426,7 +427,7 @@ VESAVideoParametersTable VESAVideoParameters800x600 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters1024x768 =
+VideoParameters VESAVideoParameters1024x768 =
 {
     0x80,
     0x2F,
@@ -502,7 +503,7 @@ VESAVideoParametersTable VESAVideoParameters1024x768 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters1280x1024 =
+VideoParameters VESAVideoParameters1280x1024 =
 {
     0xA0,
     0x3F,
@@ -578,7 +579,7 @@ VESAVideoParametersTable VESAVideoParameters1280x1024 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters1152x864 =
+VideoParameters VESAVideoParameters1152x864 =
 {
     0x90,
     0x36,
@@ -654,7 +655,7 @@ VESAVideoParametersTable VESAVideoParameters1152x864 =
     }
 };
 
-VESAVideoParametersTable VESAVideoParameters1600x1200 =
+VideoParameters VESAVideoParameters1600x1200 =
 {
     0xC8,
     0x4B,
@@ -729,6 +730,2149 @@ VESAVideoParametersTable VESAVideoParameters1600x1200 =
         0xFF
     }
 };
+
+VideoParameters TrioBase::m_LegacyVideoModes[] =
+{
+{
+    0x28,
+    0x18,
+    0x08,
+    0x0800,
+    {
+        0x09,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x63,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0xA0,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC7,
+        0x06,
+        0x07,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x14,
+        0x1F,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x08,
+    0x0800,
+    {
+        0x09,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x63,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0xA0,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC7,
+        0x06,
+        0x07,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x14,
+        0x1F,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x08,
+    0x1000,
+    {
+        0x01,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x63,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC7,
+        0x06,
+        0x07,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x1F,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x08,
+    0x1000,
+    {
+        0x01,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x63,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC7,
+        0x06,
+        0x07,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x1F,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x08,
+    0x4000,
+    {
+        0x09,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x63,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC1,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x14,
+        0x00,
+        0x96,
+        0xB9,
+        0xA2,
+        0xFF
+    },
+    {
+        0x00,
+        0x13,
+        0x15,
+        0x17,
+        0x02,
+        0x04,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x01,
+        0x00,
+        0x03,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x30,
+        0x0F,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x08,
+    0x4000,
+    {
+        0x09,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x63,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC1,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x14,
+        0x00,
+        0x96,
+        0xB9,
+        0xA2,
+        0xFF
+    },
+    {
+        0x00,
+        0x13,
+        0x15,
+        0x17,
+        0x02,
+        0x04,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x01,
+        0x00,
+        0x03,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x30,
+        0x0F,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x08,
+    0x4000,
+    {
+        0x01,
+        0x01,
+        0x00,
+        0x06
+    },
+    0x63,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x54,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC1,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x00,
+        0x96,
+        0xB9,
+        0xC2,
+        0xFF
+    },
+    {
+        0x00,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x17,
+        0x01,
+        0x00,
+        0x01,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x0D,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x0E,
+    0x1000,
+    {
+        0x00,
+        0x03,
+        0x00,
+        0x03
+    },
+    0xA6,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4D,
+        0x0B,
+        0x0C,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x83,
+        0x85,
+        0x5D,
+        0x28,
+        0x0D,
+        0x63,
+        0xBA,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x10,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x0E,
+        0x00,
+        0x0F,
+        0x08
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0A,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x10,
+    0x7D00,
+    {
+        0x21,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0x63,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x40,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x1F,
+        0x96,
+        0xB9,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x05,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x00,
+    0x00,
+    0x00,
+    0x0000,
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00
+    },
+    0x00,
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00
+    }
+},
+{
+    0x28,
+    0x18,
+    0x08,
+    0x4000,
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x03
+    },
+    0x23,
+    {
+        0x37,
+        0x27,
+        0x2D,
+        0x37,
+        0x31,
+        0x15,
+        0x04,
+        0x11,
+        0x00,
+        0x47,
+        0x06,
+        0x07,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0xE1,
+        0x24,
+        0xC7,
+        0x14,
+        0x08,
+        0xE0,
+        0xF0,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x00,
+    0x00,
+    0x0000,
+    {
+        0x29,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0x62,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x40,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x1F,
+        0x96,
+        0xB9,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x3F,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x0F,
+        0x00,
+        0x00,
+        0x08,
+        0x05,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x00,
+    0x00,
+    0x0000,
+    {
+        0x29,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0x63,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x40,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x1F,
+        0x96,
+        0xB9,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x3F,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x0F,
+        0x00,
+        0x00,
+        0x08,
+        0x05,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x08,
+    0x2000,
+    {
+        0x09,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0x63,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC0,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x14,
+        0x00,
+        0x96,
+        0xB9,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x05,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x08,
+    0x4000,
+    {
+        0x01,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0x63,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x54,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0xC0,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x00,
+        0x96,
+        0xB9,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x05,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x0E,
+    0x8000,
+    {
+        0x05,
+        0x0F,
+        0x00,
+        0x00
+    },
+    0xA2,
+    {
+        0x60,
+        0x4F,
+        0x56,
+        0x1A,
+        0x50,
+        0xE0,
+        0x70,
+        0x1F,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x5E,
+        0x2E,
+        0x5D,
+        0x14,
+        0x00,
+        0x5E,
+        0x6E,
+        0x8B,
+        0xFF
+    },
+    {
+        0x00,
+        0x08,
+        0x00,
+        0x00,
+        0x18,
+        0x18,
+        0x00,
+        0x00,
+        0x00,
+        0x08,
+        0x00,
+        0x00,
+        0x00,
+        0x18,
+        0x00,
+        0x00,
+        0x0B,
+        0x00,
+        0x05,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x07,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x0E,
+    0x8000,
+    {
+        0x05,
+        0x0F,
+        0x00,
+        0x00
+    },
+    0xA7,
+    {
+        0x5B,
+        0x4F,
+        0x53,
+        0x17,
+        0x50,
+        0xBA,
+        0x6C,
+        0x1F,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x5E,
+        0x2B,
+        0x5D,
+        0x14,
+        0x0F,
+        0x5F,
+        0x0A,
+        0x8B,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x04,
+        0x07,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x00,
+        0x04,
+        0x07,
+        0x00,
+        0x00,
+        0x01,
+        0x00,
+        0x05,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x07,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x0E,
+    0x8000,
+    {
+        0x01,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0xA2,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x54,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0x40,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x83,
+        0x85,
+        0x5D,
+        0x28,
+        0x0F,
+        0x63,
+        0xBA,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x08,
+        0x00,
+        0x00,
+        0x18,
+        0x18,
+        0x00,
+        0x00,
+        0x00,
+        0x08,
+        0x00,
+        0x00,
+        0x00,
+        0x18,
+        0x00,
+        0x00,
+        0x0B,
+        0x00,
+        0x05,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x05,
+        0x05,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x0E,
+    0x8000,
+    {
+        0x01,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0xA3,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x54,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0x40,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x83,
+        0x85,
+        0x5D,
+        0x28,
+        0x0F,
+        0x63,
+        0xBA,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x05,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x0E,
+    0x0800,
+    {
+        0x09,
+        0x03,
+        0x00,
+        0x02
+    },
+    0xA3,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0xA0,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4D,
+        0x0B,
+        0x0C,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x83,
+        0x85,
+        0x5D,
+        0x14,
+        0x1F,
+        0x63,
+        0xBA,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x0E,
+    0x0800,
+    {
+        0x09,
+        0x03,
+        0x00,
+        0x02
+    },
+    0xA3,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0xA0,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4D,
+        0x0B,
+        0x0C,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x83,
+        0x85,
+        0x5D,
+        0x14,
+        0x1F,
+        0x63,
+        0xBA,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x0E,
+    0x1000,
+    {
+        0x01,
+        0x03,
+        0x00,
+        0x02
+    },
+    0xA3,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4D,
+        0x0B,
+        0x0C,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x83,
+        0x85,
+        0x5D,
+        0x28,
+        0x1F,
+        0x63,
+        0xBA,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x0E,
+    0x1000,
+    {
+        0x01,
+        0x03,
+        0x00,
+        0x02
+    },
+    0xA3,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4D,
+        0x0B,
+        0x0C,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x83,
+        0x85,
+        0x5D,
+        0x28,
+        0x1F,
+        0x63,
+        0xBA,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x08,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x10,
+    0x0800,
+    {
+        0x08,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x67,
+    {
+        0x2D,
+        0x27,
+        0x28,
+        0x90,
+        0x2B,
+        0xA0,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4F,
+        0x0D,
+        0x0E,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x14,
+        0x1F,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x0C,
+        0x00,
+        0x0F,
+        0x08
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x10,
+    0x1000,
+    {
+        0x00,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x67,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4F,
+        0x0D,
+        0x0E,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x1F,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x0C,
+        0x00,
+        0x0F,
+        0x08
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0E,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x18,
+    0x10,
+    0x1000,
+    {
+        0x00,
+        0x03,
+        0x00,
+        0x02
+    },
+    0x66,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x55,
+        0x81,
+        0xBF,
+        0x1F,
+        0x00,
+        0x4F,
+        0x0D,
+        0x0E,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x0F,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x08,
+        0x10,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x18,
+        0x0E,
+        0x00,
+        0x0F,
+        0x08
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x10,
+        0x0A,
+        0x00,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x1D,
+    0x10,
+    0xA000,
+    {
+        0x01,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0xE3,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x54,
+        0x80,
+        0x0B,
+        0x3E,
+        0x00,
+        0x40,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0xEA,
+        0x8C,
+        0xDF,
+        0x28,
+        0x00,
+        0xE7,
+        0x04,
+        0xC3,
+        0xFF
+    },
+    {
+        0x00,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x3F,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x05,
+        0x01,
+        0xFF
+    }
+},
+{
+    0x50,
+    0x1D,
+    0x10,
+    0xA000,
+    {
+        0x01,
+        0x0F,
+        0x00,
+        0x06
+    },
+    0xE3,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x54,
+        0x80,
+        0x0B,
+        0x3E,
+        0x00,
+        0x40,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0xEA,
+        0x8C,
+        0xDF,
+        0x28,
+        0x00,
+        0xE7,
+        0x04,
+        0xE3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x14,
+        0x07,
+        0x38,
+        0x39,
+        0x3A,
+        0x3B,
+        0x3C,
+        0x3D,
+        0x3E,
+        0x3F,
+        0x01,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x05,
+        0x0F,
+        0xFF
+    }
+},
+{
+    0x28,
+    0x18,
+    0x08,
+    0x2000,
+    {
+        0x01,
+        0x0F,
+        0x00,
+        0x0E
+    },
+    0x63,
+    {
+        0x5F,
+        0x4F,
+        0x50,
+        0x82,
+        0x54,
+        0x80,
+        0xBF,
+        0x1F,
+        0x00,
+        0x41,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x9C,
+        0x8E,
+        0x8F,
+        0x28,
+        0x40,
+        0x96,
+        0xB9,
+        0xA3,
+        0xFF
+    },
+    {
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x08,
+        0x09,
+        0x0A,
+        0x0B,
+        0x0C,
+        0x0D,
+        0x0E,
+        0x0F,
+        0x41,
+        0x00,
+        0x0F,
+        0x00
+    },
+    {
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x40,
+        0x05,
+        0x0F,
+        0xFF
+    }
+}
+};
+
+VideoParameters* TrioBase::m_VesaResolutions[] =
+{
+    &VESAVideoParameters132x43,
+    &VESAVideoParameters132x25,
+    &VESAVideoParameters640x400,
+    &VESAVideoParameters640x480,
+    &VESAVideoParameters800x600,
+    &VESAVideoParameters1024x768,
+    &VESAVideoParameters1280x1024,
+    &VESAVideoParameters1152x864,
+    &VESAVideoParameters1600x1200
+};
+
+uint8_t TrioBase::m_VideoModeOverrideTranslationTable1[] =
+{ 0x17, 0x17, 0x18, 0x18, 0x04, 0x05, 0x06, 0x19, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x11, 0x12, 0x1A, 0x1B, 0x1C };
+
+uint8_t TrioBase::m_VideoModeOverrideTranslationTable2[] =
+{ 0x13, 0x14, 0x15, 0x16, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x11, 0x12, 0x1A, 0x1B, 0x1C };
+
+uint8_t TrioBase::m_VideoModeOverrideTranslationTable3[] =
+{ 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x11, 0x12, 0x1A, 0x1B, 0x1C };
 
 //Data0BD0
 static VGA::CRTControllerData_t CRTData640x480x1v1[] =
@@ -2418,12 +4562,43 @@ static VESAResolutionVariant ModeData640x400x32xOEM[] =
     }
 };
 
+VESAModeInfo VESAModeInfo_68_G_640x400x256C = { 0x1B, 0x0280, 0x0280, 0x0190, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_69_G_640x480x256C = { 0x1B, 0x0280, 0x0280, 0x01E0, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_6A_G_800x600x16C = { 0x1F, 0x0064, 0x0320, 0x0258, 0x08, 0x04, 0x04, 0x01, 0x03 };
+VESAModeInfo VESAModeInfo_6B_G_800x600x256C = { 0x1B, 0x0320, 0x0320, 0x0258, 0x08, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_6C_1024x768x16C = { 0x1B, 0x0080, 0x0400, 0x0300, 0x10, 0x04, 0x04, 0x01, 0x03 };
+VESAModeInfo VESAModeInfo_6D_1024x768x256C = { 0x1B, 0x0400, 0x0400, 0x0300, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_6E_1280x1024x16C = { 0x1B, 0x00A0, 0x0500, 0x0400, 0x10, 0x04, 0x04, 0x01, 0x03 };
+VESAModeInfo VESAModeInfo_6F_1280x1024x256C = { 0x1B, 0x0500, 0x0500, 0x0400, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_55_T_132x25 = { 0x0F, 0x0108, 0x0084, 0x0019, 0x10, 0x04, 0x04, 0x01, 0x00 };
+VESAModeInfo VESAModeInfo_54_T_132x43 = { 0x0F, 0x0108, 0x0084, 0x002B, 0x08, 0x04, 0x04, 0x01, 0x00 };
+VESAModeInfo VESAModeInfo_70_640x480x32K = { 0x1B, 0x0500, 0x0280, 0x01E0, 0x10, 0x01, 0x0F, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_71_640x480x64K = { 0x1B, 0x0500, 0x0280, 0x01E0, 0x10, 0x01, 0x10, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_72_640x480x16M = { 0x1B, 0x0A00, 0x0280, 0x01E0, 0x10, 0x01, 0x20, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_73_800x600x32K = { 0x1B, 0x0640, 0x0320, 0x0258, 0x08, 0x01, 0x0F, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_74_800x600x64K = { 0x1B, 0x0640, 0x0320, 0x0258, 0x08, 0x01, 0x10, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_75_800x600x16M = { 0x1B, 0x0C80, 0x0320, 0x0258, 0x08, 0x01, 0x20, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_76_1024x768x32K = { 0x1B, 0x0800, 0x0400, 0x0300, 0x10, 0x01, 0x0F, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_77_1024x768x64K = { 0x1B, 0x0800, 0x0400, 0x0300, 0x10, 0x01, 0x10, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_78_1024x768x16M = { 0x1B, 0x1000, 0x0400, 0x0300, 0x10, 0x01, 0x20, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_79_1280x1024x32K = { 0x1B, 0x0A00, 0x0500, 0x0400, 0x10, 0x01, 0x0F, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_7A_1280x1024x64K = { 0x1B, 0x0A00, 0x0500, 0x0400, 0x10, 0x01, 0x10, 0x01, 0x06 };
+VESAModeInfo VESAModeInfo_7C_1600x1200x256 = { 0x1B, 0x0640, 0x0640, 0x04B0, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_49_640x480x256C = { 0x1B, 0x0400, 0x0280, 0x01E0, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_4A_800x600x16C = { 0x1B, 0x0400, 0x0320, 0x0258, 0x08, 0x01, 0x04, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_4B_800x600x256C = { 0x1B, 0x0400, 0x0320, 0x0258, 0x08, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_4C_1024x768x16C = { 0x1B, 0x0400, 0x0400, 0x0300, 0x10, 0x01, 0x04, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_4D_1024x768x256C = { 0x1B, 0x0400, 0x0400, 0x0300, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_4E_1152x864x256C = { 0x1B, 0x0480, 0x0480, 0x0360, 0x10, 0x01, 0x08, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_4F_1280x1024x16C = { 0x1B, 0x0400, 0x0500, 0x0400, 0x10, 0x01, 0x04, 0x01, 0x04 };
+VESAModeInfo VESAModeInfo_52_640x400x16M = { 0x1B, 0x0A00, 0x0280, 0x0190, 0x10, 0x01, 0x20, 0x01, 0x06 };
 
-VESAVideoModeData TrioBase::m_VideoModeData[] = 
+VESAVideoModeData TrioBase::m_VesaVideoModes[] = 
 {
     {
         &VESAVideoParameters132x43,
         ModeData132x43x8,
+        &VESAModeInfo_54_T_132x43,
         VideoMode::T132x43x16C,
         VESAVideoModeFlags::WindowGranularity64KiB | VESAVideoModeFlags::Unknown1, //0b00000011,
         AdvancedFunctionControl::ReservedAs1,
@@ -2433,6 +4608,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters132x25,
         ModeData132x25x8,
+        &VESAModeInfo_55_T_132x25,
         VideoMode::T132x25x16C,
         VESAVideoModeFlags::WindowGranularity64KiB | VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown3, //0b00110011,
         AdvancedFunctionControl::ReservedAs1,
@@ -2440,7 +4616,9 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
         VGA::Sequencer::MemoryModeControl::ExtendedMemoryAddress
     },
     {
-        &VESAVideoParameters640x400, ModeData640x400x8,
+        &VESAVideoParameters640x400,
+        ModeData640x400x8,
+        &VESAModeInfo_68_G_640x400x256C,
         VideoMode::G640x400x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2453,6 +4631,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters640x480,
         ModeData640x480x8,
+        &VESAModeInfo_69_G_640x480x256C,
         VideoMode::G640x480x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2465,6 +4644,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters800x600,
         ModeData800x600x4,
+        &VESAModeInfo_6A_G_800x600x16C,
         VideoMode::G800x600x16C,
         VESAVideoModeFlags::Unknown1, //0b00000010,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2476,6 +4656,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters800x600,
         ModeData800x600x8,
+        &VESAModeInfo_6B_G_800x600x256C,
         VideoMode::G800x600x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2, //0b00000110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2488,6 +4669,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1024x768,
         ModeData1024x768x4,
+        &VESAModeInfo_6C_1024x768x16C,
         VideoMode::G1024x768x16C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown3, //0b00110010,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2499,6 +4681,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1024x768,
         ModeData1024x768x8,
+        &VESAModeInfo_6D_1024x768x256C,
         VideoMode::G1024x768x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2512,6 +4695,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1280x1024,
         ModeData1280x1024x4,
+        &VESAModeInfo_6E_1280x1024x16C,
         VideoMode::G1280x1024x16C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown3, //0b00110010,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2523,6 +4707,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1280x1024,
         ModeData1280x1024x8,
+        &VESAModeInfo_6F_1280x1024x256C,
         VideoMode::G1280x1024x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2535,6 +4720,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters640x480,
         ModeData640x480x16,
+        &VESAModeInfo_70_640x480x32K,
         VideoMode::G640x480x32K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2547,6 +4733,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters640x480,
         ModeData640x480x16,
+        &VESAModeInfo_71_640x480x64K,
         VideoMode::G640x480x64K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2559,6 +4746,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters640x480,
         ModeData640x480x32,
+        &VESAModeInfo_72_640x480x16M,
         VideoMode::G640x480x16M,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2571,6 +4759,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters800x600,
         ModeData800x600x16,
+        &VESAModeInfo_73_800x600x32K,
         VideoMode::G800x600x32K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2, //0b00000110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2583,6 +4772,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters800x600,
         ModeData800x600x16,
+        &VESAModeInfo_74_800x600x64K,
         VideoMode::G800x600x64K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2, //0b00000110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2595,6 +4785,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters800x600,
         ModeData800x600x32,
+        &VESAModeInfo_75_800x600x16M,
         VideoMode::G800x600x16M,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2, //0b00000110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2607,6 +4798,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1024x768,
         ModeData1024x768x16,
+        &VESAModeInfo_76_1024x768x32K,
         VideoMode::G1024x768x32K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2619,6 +4811,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1024x768,
         ModeData1024x768x16,
+        &VESAModeInfo_77_1024x768x64K,
         VideoMode::G1024x768x64K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2631,8 +4824,9 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1024x768,
         ModeData1024x768x32,
-        VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
+        &VESAModeInfo_78_1024x768x16M,
         VideoMode::G1024x768x16M,
+        VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
         AdvancedFunctionControl::EnableEnhancedFunctions,
         ColorMode::C24bpp1px,
@@ -2643,6 +4837,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1280x1024,
         ModeData1280x1024x16,
+        &VESAModeInfo_79_1280x1024x32K,
         VideoMode::G1280x1024x32K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2655,6 +4850,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1280x1024,
         ModeData1280x1024x16,
+        &VESAModeInfo_7A_1280x1024x64K,
         VideoMode::G1280x1024x64K,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2667,6 +4863,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1600x1200,
         ModeData1600x1200x8,
+        &VESAModeInfo_7C_1600x1200x256,
         VideoMode::P1600x1200x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2679,6 +4876,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters640x480,
         ModeData640x480x8xOEM,
+        &VESAModeInfo_49_640x480x256C,
         VideoMode::P640x480x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2691,6 +4889,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters800x600,
         ModeData800x600x4xOEM,
+        &VESAModeInfo_4A_800x600x16C,
         VideoMode::P800x600x16C,
         VESAVideoModeFlags::Unknown1, //0b00000010,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2704,6 +4903,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters800x600,
         ModeData800x600x8xOEM,
+        &VESAModeInfo_4B_800x600x256C,
         VideoMode::P800x600x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2, //0b00000110,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2717,6 +4917,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1024x768,
         ModeData1024x768x4xOEM,
+        &VESAModeInfo_4C_1024x768x16C,
         VideoMode::P1024x768x16C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown3, //0b00110010,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2730,6 +4931,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1024x768,
         ModeData1024x768x8xOEM,
+        &VESAModeInfo_4D_1024x768x256C,
         VideoMode::P1024x768x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2743,6 +4945,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1152x864,
         ModeData1152x864x8xOEM,
+        &VESAModeInfo_4E_1152x864x256C,
         VideoMode::P1152x864x256C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2756,6 +4959,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters1280x1024,
         ModeData1280x1024x4xOEM,
+        &VESAModeInfo_4F_1280x1024x16C,
         VideoMode::P1280x1024x16C,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown3, //0b00110010,
         AdvancedFunctionControl::EnhancedModePixelLength |
@@ -2769,6 +4973,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
     {
         &VESAVideoParameters640x400,
         ModeData640x400x32xOEM,
+        &VESAModeInfo_52_640x400x16M,
         VideoMode::P640x400x16M,
         VESAVideoModeFlags::Unknown1 | VESAVideoModeFlags::Unknown2 | VESAVideoModeFlags::Unknown3, //0b00110110,
         AdvancedFunctionControl::ReservedAs1 |
@@ -2782,7 +4987,7 @@ VESAVideoModeData TrioBase::m_VideoModeData[] =
 
 FirmwareFlag_t TrioBase::m_FirmwareFlag = FirmwareFlag:: Unknown0 |FirmwareFlag::Unknown3;
 
-VideoMode_t TrioBase::ConvertVesaModeToLegacy(Vesa::VideoMode_t mode) const
+VideoMode_t TrioBase::ConvertVesaModeToLegacy(Vesa::VideoMode_t mode)
 {
     for (int i = 0; i < sizeof(m_VideoModeTranslation) / sizeof(VideoModeTranslation); ++i)
     {
@@ -2792,7 +4997,7 @@ VideoMode_t TrioBase::ConvertVesaModeToLegacy(Vesa::VideoMode_t mode) const
     return VideoMode::Invalid;
 }
 
-VideoModeError_t TrioBase::CheckValidVideoMode(VideoMode_t mode) const
+VideoModeError_t TrioBase::CheckValidVideoMode(VideoMode_t mode)
 {
     //Check legacy
     if (mode <= VGA::VideoMode::MaxValid)
@@ -2807,159 +5012,30 @@ VideoModeError_t TrioBase::CheckValidVideoMode(VideoMode_t mode) const
     return VideoModeError::UnknownVideoMode;
 }
 
-bool TrioBase::FindVideoModeData(VideoMode_t mode, VESAVideoModeData*& videoModeData) const
+VESAVideoModeData* TrioBase::FindVideoModeData(VideoMode_t mode)
 {
-    bool ret = false;
-    for (int i = 0; i < sizeof(m_VideoModeData) / sizeof(VESAVideoModeData); ++i)
+    VESAVideoModeData* videoModeData = NULL;
+    for (int i = 0; i < sizeof(m_VesaVideoModes) / sizeof(VESAVideoModeData); ++i)
     {
-        if (m_VideoModeData[i].Mode == mode)
+        if (m_VesaVideoModes[i].Mode == mode)
         {
-            videoModeData = &m_VideoModeData[i];
-            ret = true;
+            videoModeData = &m_VesaVideoModes[i];
+            break;
         }
     }
-
-    return ret;
+    return videoModeData;
 }
 
-bool TrioBase::GetVideoModeFlags(VideoMode_t mode, VESAVideoModeFlags_t& flags) const
+bool TrioBase::GetVideoModeFlags(VideoMode_t mode, VESAVideoModeFlags_t& flags)
 {
-    bool ret = false;
     flags = 0;
     VESAVideoModeData* videoModeData = NULL;
-
-    if (ret = FindVideoModeData(mode, videoModeData))
+    if (videoModeData = FindVideoModeData(mode))
     {
         flags = videoModeData->Flags;
     }
 
-    return ret;
+    return videoModeData != NULL;
 }
-
-void TrioBase::SetupBDAColor(System::BDA::EGAFeatureBitSwitches_t featureBitSwitches) const
-{
-    //Switch us to color.
-    System::BDA::VideoModeOptions::Get() &= System::BDA::VideoModeOptions_t(~System::BDA::VideoModeOptions::Monochrome);
-
-    //Throw out the EGA mode.
-    System::BDA::EGAFeatureBitSwitches::Get() &= System::BDA::EGAFeatureBitSwitches::FeatureConnectorMask;
-    
-    //This is confusing. It's using the top bit to increase MDAHiRes80x25_2 to MDAHiResEnhanced_2 if
-    //the line mode is not 200.
-    //The other mode, CGAMono80x25_2 is uneven so that bit is already set.
-    System::BDA::VideoDisplayDataArea_t bumpHiResEnhanced = (~System::BDA::VideoDisplayDataArea::Get()) >> 7;
-    System::BDA::EGAFeatureBitSwitches::Get() |= featureBitSwitches | bumpHiResEnhanced;
-
-    //Drop the 200 line
-    System::BDA::VideoDisplayDataArea::Get() &= System::BDA::VideoDisplayDataArea_t(~System::BDA::VideoDisplayDataArea::LineMode200);
-    if ((m_FirmwareFlag & FirmwareFlag::Unknown0) != 0x00)
-    {    
-        //Clear out and set us to color.
-        System::BDA::DetectedHardware::Get() &= System::BDA::DetectedHardware_t(~System::BDA::DetectedHardware::InitialVideoModeMask);
-        System::BDA::DetectedHardware::Get() |= System::BDA::DetectedHardware::Color80x25;
-    }
-}
-
-void TrioBase::SetBDAVideoMode(VideoMode_t mode) const
-{
-    System::BDA::EGAFeatureBitSwitches_t adapterType = System::BDA::EGAFeatureBitSwitches::Get() &
-                                                       System::BDA::EGAFeatureBitSwitches::AdapterTypeMask;
-
-    System::BDA::DetectedHardware_t detectedHardware = System::BDA::DetectedHardware::Get() & System::BDA::DetectedHardware::InitialVideoModeMask;
-
-    VESAVideoModeFlags_t videoModeFlags = 0;
-    bool videoModeFlagsFound = GetVideoModeFlags(mode, videoModeFlags);
-
-    if (!videoModeFlagsFound)
-    {
-        if (m_FirmwareFlag & FirmwareFlag::Unknown0 == 0x00)
-        {
-            if (System::BDA::VideoBaseIOPort::Get() == VGA::Register::CRTControllerIndexD)
-                return;
-            
-            if (detectedHardware == System::BDA::DetectedHardware::Monochrome80x25)
-            {
-                //al = 7
-                return;
-            }
-
-            if (adapterType <= System::BDA::EGAFeatureBitSwitches::CGAMono80x25)
-                return;
-            
-            System::BDA::EGAFeatureBitSwitches_t newSwitches = 0;
-            if (adapterType <= System::BDA::EGAFeatureBitSwitches::MDAHiRes80x25_2)
-            {
-                newSwitches = System::BDA::EGAFeatureBitSwitches::CGAMono80x25_2 | 
-                              System::BDA::EGAFeatureBitSwitches::FeatureConnector1;
-            }
-            else
-            if (adapterType == System::BDA::EGAFeatureBitSwitches::MDAHiResEnhanced_2)
-            {
-                newSwitches = System::BDA::EGAFeatureBitSwitches::CGAMono80x25_2;
-            }
-            else
-            if (adapterType <= System::BDA::EGAFeatureBitSwitches::CGAMono80x25_2)
-            {
-                newSwitches = System::BDA::EGAFeatureBitSwitches::MDAHiRes80x25_2 | 
-                              System::BDA::EGAFeatureBitSwitches::FeatureConnector0;
-            }
-            else
-                return;
-            
-            SetupBDAColor(newSwitches);
-            return;
-        } else
-        {
-            if (System::BDA::VideoBaseIOPort::Get() == VGA::Register::CRTControllerIndexD)
-            {
-                //Clear out and set us to color.
-                System::BDA::DetectedHardware::Get() &= System::BDA::DetectedHardware_t(~System::BDA::DetectedHardware::InitialVideoModeMask);
-                System::BDA::DetectedHardware::Get() |= System::BDA::DetectedHardware::Color80x25;
-                return;
-            }
-
-            if (adapterType <= System::BDA::EGAFeatureBitSwitches::CGAMono80x25)
-            {
-//    mov  bl, 08h
-  //  jmp  Label0x1950                    ;Offset 0x1950
-            }
-            else if (adapterType <= System::BDA::EGAFeatureBitSwitches::MDAHiRes80x25_2)
-            {
-                //...
-            }
-            else if (adapterType == System::BDA::EGAFeatureBitSwitches::MDAHiResEnhanced_2)
-            {
-//Label0x1a34:                            ;Offset 0x1a34
-//    or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-//    and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_LineMode200;Offset 0x489, 0x7f
-//    and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488, 0xf0
-//    or   byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_CGAMono80x25_2;Offset 0x488, 0xb
-//Label0x1a48:                            ;Offset 0x1a48
-//    or   word ptr ds:[BDA_DetectedHardware], BDA_DH_80x25Monochrome;Offset 0x410, 0x30
-//    ret  
-            }
-            else if (adapterType > System::BDA::EGAFeatureBitSwitches::CGAMono80x25_2)
-            {
-                return;
-            }
-//    cmp  ah, BDA_EFBS_MDAHiRes80x25_2   ;0x8
-//    jbe  Label0x19e3                    ;Offset 0x19e3
-//    cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x9
-//    je   Label0x1a34                    ;Offset 0x1a34
-//    cmp  ah, BDA_EFBS_CGAMono80x25_2    ;0bh
-//    ja   Label0x1a16                    ;Offset 0x1a16
-
-        }
-    }
-    else
-    if (mode == VGA::VideoMode::T80x25x2M ||
-        mode == VGA::VideoMode::G640x350x2M ||
-        (videoModeFlags & VESAVideoModeFlags::Unknown1) == 0x00)
-    {
-        //GetVideoModeFlags()
-    }
-
-}
-
 
 }}

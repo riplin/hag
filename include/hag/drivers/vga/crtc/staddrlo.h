@@ -35,16 +35,6 @@ namespace StartAddressLow
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartAddressLow, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetDisplayStartAddressLow(StartAddressLow_t value)
-    {
-        return (value & DisplayStartAddressLow) >> Shift::DisplayStartAddressLow;
-    }
-    
-    inline StartAddressLow_t SetDisplayStartAddressLow(uint8_t value)
-    {
-        return StartAddressLow_t((value << Shift::DisplayStartAddressLow) & DisplayStartAddressLow);
-    }
-
 }
 
 }}}

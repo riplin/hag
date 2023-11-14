@@ -35,15 +35,6 @@ namespace GraphicsControllerIndex
         SYS_WritePortByte(Register::GraphicsControllerIndex, value);
     }
 
-    inline uint4_t GetGraphicsControllerRegisterIndex(GraphicsControllerIndex_t value)
-    {
-        return (value & GraphicsControllerRegisterIndex) >> Shift::GraphicsControllerRegisterIndex;
-    }
-
-    inline GraphicsControllerIndex_t SetGraphicsControllerRegisterIndex(uint4_t value)
-    {
-        return GraphicsControllerIndex_t((value << Shift::GraphicsControllerRegisterIndex) & GraphicsControllerRegisterIndex);
-    }
 }
 
 }}

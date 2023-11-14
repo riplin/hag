@@ -39,15 +39,6 @@ namespace BorderColor
         AttributeControllerData::Write(AttributeControllerRegister::BorderColor, AttributeControllerData_t(value));
     }
 
-    inline uint8_t GetColor(BorderColor_t value)
-    {
-        return (value & Color) >> Shift::Color;
-    }
-
-    inline BorderColor_t SetColor(uint8_t value)
-    {
-        return BorderColor_t(value << Shift::Color) & Color;
-    }
 }
 
 }}}

@@ -42,15 +42,6 @@ namespace ColorDontCare
         GraphicsControllerData::Write(GraphicsControllerRegister::ColorDontCare, GraphicsControllerData_t(value));
     }
 
-    inline uint4_t GetComparePlaneSelect(ColorDontCare_t value)
-    {
-        return (value & ComparePlaneSelect) >> Shift::ComparePlaneSelect;
-    }
-
-    inline ColorDontCare_t SetComparePlaneSelect(uint4_t value)
-    {
-        return ColorDontCare_t(value << Shift::ComparePlaneSelect) & ComparePlaneSelect;
-    }
 }
 
 }}}

@@ -36,16 +36,6 @@ namespace VerticalDisplayEnd
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::VerticalDisplayEnd, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetVerticalDisplayEndLow(VerticalDisplayEnd_t value)
-    {
-        return (value & VerticalDisplayEndLow) >> Shift::VerticalDisplayEndLow;
-    }
-
-    inline VerticalDisplayEnd_t SetVerticalDisplayEndLow(uint8_t value)
-    {
-        return (value << Shift::VerticalDisplayEndLow) & VerticalDisplayEndLow;
-    }
-
 }
 
 }}}

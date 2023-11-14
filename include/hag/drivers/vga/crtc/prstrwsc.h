@@ -39,26 +39,6 @@ namespace PresetRowScan
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::PresetRowScan, CRTControllerData_t(value));
     }
 
-    inline uint5_t GetPresetRowScanCount(PresetRowScan_t value)
-    {
-        return (value & PresetRowScanCount) >> Shift::PresetRowScanCount;
-    }
-    
-    inline uint2_t GetBytePan(PresetRowScan_t value)
-    {
-        return (value & BytePan) >> Shift::BytePan;
-    }
-
-    inline PresetRowScan_t SetPresetRowScanCount(uint5_t value)
-    {
-        return PresetRowScan_t((value << Shift::PresetRowScanCount) & PresetRowScanCount);
-    }
-    
-    inline PresetRowScan_t SetBytePan(uint2_t value)
-    {
-        return PresetRowScan_t((value << Shift::BytePan) & BytePan);
-    }
-
 }
 
 }}}

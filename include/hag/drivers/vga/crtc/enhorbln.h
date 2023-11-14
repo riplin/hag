@@ -51,26 +51,6 @@ namespace EndHorizontalBlank
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::EndHorizontalBlank, CRTControllerData_t(value));
     }
 
-    inline uint5_t GetEndHorizontalBlankLow(EndHorizontalBlank_t value)
-    {
-        return (value & EndHorizontalBlankLow) >> Shift::EndHorizontalBlankLow;
-    }
-    
-    inline uint2_t GetDisplaySkew(EndHorizontalBlank_t value)
-    {
-        return (value & DisplaySkew) >> Shift::DisplaySkew;
-    }
-
-    inline EndHorizontalBlank_t SetEndHorizontalBlankLow(uint5_t value)
-    {
-        return EndHorizontalBlank_t((value << Shift::EndHorizontalBlankLow) & EndHorizontalBlankLow);
-    }
-    
-    inline EndHorizontalBlank_t SetDisplaySkew(uint2_t value)
-    {
-        return EndHorizontalBlank_t((value << Shift::DisplaySkew) & DisplaySkew);
-    }
-
 }
 
 }}}

@@ -42,16 +42,6 @@ namespace DACMask
         SYS_WritePortByte(Register::DACMask, value);
     }
 
-    inline uint8_t GetMask(DACMask_t value)
-    {
-        return (value & Mask) >> Shift::Mask;
-    }
-
-    inline DACMask_t SetMask(uint8_t value)
-    {
-        return DACMask_t((value << Shift::Mask) & Mask);
-    }
-
 }
 
 }}

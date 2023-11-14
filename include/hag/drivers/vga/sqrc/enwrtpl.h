@@ -34,16 +34,6 @@ namespace EnableWritePlane
         SequencerData::Write(SequencerRegister::EnableWritePlane, SequencerData_t(value));
     }
 
-    inline uint4_t GetEnableWriteToPlane(EnableWritePlane_t value)
-    {
-        return (value & EnableWriteToPlane) >> Shift::EnableWriteToPlane;
-    }
-
-    inline EnableWritePlane_t SetEnableWriteToPlane(uint4_t value)
-    {
-        return EnableWritePlane_t((value << Shift::EnableWriteToPlane) & EnableWriteToPlane);
-    }
-
 }
 
 }}}

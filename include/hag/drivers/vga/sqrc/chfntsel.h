@@ -45,46 +45,6 @@ namespace CharacterFontSelect
         SequencerData::Write(SequencerRegister::CharacterFontSelect, SequencerData_t(value));
     }
 
-    inline uint2_t GetSelectFontB1(CharacterFontSelect_t value)
-    {
-        return (value & SelectFontB1) >> Shift::SelectFontB1;
-    }
-
-    inline uint2_t GetSelectFontA1(CharacterFontSelect_t value)
-    {
-        return (value & SelectFontA1) >> Shift::SelectFontA1;
-    }
-
-    inline uint1_t GetSelectFontB2(CharacterFontSelect_t value)
-    {
-        return (value & SelectFontB2) >> Shift::SelectFontB2;
-    }
-
-    inline uint1_t GetSelectFontA2(CharacterFontSelect_t value)
-    {
-        return (value & SelectFontA2) >> Shift::SelectFontA2;
-    }
-
-    inline CharacterFontSelect_t SetSelectFontB1(uint2_t value)
-    {
-        return CharacterFontSelect_t((value << Shift::SelectFontB1) & SelectFontB1);
-    }
-
-    inline CharacterFontSelect_t SetSelectFontA1(uint2_t value)
-    {
-        return CharacterFontSelect_t((value << Shift::SelectFontA1) & SelectFontA1);
-    }
-
-    inline CharacterFontSelect_t SetSelectFontB2(uint1_t value)
-    {
-        return CharacterFontSelect_t((value << Shift::SelectFontB2) & SelectFontB2);
-    }
-
-    inline CharacterFontSelect_t SetSelectFontA2(uint1_t value)
-    {
-        return CharacterFontSelect_t((value << Shift::SelectFontA2) & SelectFontA2);
-    }
-
 }
 
 }}}

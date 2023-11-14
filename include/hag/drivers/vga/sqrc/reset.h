@@ -35,27 +35,6 @@ namespace Reset
     {
         SequencerData::Write(SequencerRegister::Reset, SequencerData_t(value));
     }
-
-    inline uint1_t GetAsynchronousReset(Reset_t value)
-    {
-        return (value & AsynchronousReset) >> Shift::AsynchronousReset;
-    }
-    
-    inline uint1_t GetSynchronousReset(Reset_t value)
-    {
-        return (value & SynchronousReset) >> Shift::SynchronousReset;
-    }
-
-    inline Reset_t SetAsynchronousReset(uint1_t value)
-    {
-        return Reset_t((value << Shift::AsynchronousReset) & AsynchronousReset);
-    }
-    
-    inline Reset_t SetSynchronousReset(uint1_t value)
-    {
-        return Reset_t((value << Shift::SynchronousReset) & SynchronousReset);
-    }
-
 }
 
 }}}

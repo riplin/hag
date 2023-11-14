@@ -51,11 +51,6 @@ namespace DACReadIndex
         SYS_WritePortByte(Register::DACReadIndex, value);
     }
 
-    inline DACReadIndex_t SetAddress(uint8_t value)
-    {
-        return DACReadIndex_t((value << Shift::Address) & Address);
-    }
-
 }
 
 }}

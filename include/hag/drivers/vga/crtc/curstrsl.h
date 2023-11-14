@@ -38,26 +38,6 @@ namespace CursorStartScanLine
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CursorStartScanLine, CRTControllerData_t(value));
     }
 
-    inline uint5_t GetCursorScanLineStart(CursorStartScanLine_t value)
-    {
-        return (value & CursorScanLineStart) >> Shift::CursorScanLineStart;
-    }
-
-    inline uint1_t GetCursorOff(CursorStartScanLine_t value)
-    {
-        return (value & CursorOff) >> Shift::CursorOff;
-    }
-
-    inline CursorStartScanLine_t SetCursorScanLineStart(uint5_t value)
-    {
-        return CursorStartScanLine_t((value << Shift::CursorScanLineStart) & CursorScanLineStart);
-    }
-
-    inline CursorStartScanLine_t SetCursorOff(uint1_t value)
-    {
-        return CursorStartScanLine_t((value << Shift::CursorOff) & CursorOff);
-    }
-
 }
 
 }}}

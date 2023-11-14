@@ -53,36 +53,6 @@ namespace EndHorizontalSyncPosition
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::EndHorizontalSyncPosition, CRTControllerData_t(value));
     }
 
-    inline uint5_t GetEndHorizontalSyncPositionLow(EndHorizontalSyncPosition_t value)
-    {
-        return (value & EndHorizontalSyncPositionLow) >> Shift::EndHorizontalSyncPositionLow;
-    }
-    
-    inline uint2_t GetHorizontalSkew(EndHorizontalSyncPosition_t value)
-    {
-        return (value & HorizontalSkew) >> Shift::HorizontalSkew;
-    }
-    
-    inline uint1_t GetEndHorizontalBlankHigh(EndHorizontalSyncPosition_t value)
-    {
-        return (value & EndHorizontalBlankHigh) >> Shift::EndHorizontalBlankHigh;
-    }
-
-    inline EndHorizontalSyncPosition_t SetEndHorizontalSyncPositionLow(uint5_t value)
-    {
-        return EndHorizontalSyncPosition_t((value << Shift::EndHorizontalSyncPositionLow) & EndHorizontalSyncPositionLow);
-    }
-
-    inline EndHorizontalSyncPosition_t SetHorizontalSkew(uint2_t value)
-    {
-        return EndHorizontalSyncPosition_t((value << Shift::HorizontalSkew) & HorizontalSkew);
-    }
-    
-    inline EndHorizontalSyncPosition_t SetEndHorizontalBlankHigh(uint1_t value)
-    {
-        return EndHorizontalSyncPosition_t((value << Shift::EndHorizontalBlankHigh) & EndHorizontalBlankHigh);
-    }
-
 }
 
 }}}

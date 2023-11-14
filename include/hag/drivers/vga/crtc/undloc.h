@@ -44,36 +44,6 @@ namespace UnderlineLocation
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::UnderlineLocation, CRTControllerData_t(value));
     }
 
-    inline uint5_t GetLocation(UnderlineLocation_t value)
-    {
-        return (value & Location) >> Shift::Location;
-    }
-
-    inline uint1_t GetCountBy4Mode(UnderlineLocation_t value)
-    {
-        return (value & CountBy4Mode) >> Shift::CountBy4Mode;
-    }
-
-    inline uint1_t GetDoubleWordMode(UnderlineLocation_t value)
-    {
-        return (value & DoubleWordMode) >> Shift::DoubleWordMode;
-    }
-
-    inline UnderlineLocation_t SetLocation(uint5_t value)
-    {
-        return (value << Shift::Location) & Location;
-    }
-
-    inline UnderlineLocation_t SetCountBy4Mode(uint1_t value)
-    {
-        return (value << Shift::CountBy4Mode) & CountBy4Mode;
-    }
-
-    inline UnderlineLocation_t SetVerticalDisplayEndLow(uint1_t value)
-    {
-        return (value << Shift::DoubleWordMode) & DoubleWordMode;
-    }
-
 }
 
 }}}

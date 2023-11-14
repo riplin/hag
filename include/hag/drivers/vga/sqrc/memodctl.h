@@ -39,37 +39,6 @@ namespace MemoryModeControl
     {
         SequencerData::Write(SequencerRegister::MemoryModeControl, SequencerData_t(value));
     }
-
-    inline uint1_t GetExtendedMemoryAddress(MemoryModeControl_t value)
-    {
-        return (value & ExtendedMemoryAddress) >> Shift::ExtendedMemoryAddress;
-    }
-
-    inline uint1_t GetSequentialAddressingMode(MemoryModeControl_t value)
-    {
-        return (value & SequentialAddressingMode) >> Shift::SequentialAddressingMode;
-    }
-    
-    inline uint1_t GetSelectChain4Mode(MemoryModeControl_t value)
-    {
-        return (value & SelectChain4Mode) >> Shift::SelectChain4Mode;
-    }
-
-    inline MemoryModeControl_t SetExtendedMemoryAddress(uint1_t value)
-    {
-        return MemoryModeControl_t((value << Shift::ExtendedMemoryAddress) & ExtendedMemoryAddress);
-    }
-    
-    inline MemoryModeControl_t SetSequentialAddressingMode(uint1_t value)
-    {
-        return MemoryModeControl_t((value << Shift::SequentialAddressingMode) & SequentialAddressingMode);
-    }
-    
-    inline MemoryModeControl_t SetSelectChain4Mode(uint1_t value)
-    {
-        return MemoryModeControl_t((value << Shift::SelectChain4Mode) & SelectChain4Mode);
-    }
-
 }
 
 }}}

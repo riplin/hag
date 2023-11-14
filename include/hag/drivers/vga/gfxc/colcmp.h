@@ -44,15 +44,6 @@ namespace ColorCompare
         GraphicsControllerData::Write(GraphicsControllerRegister::ColorCompare, GraphicsControllerData_t(value));
     }
 
-    inline uint4_t GetColorCompareData(ColorCompare_t value)
-    {
-        return (value & ColorCompareData) >> Shift::ColorCompareData;
-    }
-
-    inline ColorCompare_t SetColorCompareData(uint4_t value)
-    {
-        return ColorCompare_t(value << Shift::ColorCompareData) & ColorCompareData;
-    }
 }
 
 }}}

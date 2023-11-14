@@ -35,21 +35,6 @@ namespace InputStatus1
         return InputStatus1_t(SYS_ReadPortByte(inputStatus1));
     }
 
-    inline uint1_t GetDisplayModeInactive(InputStatus1_t value)
-    {
-        return (value & DisplayModeInactive) >> Shift::DisplayModeInactive;
-    }
-    
-    inline uint1_t GetVerticalSyncActive(InputStatus1_t value)
-    {
-        return (value & VerticalSyncActive) >> Shift::VerticalSyncActive;
-    }
-
-    inline uint2_t GetVideoSignalTest(InputStatus1_t value)
-    {
-        return (value & VideoSignalTest) >> Shift::VideoSignalTest;
-    }
-
 }
 
 }}

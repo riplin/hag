@@ -36,16 +36,6 @@ namespace HorizontalDisplayEnd
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::HorizontalDisplayEnd, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetHorizontalDisplayEndLow(HorizontalDisplayEnd_t value)
-    {
-        return (value & HorizontalDisplayEndLow) >> Shift::HorizontalDisplayEndLow;
-    }
-
-    inline HorizontalDisplayEnd_t SetHorizontalDisplayEndLow(uint8_t value)
-    {
-        return HorizontalDisplayEnd_t((value << Shift::HorizontalDisplayEndLow) & HorizontalDisplayEndLow);
-    }
-    
 }
 
 }}}

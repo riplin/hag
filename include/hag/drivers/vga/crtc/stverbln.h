@@ -39,16 +39,6 @@ namespace StartVerticalBlank
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartVerticalBlank, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetStartVerticalBlankLow(StartVerticalBlank_t value)
-    {
-        return (value & StartVerticalBlankLow) >> Shift::StartVerticalBlankLow;
-    }
-
-    inline StartVerticalBlank_t SetStartVerticalBlankLow(uint8_t value)
-    {
-        return StartVerticalBlank_t((value << Shift::StartVerticalBlankLow) & StartVerticalBlankLow);
-    }
-
 }
 
 }}}

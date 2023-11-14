@@ -38,16 +38,6 @@ namespace SequencerIndex
         SYS_WritePortByte(Register::SequencerIndex, value);
     }
 
-    inline uint7_t GetSequenceRegisterIndex(SequencerIndex_t value)
-    {
-        return (value & SequencerRegisterIndex) >> Shift::SequencerRegisterIndex;
-    }
-
-    inline SequencerIndex_t SetSequenceRegisterIndex(uint7_t value)
-    {
-        return SequencerIndex_t((value << Shift::SequencerRegisterIndex) & SequencerRegisterIndex);
-    }
-
 }
 
 }}

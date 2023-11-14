@@ -43,15 +43,6 @@ namespace BitMask
         GraphicsControllerData::Write(GraphicsControllerRegister::BitMask, GraphicsControllerData_t(value));
     }
 
-    inline uint8_t GetMask(BitMask_t value)
-    {
-        return (value & Mask) >> Shift::Mask;
-    }
-
-    inline BitMask_t SetMask(uint8_t value)
-    {
-        return BitMask_t(value << Shift::Mask) & Mask;
-    }
 }
 
 }}}

@@ -58,16 +58,6 @@ namespace DACWriteIndex
         SYS_WritePortByte(Register::DACWriteIndex, value);
     }
 
-    inline uint8_t GetAddress(DACWriteIndex_t value)
-    {
-        return (value & Address) >> Shift::Address;
-    }
-
-    inline DACWriteIndex_t SetAddress(uint8_t value)
-    {
-        return DACWriteIndex_t((value << Shift::Address) & Address);
-    }
-
 }
 
 }}

@@ -34,17 +34,6 @@ namespace CursorLocationAddressLow
     {
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CursorLocationAddressLow, CRTControllerData_t(value));
     }
-
-    inline uint8_t GetCursorAddressLow(CursorLocationAddressLow_t value)
-    {
-        return (value & CursorAddressLow) >> Shift::CursorAddressLow;
-    }
-    
-    inline CursorLocationAddressLow_t SetCursorAddressLow(uint8_t value)
-    {
-        return CursorLocationAddressLow_t((value << Shift::CursorAddressLow) & CursorAddressLow);
-    }
-
 }
 
 }}}

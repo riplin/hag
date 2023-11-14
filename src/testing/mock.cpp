@@ -123,6 +123,7 @@ void Instance::Initialize(IAllocator& allocator, PortAndValue* defaultValues, ui
     DefaultPortValuesCount = defaultValuesCount;
 
     Reset();
+    SelectInstance(0);
 }
 
 void Instance::Snapshot()
@@ -1203,7 +1204,7 @@ void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg)
     while (ptr != NULL)
     {
         IndexedPort* idxPort = customporthandler_cast<IndexedPort>(ptr);
-        if (idxPort != NULL && idxPort->GetIndexPort())
+        if (idxPort != NULL && idxPort->GetIndexPort() == port)
         {
             idxPort->AddReadOnlyRegister(reg);
             break;

@@ -56,7 +56,6 @@ int SetVideoModeTest();
 int main(void)
 {
     int ret = 0;
-    
     TESTFUNCTION(MockSetupTeardownTest);
     TESTFUNCTION(SquenceRegisterLockingTest);
     TESTFUNCTION(CRTCIndexRegisterTest);

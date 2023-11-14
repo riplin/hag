@@ -44,26 +44,6 @@ namespace CursorEndScanLine
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CursorEndScanLine, CRTControllerData_t(value));
     }
 
-    inline uint5_t GetCursorScanLineEnd(CursorEndScanLine_t value)
-    {
-        return (value & CursorScanLineEnd) >> Shift::CursorScanLineEnd;
-    }
-    
-    inline uint2_t GetCursorSkew(CursorEndScanLine_t value)
-    {
-        return (value & CursorSkew) >> Shift::CursorSkew;
-    }
-
-    inline CursorEndScanLine_t SetCursorScanLineEnd(uint5_t value)
-    {
-        return CursorEndScanLine_t((value << Shift::CursorScanLineEnd) & CursorScanLineEnd);
-    }
-
-    inline CursorEndScanLine_t SetCursorSkew(uint2_t value)
-    {
-        return CursorEndScanLine_t((value << Shift::CursorSkew) & CursorSkew);
-    }
-
 }
 
 }}}

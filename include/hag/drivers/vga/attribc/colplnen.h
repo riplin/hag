@@ -37,16 +37,6 @@ namespace ColorPlane
         AttributeControllerData::Write(AttributeControllerRegister::ColorPlane, AttributeControllerData_t(value));
     }
 
-    inline uint4_t GetDisplayPlaneEnable(ColorPlane_t value)
-    {
-        return (value & DisplayPlaneEnable) >> Shift::DisplayPlaneEnable;
-    }
-
-    inline ColorPlane_t SetDisplayPlaneEnable(uint4_t value)
-    {
-        return ColorPlane_t(value << Shift::DisplayPlaneEnable) & DisplayPlaneEnable;
-    }
-    
 }
 
 }}}

@@ -38,16 +38,6 @@ namespace ScreenOffset
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::ScreenOffset, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetLogicalScreenWidthLow(ScreenOffset_t value)
-    {
-        return (value & LogicalScreenWidthLow) >> Shift::LogicalScreenWidthLow;
-    }
-
-    inline ScreenOffset_t SetLogicalScreenWidthLow(uint8_t value)
-    {
-        return (value << Shift::LogicalScreenWidthLow) & LogicalScreenWidthLow;
-    }
-
 }
 
 }}}

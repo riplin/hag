@@ -36,16 +36,6 @@ namespace VerticalTotal
         CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::VerticalTotal, CRTControllerData_t(value));
     }
 
-    inline uint8_t GetVerticalTotalLow(VerticalTotal_t value)
-    {
-        return (value & VerticalTotalLow) >> Shift::VerticalTotalLow;
-    }
-
-    inline VerticalTotal_t SetVerticalTotalLow(uint8_t value)
-    {
-        return VerticalTotal_t((value << Shift::VerticalTotalLow) & VerticalTotalLow);
-    }
-
 }
 
 }}}

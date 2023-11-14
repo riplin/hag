@@ -48,17 +48,6 @@ namespace RAMDACData
     {
         SYS_WritePortByte(Register::RAMDACData, value);
     }
-
-    inline uint8_t GetAddress(RAMDACData_t value)
-    {
-        return (value & Address) >> Shift::Address;
-    }
-
-    inline RAMDACData_t SetAddress(uint8_t value)
-    {
-        return RAMDACData_t((value << Shift::Address) & Address);
-    }
-
 }
 
 }}

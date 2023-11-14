@@ -40,11 +40,6 @@ namespace DACStatus
         return DACStatus_t(SYS_ReadPortByte(Register::DACStatus));
     }
 
-    inline uint2_t GetStatus(DACStatus_t value)
-    {
-        return (value & Status) >> Shift::Status;
-    }
-
 }
 
 }}
