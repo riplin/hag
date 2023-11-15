@@ -504,7 +504,7 @@ extern uint16_t ModeSetBDA_read_0x07_0x0FCount;
 
 int ModeSetBDATest()
 {
-    int ret = 698;
+    int ret = 696;
     Support::Allocator allocator;
     S3Trio64MockConfigSetup(allocator);
 

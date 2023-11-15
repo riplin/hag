@@ -12,6 +12,7 @@
 #include <hag/drivers/vga/gfxc/data.h>
 #include <hag/drivers/vga/sqrc/memodctl.h>
 #include <hag/drivers/vga/instat1.h>
+#include <hag/drivers/vga/regs.h>
 
 #include <hag/drivers/s3/trio.h>
 #include <hag/drivers/s3/vidmodes.h>
@@ -37,36 +38,38 @@ L:
 
 #pragma pack(push, 1);
 
-uint8_t rol(uint8_t value, uint8_t rolval);
-#pragma aux rol =   \
-    "rol al, bl"    \
-    parm [al] [bl]  \
-    value [al];
-
 namespace Clean
 {
 
 Hag::VGA::Register_t GetCRTControllerIndexRegister()
 {
-    return (Hag::VGA::MiscellaneousOutput::Read() & 
-            Hag::VGA::MiscellaneousOutput::IOAddressSelect) == 
-            Hag::VGA::MiscellaneousOutput::IOAddressSelect ?
-            Hag::VGA::Register::CRTControllerIndexD :
-            Hag::VGA::Register::CRTControllerIndexB;
+    using namespace Hag::VGA;
+
+    return (MiscellaneousOutput::Read() & 
+            MiscellaneousOutput::IOAddressSelect) == 
+            MiscellaneousOutput::IOAddressSelect ?
+            Register::CRTControllerIndexD :
+            Register::CRTControllerIndexB;
 }
 
 void LockExtendedCRTRegisters()
 {
-    Hag::VGA::Register_t crtc = GetCRTControllerIndexRegister();
-    Hag::S3::CRTController::RegisterLock1::Lock(crtc);
-    Hag::S3::CRTController::RegisterLock2::Lock(crtc);
+    using namespace Hag;
+    using namespace Hag::VGA;
+
+    Register_t crtc = GetCRTControllerIndexRegister();
+    S3::CRTController::RegisterLock1::Lock(crtc);
+    S3::CRTController::RegisterLock2::Lock(crtc);
 }
 
 void UnlockExtendedCRTRegisters()
 {
-    Hag::VGA::Register_t crtc = GetCRTControllerIndexRegister();
-    Hag::S3::CRTController::RegisterLock1::Unlock(crtc);
-    Hag::S3::CRTController::RegisterLock2::Unlock(crtc);
+    using namespace Hag;
+    using namespace Hag::VGA;
+
+    Register_t crtc = GetCRTControllerIndexRegister();
+    S3::CRTController::RegisterLock1::Unlock(crtc);
+    S3::CRTController::RegisterLock2::Unlock(crtc);
 }
 
 bool UnlockExtendedCRTRegistersSafe()
@@ -75,596 +78,293 @@ bool UnlockExtendedCRTRegistersSafe()
     return true;
 }
 
-//Data0197                DB 09h                      ;Offset 0x197 - bit 7 - Save / Restore functionality supported
-uint8_t Data0197 = 0x09;
-
-void ModeSetBDA(uint8_t& al)
+void ModeSetBDA(Hag::VGA::VideoMode_t& mode)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
+    using namespace Hag;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-    //mov  bl, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
-    //and  bl, BDA_DH_InitialVideoModeMask;0x30
-    r.h.bl = Hag::System::BDA::DetectedHardware::Get() & 0x30;
+    if (((VideoDisplayDataArea::Get() & VideoDisplayDataArea::VGA) != VideoDisplayDataArea::VGA) ||
+        (DisplayMode::Get() == mode))
+        return;
 
-    //test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489, 0x1
-    //je   Exit                           ;Offset 0x1944 - not in VGA mode.
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x01) == 0)
-        goto Exit;
+    DetectedHardware_t initialVideoMode = DetectedHardware::Get() & DetectedHardware::InitialVideoModeMask;
+    EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() & EGAFeatureBitSwitches::AdapterTypeMask;
 
-    //cmp  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449 - Mode already set.
-    //je   Exit                           ;Offset 0x1944 - already in this video mode
-    if (Hag::System::BDA::DisplayMode::Get() == al)
-        goto Exit;
-
-    //mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
-    //and  ah, BDA_EFBS_AdapterTypeMask   ;0xf
-    r.h.ah = Hag::System::BDA::EGAFeatureBitSwitches::Get() & 0x0F;
-
-    //cmp  al, INT10_00_07_T_80x25_9x16_720x400_M_x_B000;0x7
-    //je   Label0x1983                    ;Offset 0x1983
-    if (al == 0x07)
-        goto Label0x1983;
-
-    //cmp  al, INT10_00_0F_G_80x25_8x14_640x350_M_2_A000;0xf
-    //je   Label0x1983                    ;Offset 0x1983
-    if (al == 0x0f)
-        goto Label0x1983;
-    
-    //mov  bh, al                         ;inputs: al = video mode, outputs: al = flags, zero = 0 success
-    //call GetVideoModeFlags              ;Offset 0x105d
-    //jne  NotFound                       ;Offset 0x1918
+    uint8_t flags = 0;
+    if ((mode == VideoMode::T80x25x2M) || (mode == VideoMode::G640x350x2M) ||
+        (S3::TrioBase::GetVideoModeFlags(mode, flags) && ((flags & S3::VESAVideoModeFlags::Unknown1) == 0)))
     {
-        uint8_t flags;
-        if (!Hag::S3::TrioBase::GetVideoModeFlags(al, flags))
-            goto NotFound;
+        if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) == 0)
+        {
+            if ((VideoBaseIOPort::Get() != Register::CRTControllerIndexB) &&
+                (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2))
+            {
+                if (initialVideoMode != DetectedHardware::Monochrome80x25)
+                {
+                    mode = VideoMode::T40x25x16G;
+                }
+                else
+                {
+                    if (adapterType <= EGAFeatureBitSwitches::CGAMono80x25)
+                    {
+                        VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                    }
+                    else if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+                    {
+                        VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                        VideoDisplayDataArea::Get() |= VideoDisplayDataArea::LineMode200;
+                        EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                        Hag::System::BDA::EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                        if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) != 0)
+                        {
+                            DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+                        }
+                    }
+                    else 
+                    {
+                        VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                        VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+                        EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                        EGAFeatureBitSwitches::Get() |= adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2 ?
+                                                                  EGAFeatureBitSwitches::CGAMono80x25_2 :
+                                                                  EGAFeatureBitSwitches::MDAHiRes80x25_2;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (VideoBaseIOPort::Get() == Register::CRTControllerIndexB)
+            {
+                DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+            }
+            else if ((adapterType <= EGAFeatureBitSwitches::CGAMono80x25) ||
+                (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2))
+            {
+                VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+                EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+            }
+            else
+            {
+                if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+                {
+                    VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                    VideoDisplayDataArea::Get() |= VideoDisplayDataArea::LineMode200;
+                    EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                    Hag::System::BDA::EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                    if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) != 0)
+                    {
+                        DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+                    }
+                }
+                else if (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2)
+                {
+                    VideoModeOptions::Get() &= ~VideoModeOptions::Monochrome;
+                    EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                    EGAFeatureBitSwitches::Get() |= ((~VideoDisplayDataArea::Get()) >> 7) | EGAFeatureBitSwitches::MDAHiRes80x25_2;
+                    VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
 
-    //test al, 02h                        ;test bit 1
-    //mov  al, bh                         ;al = video mode
-    //je   Label0x1983                    ;Offset 0x1983 - if not set, jump
-        if ((flags & 0x02) == 0)
-            goto Label0x1983;
+                    if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) != 0)
+                    {
+                        DetectedHardware::Get() &= DetectedHardware::InitialVideoModeMask;
+                        DetectedHardware::Get() |= DetectedHardware::Color80x25;
+                    }
+                }
+            }
+        }
     }
-//NotFound:                               ;Offset 0x1918
-LABEL(ModeSetBDA, NotFound);
-
-//    test byte ptr cs:[Data0197], 01h    ;Offset 0x197
-//    je   MonochromeMode                 ;Offset 0x1923
-    if ((Data0197 & 0x01) == 0)
-        goto MonochromeMode;
-
-//    jmp  Label0x19b7                    ;Offset 0x19b7
-    goto Label0x19b7;
-
-//MonochromeMode:                         ;Offset 0x1923
-LABEL(ModeSetBDA, MonochromeMode);
-
-//    cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexD;Offset 0x463, port - 0x3d4
-//    je   Exit                           ;Offset 0x1944 - We are operating in color mode. leave.
-    if (Hag::System::BDA::VideoBaseIOPort::Get() == 0x3d4)
-        goto Exit;
-
-//    cmp  bl, BDA_DH_80x25Monochrome     ;0x30
-//    je   Label0x198e                    ;Offset 0x198e
-    if (r.h.bl == 0x30)
-        goto Label0x198e;
-
-//    cmp  ah, BDA_EFBS_CGAMono80x25      ;0x5
-//    jbe  Exit                           ;Offset 0x1944
-    if (r.h.ah <= 0x05)
-        goto Exit;
-
-//    cmp  ah, BDA_EFBS_MDAHiRes80x25_2   ;0x8
-//    jbe  Label0x1949                    ;Offset 0x1949
-    if (r.h.ah <= 0x08)
-        goto Label0x1949;
-
-//    cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x9
-//    je   Label0x194e                    ;Offset 0x194e
-    if (r.h.ah == 0x09)
-        goto Label0x194e;
-
-//    cmp  ah, BDA_EFBS_CGAMono80x25_2    ;0xb
-//    jbe  Label0x1945                    ;Offset 0x1945
-    if (r.h.ah <= 0x0b)
-        goto Label0x1945;
-
-//Exit:                                   ;Offset 0x1944
-//    ret
-LABEL(ModeSetBDA, Exit);
-    return;
-
-// Label0x1945:                            ;Offset 0x1945
-LABEL(ModeSetBDA, Label0x1945);
-
-//     mov  bl, BDA_EFBS_FeatureConnector0 OR BDA_EFBS_MDAHiRes80x25_2;0x48
-    r.h.bl = 0x48;
-
-//     jmp  Label0x1950                    ;Offset 0x1950
-    goto Label0x1950;
-
-// Label0x1949:                            ;Offset 0x1949
-LABEL(ModeSetBDA, Label0x1949);
-
-//     mov  bl, BDA_EFBS_FeatureConnector1 OR BDA_EFBS_CGAMono80x25_2;0x8b
-    r.h.bl = 0x8b;
-
-//     jmp  Label0x1950                    ;Offset 0x1950
-//     nop
-    goto Label0x1950;
-
-// Label0x194e:                            ;Offset 0x194e
-LABEL(ModeSetBDA, Label0x194e);
-
-//     mov  bl, BDA_EFBS_CGAMono80x25_2    ;0xb
-    r.h.bl = 0x0b;
-
-// Label0x1950:                            ;Offset 0x1950
-LABEL(ModeSetBDA, Label0x1950);
-
-//     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_Monochrome;Offset 0x487, 0xfd
-    Hag::System::BDA::VideoModeOptions::Get() &= 0xfd;
-
-//     and  byte ptr ds:[BDA_EGAFeatureBitSwitches], 0f0h;Offset 0x488
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() &= 0xf0;
-
-//     mov  ah, byte ptr ds:[BDA_VideoDisplayDataArea];Offset 0x489
-    r.h.ah = Hag::System::BDA::VideoDisplayDataArea::Get();
-
-//     not  ah
-    r.h.ah = ~r.h.ah;
-
-//     and  ah, BDA_VDDA_LineMode200;0x80
-    r.h.ah &= 0x80;
-
-//     rol  ah, 01h;rotate top bit in to first bit - BDA_EFBS_MDAColor80x25
-    r.h.ah = rol(r.h.ah, 1);
-
-//     or   ah, bl
-    r.h.ah |= r.h.bl;
-
-//     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], ah;Offset 0x488
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() |= r.h.ah;
-
-//     and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_LineMode200;Offset 0x489, 0x7f
-    Hag::System::BDA::VideoDisplayDataArea::Get() &= 0x7f;
-
-//     test byte ptr cs:[Data0197], 01h    ;Offset 0x197
-//     je   Exit                           ;Offset 0x1944
-    if ((Data0197 & 0x01) == 0)
-        goto Exit;
-
-// Label0x1978:                            ;Offset 0x1978
-LABEL(ModeSetBDA, Label0x1978);
-
-//     and  byte ptr ds:[BDA_DetectedHardware], NOT BDA_DH_InitialVideoModeMask;Offset 0x410, 0x0cf
-    Hag::System::BDA::DetectedHardware::Get() &= 0xcf;
-
-//     or   word ptr ds:[BDA_DetectedHardware], BDA_DH_80x25Color;Offset 0x410, 0x20
-    Hag::System::BDA::DetectedHardware::Get() |= 0x20;
-
-//     ret
-    return;
-
-// Label0x1983:                            ;Offset 0x1983 
-LABEL(ModeSetBDA, Label0x1983);
-
-//     test byte ptr cs:[Data0197], 01h    ;Offset 0x197
-//     je   Label0x1992                    ;Offset 0x1992
-    if ((Data0197 & 0x01) == 0)
-        goto Label0x1992;
-
-//     jmp  Label0x1a17                    ;Offset 0x1a17
-    goto Label0x1a17;
-
-// Label0x198e:                            ;Offset 0x198e
-LABEL(ModeSetBDA, Label0x198e);
-
-//     mov  al, 07h
-    al = 0x07;
-
-//     jmp  Exit                           ;Offset 0x1944
-    goto Exit;
-
-// Label0x1992:                            ;Offset 0x1992
-LABEL(ModeSetBDA, Label0x1992);
-
-//     cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexB;Offset 0x463, port - 0x3b4
-//     je   Label0x1a16                    ;Offset 0x1a16
-    if (Hag::System::BDA::VideoBaseIOPort::Get() == 0x3b4)
-        goto Label0x1a16;
-
-//     cmp  bl, 30h
-//     jne  Label0x19d8                    ;Offset 0x19d8
-    if (r.h.bl != 0x30)
-        goto Label0x19d8;
-
-//     cmp  ah, BDA_EFBS_CGAMono80x25      ;0x5
-//     jbe  Label0x19dc                    ;Offset 0x19dc
-    if (r.h.ah <= 0x05)
-        goto Label0x19dc;
-
-//     cmp  ah, BDA_EFBS_MDAHiRes80x25_2   ;0x8
-//     jbe  Label0x19e3                    ;Offset 0x19e3
-    if (r.h.ah <= 0x08)
-        goto Label0x19e3;
-
-//     cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x9
-//     je   Label0x1a01                    ;Offset 0x1a01
-    if (r.h.ah == 0x9)
-        goto Label0x1a01;
-
-//     cmp  ah, BDA_EFBS_CGAMono80x25_2    ;0xb
-//     ja   Label0x1a16                    ;Offset 0x1a16
-    if (r.h.ah > 0xb)
-        goto Label0x1a16;
-
-//     mov  bl, 08h
-    r.h.bl = 0x08;
-//     jmp  Label0x1a03                    ;Offset 0x1a03
-    goto Label0x1a03;
-
-// Label0x19b7:                            ;Offset 0x19b7
-LABEL(ModeSetBDA, Label0x19b7);
-
-//     cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexD;Offset 0x463, port - 0x3d4
-//     je   Label0x1978                    ;Offset 0x1978
-    if (Hag::System::BDA::VideoBaseIOPort::Get() == 0x3d4)
-        goto Label0x1978;
-
-//     cmp  ah, BDA_EFBS_CGAMono80x25      ;0x5
-//     jbe  Label0x19d3                    ;Offset 0x19d3
-    if (r.h.ah <= 0x05)
-        goto Label0x19d3;
-
-//     cmp  ah, BDA_EFBS_MDAHiRes80x25_2   ;0x8
-//     jbe  Label0x19e3                    ;Offset 0x19e3
-    if (r.h.ah <=0x08)
-        goto Label0x19e3;
-
-//     cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x9
-//     je   Label0x1a34                    ;Offset 0x1a34
-    if (r.h.ah == 0x9)
-        goto Label0x1a34;
-
-//     cmp  ah, BDA_EFBS_CGAMono80x25_2    ;0bh
-//     ja   Label0x1a16                    ;Offset 0x1a16
-    if (r.h.ah > 0xb)
-        goto Label0x1a16;
-
-// Label0x19d3:                            ;Offset 0x19d3
-LABEL(ModeSetBDA, Label0x19d3);
-
-//     mov  bl, 08h
-    r.h.bl = 0x08;
-//     jmp  Label0x1950                    ;Offset 0x1950
-    goto Label0x1950;
-
-// Label0x19d8:                            ;Offset 0x19d8
-LABEL(ModeSetBDA, Label0x19d8);
-
-//     mov  al, 00h
-    al = 0x00;
-
-//     jmp  Label0x1a16                    ;Offset 0x1a16
-    goto Label0x1a16;
-
-// Label0x19dc:                            ;Offset 0x19dc
-LABEL(ModeSetBDA, Label0x19dc);
-
-//     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-    Hag::System::BDA::VideoModeOptions::Get() |= 0x02;
-
-//     jmp  Label0x1a16                    ;Offset 0x1a16
-    goto Label0x1a16;
-
-// Label0x19e3:                            ;Offset 0x19e3
-LABEL(ModeSetBDA, Label0x19e3);
-
-//     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-    Hag::System::BDA::VideoModeOptions::Get() |= 0x02;
-
-//     or   byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode200;Offset 0x489, 0x80
-    Hag::System::BDA::VideoDisplayDataArea::Get() |= 0x80;
-
-//     and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488, 0xf0
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() &= 0xf0;
-
-//     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_CGAMono80x25_2;Offset 0x488, 0xb
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() |= 0x0b;
-
-//     test byte ptr cs:[Data0197], 01h    ;Offset 0x197
-//     je   Label0x1a16                    ;Offset 0x1a16
-    if ((Data0197 & 0x01) == 0x00)
-        goto Label0x1a16;
-
-//     jmp  Label0x1a48                    ;Offset 0x1a48
-    goto Label0x1a48;
-
-// Label0x1a01:                            ;Offset 0x1a01
-LABEL(ModeSetBDA, Label0x1a01);
-
-//     mov  bl, 0bh
-    r.h.bl = 0x0b;
-
-// Label0x1a03:                            ;Offset 0x1a03
-LABEL(ModeSetBDA, Label0x1a03);
-
-//     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-    Hag::System::BDA::VideoModeOptions::Get() |= 0x02;
-
-//     and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_LineMode200;Offset 0x489, 0x7f
-    Hag::System::BDA::VideoDisplayDataArea::Get() &= 0x7f;
-
-//     and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488, 0xf0
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() &= 0xf0;
-
-//     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], bl;Offset 0x488
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() |= r.h.bl;
-
-// Label0x1a16:                            ;Offset 0x1a16
-LABEL(ModeSetBDA, Label0x1a16);
-
-//     ret
-    return;
-
-// Label0x1a17:                            ;Offset 0x1a17
-LABEL(ModeSetBDA, Label0x1a17);
-
-//     cmp  word ptr ds:[BDA_VideoBaseIOPort], CRTControllerIndexB;Offset 0x463, port - 0x3b4
-//     je   Label0x1a48                    ;Offset 0x1a48
-    if (Hag::System::BDA::VideoBaseIOPort::Get() == 0x3b4)
-        goto Label0x1a48;
-
-//     cmp  ah, BDA_EFBS_CGAMono80x25      ;0x5
-//     jbe  Label0x1a34                    ;Offset 0x1a34
-    if (r.h.ah <= 0x05)
-        goto Label0x1a34;
-
-//     cmp  ah, BDA_EFBS_MDAHiRes80x25_2   ;0x8
-//     jbe  Label0x19e3                    ;Offset 0x19e3
-    if (r.h.ah <= 0x08)
-        goto Label0x19e3;
-
-//     cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x9
-//     je   Label0x1a34                    ;Offset 0x1a34
-    if (r.h.ah == 0x09)
-        goto Label0x1a34;
-
-//     cmp  ah, BDA_EFBS_CGAMono80x25_2    ;0xb
-//     jbe  Label0x19d3                    ;Offset 0x19d3
-    if (r.h.ah <= 0x0b)
-        goto Label0x19d3;
-
-//     ret
-    return;
-
-// Label0x1a34:                            ;Offset 0x1a34
-LABEL(ModeSetBDA, Label0x1a34);
-
-//     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-    Hag::System::BDA::VideoModeOptions::Get() |= 0x02;
-
-//     and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_LineMode200;Offset 0x489, 0x7f
-    Hag::System::BDA::VideoDisplayDataArea::Get() &= 0x7f;
-
-//     and  byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488, 0xf0
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() &= 0xf0;
-
-//     or   byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_CGAMono80x25_2;Offset 0x488, 0xb
-    Hag::System::BDA::EGAFeatureBitSwitches::Get() |= 0x0b;
-
-// Label0x1a48:                            ;Offset 0x1a48
-LABEL(ModeSetBDA, Label0x1a48);
-
-//     or   word ptr ds:[BDA_DetectedHardware], BDA_DH_80x25Monochrome;Offset 0x410, 0x30
-    Hag::System::BDA::DetectedHardware::Get() |= 0x30;
-
-//     ret  
-    return;
+    else if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) != 0)
+    {
+        if (VideoBaseIOPort::Get() == Register::CRTControllerIndexD)
+        {
+            DetectedHardware::Get() &= ~DetectedHardware::InitialVideoModeMask;
+            DetectedHardware::Get() |= DetectedHardware::Color80x25;
+        }
+        else if ((adapterType > EGAFeatureBitSwitches::CGAMono80x25) &&
+            (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2))
+        {
+            if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+            {
+                VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                VideoDisplayDataArea::Get() |= VideoDisplayDataArea::LineMode200;
+                EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                Hag::System::BDA::EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) != 0)
+                {
+                    DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+                }
+            }
+            else if (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2)
+            {
+                VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+                EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+            }
+        }
+        else
+        {
+            VideoModeOptions::Get() &= ~VideoModeOptions::Monochrome;
+            EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+            EGAFeatureBitSwitches::Get() |= ((~VideoDisplayDataArea::Get()) >> 7) | EGAFeatureBitSwitches::MDAHiRes80x25_2;
+            VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+
+            if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) != 0)
+            {
+                DetectedHardware::Get() &= DetectedHardware::InitialVideoModeMask;
+                DetectedHardware::Get() |= DetectedHardware::Color80x25;
+            }
+        }
+    }
+    else if (VideoBaseIOPort::Get() != Register::CRTControllerIndexD)
+    {
+        if (initialVideoMode == DetectedHardware::Monochrome80x25)
+        {
+            mode = VideoMode::T80x25x2M;
+        }
+        else if (adapterType > EGAFeatureBitSwitches::CGAMono80x25)
+        {
+            EGAFeatureBitSwitches_t newAdapterType = 0;
+            if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+            {
+                newAdapterType = EGAFeatureBitSwitches::CGAMono80x25_2 | EGAFeatureBitSwitches::FeatureConnector1;
+            }
+            else if (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2)
+            {
+                newAdapterType = EGAFeatureBitSwitches::CGAMono80x25_2;
+            }
+            else if (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2)
+            {
+                newAdapterType = EGAFeatureBitSwitches::MDAHiRes80x25_2 | EGAFeatureBitSwitches::FeatureConnector0;
+            }
+
+            VideoModeOptions::Get() &= ~VideoModeOptions::Monochrome;
+            EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+            EGAFeatureBitSwitches::Get() |= ((~VideoDisplayDataArea::Get()) >> 7) | newAdapterType;
+            VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+
+            if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) != 0)
+            {
+                DetectedHardware::Get() &= DetectedHardware::InitialVideoModeMask;
+                DetectedHardware::Get() |= DetectedHardware::Color80x25;
+            }
+        }
+    }
 }
 
-
-//;inputs:
-//;al = video mode
-//outputs:
-//al = display mode
-bool VerifyBDAOrDeactivate(uint8_t& al)
+bool VerifyBDAOrDeactivate(Hag::VGA::VideoMode_t& mode)
 {
-    REGPACK r;
+    using namespace Hag;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
     uint8_t flags = 0;
-    memset(&r, 0, sizeof(r));
+    bool ret = false;
+    PointHeightOfCharacterMatrix_t newPointHeight = 0;
 
-//     mov  ah, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
-    r.h.ah = Hag::System::BDA::DetectedHardware::Get();
+    if ((DetectedHardware::Get() & DetectedHardware::InitialVideoModeMask) == DetectedHardware::Monochrome80x25)
+    {
+        if ((VideoModeOptions::Get() & VideoModeOptions::Monochrome) != 0)
+        {
+            if ((mode != VideoMode::G640x350x2M) &&
+                (mode != VideoMode::T80x25x2M) && 
+                (!S3::TrioBase::GetVideoModeFlags(mode, flags) ||
+                ((flags & S3::VESAVideoModeFlags::Unknown1) == 0)))
+            {                
+                mode = VideoMode::T80x25x2M;
+                VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
+            }
+            ret = mode != VideoMode::T40x25x16G;
+        }
+        else
+        {
+            VideoModeOptions::Get() |= VideoModeOptions::Inactive;
+            newPointHeight = 14;
+        }
+    }
+    else
+    {
+        if ((Hag::System::BDA::VideoModeOptions::Get() & VideoModeOptions::Monochrome) == 0)
+        {
+            if ((mode == VideoMode::G640x350x2M) ||
+                (mode == VideoMode::T80x25x2M) ||
+                (Hag::S3::TrioBase::GetVideoModeFlags(mode, flags) &&
+                (flags & S3::VESAVideoModeFlags::Unknown1) == 0))
+            {
+                mode = VideoMode::T40x25x16G;
+                VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
+            }
+            ret = mode != VideoMode::T40x25x16G;
+        }
+        else
+        {
+            VideoModeOptions::Get() |= mode == VideoMode::T80x25x16C ?
+                                               VideoModeOptions::Inactive | VideoModeOptions::Unknown :
+                                               VideoModeOptions::Inactive;
+            newPointHeight = 8;
+        }
+    }
 
-//     and  ah, BDA_DH_InitialVideoModeMask;0x30
-    r.h.ah &= 0x30;
-
-//     cmp  ah, BDA_DH_80x25Monochrome     ;0x30
-//     jne  IsColor1                        ;Offset 0x1a6a
-    if (r.h.ah != 0x30)
-        goto IsColor1;
-
-//     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-//     jne  IsMonochrome2                  ;Offset 0x1aad
-    if ((Hag::System::BDA::VideoModeOptions::Get() & 0x02) != 0)
-        goto IsMonochrome2;
-
-//     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487, 0x8
-    Hag::System::BDA::VideoModeOptions::Get() |= 0x08;
-
-//     mov  al, 0eh                        ;al = PointHeightOfCharacterMatrix 0xe = 14
-    al = 0x0e;
-
-//     jmp  Label0x1a84                    ;Offset 0x1a84
-    goto Label0x1a84;
-
-// IsColor1:                                ;Offset 0x1a6a
-LABEL(VerifyBDAOrDeactivate, IsColor1);
-
-//     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487, 0x2
-//     je   IsColor2                  ;Offset 0x1a8f
-    if ((Hag::System::BDA::VideoModeOptions::Get() & 0x02) == 0)
-        goto IsColor2;
-
-//     mov  ah, BDA_VMO_Inactive           ;0x8
-    r.h.ah = 0x08;
-
-//     cmp  al, BDA_DM_80x25_16_Gray_Text  ;0x02
-//     jbe  SetInactive                    ;Offset 0x1a7e
-    if (al <= 0x02)
-        goto SetInactive;
-
-//     cmp  al, BDA_DM_320x200_4_Color_Graphics1;0x04
-//     jae  SetInactive                    ;Offset 0x1a7e
-    if (al >= 0x04)
-        goto SetInactive;
-
-//     or   ah, BDA_VMO_Unknown            ;0x4
-    r.h.ah |= 0x04;
-
-// SetInactive:                            ;Offset 0x1a7e
-LABEL(VerifyBDAOrDeactivate, SetInactive);
-
-//     or   byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487 - Set inactive
-    Hag::System::BDA::VideoModeOptions::Get() |= r.h.ah;
-
-//     mov  al, 08h                        ; al = PointHeightOfCharacterMatrix 0x8 = 8
-    al = 0x08;
-
-// Label0x1a84:                            ;Offset 0x1a84
-LABEL(VerifyBDAOrDeactivate, Label0x1a84);
-
-//     mov  byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484, 0x18 = 24
-    Hag::System::BDA::RowsOnScreen::Get() = 0x18;
-
-//     mov  ah, 00h
-    r.h.ah = 0x00;
-
-//     mov  word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
-    Hag::System::BDA::PointHeightOfCharacterMatrix::Get() = r.w.ax;
-
-//     ret
-    return false;// correct?
-
-// IsColor2:                          ;Offset 0x1a8f
-LABEL(VerifyBDAOrDeactivate, IsColor2);
-
-//     cmp  al, BDA_DM_640x350_Monochrome_Graphics;0x0f
-//     je   ClearDontClearDisplay          ;Offset 0x1aa4
-    if (al == 0x0f)
-        goto ClearDontClearDisplay;
-
-//     cmp  al, BDA_DM_80x25_Monochrome_Text;0x07
-//     je   ClearDontClearDisplay          ;Offset 0x1aa4
-    if (al == 0x07)
-        goto ClearDontClearDisplay;
-
-//     mov  bh, al                         ;save mode
-//     call GetVideoModeFlags              ;Offset 0x105d
-//     jne  Exit                           ;Offset 0x1ac9
-    if (!Hag::S3::TrioBase::GetVideoModeFlags(al, flags))
-        goto Exit;
-
-//     test al, 02h                        ;test flag
-//     mov  al, bh                         ;restore mode
-//     jne  Exit                           ;Offset 0x1ac9 exit if set
-    if ((flags & 0x02) != 0)
-        goto Exit;
-
-// ClearDontClearDisplay:                  ;Offset 0x1aa4
-LABEL(VerifyBDAOrDeactivate, ClearDontClearDisplay);
-
-//     mov  al, 00h
-    al = 0x00;
-
-//     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
-    Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
-
-//     jmp  Exit                           ;Offset 0x1ac9
-    goto Exit;
-
-// IsMonochrome2:                          ;Offset 0x1aad
-LABEL(VerifyBDAOrDeactivate, IsMonochrome2);
-
-//     cmp  al, BDA_DM_640x350_Monochrome_Graphics;0x0f
-//     je   Exit                           ;Offset 0x1ac9
-    if (al == 0x0f)
-        goto Exit;
-
-//     cmp  al, BDA_DM_80x25_Monochrome_Text;0x07
-//     je   Exit                           ;Offset 0x1ac9
-    if (al == 0x07)
-        goto Exit;
-
-//     mov  bh, al                         ;Save mode
-//     call GetVideoModeFlags              ;Offset 0x105d
-//     jne  NotFound                       ;Offset 0x1ac2
-    if (!Hag::S3::TrioBase::GetVideoModeFlags(al, flags))
-        goto NotFound;
-
-//     test al, 02h                        ;
-//     mov  al, bh                         ;restore mode
-//     je   Exit                           ;Offset 0x1ac9 - exit if not set
-    if ((flags & 0x02) == 0)
-        goto Exit;
-
-// NotFound:                               ;Offset 0x1ac2
-LABEL(VerifyBDAOrDeactivate, NotFound);
-
-//     mov  al, BDA_DM_80x25_Monochrome_Text;0x07
-    al = 0x07;
-
-//     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
-    Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
-
-// Exit:                                   ;Offset 0x1ac9
-LABEL(VerifyBDAOrDeactivate, Exit);
-
-//     DB 03Ah, 0C0h                       ;cmp  al, al - masm encoding difference zero flag = 1
-//     ret
-    return al != 0;
+    if (newPointHeight != 0)
+    {
+        RowsOnScreen::Get() = 24;
+        PointHeightOfCharacterMatrix::Get() = newPointHeight;
+    }
+    return ret;
 }
 
 bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer))
 {
+    using namespace Hag::System::BDA;
+
     returnPointer = NULL;
-        Hag::System::BDA::VideoParameterControlBlockPointer_t& controlBlockPointer = Hag::System::BDA::VideoParameterControlBlockPointer::Get();
-        FARPointer* realControlBlockPointer = controlBlockPointer.ToPointer<FARPointer>(0x1D);
-        bool ret = !realControlBlockPointer->IsNull();
-        if (!ret)
-            returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>(size);
-        ret = !realControlBlockPointer[index].IsNull();
+
+    FARPointer* realControlBlockPointer = VideoParameterControlBlockPointer::Get().ToPointer<FARPointer>(0x1D);
+    bool ret = !realControlBlockPointer->IsNull();
+
+    if (!ret)
+        returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>(size);
+
+    ret = !realControlBlockPointer[index].IsNull();
+
     return ret;
 }
 
-Hag::S3::VideoParameters* GetVideoModeOverrideTable(uint8_t mode)
+Hag::S3::VideoParameters* GetVideoModeOverrideTable(Hag::VGA::VideoMode_t mode)
 {
-    Hag::S3::VideoParameters* overrideTable = NULL;
+    using namespace Hag;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-    if (mode <= Hag::VGA::VideoMode::MaxValid)
+    S3::VideoParameters* overrideTable = NULL;
+
+    if (mode <= VideoMode::MaxValid)
     {
         uint8_t* translationTable = Hag::S3::TrioBase::m_VideoModeOverrideTranslationTable1;
-        if ((Hag::System::BDA::VideoDisplayDataArea::Get() & Hag::System::BDA::VideoDisplayDataArea::LineMode400) == 0x00)
+        if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::LineMode400) == 0)
         {
-            translationTable = Hag::S3::TrioBase::m_VideoModeOverrideTranslationTable2;
-            Hag::System::BDA::EGAFeatureBitSwitches_t adapterType = Hag::System::BDA::EGAFeatureBitSwitches::Get() &
-                                                                    Hag::System::BDA::EGAFeatureBitSwitches::AdapterTypeMask;
+            translationTable = S3::TrioBase::m_VideoModeOverrideTranslationTable2;
+            EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() &
+                                                  EGAFeatureBitSwitches::AdapterTypeMask;
 
-            if ((adapterType != Hag::System::BDA::EGAFeatureBitSwitches::MDAHiResEnhanced) &&
-                (adapterType != Hag::System::BDA::EGAFeatureBitSwitches::MDAHiResEnhanced_2) &&
-                (adapterType != Hag::System::BDA::EGAFeatureBitSwitches::MDAColor80x25_2))
+            if ((adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced) &&
+                (adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced_2) &&
+                (adapterType != EGAFeatureBitSwitches::MDAColor80x25_2))
             {
-                translationTable = Hag::S3::TrioBase::m_VideoModeOverrideTranslationTable3;
+                translationTable = S3::TrioBase::m_VideoModeOverrideTranslationTable3;
             }
         }
-        overrideTable = &Hag::S3::TrioBase::m_LegacyVideoModes[translationTable[mode]];
+        overrideTable = &S3::TrioBase::m_LegacyVideoModes[translationTable[mode]];
     }
     else
     {
-        Hag::S3::VESAVideoModeData* vesaModeData = NULL;
-        if (vesaModeData = Hag::S3::TrioBase::FindVideoModeData(mode))
+        S3::VESAVideoModeData* vesaModeData = NULL;
+        if (vesaModeData = S3::TrioBase::FindVideoModeData(mode))
             overrideTable = vesaModeData->OverrideTable;
     }
     return overrideTable;
@@ -675,134 +375,44 @@ Hag::S3::VideoParameters* GetCurrentVideoModeOverrideTable()
     return GetVideoModeOverrideTable(Hag::System::BDA::DisplayMode::Get());
 }
 
-uint8_t Mode0_7ControlRegValue[] =
-{
-    0x2C, 0x28, 0x2D, 0x29, 0x2A, 0x2E, 0x1E, 0x29
-};
-
 Hag::S3::VideoParameters* SetTextModeBiosData(uint8_t mode)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    uint8_t flags = 0;
-    r.h.al = mode;
-    Hag::S3::VideoParameters* overrideTable = NULL;
-    uint8_t* selectedFont = NULL;
+    using namespace Hag;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-//     mov       es, word ptr cs:[Data1488];Offset 0x1488
-//     mov       di, 010ch                 ;int 43 - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
-    //di_ptr = &Hag::Testing::Mock::Memory::RefAs<uint8_t*, 0x10c>(2);
-
-//     cmp       al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
-//     jbe       LegacyMode                ;Offset 0x1b2d
-    if (r.h.al <= 0x13)
-        goto LegacyMode;
-
-//     call      GetVideoModeFlags         ;Offset 0x105d
-//     jne       LegacyMode                ;Offset 0x1b2d
-    if (!Hag::S3::TrioBase::GetVideoModeFlags(r.h.al, flags))
-        goto LegacyMode;
-
-//     mov       bx, offset LowerCharacters8x8;Offset 0x5720
-    selectedFont = Hag::S3::TrioBase::m_Characters8x8;
-
-//     test      al, 01h                   ;text
-//     jne       CharMapSelected           ;Offset 0x1b4b
-    if ((flags & 0x01) != 0x00)
-        goto CharMapSelected;
-
-//     and       al, 70h
-//     je        CharMapSelected           ;Offset 0x1b4b
-    if ((flags & 0x70) == 0x00)
-        goto CharMapSelected;
-
-//     mov       bx, offset Characters8x14 ;Offset 0x5f20
-    selectedFont = Hag::S3::TrioBase::m_Characters8x14;
-
-//     cmp       al, 20h
-//     jbe       CharMapSelected           ;Offset 0x1b4b
-    if (r.h.al <= 0x20)
-        goto CharMapSelected;
-
-//     mov       bx, offset Characters8x16 ;Offset 0x6e30
-    selectedFont = Hag::S3::TrioBase::m_Characters8x16;
-
-//     jmp       CharMapSelected           ;Offset 0x1b4b
-    goto CharMapSelected;
-
-// LegacyMode:                             ;Offset 0x1b2d
-LABEL(SetTextModeBiosData, LegacyMode);
-
-//     mov       bx, offset LowerCharacters8x8;Offset 0x5720
-    selectedFont = Hag::S3::TrioBase::m_Characters8x8;
-
-//     cmp       al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
-//     je        CharMapSelected           ;Offset 0x1b4b
-    if (r.h.al == 0x13)
-        goto CharMapSelected;
-
-//     cmp       al, INT10_00_08_Unknown   ;0x08
-//     jb        CharMapSelected           ;Offset 0x1b4b
-    if (r.h.al < 0x08)
-        goto CharMapSelected;
-
-//     mov       bx, offset Characters8x16 ;Offset 0x6e30
-    selectedFont = Hag::S3::TrioBase::m_Characters8x16;
-
-//     je        CharMapSelected           ;Offset 0x1b4b
-    if (r.h.al == 0x08)
-        goto CharMapSelected;
-
-//     cmp       al, INT10_00_11_G_80x30_8x16_640x480_M_x_A000;0x11
-//     jae       CharMapSelected           ;Offset 0x1b4b
-    if (r.h.al >= 0x11)
-        goto CharMapSelected;
-
-//     mov       bx, offset Characters8x14 ;Offset 0x5f20
-    selectedFont = Hag::S3::TrioBase::m_Characters8x14;
-
-//     cmp       al, INT10_00_0F_G_80x25_8x14_640x350_M_2_A000;0x0f
-//     jae       CharMapSelected           ;Offset 0x1b4b
-    if (r.h.al >= 0x0f)
-        goto CharMapSelected;
-
-//     mov       bx, offset LowerCharacters8x8;Offset 0x5720
-    selectedFont = Hag::S3::TrioBase::m_Characters8x8;
-
-// CharMapSelected:                        ;Offset 0x1b4b
-LABEL(SetTextModeBiosData, CharMapSelected);
+    static uint8_t Mode0_7ControlRegValue[] = { 0x2C, 0x28, 0x2D, 0x29, 0x2A, 0x2E, 0x1E, 0x29 };
 
     for (int i = 0; i < 8; ++i)
     {
-        Hag::System::BDA::CursorPositions::Get()[i].Column = 0;
-        Hag::System::BDA::CursorPositions::Get()[i].Row = 0;
+        CursorPositions::Get()[i].Column = 0;
+        CursorPositions::Get()[i].Row = 0;
     }
 
-    Hag::System::BDA::ActiveDisplayNumber::Get() = 0;
-    Hag::System::BDA::VideoBufferOffset::Get() = 0;
+    ActiveDisplayNumber::Get() = 0;
+    VideoBufferOffset::Get() = 0;
 
-    if (Hag::System::BDA::DisplayMode::Get() <= Hag::VGA::VideoMode::T80x25x2M)
+    if (DisplayMode::Get() <= VideoMode::T80x25x2M)
     {
-        Hag::System::BDA::CGAColorPaletteMaskSetting::Get() = Hag::System::BDA::DisplayMode::Get() == 
-                                                              Hag::VGA::VideoMode::G640x200x2M ?
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::Blue |
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::Green |
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::Red |
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::BorderAndBackgroundColorIntensity |
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::BackgroundColor |
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::ForgroundColorSelect :
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::BackgroundColor |
-                                                              Hag::System::BDA::CGAColorPaletteMaskSetting::ForgroundColorSelect;
-        Hag::System::BDA::CRTModeControlRegValue::Get() = Mode0_7ControlRegValue[Hag::System::BDA::DisplayMode::Get()];
+        CGAColorPaletteMaskSetting::Get() = DisplayMode::Get() == VideoMode::G640x200x2M ?
+                                            CGAColorPaletteMaskSetting::Blue |
+                                            CGAColorPaletteMaskSetting::Green |
+                                            CGAColorPaletteMaskSetting::Red |
+                                            CGAColorPaletteMaskSetting::BorderAndBackgroundColorIntensity |
+                                            CGAColorPaletteMaskSetting::BackgroundColor |
+                                            CGAColorPaletteMaskSetting::ForgroundColorSelect :
+                                            CGAColorPaletteMaskSetting::BackgroundColor |
+                                            CGAColorPaletteMaskSetting::ForgroundColorSelect;
+        CRTModeControlRegValue::Get() = Mode0_7ControlRegValue[DisplayMode::Get()];
     }
 
-    overrideTable = GetCurrentVideoModeOverrideTable();
-    Hag::System::BDA::NumberOfScreenColumns::Get() = overrideTable->DisplayedCharacterColumns;
-    Hag::System::BDA::RowsOnScreen::Get() = overrideTable->DisplayedRowsMinus1;
-    Hag::System::BDA::PointHeightOfCharacterMatrix::Get() = overrideTable->CharacterMatrixHeightPoints;
-    Hag::System::BDA::VideoBufferSize::Get() = overrideTable->VideoBufferSize;
-    Hag::System::BDA::CursorScanLines::Get().End = overrideTable->CRTCRegisters[11];
-    Hag::System::BDA::CursorScanLines::Get().Start = overrideTable->CRTCRegisters[10];
+    S3::VideoParameters* overrideTable = GetCurrentVideoModeOverrideTable();
+    NumberOfScreenColumns::Get() = overrideTable->DisplayedCharacterColumns;
+    RowsOnScreen::Get() = overrideTable->DisplayedRowsMinus1;
+    PointHeightOfCharacterMatrix::Get() = overrideTable->CharacterMatrixHeightPoints;
+    VideoBufferSize::Get() = overrideTable->VideoBufferSize;
+    CursorScanLines::Get().End = overrideTable->CRTCRegisters[11];
+    CursorScanLines::Get().Start = overrideTable->CRTCRegisters[10];
     return overrideTable;
 }
 
@@ -812,7 +422,6 @@ void SaveDynamicParameterData(Hag::S3::VideoParameters* overrideTable)
     if (!GetVideoParameterBlockElement(1, savePointer, 0x100))
         return;
 
-    overrideTable += 0x23;
     memcpy(savePointer, overrideTable->AttributeControllerRegs, 16);
     savePointer += 16;
     *savePointer = overrideTable->AttributeControllerRegs[17];
@@ -820,12 +429,13 @@ void SaveDynamicParameterData(Hag::S3::VideoParameters* overrideTable)
 
 void PrepareAttributeController()
 {
-    Hag::VGA::InputStatus1::Read(Hag::System::BDA::VideoBaseIOPort::Get() + 6);
-    Hag::VGA::AttributeControllerIndex::Write(0x00);
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    InputStatus1::Read(VideoBaseIOPort::Get() + (Register::InputStatus1D - Register::CRTControllerIndexD));
+    AttributeControllerIndex::Write(AttributeControllerRegister::Palette0);
 }
 
-// ;inputs:
-// ;es:si video mode table pointer
 void ApplyVideoParameters(Hag::S3::VideoParameters* overrideTable)
 {
     REGPACK r;

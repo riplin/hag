@@ -176,7 +176,7 @@ namespace FirmwareFlag
 {
     enum
     {
-        Unknown0 = 0x01,
+        Color = 0x01,
         Unknown1 = 0x02,
         Unknown2 = 0x04,
         Unknown3 = 0x08,

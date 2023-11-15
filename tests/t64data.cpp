@@ -77,7 +77,6 @@ uint16_t ModeSetBDA_readDefaultCount = sizeof(ModeSetBDA_readDefault) / sizeof(u
 
 uint8_t ModeSetBDA_read_0x03[] =
 {
-    Hag::System::BDA::Offset::DetectedHardware,
     Hag::System::BDA::Offset::DisplayMode,
     Hag::System::BDA::Offset::VideoDisplayDataArea
 };

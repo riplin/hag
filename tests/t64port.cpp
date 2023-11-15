@@ -956,10 +956,6 @@ void ModeSetBDA(uint8_t& al)
     REGPACK r;
     memset(&r, 0, sizeof(r));
 
-    //mov  bl, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
-    //and  bl, BDA_DH_InitialVideoModeMask;0x30
-    r.h.bl = Hag::System::BDA::DetectedHardware::Get() & 0x30;
-
     //test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489, 0x1
     //je   Exit                           ;Offset 0x1944 - not in VGA mode.
     if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x01) == 0)
@@ -969,6 +965,10 @@ void ModeSetBDA(uint8_t& al)
     //je   Exit                           ;Offset 0x1944 - already in this video mode
     if (Hag::System::BDA::DisplayMode::Get() == al)
         goto Exit;
+
+    //mov  bl, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
+    //and  bl, BDA_DH_InitialVideoModeMask;0x30
+    r.h.bl = Hag::System::BDA::DetectedHardware::Get() & 0x30;
 
     //mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
     //and  ah, BDA_EFBS_AdapterTypeMask   ;0xf
