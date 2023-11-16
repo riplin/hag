@@ -19,6 +19,7 @@ namespace ExtendedSystemControl1
         Unknown = 0x02,                             //Undocumented flag that's used.
         EnableBREQFunction = 0x04,                  //0 = ~BREQ, ~BGNT functions disabled.
                                                     //1 = ~BREQ, ~BGNT functions enabled.
+        LowerMask = 0x0F,
         PixelLengthSelect = 0x30,                   //00 = 1 byte (default). This corresponds to a pixel length of 4 or
         Length4Or8Bpp = 0x00,                       //     8 bits/pixel in bit 7 of the Subsystem Status register (0x42E8).
         Length16Bpp = 0x10,                         //01 = 2 bytes. 16 bits/pixel
@@ -49,13 +50,13 @@ namespace ExtendedSystemControl1
 
     inline ExtendedSystemControl1_t Read(VGA::Register_t controllerIndexRegister)
     {
-        VGA::CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::ExtendedSystemControl2);
+        VGA::CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::ExtendedSystemControl1);
         return ExtendedSystemControl1_t(VGA::CRTControllerData::Read(controllerIndexRegister + 1));
     }
     
     inline void Write(VGA::Register_t controllerIndexRegister, ExtendedSystemControl1_t value)
     {
-        VGA::CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::ExtendedSystemControl2, VGA::CRTControllerData_t(value));
+        VGA::CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::ExtendedSystemControl1, VGA::CRTControllerData_t(value));
     }
 
 }

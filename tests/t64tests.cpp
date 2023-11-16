@@ -24,12 +24,12 @@ namespace Clean
     uint8_t FetchBusSpecificSystemConfig(uint16_t crtcPort);
     void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint16_t crtcPort);
     Hag::S3::VideoParameters* GetVideoModeOverrideTable(uint8_t mode);
-    void SetupClocks(uint8_t clockConfig);
+    void SetupClocks(Hag::VGA::Register_t crtcPort, uint8_t clockConfig);
     void ConfigureExtraVESAModeSettings(uint8_t mode, uint16_t crtc, Hag::S3::VESAVideoModeData* overrideTable, Hag::S3::VESAResolutionVariant* modeData);
     Hag::S3::VideoParameters* GetVideoModeOverrideTable(uint8_t mode);
     void EnableOver256KAddressingAndSetAddressWindow(uint8_t mode, uint16_t crtcReg);
     void SetColorMode(uint8_t mode);
-    void ClearMemory();
+    void ClearMemory(Hag::VGA::Register_t crtcPort);
     void ApplyVESAOverrideData(uint8_t mode);
     void SetPalette();
     void SetFont();
@@ -995,7 +995,7 @@ int SetupClocksTest()
         {
             Hag::Testing::Mock::SelectInstance(1);
             Hag::S3::VESAVideoModeData* vesaModeData = Hag::S3::TrioBase::FindVideoModeData(mode);
-            Clean::SetupClocks(vesaModeData->VariantData->ClockConfigIndex);
+            Clean::SetupClocks(Clean::GetCRTControllerIndexRegister(), vesaModeData->VariantData->ClockConfigIndex);
         }
 
         ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
@@ -1260,7 +1260,7 @@ int ClearMemoryTest()
     ClearMemory();
 
     Hag::Testing::Mock::SelectInstance(1);
-    Clean::ClearMemory();
+    Clean::ClearMemory(GetCRTControllerIndexRegister());
 
     ret -= Hag::Testing::Mock::VerifyPortsAndValues(0,
                                                     ClearMemoryTest_modifiedPorts,
@@ -1313,7 +1313,7 @@ extern uint16_t ApplyVESAOverrideDataTest_ignoreIndexedPortsCount;
 
 int ApplyVESAOverrideDataTest()
 {
-    int ret = 6784;
+    int ret = 6724;
 
     Support::Allocator allocator;
     S3Trio64MockConfigSetup(allocator);

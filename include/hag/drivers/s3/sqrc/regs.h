@@ -21,6 +21,8 @@ namespace Hag { namespace S3 { namespace SequencerRegister
         ClockSynthTestHigh = 0x16,              //SR16
         ClockSynthTestLow = 0x17,               //SR17
         RAMDACClockSynthControl = 0x18,         //SR18
+        Unknown1A = 0x1A,                       //SR1A
+        Unknown1B = 0x1B,                       //SR1B
     };
 
 }}}

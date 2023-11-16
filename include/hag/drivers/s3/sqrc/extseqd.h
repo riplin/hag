@@ -29,10 +29,11 @@ namespace ExtendedSequencerD
                                         //        01 = HSYNC = 0
                                         //        10 = HSYNC = 1
                                         //        11 = Reserved
-        VSYNCControl = 0xC0             //VSY-CTL 00 = Normal operation
+        VSYNCControl = 0xC0,            //VSY-CTL 00 = Normal operation
                                         //        01 = VSYNC = 0
                                         //        10 = VSYNC = 1
                                         //        11 = Reserved
+        SyncMask = 0xF0
     };
 
     namespace Shift

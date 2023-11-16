@@ -22,7 +22,8 @@ namespace SystemConfiguration
                                                 //     Address latching occurs during the T1 cycle.
                                                 // 1 = Minimum 1 wait state delay from ~SADS asserted to assertion of ~SRDY (Default)
                                                 //     With this setting, bit 3 of CR58 determines when the address is latched.
-        Reserved = 0x20                         // Reserved value = 1
+        Reserved = 0x20,                        // Reserved value = 1
+        UpperBitsMask = 0xF0
     };
 
     namespace Shift

@@ -272,7 +272,7 @@ namespace Hag { namespace System { namespace BDA
             VGA                        = 0x01,
             GrayScale                  = 0x02,
             MonochromeMonitor          = 0x04,
-            PaletteLoadingEnabled      = 0x08,
+            PaletteLoadingDisabled     = 0x08,
             DisplaySwitchingEnabled    = 0x40,
             LineMode350                = 0x00,
             LineMode400                = 0x10,

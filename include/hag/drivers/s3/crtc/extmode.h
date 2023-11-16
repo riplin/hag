@@ -15,6 +15,7 @@ namespace ExtendedMode
 
     enum //Mask
     {
+        UnknownMask = 0x03,
         LogicalScreenWidthHigh = 0x04,      //OLD LSW8 This is an extension of the Offset (Screen Width) register (CR13).
                                             //         This is disabled if bits 5-4 of the ExtendedSystemControl2 register (CR51) are not 00b.
         HorizontalCounterDoubleMode = 0x80  //HCTR X2 0 = Disable horizontal counter double mode, 1 = Enable horizontal counter double mode
@@ -25,7 +26,7 @@ namespace ExtendedMode
     {
         enum
         {
-            LogicalScreenWidthHigh = 0x00,
+            LogicalScreenWidthHigh = 0x02,
             HorizontalCounterDoubleMode = 0x07
         };
     }

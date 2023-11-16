@@ -5,6 +5,7 @@
 #include <i86.h>
 #include <stdio.h>
 #include <string.h>
+#include <hag/drivers/s3/crtc/revision.h>
 
 #if 0
 #define LABEL(F, L)         \
@@ -2192,7 +2193,7 @@ LABEL(ApplyVideoParameters, WriteAttributeControllerRegs);
 
 //     cmp   ah, 11h                       ;
 //     jne   Skip17                        ;Offset 0x48e4
-    if (r.h.ah == 0x11)
+    if (r.h.ah != 0x11)
         goto Skip17;
 
 //     inc   si
@@ -3059,13 +3060,9 @@ void SetupClocks(uint8_t clockConfig)
 //     mov  si, offset ClockData           ;Offset 0393h
     clockDataPtr = ClockData;
 
-//     call ReadDeviceIDAndRevision        ;Offset 0xfc2
-// ;Returns the Device ID in ah and Revision in al
-    ReadDeviceIDAndRevision(r.h.ah, r.h.al);
-    
 //     cmp  al, 03h                        ;
 //     jne  NotRev3                        ;Offset 0x331
-    if (r.h.al != 0x03)
+    if (Hag::S3::CRTController::Revision::Read(GetCRTControllerIndexRegister()) != 0x03)
         goto NotRev3;
 
 //     mov  si, offset ClockDataRev3       ;Revision 3 uses offset 0x3b7 data instead.

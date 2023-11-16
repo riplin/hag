@@ -9,23 +9,54 @@
 
 #include <hag/drivers/vga/miscout.h>
 #include <hag/drivers/vga/attribc/data.h>
+#include <hag/drivers/vga/crtc/verrtcen.h>
 #include <hag/drivers/vga/gfxc/data.h>
+#include <hag/drivers/vga/sqrc/reset.h>
+#include <hag/drivers/vga/sqrc/clkmod.h>
+#include <hag/drivers/vga/sqrc/data.h>
+#include <hag/drivers/vga/sqrc/enwrtpl.h>
+#include <hag/drivers/vga/sqrc/chfntsel.h>
 #include <hag/drivers/vga/sqrc/memodctl.h>
 #include <hag/drivers/vga/instat1.h>
 #include <hag/drivers/vga/regs.h>
 
+#include <hag/drivers/s3/advfnctl.h>
+#include <hag/drivers/s3/bitplnwm.h>
+#include <hag/drivers/s3/curxpos.h>
+#include <hag/drivers/s3/curypos.h>
+#include <hag/drivers/s3/drawcmd.h>
+#include <hag/drivers/s3/fgcolor.h>
+#include <hag/drivers/s3/fgmix.h>
+#include <hag/drivers/s3/gfxprocs.h>
+#include <hag/drivers/s3/majapcnt.h>
 #include <hag/drivers/s3/trio.h>
 #include <hag/drivers/s3/vidmodes.h>
-#include <hag/drivers/s3/advfnctl.h>
+#include <hag/drivers/s3/wregdata.h>
+#include <hag/drivers/s3/crtc/conf1.h>
+#include <hag/drivers/s3/crtc/devidhi.h>
+#include <hag/drivers/s3/crtc/devidlo.h>
 #include <hag/drivers/s3/crtc/exhorovf.h>
 #include <hag/drivers/s3/crtc/exmscct2.h>
 #include <hag/drivers/s3/crtc/exsysct1.h>
 #include <hag/drivers/s3/crtc/exsysct2.h>
 #include <hag/drivers/s3/crtc/exsysct3.h>
+#include <hag/drivers/s3/crtc/extmode.h>
 #include <hag/drivers/s3/crtc/exverovf.h>
+#include <hag/drivers/s3/crtc/linawctr.h>
+#include <hag/drivers/s3/crtc/modectrl.h>
 #include <hag/drivers/s3/crtc/reglock1.h>
 #include <hag/drivers/s3/crtc/reglock2.h>
+#include <hag/drivers/s3/crtc/revision.h>
+#include <hag/drivers/s3/crtc/sysconf.h>
+#include <hag/drivers/s3/sqrc/clksync2.h>
+#include <hag/drivers/s3/sqrc/dclkvhi.h>
+#include <hag/drivers/s3/sqrc/dclkvlow.h>
+#include <hag/drivers/s3/sqrc/mclkvhi.h>
+#include <hag/drivers/s3/sqrc/mclkvlow.h>
+#include <hag/drivers/s3/sqrc/rclksync.h>
+#include <hag/drivers/s3/sqrc/regs.h>
 #include <hag/drivers/s3/sqrc/unlexseq.h>
+#include <hag/drivers/s3/sqrc/extseqd.h>
 
 #if 0
 #define LABEL(F, L)         \
@@ -438,346 +469,74 @@ void PrepareAttributeController()
 
 void ApplyVideoParameters(Hag::S3::VideoParameters* overrideTable)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    int crtIdx = 0;
-    int attrIdx = 0;
-    int gfxIdx = 0;
-//     push  cx
-//     push  dx
-//     mov   cx, 0019h
-//     mov   ax, 0000h
-//     push  cx
-//     push  ax
-//     call  PrepareAttributeController    ;Offset 0x47ae
+    using namespace Hag;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
     PrepareAttributeController();
 
-//     mov   cx, 0005h
-//     add   si, cx                        ;point to byte 5 in video mode table entry - SequencerRegisters
-    //overrideTable += 0x05;
-
-//     mov   ax, 0100h                     ;SR0 - Asynchronous reset (should serve no function on Trio32/Trio64)
-    r.w.ax = 0x0100;
-
-//     mov   dx, SequenceIndex             ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     cli
     SYS_ClearInterrupts();
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc   al                            ;SR1 - Clock Mode Register
-    ++r.h.al;
-
-//     mov   ah, 20h                       ;bit 5 = 1 - Turn screen off
-    r.h.ah = 0x20;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-    
-//     or    ah, byte ptr es:[si]          ;Write Clock mode register again.
-    r.h.ah |= overrideTable->SequencerRegisters[0];//overrideTable[0];
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov   al, byte ptr es:[si + 04h]    ;Load MiscOutputRegisterValues
-    r.h.al = overrideTable->MiscOutputRegisterValues;//overrideTable[0x04];
-
-//     mov   dx, MiscellaneousWrite        ;port - 0x3c2
-    r.w.dx = 0x3c2;
-
-//     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     mov   ax, 0300h                     ;SR0 - Asynchronous and Synchronous reset (should serve no function on Trio32/Trio64)
-    r.w.ax = 0x0300;
-
-//     mov   dx, SequenceIndex             ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     sti
+    Sequencer::Reset::Write(Sequencer::Reset::AsynchronousReset);
+    Sequencer::ClockingMode::Write(Sequencer::ClockingMode::ScreenOff);
+    Sequencer::ClockingMode::Write(Sequencer::ClockingMode::ScreenOff | overrideTable->SequencerRegisters[0]);
+    MiscellaneousOutput::Write(overrideTable->MiscOutputRegisterValues);
+    Sequencer::Reset::Write(Sequencer::Reset::AsynchronousReset | Sequencer::Reset::SynchronousReset);
     SYS_RestoreInterrupts();
 
-//     mov   cx, 03h                       ;loop remaining 3 bytes
-    r.w.cx = 0x03;
+    Sequencer::EnableWritePlane::Write(overrideTable->SequencerRegisters[1]);
+    Sequencer::CharacterFontSelect::Write(overrideTable->SequencerRegisters[2]);
+    Sequencer::MemoryModeControl::Write(overrideTable->SequencerRegisters[3]);
 
-//     mov   al, 02h                       ;SR2 - Enable Write Plane register
-    r.h.al = 0x02;
+    Register_t crtRegister = VideoBaseIOPort::Get();
 
-//     inc   si
-    //++overrideTable;
-    int seqIdx = 1;
+    if ((DisplayMode::Get() < VideoMode::Unknown1) ||
+        (DisplayMode::Get() > VideoMode::Reserved2))
+    {
+        crtRegister = (overrideTable->MiscOutputRegisterValues & MiscellaneousOutput::IOAddressSelect) == 0 ? 
+                        Register::CRTControllerIndexB :
+                        Register::CRTControllerIndexD;
+    }
+    VideoBaseIOPort::Get() = crtRegister;
+    CRTController::VerticalRetraceEnd::Write(crtRegister, 0);
 
-// WriteSequenceRegisters:                 ;Offset 0x4862
-LABEL(ApplyVideoParameters, WriteSequenceRegisters);
-
-//     mov   ah, byte ptr es:[si]          ;
-    r.h.ah = overrideTable->SequencerRegisters[seqIdx];
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc   al
-    ++r.h.al;
-
-//     inc   si
-    ++seqIdx;
-
-//     loop  WriteSequenceRegisters        ;Offset 0x4862
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto WriteSequenceRegisters;
-
-//                                         ;si no points at MiscOutputRegisterValues
-//     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0463h = port 0x3?4
-    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
-
-//     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Unknown1;Offset 0449h, 0x8
-//     jb    Label0x487d                   ;Offset 0x487d
-    if (Hag::System::BDA::DisplayMode::Get() < 0x08)
-        goto Label0x487d;
-
-//     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Reserved2;Offset 0449h, 0xc
-//     jbe   IsMonochrome                  ;Offset 0x488a
-    if (Hag::System::BDA::DisplayMode::Get() <= 0x0c)
-        goto IsMonochrome;
-
-// Label0x487d:                            ;Offset 0x487d
-LABEL(ApplyVideoParameters, Label0x487d);
-
-//     mov   dx, CRTControllerIndexB       ;port - 0x3b4
-    r.w.dx = 0x3b4;
-
-//     mov   al, byte ptr es:[si]
-    r.h.al = overrideTable->MiscOutputRegisterValues;
-
-//     test  al, 01h                       ;bit 0 - 0 = Monochrome emulation, 1 = Color emulation
-//     je    IsMonochrome                  ;Offset 0x488a
-    if ((r.h.al & 0x01) == 0x00)
-        goto IsMonochrome;
-
-//     mov   dx, CRTControllerIndexD       ;port - 0x3d4
-    r.w.dx = 0x3d4;
-
-// IsMonochrome:                           ;Offset 0x488a
-LABEL(ApplyVideoParameters, IsMonochrome);
-
-//     mov   word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0463h Store CRTControllerIndex in BDA
-    Hag::System::BDA::VideoBaseIOPort::Get() = r.w.dx;
-
-//     inc   si                            ;Point to CRTCRegisters
-    //++overrideTable;
-
-//     mov   ax, 11h                       ;CR11 - Vertical Retrace End register
-    r.w.ax = 0x0011;
-
-//     out   dx, ax                        ;Clear to 0
-//                                         ;bits 3-0 = 000 - Vertical retrace end set to 0 scanlines
-//                                         ;bit 4 = 0 - Clear vertical retrace interrupt
-//                                         ;bit 5 = 0 - Enable vertical retrace interrupt
-//                                         ;bit 6 = 0 - 3 dram refresh cycles generated per horizontal line
-//                                         ;bit 7 = 0 - Writing to all CRT controller registers enabled
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop   ax                            ;0x0000
-    r.w.ax = 0x0000;
-
-//     pop   cx                            ;0x0019 - 25
-    r.w.cx = 0x0019;
-
-//     add   si, ax
-    //overrideTable += r.w.ax;
-
-// WriteCRTCRegisters:                     ;Offset 0x4897
-LABEL(ApplyVideoParameters, WriteCRTCRegisters);
-
-//     mov   ah, byte ptr es:[si]          ;Write CR0-CR18
-    r.h.ah = overrideTable->CRTCRegisters[crtIdx];
-
-//     inc   si
-    ++crtIdx;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc   al
-    ++r.h.al;
-
-//     loop  WriteCRTCRegisters            ;Offset 0x4897
-    --r.w.cx;
-    if (r.w.cx != 0)
-        goto WriteCRTCRegisters;
-
-//     add   dx, 06h                       ;port - 0x3?a - InputStatus1
-    r.w.dx += 0x0006;
-
-//     in    al, dx                        ;Reset Attribute Controller port 0x3c0 to point to index register
-    r.h.al = SYS_ReadPortByte(r.w.dx);
-
-//     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Unknown2;Offset 0449h, 0x9
-//     je    Label0x48b2                   ;Offset 0x48b2
-    if (Hag::System::BDA::DisplayMode::Get() == 0x09)
-        goto Label0x48b2;
-
-//     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_Reserved1;Offset 0449h, 0xb
-//     jne   Label0x48b6                   ;Offset 0x48b6
-    if (Hag::System::BDA::DisplayMode::Get() != 0x0b)
-        goto Label0x48b6;
-
-// Label0x48b2:                            ;Offset 0x48b2
-LABEL(ApplyVideoParameters, Label0x48b2);
-
-//     sub   dl, 20h                       ;port - 0x3ba - InputStatus1
-    r.h.dl -= 0x20;
-
-//     in    al, dx                        ;Reset Attribute Controller port 0x3c0 to point to index register
-    r.h.al = SYS_ReadPortByte(r.w.dx);
-
-// Label0x48b6:                            ;Offset 0x48b6
-LABEL(ApplyVideoParameters, Label0x48b6);
-
-//     xor   ah, ah                        ;0
-    r.h.ah = 0x00;
-
-//     mov   cx, 0010h                     ;16
-    r.w.cx = 0x0010;
-
-//     mov   dx, AttributeControllerIndex  ;port - 0x3c0
-    r.w.dx = 0x3c0;
-
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x8
-//     jne   UsingDefaultPalette           ;Offset 0x48cf
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
-        goto UsingDefaultPalette;
-
-// WritePalette:                           ;Offset 0x48c5
-LABEL(ApplyVideoParameters, WritePalette);
-
-//     mov   al, ah                        ;
-    r.h.al = r.h.ah;
-
-//     out   dx, al                        ;Index
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     inc   ah                            ;counts up to 0x11?
-    ++r.h.ah;
-
-//     lodsb es:[si]
-    r.h.al = overrideTable->AttributeControllerRegs[attrIdx];
-    //++overrideTable;
-    ++attrIdx;
-
-//     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     loop  WritePalette                  ;Offset 0x48c5
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto WritePalette;
-
-// UsingDefaultPalette:                    ;Offset 0x48cf
-LABEL(ApplyVideoParameters, UsingDefaultPalette);
-
-//     add   ah, cl                        ;Skip over palette data, ah = 0x10
-    r.h.ah += r.h.cl;
-
-//     add   si, cx                        ;Skip over palette data
-    //overrideTable += r.w.cx;
-    attrIdx += r.w.cx;
-
-//     mov   cx, 0005h                     ;
-    r.w.cx = 0x0005;
-
-// WriteAttributeControllerRegs:           ;Offset 0x48d6
-LABEL(ApplyVideoParameters, WriteAttributeControllerRegs);
-
-//     cmp   ah, 11h                       ;
-//     jne   Skip17                        ;Offset 0x48e4
-    if (r.h.ah == 0x11)
-        goto Skip17;
-
-//     inc   si
-    ++attrIdx;
-
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x8
-//     jne   DefaultPaletteDisabled2       ;Offset 0x48f1
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
-        goto DefaultPaletteDisabled2;
-
-//     dec   si
-    --attrIdx;
-
-// Skip17:                                 ;Offset 0x48e4
-LABEL(ApplyVideoParameters, Skip17);
-
-//     mov   al, ah
-    r.h.al = r.h.ah;
-
-//     out   dx, al                        ;write 0x10 or 0x11
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     xor   al, al                        ;0
-    r.h.al = 0x00;
+    for (uint8_t crtIndex = 0; crtIndex < 25; ++crtIndex)
+    {
+        CRTControllerData::Write(crtRegister, crtIndex, overrideTable->CRTCRegisters[crtIndex]);
+    }
     
-//     cmp   ah, 14h                       ;Don't load 20th byte
-//     je    Skip20                        ;Offset 0x48f0
-    if (r.h.ah == 0x14)
-        goto Skip20;
+    //Reset Attribute Controller port 0x3c0 to point to index register
+    Register_t inputStatus1 = crtRegister + (Register::InputStatus1D - Register::CRTControllerIndexD);
+    InputStatus1::Read(inputStatus1);
 
-//     lodsb es:[si]
-    r.h.al = overrideTable->AttributeControllerRegs[attrIdx];
-    ++attrIdx;
+    if ((DisplayMode::Get() == VideoMode::Unknown2) ||
+        (DisplayMode::Get() != VideoMode::Reserved1))
+    {
+        InputStatus1::Read(Register::InputStatus1B);
+    }
 
-// Skip20:                                 ;Offset 0x48f0
-LABEL(ApplyVideoParameters, Skip20);
+    if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) == 0)
+    {
+        for (uint8_t attribIndex = 0; attribIndex < 16; ++attribIndex)
+        {
+            AttributeControllerData::Write(attribIndex, overrideTable->AttributeControllerRegs[attribIndex]);
+        }
+    }
 
-//     out   dx, al                        ;Write out 0 or the loaded value
-    SYS_WritePortByte(r.w.dx, r.h.al);
+    uint8_t attribIndex = 16;
+    for (uint8_t attribCount = 0; attribCount < 5; ++attribCount)
+    {
+        if ((attribIndex != 17) || ((VideoDisplayDataArea::Get() &VideoDisplayDataArea::PaletteLoadingDisabled) == 0))
+        {
+            AttributeControllerData_t value = attribIndex == 20 ? 0 :overrideTable->AttributeControllerRegs[16 + attribCount];
+            AttributeControllerData::Write(attribIndex, value);
+        }
+        ++attribIndex;
+    }
 
-// DefaultPaletteDisabled2:                ;Offset 0x48f1
-LABEL(ApplyVideoParameters, DefaultPaletteDisabled2);
-
-//     inc   ah
-    ++r.h.ah;
-
-//     loop  WriteAttributeControllerRegs  ;Offset 0x48d6 loop 5 bytes
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto WriteAttributeControllerRegs;
-
-//     xor   al, al                        ;0
-    r.h.al = 0x00;
-
-//     mov   cx, 0009h                     ;count 9, si points to GraphicsControllerRegs
-    r.w.cx = 0x0009;
-
-//     mov   dx, GraphicsControllerIndex   ;port - 0x3ce
-    r.w.dx = 0x3ce;
-
-// WriteGraphicsControllerRegs:            ;Offset 0x48fd
-LABEL(ApplyVideoParameters, WriteGraphicsControllerRegs);
-
-//     mov   ah, byte ptr es:[si]
-    r.h.ah = overrideTable->GraphicsControllerRegs[gfxIdx];
-
-//     inc   si
-    ++gfxIdx;
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc   al
-    ++r.h.al;
-
-//     loop  WriteGraphicsControllerRegs   ;Offset 0x48fd write out GR0-GR8
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto WriteGraphicsControllerRegs;
+    for (uint8_t gfxIndex = 0; gfxIndex < 9; ++gfxIndex)
+    {
+        GraphicsControllerData::Write(gfxIndex, overrideTable->GraphicsControllerRegs[gfxIndex]);
+    }
 }
 
 // ;This function pokes an index value into an index register
@@ -802,1051 +561,224 @@ uint8_t ReadDataWithIndexRegister(uint16_t port, uint8_t index)
 //     ret
 }
 
-void TurnOffScreen()
-{
-//     push  dx
-//     mov   dx, SequenceIndex             ;port - 03c4h
-//     in    al, dx                        ;Read current index number
-    uint8_t currIdx = SYS_ReadPortByte(0x3c4);
-
-//     push  ax                            ;Store it
-//     mov   al, 01h                       ;SR1 - Clocking Mode register
-//     call  ReadDataWithIndexRegister     ;Offset 0x4640
-//     or    ah, 20h                       ;Turn off screen
-    uint8_t tmp = ReadDataWithIndexRegister(0x3c4, 0x01) | 0x20;
-
-//     out   dx, ax                        ;Write
-    SYS_WritePortShort(0x3c4, (uint16_t(tmp) << 8) | 0x01);
-
-//     pop   ax                            ;Load back original value of Index
-//     out   dx, al                        ;Write back original index
-    SYS_WritePortByte(0x3c4, currIdx);
-
-//     pop   dx
-//     ret   
-}
-
-void TurnOnScreen()
-{
-//     push  dx
-//     mov   dx, SequenceIndex             ;port - 03c4h
-//     in    al, dx                        ;Read current index number
-    uint8_t currIdx = SYS_ReadPortByte(0x3c4);
-
-//     push  ax                            ;Store it
-//     mov   al, 01h                       ;SR1 - Clocking Mode register
-//     call  ReadDataWithIndexRegister     ;Offset 0x4640
-//     and   ah, 0dfh                      ;Turn on screen
-    uint8_t tmp = ReadDataWithIndexRegister(0x3c4, 0x01) & ~0x20;
-
-//     out   dx, ax                        ;Write
-    SYS_WritePortShort(0x3c4, (uint16_t(tmp) << 8) | 0x01);
-
-//     pop   ax                            ;Load back original value of index
-//     out   dx, al                        ;Write back original index
-    SYS_WritePortByte(0x3c4, currIdx);
-
-//     pop   dx
-//     ret
-}
-
-uint8_t CRTControllerInitData[] =
-{
-    0x1A,
-    0x38, 0x48,
-    0x39, 0xA5,
-    0x31, 0x05,
-    0x50, 0x00,
-    0x51, 0x00,
-    0x53, 0x00,
-    0x54, 0x38,
-    0x55, 0x00,
-    0x58, 0x03,
-    0x5D, 0x00,
-    0x5E, 0x00,
-    0x60, 0x07,
-    0x61, 0x80,
-    0x62, 0xA1,
-    0x67, 0x00,
-    0x69, 0x00,
-    0x6A, 0x00,
-    0x32, 0x40,
-    0x33, 0x00,
-    0x34, 0x00,
-    0x35, 0x00,
-    0x3A, 0x05,
-    0x3B, 0x5A,
-    0x3C, 0x10,
-    0x43, 0x00,
-    0x45, 0x00
-};
-
-uint8_t SequenceInitData[] =
-{
-    0x03,
-    0x08, 0x06,
-    0x0B, 0x00,
-    0x14, 0x00
-};
-
-uint8_t PCISystemConfig = 0xD0;
-uint8_t VLBSystemConfig = 0xF0;
-
 // ;inputs:
 // ;dx = CRT Control Index register
 // ;outputs:
 // ;bh = bus specific settings for CR40 - System Configuration
-uint8_t FetchBusSpecificSystemConfig(uint16_t crtcPort)
+uint8_t FetchBusSpecificSystemConfig(Hag::VGA::Register_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.w.dx = crtcPort;
-//     mov  al, 36h                        ;CR36 - Configuration 1
-    r.h.al = 0x36;
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
+    using namespace Hag::S3;
 
-//     and  ah, 03h                        ;Isolate bits 1-0 - System Bus Select
-    r.h.ah &= 0x03;
-
-//     cmp  ah, 02h                        ;01h = VLB, 02h = PCI
-//     je   IsPCI                          ;Offset 0xe91
-    if (r.h.ah == 0x02)
-        goto IsPCI;
-
-//     mov  bh, byte ptr cs:[VLBSystemConfig];Offset 0x19b
-//     ret
-    return VLBSystemConfig;
-
-// IsPCI:                                  ;Offset 0xe91
-LABEL(FetchBusSpecificSystemConfig, IsPCI);
-
-//     mov  bh, byte ptr cs:[PCISystemConfig];Offset 0x19a
-//     ret
-    return PCISystemConfig;
+    return ((CRTController::Configuration1::Read(crtcPort) & 
+            CRTController::Configuration1::SystemBusSelect) == 
+            CRTController::Configuration1::PCIBus) ?
+            TrioBase::m_PCISystemConfig :
+            TrioBase::m_VLBSystemConfig;
 }
 
 void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint16_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    uint8_t* sequenceData = SequenceInitData;
-
-    r.w.dx = crtcPort;
-
-//     push  bx
-//     push  cx
-//     lodsb cs:[si]                       ;Load count
-    r.h.al = CRTCInitData[0];
-    ++CRTCInitData;
-//     mov   cl, al
-    r.h.cl = r.h.al;
-//     xor   ch, ch
-    r.h.ch = 0x00;
-
-// LoopCRTCData:                           ;Loop over CRT data and output.
-LABEL(InitializeCRTControllerAndSequencer, LoopCRTCData);
-
-//     lodsw cs:[si]
-    r.h.al = CRTCInitData[0];
-    r.h.ah = CRTCInitData[1];
-    CRTCInitData += 2;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     loop  LoopCRTCData                  ;Offset 0xff6
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto LoopCRTCData;
-
-//     push  dx
-//     push  si
-//     mov   dx, SequenceIndex             ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     mov   si, word ptr cs:[SequenceInitPtr];Offset 0x1ca
-    //sequenceData
-
-//     lodsb cs:[si]
-    r.h.al = sequenceData[0];
-        ++sequenceData;
-
-//     mov   cl, al
-    r.h.cl = r.h.al;
-
-//     xor   ch, ch
-    r.h.ch = 0x00;
-
-// LoopSequenceData:                       ;Loop over sequence data
-LABEL(InitializeCRTControllerAndSequencer, LoopSequenceData);
-
-//     lodsw cs:[si]
-    r.h.al = sequenceData[0];
-    r.h.ah = sequenceData[1];
-    sequenceData += 2;
-
-//     cmp   al, 0dh                       ;If register SRD, clear upper 4 bits
-//     jne   NotSRD                        ;Offset 0x1014
-    if (r.h.al != 0xd)
-        goto NotSRD;
-
-//     and   ah, 0fh
-    r.h.ah &= 0xf;
-
-// NotSRD:
-LABEL(InitializeCRTControllerAndSequencer, NotSRD);
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     loop  LoopSequenceData              ;Offset 0x100b
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto LoopSequenceData;
-
-//     pop   si
-//     pop   dx
-    r.w.dx = crtcPort;
-
-//     call  FetchBusSpecificSystemConfig  ;Offset 0xe7e
-    r.h.bh = FetchBusSpecificSystemConfig(r.w.dx);
-
-//     mov   al, 40h                       ;CR40 - System Configuration
-    r.h.al = 0x40;
-
-//     call  ReadDataWithIndexRegister     ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and   ah, 0f0h                      ;drop lowest 4 bits
-    r.h.ah &= 0xf0;
-
-//     or    ah, bh                        ;set lowest 4 bits with bus specific settings
-    r.h.ah |= r.h.bh;
-
-//     out   dx, ax                        ;
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov   al, 42h                       ;CR42 Mode Control register
-    r.h.al = 0x42;
-
-//     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-//     inc   dx
-    ++r.w.dx;
-
-//     in    al, dx                        ;Read Mode Control register
-    r.h.al = SYS_ReadPortByte(r.w.dx);
-
-//     and   al, 0dfh                      ;bit 5, Interlaced mode, 0 = set to non-interlaced.
-    r.h.al &= 0xdf;
-
-//     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     dec   dx
-    --r.w.dx;
-
-//     pop   cx
-//     pop   bx
-//     ret
-}
-
-void WaitGraphicsEngineReady()
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-
-//     push dx
-//     push ax
-//     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = GetCRTControllerIndexRegister();
-
-//     mov  al, 40h                        ;CR40
-    r.h.al = 0x40;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     test ah, 01h                        ;Check to see if Enhanced command registers are unlocked.
-//     je   Exit                           ;Offset 0x12c6 if locked, exit.
-    if ((r.h.ah & 0x01) == 0x00)
-        goto Exit;
-
-//     mov  dx, GraphicsProcessorStatus    ;port - 0x9ae8
-    r.w.dx = 0x9ae8;
-
-//     in   ax, dx
-    r.w.ax = SYS_ReadPortShort(r.w.dx);
-
-//     DB 03Dh, 0FFh, 0FFh                 ;cmp  ax, 0ffffh masm encoding difference
-//     je   Exit                           ;Offset 0x12c6 if all ones, we exit.
-    if (r.w.ax == 0xffff)
-        goto Exit;
-
-// Label0x12be:                            ;Offset 0x12be
-LABEL(WaitGraphicsEngineReady, Label0x12be);
-
-//     jmp  Label0x12c0                    ;Offset 0x12c0
-// Label0x12c0:                            ;Offset 0x12c0
-//     in   ax, dx
-    r.w.ax = SYS_ReadPortShort(r.w.dx);
-
-//     test ah, 02h                        ;Test Harware (Graphics Engine) Busy
-//     jne  Label0x12be                    ;Offset 0x12be if busy, try again.
-    if ((r.h.ah & 0x02) != 0x00)
-        goto Label0x12be;
-
-// Exit:                                   ;Offset 0x12c6
-LABEL(WaitGraphicsEngineReady, Exit);
-
-//     pop  ax
-//     pop  dx
-//     ret  
-}
-
-void ClearMemory()
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-
-//     test byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_DontClearDisplay;Offset 0x487, 80h
-//     je   Label0x1226                    ;Offset 0x1226
-    if ((Hag::System::BDA::VideoModeOptions::Get() & 0x80) == 0x00)
-        goto Label0x1226;
-
-//     ret
-    return;
-
-// Label0x1226:                            ;Offset 0x1226
-LABEL(ClearMemory, Label0x1226);
-
-//     push dx
-//     push ax
-//     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = GetCRTControllerIndexRegister();
-
-//     call UnlockExtendedCRTRegisters     ;Offset 0xfa6
-    UnlockExtendedCRTRegisters();
-
-//     mov  al, 58h                        ;CR58 - Linear Address Window Control register
-    r.h.al = 0x58;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0efh                       ;bit 4 = 0 - Disable linear addressing
-    r.h.ah &= 0xef;
-
-//     out  dx, ax                         ;Write Out
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 50h                        ;CR50 - Extended System Control 1 register
-    r.h.al = 0x50;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0fh                        ;Clear out top 4 bits
-    r.h.ah &= 0x0f;
-
-//     or   ah, 10h                        ;bit 4 = 1 - 16 bits / pixel
-    r.h.ah |= 0x10;
-
-//     out  dx, ax                         ;Write out
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 43h                        ;CR43 - Extended Mode register
-    r.h.al = 0x43;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0f7h                       ;bit 3 = 0 - Unknown
-    r.h.ah &= 0xf7;
-
-//     out  dx, ax                         ;
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 40h                        ;CR40 - System Configuration register
-    r.h.al = 0x40;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     or   ah, 01h                        ;bit 0 = 1 - Enable enhanced register access
-    r.h.ah |= 0x01;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dx, AdvancedFunctionControl    ;0x4ae8
-    r.w.dx = 0x4ae8;
-
-//     mov  al, 07h                        ;bit 0 = 1 - Enable Enhanced Functions
-//                                         ;bit 1 = 1 - Unknown
-//                                         ;bit 2 = 1 - Enhanced modes pixel length = 4 bits / pixel
-    r.h.al = 0x07;
-
-//     out  dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     mov  dh, 0beh                       ;0xbee8 - WriteRegisterData
-    r.h.dh = 0xbe;
-
-//     xor  ax, ax
-    r.w.ax = 0x0000;
-
-//     mov  ah, 10h                        ;bits 15-12 = 0001 - Index = 0x1 - Top Scissors
-    r.h.ah = 0x10;
-
-//     out  dx, ax                         ;bits 11-0 = 0x000
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  ah, 20h                        ;bits 15-12 = 0010 - Index = 0x2 - Left Scissors
-    r.h.ah = 0x20;
-
-//     out  dx, ax                         ;bits 11-0 = 0x000
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  ax, 3fffh                      ;bits 15-12 = 0011 - Index 0x3 - Bottom Scissors
-    r.w.ax = 0x3fff;
-
-//     out  dx, ax                         ;bits 11-0 = 0xfff
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  ah, 4fh                        ;bits 15-12 = 0100 - Index 0x4 - Right Scissors
-    r.h.ah = 0x4f;
-
-//     out  dx, ax                         ;bits 11-0 = 0xfff
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     push ax                             ;store 0x4fff
-//     mov  ax, 0e040h                     ;bits 15-12 = 0111 - Index 0xe - Multifunction Control Miscellaneous
-    r.w.ax = 0xe040;
-
-//     out  dx, ax                         ;bit 6 = 1 - Slow Read/Modify/Write Cycle
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop  ax                             ;0x4fff
-    r.w.ax = 0x4fff;
-
-//     mov  dh, 0AAh                       ;0xaae8 - BitplaneWriteMask
-    r.h.dh = 0xaa;
-
-//     mov  ah, 0ffh                       ;0xffff
-    r.h.ah = 0xff;
-
-//     out  dx, ax                         ;update all bitplanes lower 16 bits
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     out  dx, ax                         ;update all bitplanes upper 16 bits
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 0a6h                       ;0xa6e8 - ForegroundColorRegister
-    r.h.dh = 0xa6;
-
-//     xor  ax, ax                         ;0
-    r.w.ax = 0x0000;
-
-//     out  dx, ax                         ;set foreground color to black, lower 16 bits
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     out  dx, ax                         ;set foreground color to black, upper 16 bits
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 0bah                       ;0xbae8 - ForegroundMix
-    r.h.dh = 0xba;
-
-//     mov  al, 27h                        ;0x0027
-//                                         ;bits 3-0 = 0111 = Mix Type: new
-//                                         ;bits 6-5 = 01 = Color Source: Foreground color
-    r.h.al = 0x27;
+    using namespace Hag;
+    using namespace Hag::VGA;
+
+    for (uint8_t crtcCount = 0; crtcCount < CRTCInitData[0]; ++crtcCount)
+    {
+        CRTControllerData::Write(crtcPort, CRTCInitData[1 + (crtcCount << 1)], CRTCInitData[2 + (crtcCount << 1)]);
+    }
+
+    for (uint8_t sequenceCount = 0; sequenceCount < S3::TrioBase::m_SequenceInitData[0]; ++sequenceCount)
+    {
+        SequencerIndex_t index = S3::TrioBase::m_SequenceInitData[1 + (sequenceCount << 1)];
+        SequencerData_t value = S3::TrioBase::m_SequenceInitData[2 + (sequenceCount << 1)];
+
+        //Don't write the hsync / vsync data.
+        if (index == S3::SequencerRegister::ExtendedSequencerD)
+            value &= ~S3::Sequencer::ExtendedSequencerD::SyncMask;
+
+        SequencerData::Write(index, value);
+    }
+    S3::CRTController::SystemConfiguration_t sysConf = S3::CRTController::SystemConfiguration::Read(crtcPort);
+    sysConf &= S3::CRTController::SystemConfiguration::UpperBitsMask;
+    sysConf |= FetchBusSpecificSystemConfig(crtcPort);
+    S3::CRTController::SystemConfiguration::Write(crtcPort, sysConf);
+
+    CRTControllerIndex::Write(crtcPort, S3::CRTControllerRegister::ModeControl);
+    S3::CRTController::ModeControl_t modeControl = CRTControllerData::Read(crtcPort + 1) & ~S3::CRTController::ModeControl::Interlaced;
+    CRTControllerData::Write(crtcPort + 1, modeControl);
     
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 0beh                       ;0xbee8 - WriteRegisterData
-    r.h.dh = 0xbe;
-
-//     mov  ax, 0a000h                     ;bits 15-12 = 1010 - Index 0xa - Pixel Control
-    r.w.ax = 0xa000;
-
-//     out  dx, ax                         ;bits 7-6 = 00 - Foreground Mix register is always selected
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 86h                        ;0x86e8 - CurrentXPosition
-    r.h.dh = 0x86;
-
-//     xor  ax, ax                         ;0
-    r.w.ax =0x0000;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 82h                        ;0x82e8 - CurrentYPosition
-    r.h.dh = 0x82;
-
-//     out  dx, ax                         ;0
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 96h                        ;0x96e8 - MajorAxisPixelCount
-    r.h.dh = 0x96;
-
-//     mov  ax, 0fffh                      ;0xfff = 4095
-    r.w.ax = 0x0fff;
-//     out  dx, ax                         ;0b1000000101 10011
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 0beh                       ;0xbee8 - WriteRegisterData
-    r.h.dh = 0xbe;
-
-//     out  dx, ax                         ;bits 15-12 = 0 - Minor Axis Pixel Count, bits 11-0 = 4095 - Rectangle Height
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dh, 09ah                       ;0x9ae8 - DrawingCommand
-    r.h.dh = 0x9a;
-
-//     mov  ax, 40b3h                      ;bit 1 = 1 - Multiple pixels transferred at a time (across the plane mode)
-//                                         ;bit 4 = 1 - Draw Pixels
-//                                         ;bits 7-5 = 101 - Select Drawing Direction 225 degrees, +Y,X maj, +X
-//                                         ;bits 15-13 = 010 - Rectangle fill
-    r.w.ax = 0x40b3;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     call WaitGraphicsEngineReady        ;Offset 0x12a6
-    WaitGraphicsEngineReady();
-
-//     pop  ax
-//     pop  dx
-//     ret
 }
 
-// ;Returns the Device ID in ah and Revision in al
-void ReadDeviceIDAndRevision(uint8_t& deviceId, uint8_t& revision)
+void WaitGraphicsEngineReady(Hag::VGA::Register_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-//     push dx
-//     push bx
-//     call UnlockExtendedCRTRegisters
-    UnlockExtendedCRTRegisters();
+    using namespace Hag;
+    using namespace Hag::VGA;
 
-//     call GetCRTControllerIndexRegister
-    r.w.dx = GetCRTControllerIndexRegister();
-
-//     mov  al, 2eh                        ;index 2eh - CR2E - Device ID Low
-    r.h.al = 0x2e;
-
-//     call ReadDataWithIndexRegister
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     mov  bh, ah
-    r.h.bh = r.h.ah;
-
-//     mov  al, 2fh                        ;index 2fh - CR2F - Revision
-    r.h.al = 0x2f;
-
-//     call ReadDataWithIndexRegister
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     mov  al, ah
-    r.h.al = r.h.ah;
-//     mov  ah, bh
-    r.h.ah = r.h.bh;
-//     pop  bx
-//     pop  dx
-//     ret
-    deviceId = r.h.ah;
-    revision = r.h.al;
+    S3::CRTController::SystemConfiguration_t systemConfig = S3::CRTController::SystemConfiguration::Read(crtcPort);
+    if (((systemConfig & S3::CRTController::SystemConfiguration::EnableEnhancedRegisterAccess) != 0) &&
+        S3::GraphicsProcessorStatus::Read() != S3::GraphicsProcessorStatus::FIFOStatusInvalid)
+    {
+        S3::GraphicsProcessorStatus_t status = 0;
+        do
+        {
+            status = S3::GraphicsProcessorStatus::Read();
+        } while ((status & S3::GraphicsProcessorStatus::GraphicsEngineBusy) != 0);
+    }
 }
 
-//;DCLK High/Low values
-uint8_t ClockData[] =
+void ClearMemory(Hag::VGA::Register_t crtcPort)
 {
-    0x28, 0x61, //00h
-    0x55, 0x49, //01h
-    0x2B, 0x42, //02h
-    0x7C, 0x24, //03h
-    0x1A, 0x40, //04h
-    0x29, 0x22, //05h
-    0x63, 0x48, //06h
-    0x30, 0x42, //07h
-    0x6F, 0x24, //08h
-    0x6B, 0x24, //09h
-    0x2B, 0x22, //0Ah
-    0x33, 0x61, //0Bh
-    0x2D, 0x21, //0Ch
-    0x47, 0x42, //0Dh
-    0x13, 0x20, //0Eh
-    0x26, 0x21, //0Fh
-    0x51, 0x44  //10h  <- Interlaced
-};
+    using namespace Hag;
+    using namespace Hag::System::BDA;
 
-//;MCLK High/Low values
-uint8_t Data03b5[] = { 0x79, 0x46 };
+    if ((VideoModeOptions::Get() & VideoModeOptions::DontClearDisplay) == 0)
+    {
+        UnlockExtendedCRTRegisters();
 
-//;DCLK High/Low values - revision 03h data
-uint8_t ClockDataRev3[] =
-{
-    0x28, 0x61, //00h
-    0x55, 0x49, //01h
-    0x2B, 0x42, //02h
-    0x7C, 0x24, //03h
-    0x1A, 0x40, //04h
-    0x29, 0x22, //05h
-    0x63, 0x48, //06h
-    0x30, 0x42, //07h
-    0x2D, 0x03, //08h  <- Different from other table
-    0x50, 0x07, //09h  <- Different from other table
-    0x2B, 0x22, //0Ah
-    0x2A, 0x43, //0Bh  <- Different from other table
-    0x2D, 0x21, //0Ch
-    0x23, 0x22, //0Dh  <- Different from other table
-    0x13, 0x20, //0Eh
-    0x26, 0x21, //0Fh
-    0x51, 0x44  //10h  <- Interlaced
-};
+        S3::CRTController::LinearAddressWindowControl_t linearAddressControl = 
+            S3::CRTController::LinearAddressWindowControl::Read(crtcPort);
+        S3::CRTController::LinearAddressWindowControl::Write(crtcPort, linearAddressControl &
+                                                             ~S3::CRTController::LinearAddressWindowControl::EnableLinearAddressing);
 
-// ;inputs:
-// ;bl = index
-// ;si = pointer to timing data
-// ;preserves ax and dx
-// ;
-// ;If bl is 22h, it ignores si and stomps it with a different pointer, 
-// ;then it writes the si[1] to MCLK Low and si[0] to MCLK high and sets a hardcoded DCLK. Then it signals that both frequencies were set.
-// ;
-// ;If bl is not 22h, it writes si[1] to DCLK Low and si[0] to DCLK High. Then it signals that only the DCLK frequency should be refreshed.
+        S3::CRTController::ExtendedSystemControl1_t extendedSystemControl = 
+            S3::CRTController::ExtendedSystemControl1::Read(crtcPort) & 
+            S3::CRTController::ExtendedSystemControl1::LowerMask;
+        S3::CRTController::ExtendedSystemControl1::Write(crtcPort, extendedSystemControl |
+                                                         S3::CRTController::ExtendedSystemControl1::Length16Bpp);
+
+        S3::CRTController::ExtendedMode_t extendedMode = S3::CRTController::ExtendedMode::Read(crtcPort);
+        S3::CRTController::ExtendedMode::Write(crtcPort, extendedMode &
+                                               S3::CRTController::ExtendedMode::UnknownMask);
+
+        S3::CRTController::SystemConfiguration_t systemConfiguration = S3::CRTController::SystemConfiguration::Read(crtcPort);
+        S3::CRTController::SystemConfiguration::Write(crtcPort, systemConfiguration |
+                                                      S3::CRTController::SystemConfiguration::EnableEnhancedRegisterAccess);
+
+        S3::AdvancedFunctionControl::WriteLower(S3::AdvancedFunctionControl::EnableEnhancedFunctions |
+                                                S3::AdvancedFunctionControl::ReservedAs1 |
+                                                S3::AdvancedFunctionControl::EnhancedModePixelLength);
+
+        S3::WriteRegisterData::WriteTopScissors(S3::WriteRegisterData::MinValue);
+        S3::WriteRegisterData::WriteLeftScissors(S3::WriteRegisterData::MinValue);
+        S3::WriteRegisterData::WriteBottomScissors(S3::WriteRegisterData::MaxValue);
+        S3::WriteRegisterData::WriteRightScissors(S3::WriteRegisterData::MaxValue);
+
+        S3::WriteRegisterData::WriteMultifunctionControlMisc(S3::MultifunctionControlMiscellaneous::SelectSlowReadModifyWriteCycle);
+
+        S3::BitplaneWriteMask::Write16x2(S3::BitplaneWriteMask::AllSet);
+
+        S3::ForegroundColor::Write16x2(0);
+
+        S3::ForegroundMix::Write(S3::ForegroundMix::MixNew | S3::ForegroundMix::SelectForegroundColor);
+
+        S3::WriteRegisterData::WritePixelControl(S3::PixelControl::MixForeground);
+
+        S3::CurrentXPosition::Write(0);
+        S3::CurrentYPosition::Write(0);
+
+        S3::MajorAxisPixelCount::Write(S3::MajorAxisPixelCount::MaxValue);
+
+        S3::WriteRegisterData::WriteMinorAxisPixelCount(S3::MinorAxisPixelCount::MaxValue);
+
+        S3::DrawingCommand::Write(S3::DrawingCommand::MustBe1 |
+                                  S3::DrawingCommand::AcrossThePlanePixelMode |
+                                  S3::DrawingCommand::DrawPixel |
+                                  S3::DrawingCommand::PosYXmajPosX |
+                                  S3::DrawingCommand::CommandRectangleFill);
+
+        WaitGraphicsEngineReady(crtcPort);
+    }
+}
+
 void ConfigureDCLKAndMCLK(uint8_t idx, uint8_t* data)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.h.bl = idx;
+    using namespace Hag;
+    using namespace Hag::VGA;
 
-//     push  ax
-//     push  dx
-//     mov   dx, SequenceIndex             ;port - 03c4h
-    r.w.dx = 0x3c4;
+    S3::Sequencer::UnlockExtendedSequencer::Unlock();
+    S3::Sequencer::ClockSynthControl2_t clockSynthControl2;
+    if (idx == 0x22)
+    {
+        SequencerData::Write(S3::SequencerRegister::Unknown1B, 0x00);
+        SequencerData::Write(S3::SequencerRegister::Unknown1A, 0x46);
 
-//     mov   ax, 0608h                     ;SR8 - Unlock Extended Sequencer register
-    r.w.ax = 0x0608;
-//     out   dx, ax                        ;Unlock
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+        S3::Sequencer::MClockValueLow::Write(0x46);
+        S3::Sequencer::MClockValueHigh::Write(0x79);
+        S3::Sequencer::DClockValueLow::Write(0x49);
+        S3::Sequencer::DClockValueHigh::Write(0x55);
 
-//     mov   ax, 0012h                     ;SR12 - DCLK Value Low register
-    r.w.ax = 0x0012;
-//     cmp   bl, 22h                       ;22h is a special case...
-//     jne   Label0x364                    ;Offset 0x364
-    if (r.h.bl != 0x22)
-        goto Label0x364;
+        clockSynthControl2 = S3::Sequencer::ClockSynthControl2::EnableNewMClockFrequencyLoad |
+                             S3::Sequencer::ClockSynthControl2::EnableNewDClockFrequencyLoad;
+    }
+    else
+    {
+        S3::Sequencer::DClockValueLow::Write(data[1]);
+        S3::Sequencer::DClockValueHigh::Write(data[0]);
 
-//     mov   si, offset Data03b5           ;Offset 03b5h
-    data = Data03b5;
+        clockSynthControl2 = S3::Sequencer::ClockSynthControl2::EnableNewDClockFrequencyLoad;
+    }
 
-//     mov   ax, 001bh                     ;SR1B - Unknown
-    r.w.ax = 0x001b;
+    S3::Sequencer::RAMDACClockSynthControl::Write(0);
 
-//     out   dx, ax                        ;reset to 0
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+    S3::Sequencer::ClockSynthControl2_t originalClockSynthControl2 = S3::Sequencer::ClockSynthControl2::Read();
 
-//     mov   al, 1ah                       ;SR1A - Unknown
-    r.h.al = 0x1a;
-
-//     mov   ah, byte ptr cs:[si + 01h]    ;Low value?
-    r.h.ah = data[0x01];
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov   al, 10h                       ;SR10 - MCLK Value Low register
-    r.h.al = 0x10;
-
-// Label0x364:                             ;Offset 0x364
-LABEL(ConfigureDCLKAndMCLK, Label0x364);
-
-//     mov   ah, byte ptr cs:[si + 01h]    ;Low value
-    r.h.ah = data[0x01];
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc   al                            ;SR11 - MCLK Value High register or SR13 - DCLK Value High register
-    ++r.h.al;
-
-//     mov   ah, byte ptr cs:[si]          ;High value
-    r.h.ah = data[0x00];
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov   cl, 02h                       ;2 = Enable new MCLK frequency load
-    r.h.cl = 0x02;
-
-//     cmp   bl, 22h
-//     jne   Label0x380                    ;Offset 0x380
-    if (r.h.bl != 0x22)
-        goto Label0x380;
-
-//     mov   ax, 4912h                     ;DCLK Value Low register, PLL R = 4, PLL N = 10
-    r.w.ax = 0x4912;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov   ax, 5513h                     ;DCLK Value High register, M = 86
-    r.w.ax = 0x5513;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov   cl, 03h                       ;3 = Enable new MCLK and DCLK frequency load
-    r.h.cl = 0x03;
-
-// Label0x380:                             ;Offset 0x380
-LABEL(ConfigureDCLKAndMCLK, Label0x380);
-
-//     mov   ax, 0018h                     ;SR18 - RAMDAC/CLKSYN Control register, Reset all flags to default (00h)
-    r.w.ax = 0x0018;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov   al, 15h                       ;SR15 - CLKSYN Control 2 register
-    r.h.al = 0x15;
-
-//     call  ReadDataWithIndexRegister     ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and   ah, 0ech                      ;Clear MCLK frequency load, clear DCLK frequency load, don't divide DCLK by 2
-    r.h.ah &= 0xec;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     or    ah, cl                        ;cl is either 3 or 2, which means either both MCLK and DCLK frequencies are set, or only MCLK
-    r.h.ah |= r.h.cl;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-//     pop   dx
-//     pop   ax
-//     ret
-}
-
-// ;inputs:
-// ;ah = index value 00h to 11h (Where 11h is a special case)
-// ;This function is basically selecting a timing table based on chip revision, then adds the index to the timing table
-// ;and sets up DCLK and perhaps MCLK. After that, based on the index it enables or disables interlacing.
-void SetupClocks(uint8_t clockConfig)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.h.ah = clockConfig;
-    uint8_t* clockDataPtr = NULL;
-    uint16_t axtmp = 0;
-
-//     xor  bx, bx
-    r.w.bx = 0x0000;
-
-//     mov  bl, ah
-    r.h.bl = r.h.ah;
-
-//     and  bl, 1fh
-    r.h.bl &= 0x1f;
-
-//     push ax                             ;Store input
-    axtmp = r.w.ax;
-
-//     mov  si, offset ClockData           ;Offset 0393h
-    clockDataPtr = ClockData;
-
-//     call ReadDeviceIDAndRevision        ;Offset 0xfc2
-// ;Returns the Device ID in ah and Revision in al
-    ReadDeviceIDAndRevision(r.h.ah, r.h.al);
+    originalClockSynthControl2 &= ~(S3::Sequencer::ClockSynthControl2::EnableNewMClockFrequencyLoad |
+                                    S3::Sequencer::ClockSynthControl2::EnableNewDClockFrequencyLoad |
+                                    S3::Sequencer::ClockSynthControl2::DivideDClockByTwo);
     
-//     cmp  al, 03h                        ;
-//     jne  NotRev3                        ;Offset 0x331
-    if (r.h.al != 0x03)
-        goto NotRev3;
-
-//     mov  si, offset ClockDataRev3       ;Revision 3 uses offset 0x3b7 data instead.
-    clockDataPtr = ClockDataRev3;
-
-// NotRev3:                                ;Offset 0x331
-LABEL(SetupClocks, NotRev3);
-
-//     pop  ax                             ;Restore input
-    r.w.ax = axtmp;
-
-//     shl  bl, 01h                        ;2 bytes per entry
-    r.h.bl <<= 1;
-
-//     add  si, bx                         ;Add offset to base
-    clockDataPtr += r.w.bx;
-
-//     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = GetCRTControllerIndexRegister();
-
-//     call ConfigureDCLKAndMCLK           ;Offset 0x343
-    ConfigureDCLKAndMCLK(r.h.bl, clockDataPtr);
-
-//     and  ah, 20h                        ;If ah == 0x20 Interlaced = on
-    r.h.ah &= 0x20;
-
-//     mov  al, 42h                        ;CR42 - Mode Control Register
-    r.h.al = 0x42;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     ret
+    S3::Sequencer::ClockSynthControl2::Write(originalClockSynthControl2);
+    S3::Sequencer::ClockSynthControl2::Write(originalClockSynthControl2 | clockSynthControl2);
 }
 
-uint8_t VESAModeData[] = 
+void SetupClocks(Hag::VGA::Register_t crtcPort, uint8_t clockConfig)
 {
-    0x68, 0xE6, 0x4D, 0x69, 0xF2, 0x4D, 0x6A, 0xFE, 0x4D, 0x6B, 0x0A, 0x4E, 0x6C, 0x16,
-    0x4E, 0x6D, 0x22, 0x4E, 0x6E, 0x2E, 0x4E, 0x6F, 0x3A, 0x4E, 0x55, 0x46, 0x4E, 0x54, 0x52, 0x4E,
-    0x70, 0x5E, 0x4E, 0x71, 0x6A, 0x4E, 0x72, 0x76, 0x4E, 0x73, 0x82, 0x4E, 0x74, 0x8E, 0x4E, 0x75,
-    0x9A, 0x4E, 0x76, 0xA6, 0x4E, 0x77, 0xB2, 0x4E, 0x78, 0xBE, 0x4E, 0x79, 0xCA, 0x4E, 0x7A, 0xD6,
-    0x4E, 0x7C, 0xE2, 0x4E, 0x80, 0x00, 0x00, 0x49, 0xEE, 0x4E, 0x4A, 0xFA, 0x4E, 0x4B, 0x06, 0x4F,
-    0x4C, 0x12, 0x4F, 0x4D, 0x1E, 0x4F, 0x4E, 0x2A, 0x4F, 0x4F, 0x36, 0x4F, 0x52, 0x42, 0x4F, 0xFF
-};
+    using namespace Hag;
 
-uint8_t VESAModeInfo_68_G_640x400x256C[] = { 0x1B, 0x80, 0x02, 0x80, 0x02, 0x90, 0x01, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_69_G_640x480x256C[] = { 0x1B, 0x80, 0x02, 0x80, 0x02, 0xE0, 0x01, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_6A_G_800x600x16C[] = { 0x1F, 0x64, 0x00, 0x20, 0x03, 0x58, 0x02, 0x08, 0x04, 0x04, 0x01, 0x03 };
-uint8_t VESAModeInfo_6B_G_800x600x256C[] = { 0x1B, 0x20, 0x03, 0x20, 0x03, 0x58, 0x02, 0x08, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_6C_1024x768x16C[] = { 0x1B, 0x80, 0x00, 0x00, 0x04, 0x00, 0x03, 0x10, 0x04, 0x04, 0x01, 0x03 };
-uint8_t VESAModeInfo_6D_1024x768x256C[] = { 0x1B, 0x00, 0x04, 0x00, 0x04, 0x00, 0x03, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_6E_1280x1024x16C[] = { 0x1B, 0xA0, 0x00, 0x00, 0x05, 0x00, 0x04, 0x10, 0x04, 0x04, 0x01, 0x03 };
-uint8_t VESAModeInfo_6F_1280x1024x256C[] = { 0x1B, 0x00, 0x05, 0x00, 0x05, 0x00, 0x04, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_55_T_132x25[] = { 0x0F, 0x08, 0x01, 0x84, 0x00, 0x19, 0x00, 0x10, 0x04, 0x04, 0x01, 0x00 };
-uint8_t VESAModeInfo_54_T_132x43[] = { 0x0F, 0x08, 0x01, 0x84, 0x00, 0x2B, 0x00, 0x08, 0x04, 0x04, 0x01, 0x00 };
-uint8_t VESAModeInfo_70_640x480x32K[] = { 0x1B, 0x00, 0x05, 0x80, 0x02, 0xE0, 0x01, 0x10, 0x01, 0x0F, 0x01, 0x06 };
-uint8_t VESAModeInfo_71_640x480x64K[] = { 0x1B, 0x00, 0x05, 0x80, 0x02, 0xE0, 0x01, 0x10, 0x01, 0x10, 0x01, 0x06 };
-uint8_t VESAModeInfo_72_640x480x16M[] = { 0x1B, 0x00, 0x0A, 0x80, 0x02, 0xE0, 0x01, 0x10, 0x01, 0x20, 0x01, 0x06 };
-uint8_t VESAModeInfo_73_800x600x32K[] = { 0x1B, 0x40, 0x06, 0x20, 0x03, 0x58, 0x02, 0x08, 0x01, 0x0F, 0x01, 0x06 };
-uint8_t VESAModeInfo_74_800x600x64K[] = { 0x1B, 0x40, 0x06, 0x20, 0x03, 0x58, 0x02, 0x08, 0x01, 0x10, 0x01, 0x06 };
-uint8_t VESAModeInfo_75_800x600x16M[] = { 0x1B, 0x80, 0x0C, 0x20, 0x03, 0x58, 0x02, 0x08, 0x01, 0x20, 0x01, 0x06 };
-uint8_t VESAModeInfo_76_1024x768x32K[] = { 0x1B, 0x00, 0x08, 0x00, 0x04, 0x00, 0x03, 0x10, 0x01, 0x0F, 0x01, 0x06 };
-uint8_t VESAModeInfo_77_1024x768x64K[] = { 0x1B, 0x00, 0x08, 0x00, 0x04, 0x00, 0x03, 0x10, 0x01, 0x10, 0x01, 0x06 };
-uint8_t VESAModeInfo_78_1024x768x16M[] = { 0x1B, 0x00, 0x10, 0x00, 0x04, 0x00, 0x03, 0x10, 0x01, 0x20, 0x01, 0x06 };
-uint8_t VESAModeInfo_79_1280x1024x32K[] = { 0x1B, 0x00, 0x0A, 0x00, 0x05, 0x00, 0x04, 0x10, 0x01, 0x0F, 0x01, 0x06 };
-uint8_t VESAModeInfo_7A_1280x1024x64K[] = { 0x1B, 0x00, 0x0A, 0x00, 0x05, 0x00, 0x04, 0x10, 0x01, 0x10, 0x01, 0x06 };
-uint8_t VESAModeInfo_7C_1600x1200x256[] = { 0x1B, 0x40, 0x06, 0x40, 0x06, 0xB0, 0x04, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_49_640x480x256C[] = { 0x1B, 0x00, 0x04, 0x80, 0x02, 0xE0, 0x01, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_4A_800x600x16C[] = { 0x1B, 0x00, 0x04, 0x20, 0x03, 0x58, 0x02, 0x08, 0x01, 0x04, 0x01, 0x04 };
-uint8_t VESAModeInfo_4B_800x600x256C[] = { 0x1B, 0x00, 0x04, 0x20, 0x03, 0x58, 0x02, 0x08, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_4C_1024x768x16C[] = { 0x1B, 0x00, 0x04, 0x00, 0x04, 0x00, 0x03, 0x10, 0x01, 0x04, 0x01, 0x04 };
-uint8_t VESAModeInfo_4D_1024x768x256C[] = { 0x1B, 0x00, 0x04, 0x00, 0x04, 0x00, 0x03, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_4E_1152x864x256C[] = { 0x1B, 0x80, 0x04, 0x80, 0x04, 0x60, 0x03, 0x10, 0x01, 0x08, 0x01, 0x04 };
-uint8_t VESAModeInfo_4F_1280x1024x16C[] = { 0x1B, 0x00, 0x04, 0x00, 0x05, 0x00, 0x04, 0x10, 0x01, 0x04, 0x01, 0x04 };
-uint8_t VESAModeInfo_52_640x400x16M[] = { 0x1B, 0x00, 0x0A, 0x80, 0x02, 0x90, 0x01, 0x10, 0x01, 0x20, 0x01, 0x06 };
+    uint8_t* clockDataPtr = S3::CRTController::Revision::Read(crtcPort) != 0x03 ?
+                            S3::TrioBase::m_ClockData :
+                            S3::TrioBase::m_ClockDataRev3;
 
-// ;0 = red mask size
-// ;1 = red field position
-// ;2 = green mask size
-// ;3 = green field size
-// ;4 = blue mask size
-// ;5 = blue field size
-// ;6 = reserved mask size
-// ;7 = reserved mask position
-// ;8 = direct color mode info
-uint8_t PixelData15bpp[] = { 0x05, 0x0A, 0x05, 0x05, 0x05, 0x00, 0x01, 0x0F, 0x00 };
-uint8_t PixelData16bpp[] = { 0x05, 0x0B, 0x06, 0x05, 0x05, 0x00, 0x00, 0x00, 0x00 };
-uint8_t PixelData24bpp[] = { 0x08, 0x10, 0x08, 0x08, 0x08, 0x00, 0x00, 0x00, 0x00 };
-uint8_t PixelData32bpp[] = { 0x08, 0x10, 0x08, 0x08, 0x08, 0x00, 0x08, 0x18, 0x00 };
+    uint32_t offset = (clockConfig & 0x1f) << 1;
+    ConfigureDCLKAndMCLK(clockConfig, clockDataPtr + offset);
 
-
-uint8_t* VESAModeDataPtr[] =
-{
-    VESAModeInfo_68_G_640x400x256C,
-    VESAModeInfo_69_G_640x480x256C,
-    VESAModeInfo_6A_G_800x600x16C,
-    VESAModeInfo_6B_G_800x600x256C,
-    VESAModeInfo_6C_1024x768x16C,
-    VESAModeInfo_6D_1024x768x256C,
-    VESAModeInfo_6E_1280x1024x16C,
-    VESAModeInfo_6F_1280x1024x256C,
-    VESAModeInfo_55_T_132x25,
-    VESAModeInfo_54_T_132x43,
-    VESAModeInfo_70_640x480x32K,
-    VESAModeInfo_71_640x480x64K,
-    VESAModeInfo_72_640x480x16M,
-    VESAModeInfo_73_800x600x32K,
-    VESAModeInfo_74_800x600x64K,
-    VESAModeInfo_75_800x600x16M,
-    VESAModeInfo_76_1024x768x32K,
-    VESAModeInfo_77_1024x768x64K,
-    VESAModeInfo_78_1024x768x16M,
-    VESAModeInfo_79_1280x1024x32K,
-    VESAModeInfo_7A_1280x1024x64K,
-    VESAModeInfo_7C_1600x1200x256,
-    NULL,
-    VESAModeInfo_49_640x480x256C,
-    VESAModeInfo_4A_800x600x16C,
-    VESAModeInfo_4B_800x600x256C,
-    VESAModeInfo_4C_1024x768x16C,
-    VESAModeInfo_4D_1024x768x256C,
-    VESAModeInfo_4E_1152x864x256C,
-    VESAModeInfo_4F_1280x1024x16C,
-    VESAModeInfo_52_640x400x16M
-};
-
-// ;inputs:
-// ;bl = legacy mode
-// ;ds:si points to VESAModeData
-// ;
-// ;outputs:
-// ;di will be incremented by N*2 loops over VESAModeData until mode is found, this can point into the VESAVideoModeIds table
-// ;si will point to found VESAModeData entry.
-bool FindModeFromVESAModeData(uint8_t mode, uint8_t*& vesaModeData, uint16_t& vesaVideoModeIdsOffset)
-{
-LABEL(FindModeFromVESAModeData, Start);
-
-//     cmp    byte ptr ds:[si], 0ffh       ;Terminate?
-//     je     NotFound                     ;Offset 0x4c9b
-    if (vesaModeData[0] == 0xff)
-        goto NotFound;
-
-//     cmp    byte ptr ds:[si], bl         ;Found?
-//     je     Finished                     ;Offset 0x4c98
-    if (vesaModeData[0] == mode)
-        goto Finished;
-
-//     add    di, 02h
-    vesaVideoModeIdsOffset += 0x02;
-
-//     add    si, 03h
-    vesaModeData += 0x03;
-
-//     jmp    FindModeFromVESAModeData     ;Offset 0x4c87
-    goto Start;
-
-// Finished:                               ;Offset 0x4c98
-LABEL(FindModeFromVESAModeData, Finished);
-//     cmp    bl, 0ffh
-    return mode != 0xff;
-
-// NotFound:                               ;Offset 0x4c9b
-LABEL(FindModeFromVESAModeData, NotFound);
-
-//     ret
-    return false;
+    S3::CRTController::ModeControl::Write(crtcPort, clockConfig & S3::CRTController::ModeControl::Interlaced);
 }
 
-// ;inputs:
-// ;none
-// ;outputs:
-// ;dx = Memory size in 4K blocks. 0.5MiB = 0 (why?)
-uint16_t GetInstalledMemorySizeIn4KBlocks()
+uint16_t GetInstalledMemorySizeIn4KiBlocks(Hag::VGA::Register_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
+    using namespace Hag;
 
-//     push ax
-//     call UnlockExtendedCRTRegisters     ;Offset 0xfa6
     UnlockExtendedCRTRegisters();
 
-//     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = GetCRTControllerIndexRegister();
-
-//     mov  al, 36h                        ;CR36 - Configuration 1 register
-    r.h.al = 0x36;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     xor  dx, dx                         ;dx = 0
-    r.w.dx = 0x0000;
-
-//     and  ah, 0e0h                       ;And off everything but the upper 3 bits - Display memory size
-    r.h.ah &= 0xe0;
-
-//     cmp  ah, 0e0h                       ;111 = 0.5MiB Trio32 only
-//     je   Exit                           ;Offset 0x1482
-    if (r.h.ah == 0xe0)
-        goto Exit;
-
-//     inc  dx                             ;dx = 1
-    ++r.w.dx;
-
-//     cmp  ah, 0c0h                       ;110 = 1MiB
-//     je   Exit                           ;Offset 0x1482
-    if (r.h.ah == 0xc0)
-        goto Exit;
-
-//     inc  dx                             ;dx = 2
-    ++r.w.dx;
-
-//     cmp  ah, 80h                        ;100 = 2MiB
-//     je   Exit                           ;Offset 0x1482
-    if (r.h.ah == 0x80)
-        goto Exit;
-
-//     inc  dx                             ;
-    ++r.w.dx;
-
-//     inc  dx                             ;dx = 4
-    ++r.w.dx;
-
-//     cmp  ah, 00h                        ;000 = 4MiB
-//     je   Exit                           ;Offset 0x1482
-    if (r.h.ah == 0x00)
-        goto Exit;
-
-//     mov  dl, 01h                        ;dx = 1 - Assume 1MiB
-    r.h.dl = 0x01;
-
-// Exit:                                   ;Offset 0x1482
-LABEL(GetInstalledMemorySizeIn4KBlocks, Exit);
-
-//     xchg dh, dl                         ;dx = 0 - 256 - 512 - 1024
-    r.h.al = r.h.dl;
-    r.h.dl = r.h.dh;
-    r.h.dh = r.h.al;
-
-//     pop  ax
-//     ret
-    return r.w.dx;
+    uint16_t size;
+    switch (S3::CRTController::Configuration1::Read(crtcPort) & S3::CRTController::Configuration1::DisplayMemorySize)
+    {
+    case S3::CRTController::Configuration1::Size05MiB:
+        size = 0x0000;      //0.5MiB == 0 for some reason.
+        break;
+    case S3::CRTController::Configuration1::Size1MiB:
+        size = 0x0100;
+        break;
+    case S3::CRTController::Configuration1::Size2MiB:
+        size = 0x0200;
+        break;
+    case S3::CRTController::Configuration1::Size4MiB:
+        size = 0x0400;
+        break;
+    default:
+        size = 0x0100;
+        break;
+    }
+    return size;
 }
-
-// VESAModeInfo STRUCT
-//     ModeAttributes BYTE ?                ;0x00
-//     BytesPerScanline WORD ?              ;0x01
-//     WidthInPixels WORD ?                 ;0x03
-//     HeightInPixels WORD ?                ;0x05
-//     HeightOfCharacterCellInPixels BYTE ? ;0x07
-//     MemoryPlanes BYTE ?                  ;0x08
-//     BitsPerPixel BYTE ?                  ;0x09
-//     Banks BYTE ?                         ;0x0a
-//     MemoryModelType BYTE ?               ;0x0b
-// VESAModeInfo ENDS
 
 // ;inputs:
 // ;dx = CRTC register
 // ;es:di = VESAResolutionVariant
-void ConfigureExtraVESAModeSettings(uint8_t mode, uint16_t crtc, Hag::S3::VESAVideoModeData* overrideTable, Hag::S3::VESAResolutionVariant* modeData)
+void ConfigureExtraVESAModeSettings(uint8_t mode, uint16_t crtcPort, Hag::S3::VESAVideoModeData* overrideTable, Hag::S3::VESAResolutionVariant* modeData)
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
-    r.w.dx = crtc;
-
-//     push di
-//     push ds
-//     mov  bl, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    //r.h.bl = Hag::System::BDA::DisplayMode::Get();
-
-//     push cs
-//     pop  ds
-//     lea  si, ds:[VESAModeData]          ;Offset 0x4d82
-//     call FindModeFromVESAModeData       ;Offset 0x4c87
-    //FindModeFromVESAModeData(r.h.bl, vesaModeData, vesaVideoModeIdsOffset);
-
-//     mov  si, word ptr ds:[si + 01h]     ;si = pointer to VESAModeInfo
-    //vesaModeInfo = VESAModeDataPtr[vesaVideoModeIdsOffset >> 1];
+    r.w.dx = crtcPort;
 
 //     mov  bx, (VESAModeInfo ptr ds:[si]).BytesPerScanLine;bx = BytesPerScanLine
     r.w.bx = overrideTable->ModeInfo->BytesPerScanline;
@@ -2037,13 +969,13 @@ LABEL(ConfigureExtraVESAModeSettings, DontModifySyncPolarity);
     r.h.ch = modeData->ExtendedMemoryControl3_1MiB;
 
 //     push dx                             ;store crtc port
-//     call GetInstalledMemorySizeIn4KBlocks;Offset 0x1457 dh holds value, dl = 0
+//     call GetInstalledMemorySizeIn4KiBlocks;Offset 0x1457 dh holds value, dl = 0
 //     mov  bh, dh                         ;store size value in bh
-    r.w.dx = GetInstalledMemorySizeIn4KBlocks();
+    r.w.dx = GetInstalledMemorySizeIn4KiBlocks(crtcPort);
     r.h.bh = r.h.dh;
 
 //     pop  dx                             ;crtc port restored
-    r.w.dx = GetCRTControllerIndexRegister();
+    r.w.dx = crtcPort;
 
 //     cmp  bh, 01h                        ;1MiB
 //     je   Is1MiB                         ;Offset 0x480
@@ -2303,12 +1235,12 @@ LABEL(ConfigureExtraVESAModeSettings, Exit);
 //     ret  
 }
 
-void EnableOver256KAddressingAndSetAddressWindow(uint8_t mode, uint16_t crtcReg)
+void EnableOver256KAddressingAndSetAddressWindow(uint8_t mode, uint16_t crtcPort)
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
     r.h.al = mode;
-    r.w.dx = crtcReg;
+    r.w.dx = crtcPort;
 
 //     push ax
 //     mov  bl, al
@@ -2567,6 +1499,7 @@ void ApplyVESAOverrideData(uint8_t mode)
     uint32_t offset = 0;
     uint16_t idx = 0;
     uint16_t crtIdx = 0;
+    Hag::VGA::Register_t crtcPort = GetCRTControllerIndexRegister();
     Hag::S3::VESAVideoModeData* overrideTable = NULL;
     Hag::S3::VESAResolutionVariant* modeData = NULL;
 
@@ -2596,7 +1529,7 @@ void ApplyVESAOverrideData(uint8_t mode)
     SYS_WritePortShort(r.w.dx, r.w.ax);
 
 //     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = GetCRTControllerIndexRegister();
+    r.w.dx = crtcPort;
 
 //     mov  al, 30h                        ;CR30 - Chip ID / Revision register
     r.h.al = 0x30;
@@ -2637,13 +1570,11 @@ void ApplyVESAOverrideData(uint8_t mode)
 //     out  dx, al
     SYS_WritePortByte(r.w.dx, r.h.al);
 
-//     pop  dx
-    r.w.dx = GetCRTControllerIndexRegister();
-
+    r.w.dx = crtcPort;
 //     push si
 //     mov  si, word ptr cs:[CRTControllerInitPtr];Offset 0x1bd points to CRTControllerInitData
 //     call InitializeCRTControllerAndSequencer;Offset 0xfee
-    InitializeCRTControllerAndSequencer(CRTControllerInitData, r.w.dx);
+    InitializeCRTControllerAndSequencer(Hag::S3::TrioBase::m_CRTControllerInitData, crtcPort);
 
 //     pop  si
 // Label0x10b9:                            ;Offset 0x10b9
@@ -2664,7 +1595,7 @@ LABEL(ApplyVESAOverrideData, Found);
     modeData = overrideTable->VariantData;
 
 //     call ClearMemory                    ;Offset 0x121e
-    ClearMemory();
+    ClearMemory(crtcPort);
 
 //     call EmptyFunction1                 ;Offset 0x230
 //     mov  al, 41h                        ;CR41 - BIOS Flag register
@@ -2773,7 +1704,7 @@ LABEL(ApplyVESAOverrideData, OverrideTableFound);
     SYS_WritePortByte(r.w.dx, r.h.al);
 
 //     pop  dx                             ;Restore CRTC register
-    r.w.dx = GetCRTControllerIndexRegister();
+    r.w.dx = crtcPort;
 
 //     mov  ah, bl
     r.h.ah = r.h.bl;
@@ -2818,7 +1749,7 @@ LABEL(ApplyVESAOverrideData, DataFound);
     r.h.ah = modeData->ClockConfigIndex;
 
 //     call SetupClocks                    ;Offset 0x31c
-    SetupClocks(r.h.ah);
+    SetupClocks(crtcPort, r.h.ah);
 
 //     mov  cx, 19h                        ;25 CRTC registers
     r.w.cx = 0x0019;
@@ -5574,7 +4505,7 @@ LABEL(SetVideoMode, Label0x18da);
     EnablePaletteBasedVideo();
 
 //     call TurnOnScreen                   ;Offset 0x4800
-    TurnOnScreen();
+    Hag::VGA::Sequencer::ClockingMode::TurnScreenOn();
 
 //     pop  cx
 //     call EmptyFunction3                 ;Offset 0x1380

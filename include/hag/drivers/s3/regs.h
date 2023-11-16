@@ -29,7 +29,7 @@ enum
     XCoordinate2 = 0x8EEA,                                  //X2
     LineErrorTerm = 0x92E8,                                 //ERR_TERM
     LineErrorTerm2 = 0x92EA,                                //ERR_TERM2
-    MajorAxisPixelCount = 0x96EA8,                          //MAJ_AXIS_PCNT
+    MajorAxisPixelCount = 0x96E8,                          //MAJ_AXIS_PCNT
     MajorAxisPixelCount2 = 0x96EA,                          //MAJ_AXIS_PCNT2
     GraphicsProcessorStatus = 0x9AE8,                       //GP_STAT
     DrawingCommand = 0x9AE8,                                //CMD

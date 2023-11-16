@@ -15,9 +15,9 @@ namespace Configuration1
     
     enum //Mask
     {
-        SystemBusSelect = 0x02,         //00 = Reserved
-                                        //01 = VESA local bus
-                                        //10 = PCI local bus
+        SystemBusSelect = 0x03,         //00 = Reserved
+        VesaLocalBus = 0x01,            //01 = VESA local bus
+        PCIBus = 0x02,                  //10 = PCI local bus
                                         //11 = Reserved
         MemoryPageModeSelect = 0xC0,    //00 = Reserved
                                         //01 = Reserved
@@ -26,14 +26,15 @@ namespace Configuration1
         EnableVideoBIOSAccesses = 0x10, //VL-Bus only
                                         //0 = Disable video BIOS accesses
                                         //1 = Enable video BIOS accesses
-        DisplayMemorySize = 0xE0        //000 = 4MBytes
+        DisplayMemorySize = 0xE0,       //
+        Size4MiB = 0x00,                //000 = 4MBytes
                                         //001 = Reserved
-                                        //010 = 3MBytes
+        Size3MiB = 0x40,                //010 = 3MBytes
                                         //011 = Reserved
-                                        //100 = 2MBytes
-                                        //101 = 1.5MBytes
-                                        //110 = 1MByte
-                                        //111 = 0.5MByte
+        Size2MiB = 0x80,                //100 = 2MBytes
+        Size1_5MiB = 0xA,               //101 = 1.5MBytes
+        Size1MiB = 0xC0,                //110 = 1MByte
+        Size05MiB = 0xE0                //111 = 0.5MByte
 
     };
 

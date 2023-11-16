@@ -224,6 +224,14 @@ public:
     static uint8_t m_Characters8x8[];
     static uint8_t m_Characters8x14[];
     static uint8_t m_Characters8x16[];
+
+    static uint8_t m_CRTControllerInitData[];
+    static uint8_t m_SequenceInitData[];
+    static uint8_t m_PCISystemConfig;
+    static uint8_t m_VLBSystemConfig;
+
+    static uint8_t m_ClockData[];
+    static uint8_t m_ClockDataRev3[];
 };
 
 template<Register_t CrtControllerIndex>

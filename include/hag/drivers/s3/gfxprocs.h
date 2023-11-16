@@ -54,6 +54,7 @@ namespace GraphicsProcessorStatus
                                         //          0011111111111 = 2 FIFO slots available
                                         //          0111111111111 = 1 FIFO slots available
                                         //          1111111111111 = 0 FIFO slots available
+        FIFOStatusInvalid = 0xFFFF
     };
 
     namespace Shift
