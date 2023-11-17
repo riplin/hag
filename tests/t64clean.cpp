@@ -9,6 +9,11 @@
 
 #include <hag/drivers/vga/miscout.h>
 #include <hag/drivers/vga/attribc/data.h>
+#include <hag/drivers/vga/crtc/enhorsyn.h>
+#include <hag/drivers/vga/crtc/hortotal.h>
+#include <hag/drivers/vga/crtc/scrnoffs.h>
+#include <hag/drivers/vga/crtc/sthorbln.h>
+#include <hag/drivers/vga/crtc/sthorsyn.h>
 #include <hag/drivers/vga/crtc/verrtcen.h>
 #include <hag/drivers/vga/gfxc/data.h>
 #include <hag/drivers/vga/sqrc/reset.h>
@@ -32,21 +37,28 @@
 #include <hag/drivers/s3/trio.h>
 #include <hag/drivers/s3/vidmodes.h>
 #include <hag/drivers/s3/wregdata.h>
+#include <hag/drivers/s3/crtc/bkwcomp3.h>
 #include <hag/drivers/s3/crtc/conf1.h>
 #include <hag/drivers/s3/crtc/devidhi.h>
 #include <hag/drivers/s3/crtc/devidlo.h>
 #include <hag/drivers/s3/crtc/exhorovf.h>
+#include <hag/drivers/s3/crtc/exmemct2.h>
+#include <hag/drivers/s3/crtc/exmemct3.h>
 #include <hag/drivers/s3/crtc/exmscct2.h>
 #include <hag/drivers/s3/crtc/exsysct1.h>
 #include <hag/drivers/s3/crtc/exsysct2.h>
 #include <hag/drivers/s3/crtc/exsysct3.h>
 #include <hag/drivers/s3/crtc/extmode.h>
 #include <hag/drivers/s3/crtc/exverovf.h>
+#include <hag/drivers/s3/crtc/itlrtst.h>
 #include <hag/drivers/s3/crtc/linawctr.h>
+#include <hag/drivers/s3/crtc/memconf.h>
+#include <hag/drivers/s3/crtc/misc1.h>
 #include <hag/drivers/s3/crtc/modectrl.h>
 #include <hag/drivers/s3/crtc/reglock1.h>
 #include <hag/drivers/s3/crtc/reglock2.h>
 #include <hag/drivers/s3/crtc/revision.h>
+#include <hag/drivers/s3/crtc/stdsfifo.h>
 #include <hag/drivers/s3/crtc/sysconf.h>
 #include <hag/drivers/s3/sqrc/clksync2.h>
 #include <hag/drivers/s3/sqrc/dclkvhi.h>
@@ -539,32 +551,12 @@ void ApplyVideoParameters(Hag::S3::VideoParameters* overrideTable)
     }
 }
 
-// ;This function pokes an index value into an index register
-// ;and then reads the result from the adjacent data register and puts it in ah.
-// ;inputs:
-// ;dx = index port
-// ;al = index
-// ;returns:
-// ;al = index
-// ;ah = value at index
-// ;dx is unchanged
 uint8_t ReadDataWithIndexRegister(uint16_t port, uint8_t index)
 {
-//     out  dx, al
     SYS_WritePortByte(port, index);
-//     inc  dx
-//     mov  ah, al
-//     in   al, dx
     return SYS_ReadPortByte(port + 1);
-//     dec  dx
-//     xchg al, ah
-//     ret
 }
 
-// ;inputs:
-// ;dx = CRT Control Index register
-// ;outputs:
-// ;bh = bus specific settings for CR40 - System Configuration
 uint8_t FetchBusSpecificSystemConfig(Hag::VGA::Register_t crtcPort)
 {
     using namespace Hag::S3;
@@ -605,7 +597,6 @@ void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint16_t crtcPor
     CRTControllerIndex::Write(crtcPort, S3::CRTControllerRegister::ModeControl);
     S3::CRTController::ModeControl_t modeControl = CRTControllerData::Read(crtcPort + 1) & ~S3::CRTController::ModeControl::Interlaced;
     CRTControllerData::Write(crtcPort + 1, modeControl);
-    
 }
 
 void WaitGraphicsEngineReady(Hag::VGA::Register_t crtcPort)
@@ -743,496 +734,153 @@ void SetupClocks(Hag::VGA::Register_t crtcPort, uint8_t clockConfig)
     S3::CRTController::ModeControl::Write(crtcPort, clockConfig & S3::CRTController::ModeControl::Interlaced);
 }
 
-uint16_t GetInstalledMemorySizeIn4KiBlocks(Hag::VGA::Register_t crtcPort)
+uint8_t GetMemorySizeInMiB(Hag::VGA::Register_t crtcPort)
 {
     using namespace Hag;
 
     UnlockExtendedCRTRegisters();
 
-    uint16_t size;
+    uint8_t size;
     switch (S3::CRTController::Configuration1::Read(crtcPort) & S3::CRTController::Configuration1::DisplayMemorySize)
     {
     case S3::CRTController::Configuration1::Size05MiB:
-        size = 0x0000;      //0.5MiB == 0 for some reason.
+        size = 0;      //0.5MiB == 0 for some reason.
         break;
     case S3::CRTController::Configuration1::Size1MiB:
-        size = 0x0100;
+        size = 1;
         break;
     case S3::CRTController::Configuration1::Size2MiB:
-        size = 0x0200;
+        size = 2;
         break;
     case S3::CRTController::Configuration1::Size4MiB:
-        size = 0x0400;
+        size = 4;
         break;
     default:
-        size = 0x0100;
+        size = 1;
         break;
     }
     return size;
 }
 
-// ;inputs:
-// ;dx = CRTC register
-// ;es:di = VESAResolutionVariant
-void ConfigureExtraVESAModeSettings(uint8_t mode, uint16_t crtcPort, Hag::S3::VESAVideoModeData* overrideTable, Hag::S3::VESAResolutionVariant* modeData)
+void ConfigureExtraVESAModeSettings(Hag::S3::VideoMode_t mode, Hag::VGA::Register_t crtcPort, Hag::S3::VESAVideoModeData* overrideTable, Hag::S3::VESAResolutionVariant* modeData)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.w.dx = crtcPort;
+    using namespace Hag;
+    using namespace Hag::VGA;
 
-//     mov  bx, (VESAModeInfo ptr ds:[si]).BytesPerScanLine;bx = BytesPerScanLine
-    r.w.bx = overrideTable->ModeInfo->BytesPerScanline;
+    uint16_t logicalScreenWidth = overrideTable->ModeInfo->BytesPerScanline;
 
-//     cmp  (VESAModeInfo ptr ds:[si]).MemoryModelType, 00h;MemoryModelType = Text
-//     jne  NotText                        ;Offset 0x3f9
-    if (overrideTable->ModeInfo->MemoryModelType != Hag::S3::VESAModeMemoryModel::Text)
-        goto NotText;
-
-//     shl  bx, 01h                        ;Two bytes per scan line for text
-    r.w.bx <<= 1;
-
-//     jmp  Not16Color                     ;Offset 0x402
-    goto Not16Color;
-
-//     nop  
-// NotText:                                ;Offset 0x3f9
-LABEL(ConfigureExtraVESAModeSettings, NotText);
-
-//     cmp  (VESAModeInfo ptr ds:[si]).MemoryModelType, 03h;16-color (EGA) graphics
-//     jne  Not16Color                     ;Offset 0x402
-    if (overrideTable->ModeInfo->MemoryModelType != Hag::S3::VESAModeMemoryModel::EGA16ColorGraphics)
-        goto Not16Color;
-
-//     shl  bx, 02h                        ;Four bytes per scan line for 16 color
-    r.w.bx <<= 2;
-
-// Not16Color:                             ;Offset 0x402
-LABEL(ConfigureExtraVESAModeSettings, Not16Color);
-
-//     shr  bx, 03h                        ;Divide bytes per scan line by 8
-    r.w.bx >>= 3;
-
-//     shl  bh, 04h                        ;move bits 3-0 to bits 7-4
-    r.h.bh <<= 0x04;
-
-//     mov  al, 13h                        ;CR13 - Offset register
-    r.h.al = 0x13;
-
-//     mov  ah, bl                         ;
-    r.h.ah = r.h.bl;
-
-//     out  dx, ax                         ;Write lower 8 bits of logical screen width
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 51h                        ;CR51 - Extended System Control 2 register
-//                                         ;bits 5-4 - Logical screen width bits 9-8
-    r.h.al = 0x51;
-
-//     mov  ah, bh
-    r.h.ah = r.h.bh;
-
-//     out  dx, ax                         ;
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  ax, 153ah                      ;CR3A - Miscellaneous register
-//                                         ;bits 1-0 = 01 - Refresh Count 1
-//                                         ;bit 2 = 1 - Enable Alternate Refresh Count Control
-//                                         ;bit 4 = 1 - Enable 8 Bits/Pixel or Greater Color Enhanced Mode
-    r.w.ax = 0x153a;
-
-//     cmp  (VESAModeInfo ptr ds:[si]).BitsPerPixel, 08h;
-//     jge  Over8bppOrEqual                ;Offset 0x41d
-    if (overrideTable->ModeInfo->BitsPerPixel >= 0x08)
-        goto Over8bppOrEqual;
-
-//     mov  ah, 05h                        ;bit 4 = 0 - Attribute controller shift registers configured for 4-bit modes
-    r.h.ah = 0x05;
-
-// Over8bppOrEqual:                        ;Offset 0x41d
-LABEL(ConfigureExtraVESAModeSettings, Over8bppOrEqual);
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop  ds                             ;Restore ds
-//     pop  di                             ;restore di
-//     mov  al, 31h                        ;CR31 - Memory Configuration register
-    r.h.al = 0x31;
-
-//     mov  bh, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    r.h.bh = mode;//Hag::System::BDA::DisplayMode::Get();
-
-//     cmp  bh, INT10_00_4A_800x600x16C    ;0x4a
-//     je   Is4bppMode                     ;Offset 0x43f
-    if (r.h.bh == 0x4a)
-        goto Is4bppMode;
-
-//     cmp  bh, INT10_00_4C_1024x768x16C   ;0x4c
-//     je   Is4bppMode                     ;Offset 0x43f
-    if (r.h.bh == 0x4c)
-        goto Is4bppMode;
-
-//     cmp  bh, INT10_00_4F_1280x1024x16C  ;0x4f
-//     je   Is4bppMode                     ;Offset 0x43f
-    if (r.h.bh == 0x4f)
-        goto Is4bppMode;
-
-//     test ah, 10h                        ;Check if we enabled 8 Bits/Pixel or Greater Color Enhanced Mode
-//     jne  Not4bppMode                    ;Offset 0x444
-    if ((r.h.ah & 0x10) != 0x00)
-        goto Not4bppMode;
-
-//     mov  ah, 05h                        ;bit 0 = 1 - Address offset bits 3-0 in CR35 and bits 3-2 in CR51 or the new address offset bits
-//                                         ;            (5-0 in CR6A) are enabled for specifying the 64KiB page of display memory.
-//                                         ;            Bits 5-0 of CR6A are used if this field contains a non-zero value. This allows access
-//                                         ;            up to 4MiB of display memory through a 64KiB window. (2MiB for the Trio32)
-//                                         ;bit 2 = 1 - Enable 16-bit bus VGA memory read/writes
-    r.h.ah = 0x05;
+    if (overrideTable->ModeInfo->MemoryModelType == S3::VESAModeMemoryModel::Text)
+        logicalScreenWidth <<= 1;
     
-//     jmp  SetCR31                        ;Offset 0x446
-//     nop
-    goto SetCR31;
+    if (overrideTable->ModeInfo->MemoryModelType == S3::VESAModeMemoryModel::EGA16ColorGraphics)
+        logicalScreenWidth <<= 2;
 
-// Is4bppMode:                             ;Offset 0x43f
-LABEL(ConfigureExtraVESAModeSettings, Is4bppMode);
+    logicalScreenWidth >>= 3;
+    uint8_t logicalScreenWidthHigh = uint8_t(logicalScreenWidth >> 8);
+    CRTController::ScreenOffset::Write(crtcPort, uint8_t(logicalScreenWidth));
+    S3::CRTController::ExtendedSystemControl2::Write(crtcPort, logicalScreenWidthHigh <<
+                                                     S3::CRTController::ExtendedSystemControl2::Shift::LogicalScreenWidthHigh);
 
-//     mov  ah, 0fh                        ;bit 0 = 1 - See above
-//                                         ;bit 1 = 1 - Enable 2K x 1K x 4 map image screen for 1024 x 768 or 800 x 600 screen resolution,
-//                                         ;            or 2K x 512 x 8 map image screen for 640 x 480 screen resolution.
-//                                         ;bit 2 = 1 - See above
-//                                         ;bit 3 = 1 - Force Enhanced Mode mappings
-//                                         ;            Setting this bit to 1 overrides the settings of bit 6 of CR14 and bit 3 of CR17 and
-//                                         ;            causes the use of doubleword memory addressing mode. Also, the function of bits 3-2
-//                                         ;            of GR6 is overridden with a fixed 64K map at A0000h
-    r.h.ah = 0x0f;
-//     jmp  SetCR31                        ;Offset 0x446
-//     nop
-    goto SetCR31;
-    
-// Not4bppMode:                            ;Offset 0x444
-LABEL(ConfigureExtraVESAModeSettings, Not4bppMode);
+    S3::CRTController::Miscellaneous1_t miscellaneous1 = S3::CRTController::Miscellaneous1::RefreshCount1 |
+                                                         S3::CRTController::Miscellaneous1::EnableAlternateRefreshCount;
 
-//     mov  ah, 09h                        ;bit 0 = 1 - See above
-//                                         ;bit 3 = 1 - See above
-    r.h.ah = 0x09;
+    S3::CRTController::MemoryConfiguration_t memoryConfiguration = S3::CRTController::MemoryConfiguration::EnableBaseAddressOffset |
+                                                                   S3::CRTController::MemoryConfiguration::EnableVGA16BitMemoryBusWidth;    
 
-// SetCR31:                                ;Offset 0x446
-LABEL(ConfigureExtraVESAModeSettings, SetCR31);
-
-//     out  dx, ax                         ;Write out CR31
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 50h                        ;CR50 - Extended System Control 1 register
-    r.h.al = 0x50;
-
-//     mov  ah, (VESAResolutionVariant ptr es:[di]).ExtendedSystemControl1
-    r.h.ah = modeData->ExtendedSystemControl1;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     test ah, 02h                        ;bit 1 - Unknown - Most likely just used as flag here.
-//     je   DontModifySyncPolarity         ;Offset 0x45e
-    if ((r.h.ah & 0x02) == 0x00)
-        goto DontModifySyncPolarity;
-
-//     push dx
-//     mov  dx, MiscellaneousRead          ;port - 0x3cc Miscellaneous Output register (read)
-//     in   al, dx                         ;
-    r.h.al = SYS_ReadPortByte(0x3cc);
-
-//     and  al, 3fh                        ;bits 7-6 = 00 - Positive horizontal and vertical sync pulse
-    r.h.al &= 0x3f;
-
-//     mov  dl, 0c2h                       ;port - 0x3c2 Miscellaneous Output register (write)
-//     out  dx, al
-    SYS_WritePortByte(0x3c2, r.h.al);
-
-//     pop  dx
-// DontModifySyncPolarity:                 ;Offset 0x45e
-LABEL(ConfigureExtraVESAModeSettings, DontModifySyncPolarity);
-
-//     mov  ax, 1034h                      ;CR34 - Backward Compatibility 3 register
-    r.w.ax = 0x1034;
-
-//                                         ;bit 4 = 1 - Start Display FIFO Fetch register (CR3B) enabled
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 54h                        ;CR54 - Extended Memory Control 2 register
-    r.h.al = 0x54;
-
-//     mov  ah, (VESAResolutionVariant ptr es:[di]).ExtendedMemoryControl2_1MiB
-    r.h.ah = modeData->ExtendedMemoryControl2_1MiB;
-
-//     mov  ch, (VESAResolutionVariant ptr es:[di]).ExtendedMemoryControl3_1MiB
-    r.h.ch = modeData->ExtendedMemoryControl3_1MiB;
-
-//     push dx                             ;store crtc port
-//     call GetInstalledMemorySizeIn4KiBlocks;Offset 0x1457 dh holds value, dl = 0
-//     mov  bh, dh                         ;store size value in bh
-    r.w.dx = GetInstalledMemorySizeIn4KiBlocks(crtcPort);
-    r.h.bh = r.h.dh;
-
-//     pop  dx                             ;crtc port restored
-    r.w.dx = crtcPort;
-
-//     cmp  bh, 01h                        ;1MiB
-//     je   Is1MiB                         ;Offset 0x480
-    if (r.h.bh == 0x01)
-        goto Is1MiB;
-
-//     mov  ah, (VESAResolutionVariant ptr es:[di]).ExtendedMemoryControl2
-    r.h.ah = modeData->ExtendedMemoryControl2;
-
-//     mov  ch, (VESAResolutionVariant ptr es:[di]).ExtendedMemoryControl3
-    r.h.ch = modeData->ExtendedMemoryControl3;
-
-// Is1MiB:                                 ;Offset 0x480
-LABEL(ConfigureExtraVESAModeSettings, Is1MiB);
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 60h                        ;CR60 - Extended Memory Control 3 register
-    r.h.al = 0x60;
-
-//     xchg ch, ah                         ;Store CR54 value in ch
+    if (overrideTable->ModeInfo->BitsPerPixel >= 8)
     {
-        uint8_t t = r.h.ah;
-        r.h.ah = r.h.ch;
-        r.h.ch = t;
+        miscellaneous1 |= S3::CRTController::Miscellaneous1::Enable8bppOrGreaterColorEnhancedMode;
+        memoryConfiguration = S3::CRTController::MemoryConfiguration::EnableBaseAddressOffset |
+                              S3::CRTController::MemoryConfiguration::UseEnhancedModeMemoryMapping;
     }
 
-//     out  dx, ax                         ;
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+    S3::CRTController::Miscellaneous1::Write(crtcPort, miscellaneous1);
 
-//     mov  al, 5dh                        ;CR5D - Extended Horizontal Overflow register
-    r.h.al = 0x5d;
-
-//     mov  ah, (VESAResolutionVariant ptr es:[di]).ExtendedHorizontalOverflow
-    r.h.ah = modeData->ExtendedHorizontalOverflow;
-
-//     out  dx, ax                         ;
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  bh, ah                         ;Store CR5D value in bh
-    r.h.bh = r.h.ah;
-
-//     xor  al, al                         ;CR0 - Horizontal Total register
-    r.h.al = 0x00;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     mov  bl, ah                         ;Store CR0 in bl
-    r.h.bl = r.h.ah;
-
-//     and  bx, 01ffh                      ;Keep bottom 9 bits
-    r.w.bx &= 0x01ff;
-
+    if ((mode == S3::VideoMode::P800x600x16C) ||
+        (mode == S3::VideoMode::P1024x768x16C) ||
+        (mode == S3::VideoMode::P1280x1024x16C))
     {
-//     push bx                             ;Save BX
-        uint16_t bxtmp = r.w.bx;
-
-//     shr  bx, 01h                        ;Divide by two (7-0)
-        r.w.bx >>= 1;
-
-//     mov  al, 3ch                        ;CR3C - Interlace Retrace Start register
-        r.h.al = 0x3c;
-
-//     mov  ah, bl                         ;
-        r.h.ah = r.h.bl;
-
-//     out  dx, ax
-        SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop  bx                             ;Restore BX (8-0)
-        r.w.bx = bxtmp;
+        memoryConfiguration = S3::CRTController::MemoryConfiguration::EnableBaseAddressOffset |
+                              S3::CRTController::MemoryConfiguration::EnableTwoPageScreenImage |
+                              S3::CRTController::MemoryConfiguration::EnableVGA16BitMemoryBusWidth |
+                              S3::CRTController::MemoryConfiguration::UseEnhancedModeMemoryMapping;
     }
 
-//     sub  bx, 07h                        ;Subtract 7 
-    r.w.bx -= 0x07;
+    S3::CRTController::MemoryConfiguration::Write(crtcPort, memoryConfiguration);
 
-//     mov  ah, bl
-    r.h.ah = r.h.bl;
+    S3::CRTController::ExtendedSystemControl1::Write(crtcPort, modeData->ExtendedSystemControl1);
 
-//     mov  al, 3bh                        ;CR3B - Start Display FIFO register
-    r.h.al = 0x3b;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  bh, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    r.h.bh = mode;//Hag::System::BDA::DisplayMode::Get();
-
-//     mov  al, 40h                        ;CR40 - System Configuration register
-    r.h.al = 0x40;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0feh                       ;bit 0 = 0 - this is a useless operation?
-    r.h.ah &= 0xfe;
-
-//     or   ah, 01h                        ;bit 0 = 1 - Enable enhanced register access (x2E8)
-    r.h.ah |= 0x01;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     cmp  bh, INT10_00_55_T_132x25       ;0x55
-//     je   DontModifyHorizontalSync       ;Offset 0x4fa
-    if (r.h.bh == 0x55)
-        goto DontModifyHorizontalSync;
-
-//     cmp  bh, INT10_00_54_T_132x43       ;0x54
-//     je   DontModifyHorizontalSync       ;Offset 0x4fa
-    if (r.h.bh == 0x54)
-        goto DontModifyHorizontalSync;
-
-//     mov  al, 3ah                        ;CR3A - Miscellaneous 1 register
-    r.h.al = 0x3a;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     test ah, 10h                        ;bit 4 - Attribute controller shift register configured for 8-, 16- and 24/32-bit color Enhanced modes
-//     jne  DontModifyHorizontalSync       ;Offset 0x4fa
-    if ((r.h.ah & 0x10) != 0x00)
-        goto DontModifyHorizontalSync;
-
-//     mov  al, 11h                        ;CR11 - Vertical Retrace End register
-    r.h.al = 0x11;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
+    if ((modeData->ExtendedSystemControl1 & S3::CRTController::ExtendedSystemControl1::Unknown) != 0)
     {
-//     push ax                             ;Save CR11 index and data
-        uint16_t axtmp = r.w.ax;
-
-//     and  ah, 7fh                        ;bit 7 = 0 - Enable writing to all CRT Controller registers
-        r.h.ah &= 0x7f;
-
-//     out  dx, ax
-        SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 04h                        ;CR4 - Start Horizontal Sync Position register
-        r.h.al = 0x04;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-        r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     add  ah, 02h                        ;Increase current position by 2
-        r.h.ah += 0x02;
-
-//     out  dx, ax
-        SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc  al                             ;CR5 - End Horizontal Sync Position
-        ++r.h.al;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-        r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     add  ah, 02h                        ;Increase current position by 2
-        r.h.ah += 0x02;
-
-//     out  dx, ax
-        SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     cmp  bh, INT10_00_4F_1280x1024x16C  ;0x4f
-//     jne  DontDecreaseHorizontalBlankRegister;Offset 0x4f8
-        if (r.h.bh != 0x4f)
-            goto DontDecreaseHorizontalBlankRegister;
-
-//     mov  al, 02h                        ;CR2 - Start Horizontal Blank register
-        r.h.al = 0x02;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-        r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     dec  ah                             ;Decrease current position by 1
-        --r.h.ah;
-
-//     out  dx, ax
-        SYS_WritePortShort(r.w.dx, r.w.ax);
-
-// DontDecreaseHorizontalBlankRegister:    ;Offset 0x4f8
-LABEL(ConfigureExtraVESAModeSettings, DontDecreaseHorizontalBlankRegister);
-
-//     pop  ax                             ;Restore CR11
-        r.w.ax = axtmp;
+        MiscellaneousOutput_t miscOutput = MiscellaneousOutput::Read() & 
+                                           ~(MiscellaneousOutput::SelectNegativeHorizontalSyncPulse |
+                                             MiscellaneousOutput::SelectNegativeVerticalSyncPulse);
+        MiscellaneousOutput::Write(miscOutput);
     }
 
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+    S3::CRTController::BackwardCompatibility3::Write(crtcPort, 
+                                                     S3::CRTController::BackwardCompatibility3::EnableStartDisplayFIFOFetch);
 
-// DontModifyHorizontalSync:               ;Offset 0x4fa
-LABEL(ConfigureExtraVESAModeSettings, DontModifyHorizontalSync);
-
-//     mov  al, 5eh                        ;CR5E - Extended Vertical Overflow register
-    r.h.al = 0x5e;
-
-//     mov  ah, (VESAResolutionVariant ptr es:[di]).ExtendedVerticalOverflow
-    r.h.ah = modeData->ExtendedVerticalOverflow;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 67h                        ;CR67 - Extended Miscellaneous Control 2 register
-    r.h.al = 0x67;
-
-//     mov  ah, (VESAResolutionVariant ptr es:[di]).ExtendedMiscellaneousControl2
-    r.h.ah = modeData->ExtendedMiscellaneousControl2;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     cmp  ah, 0d0h                       ;bits 7-4 = 1101 - Color Mode 13: 24-bit color, 1 pixel/VCLK
-//     jne  Exit                           ;Offset 0x521
-    if (r.h.ah != 0xd0)
-        goto Exit;
-
-//     mov  al, 11h                        ;CR11 - Vertical Retrace End register
-    r.h.al = 0x11;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
+    if (GetMemorySizeInMiB(crtcPort) == 1)
     {
-//     push ax                             ;Save CR11 index and data
-        uint16_t axtmp = r.w.ax;
-
-//     and  ah, 7fh                        ;bit 7 = 0 - Writing to CRT Controller registers enabled
-        r.h.ah &= 0x7f;
-
-//     out  dx, ax
-        SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 02h                        ;CR2 - Start Horizontal Blanking register
-        r.h.al = 0x02;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-        r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     inc  ah                             ;Increase by 1
-        ++r.h.ah;
-
-//     out  dx, ax
-        SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop  ax                             ;Restore CR11
-        r.w.ax = axtmp;
+        S3::CRTController::ExtendedMemoryControl2::Write(crtcPort, modeData->ExtendedMemoryControl2_1MiB);
+        S3::CRTController::ExtendedMemoryControl3::Write(crtcPort, modeData->ExtendedMemoryControl3_1MiB);
     }
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+    else
+    {
+        S3::CRTController::ExtendedMemoryControl2::Write(crtcPort, modeData->ExtendedMemoryControl2);
+        S3::CRTController::ExtendedMemoryControl3::Write(crtcPort, modeData->ExtendedMemoryControl3);
+    }
 
-// Exit:                                   ;Offset 0x521
-LABEL(ConfigureExtraVESAModeSettings, Exit);
+    S3::CRTController::ExtendedHorizontalOverflow::Write(crtcPort, modeData->ExtendedHorizontalOverflow);
 
-//     ret  
+    uint16_t horizontalTotal = (uint16_t(modeData->ExtendedHorizontalOverflow &
+                                  S3::CRTController::ExtendedHorizontalOverflow::HorizontalTotalHigh) << 8) |
+                                  CRTController::HorizontalTotal::Read(crtcPort);
+
+    S3::CRTController::InterlaceRetraceStart::Write(crtcPort, S3::CRTController::InterlaceRetraceStart_t(horizontalTotal >> 1));
+    S3::CRTController::StartDisplayFIFO::Write(crtcPort, horizontalTotal - 7);
+
+    S3::CRTController::SystemConfiguration::Write(crtcPort,
+                                                  S3::CRTController::SystemConfiguration::Read(crtcPort) |
+                                                  S3::CRTController::SystemConfiguration::EnableEnhancedRegisterAccess);
+
+    if ((mode != S3::VideoMode::T132x25x16C) &&
+        (mode != S3::VideoMode::T132x43x16C) &&
+        ((S3::CRTController::Miscellaneous1::Read(crtcPort) & 
+        S3::CRTController::Miscellaneous1::Enable8bppOrGreaterColorEnhancedMode) == 0))
+    {
+        CRTController::VerticalRetraceEnd_t verticalRetraceEnd = CRTController::VerticalRetraceEnd::Unlock(crtcPort);
+
+        //I somehow get the feeling that these are tweaks that could also have been applied to the data.
+        CRTController::StartHorizontalSyncPosition::Write(crtcPort,
+                                                          CRTController::StartHorizontalSyncPosition::Read(crtcPort) + 2);
+
+        CRTController::EndHorizontalSyncPosition::Write(crtcPort,
+                                                        CRTController::EndHorizontalSyncPosition::Read(crtcPort) + 2);
+        if (mode == S3::VideoMode::P1280x1024x16C)
+        {
+            CRTController::StartHorizontalBlank::Write(crtcPort,
+                                                       CRTController::StartHorizontalBlank::Read(crtcPort) - 1);
+        }
+
+        CRTController::VerticalRetraceEnd::Lock(crtcPort, verticalRetraceEnd);
+    }
+
+    S3::CRTController::ExtendedVerticalOverflow::Write(crtcPort, modeData->ExtendedVerticalOverflow);
+
+    S3::CRTController::ExtendedMiscellaneousControl2::Write(crtcPort, modeData->ExtendedMiscellaneousControl2);
+
+    if (modeData->ExtendedMiscellaneousControl2 == S3::CRTController::ExtendedMiscellaneousControl2::ColorMode13)
+    {
+        CRTController::VerticalRetraceEnd_t verticalRetraceEnd = CRTController::VerticalRetraceEnd::Unlock(crtcPort);
+
+        //Another tweak.
+        CRTController::StartHorizontalBlank::Write(crtcPort,
+                                                   CRTController::StartHorizontalBlank::Read(crtcPort) + 1);
+
+        CRTController::VerticalRetraceEnd::Lock(crtcPort, verticalRetraceEnd);
+    }
 }
 
 void EnableOver256KAddressingAndSetAddressWindow(uint8_t mode, uint16_t crtcPort)

@@ -17,13 +17,13 @@ namespace ExtendedMiscellaneousControl2
     {
         VClockPhase = 0x01, //0 = VCLK is 180 degrees out of phase with DCLK (inverted)
                             //1 = VCLK is in phase with DCLK
-        ColorMode = 0xF0    //RAMDAC Color Mode
-                            //0000 = Mode 0: 8-bit color, 1 pixel/VCLK
-                            //0001 = Mode 8: 8-bit color, 2 pixels/VCLK
-                            //0011 = Mode 9: 15-bit color, 1 pixel/VCLK
-                            //0101 = Mode 10: 16-bit color, 1 pixel/VCLK
-                            //0111 = Mode 12: 640x480x24-bit color (packed), 1 pixel/3 DCLKs (Tri032 only)
-                            //1101 = Mode 13: 24-bit color, 1 pixel/VCLK
+        ColorMode = 0xF0,   //RAMDAC Color Mode
+        ColorMode0 = 0x00,  //0000 = Mode 0: 8-bit color, 1 pixel/VCLK
+        ColorMode8 = 0x10,  //0001 = Mode 8: 8-bit color, 2 pixels/VCLK
+        ColorMode9 = 0x30,  //0011 = Mode 9: 15-bit color, 1 pixel/VCLK
+        ColorMode10 = 0x50, //0101 = Mode 10: 16-bit color, 1 pixel/VCLK
+        ColorMode12 = 0x70, //0111 = Mode 12: 640x480x24-bit color (packed), 1 pixel/3 DCLKs (Tri032 only)
+        ColorMode13 = 0xD0, //1101 = Mode 13: 24-bit color, 1 pixel/VCLK
                             //All other mode values are reserved.
     };
 

@@ -11,19 +11,6 @@ typedef uint8_t HorizontalTotal_t;
 
 namespace HorizontalTotal
 {
-    enum //Mask
-    {
-        HorizontalTotalLow = 0xFF       //9 bit value = (number of character clocks in one scan line) - 5.
-                                        //This register contains the least significan 8 bits of this value.
-    };
-
-    namespace Shift
-    {
-        enum
-        {
-            HorizontalTotalLow = 0x00
-        };
-    }
 
     inline HorizontalTotal_t Read(Register_t controllerIndexRegister)
     {
