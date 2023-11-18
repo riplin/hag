@@ -27,11 +27,11 @@ namespace Clean
     void SetupClocks(Hag::VGA::Register_t crtcPort, uint8_t clockConfig);
     void ConfigureExtraVESAModeSettings(uint8_t mode, uint16_t crtc, Hag::S3::VESAVideoModeData* overrideTable, Hag::S3::VESAResolutionVariant* modeData);
     Hag::S3::VideoParameters* GetVideoModeOverrideTable(uint8_t mode);
-    void EnableOver256KAddressingAndSetAddressWindow(uint8_t mode, uint16_t crtcReg);
-    void SetColorMode(uint8_t mode);
+    void Configure256KAddressingAndAddressWindow(uint8_t mode, uint16_t crtcReg);
+    void SetColorMode(Hag::S3::VideoMode_t mode, Hag::S3::ColorMode_t colorMode, Hag::VGA::Register_t crtcPort);
     void ClearMemory(Hag::VGA::Register_t crtcPort);
-    void ApplyVESAOverrideData(uint8_t mode);
-    void SetPalette();
+    void ApplyVESAOverrideData(uint8_t mode, Hag::VGA::Register_t crtcPort, Hag::S3::VESAVideoModeData* overrideTable);
+    void SetPalette(Hag::S3::VideoMode_t mode);
     void SetFont();
 }
 
@@ -1146,7 +1146,7 @@ int EnableOver256KAddressingAndSetAddressWindowTest()
         EnableOver256KAddressingAndSetAddressWindow(mode, crtcPort);
 
         Hag::Testing::Mock::SelectInstance(1);
-        Clean::EnableOver256KAddressingAndSetAddressWindow(mode, crtcPort);
+        Clean::Configure256KAddressingAndAddressWindow(mode, crtcPort);
 
         ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
                                                         0,
@@ -1204,7 +1204,12 @@ int SetColorModeTest()
         SetColorMode(mode);
 
         Hag::Testing::Mock::SelectInstance(1);
-        Clean::SetColorMode(mode);
+
+        Hag::S3::ColorMode_t colorMode = 0;
+        Hag::S3::VESAVideoModeData* vesaModeData = NULL;
+        if (vesaModeData = Hag::S3::TrioBase::FindVideoModeData(mode))
+            colorMode = vesaModeData->ColorMode;
+        Clean::SetColorMode(mode, colorMode, Clean::GetCRTControllerIndexRegister());
 
         ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
                                                         0,
@@ -1381,7 +1386,8 @@ int ApplyVESAOverrideDataTest()
                 continue;
             
             uint32_t offset = 0x00;
-            if (mode > 0x13 && (Hag::S3::TrioBase::FindVideoModeData(mode) == NULL))
+            Hag::S3::VESAVideoModeData* vesaData = Hag::S3::TrioBase::FindVideoModeData(mode);
+            if (mode > 0x13 && (vesaData == NULL))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
@@ -1406,7 +1412,7 @@ int ApplyVESAOverrideDataTest()
 
             Hag::Testing::Mock::Snapshot();
 
-            Clean::ApplyVESAOverrideData(mode);
+            Clean::ApplyVESAOverrideData(mode, Clean::GetCRTControllerIndexRegister(), vesaData);
         }
 
         ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, ApplyVESAOverrideDataTest_modifiedPorts[i], 
@@ -1512,7 +1518,8 @@ int SetPaletteTest()
                 continue;
             
             uint32_t offset = 0x00;
-            if (mode > 0x13 && (Hag::S3::TrioBase::FindVideoModeData(mode) == NULL))
+            Hag::S3::VESAVideoModeData* vesaData = Hag::S3::TrioBase::FindVideoModeData(mode);
+            if (mode > 0x13 && (vesaData == NULL))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
@@ -1535,11 +1542,11 @@ int SetPaletteTest()
 
             Clean::ApplyVideoParameters(parameters);
 
-            Clean::ApplyVESAOverrideData(mode);
+            Clean::ApplyVESAOverrideData(mode, Clean::GetCRTControllerIndexRegister(), vesaData);
 
             Hag::Testing::Mock::Snapshot();
 
-            Clean::SetPalette();
+            Clean::SetPalette(mode);
         }
 
         ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL,
@@ -1691,7 +1698,8 @@ int SetFontTest()
                 continue;
             
             uint32_t offset = 0x00;
-            if (mode > 0x13 && (Hag::S3::TrioBase::FindVideoModeData(mode) == NULL))
+            Hag::S3::VESAVideoModeData* vesaData = Hag::S3::TrioBase::FindVideoModeData(mode);
+            if (mode > 0x13 && (vesaData == NULL))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
@@ -1714,11 +1722,11 @@ int SetFontTest()
 
             Clean::ApplyVideoParameters(parameters);
 
-            Clean::ApplyVESAOverrideData(mode);
+            Clean::ApplyVESAOverrideData(mode, Clean::GetCRTControllerIndexRegister(), vesaData);
 
             Hag::Testing::Mock::Snapshot();
 
-            Clean::SetPalette();
+            Clean::SetPalette(mode);
 
             uint16_t crtReg = Hag::System::BDA::VideoBaseIOPort::Get();
 

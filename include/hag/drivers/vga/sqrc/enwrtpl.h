@@ -13,7 +13,11 @@ namespace EnableWritePlane
 {
     enum //Mask
     {
-        EnableWriteToPlane = 0x0F   //EN.WT.PL. each bit represents a plane.
+        EnableWriteToPlane = 0x0F,  //EN.WT.PL. each bit represents a plane.
+        Plane1 = 0x01,
+        Plane2 = 0x02,
+        Plane3 = 0x04,
+        Plane4 = 0x08
     };
 
     namespace Shift

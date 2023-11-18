@@ -16,11 +16,12 @@ namespace ReadPlaneSelect
 {
     enum //Mask
     {
-        ReadPlane = 0x03    //The memory plane is selected as follows:
-                            //00 = Plane 0
-                            //01 = Plane 1
-                            //10 = Plane 2
-                            //11 = Plane 3
+        ReadPlane = 0x03,   //The memory plane is selected as follows:
+        None = 0x00,
+        Plane1 = 0x00,      //00 = Plane 1
+        Plane2 = 0x01,      //01 = Plane 2
+        Plane3 = 0x02,      //10 = Plane 3
+        Plane4 = 0x03,      //11 = Plane 4
     };
 
     namespace Shift

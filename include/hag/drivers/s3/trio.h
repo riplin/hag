@@ -153,9 +153,9 @@ namespace VESAVideoModeFlags
     enum
     {
         WindowGranularity64KiB = 0x01,
-        Unknown1 = 0x02,                // 1 = Always 1
-        Unknown2 = 0x04,                 // 2 = unknown
-        Unknown3 = 0x30                 // 4 = 800x600 and text modes don't have these two bits set
+        Color = 0x02,       // 1 = Always 1
+        Palette256 = 0x04,  // 2 = unknown
+        Unknown3 = 0x30     // 4 = 800x600 and text modes don't have these two bits set
     };
 }
 
@@ -221,6 +221,9 @@ public:
     static uint8_t m_VideoModeOverrideTranslationTable2[];
     static uint8_t m_VideoModeOverrideTranslationTable3[];
 
+    static uint8_t m_CharacterPatch8x14[];
+    static uint8_t m_CharacterPatch8x16[];
+
     static uint8_t m_Characters8x8[];
     static uint8_t m_Characters8x14[];
     static uint8_t m_Characters8x16[];
@@ -232,6 +235,16 @@ public:
 
     static uint8_t m_ClockData[];
     static uint8_t m_ClockDataRev3[];
+
+    static uint8_t m_ColorPalette[];
+    static uint8_t m_MonochromePalette[];
+    static uint8_t m_SecondPalette[];
+    static uint8_t m_Color216Palette[];
+    static uint8_t m_Monochrome64Palette[];
+    static uint8_t m_ColorPalette3[];
+    static uint8_t m_MonochromePalette3[];
+    static uint8_t m_ColorPalette2[];
+    static uint8_t m_MonochromePalette2[];
 };
 
 template<Register_t CrtControllerIndex>

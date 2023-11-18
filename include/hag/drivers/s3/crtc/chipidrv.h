@@ -35,6 +35,12 @@ namespace ChipIDRevision
         return ChipIDRevision_t(VGA::CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
+    //This is supposedly a read-only register, yet the BIOS is writing to it...
+    inline void Write(VGA::Register_t controllerIndexRegister, ChipIDRevision_t value)
+    {
+        VGA::CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::ChipIDRevision, VGA::CRTControllerData_t(value));
+    }
+
 }
 
 }}}

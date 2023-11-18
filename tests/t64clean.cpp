@@ -7,7 +7,12 @@
 #include <hag/system/bda.h>
 #include <hag/system/sysasm.h>
 
+#include <hag/drivers/vga/dacdata.h>
+#include <hag/drivers/vga/dacmask.h>
+#include <hag/drivers/vga/dacwridx.h>
 #include <hag/drivers/vga/miscout.h>
+#include <hag/drivers/vga/instat1.h>
+#include <hag/drivers/vga/regs.h>
 #include <hag/drivers/vga/attribc/data.h>
 #include <hag/drivers/vga/crtc/enhorsyn.h>
 #include <hag/drivers/vga/crtc/hortotal.h>
@@ -16,14 +21,15 @@
 #include <hag/drivers/vga/crtc/sthorsyn.h>
 #include <hag/drivers/vga/crtc/verrtcen.h>
 #include <hag/drivers/vga/gfxc/data.h>
+#include <hag/drivers/vga/gfxc/gfxcmode.h>
+#include <hag/drivers/vga/gfxc/mmmctrl.h>
+#include <hag/drivers/vga/gfxc/rdplnsel.h>
 #include <hag/drivers/vga/sqrc/reset.h>
 #include <hag/drivers/vga/sqrc/clkmod.h>
 #include <hag/drivers/vga/sqrc/data.h>
 #include <hag/drivers/vga/sqrc/enwrtpl.h>
 #include <hag/drivers/vga/sqrc/chfntsel.h>
 #include <hag/drivers/vga/sqrc/memodctl.h>
-#include <hag/drivers/vga/instat1.h>
-#include <hag/drivers/vga/regs.h>
 
 #include <hag/drivers/s3/advfnctl.h>
 #include <hag/drivers/s3/bitplnwm.h>
@@ -37,10 +43,16 @@
 #include <hag/drivers/s3/trio.h>
 #include <hag/drivers/s3/vidmodes.h>
 #include <hag/drivers/s3/wregdata.h>
+#include <hag/drivers/s3/crtc/biosflag.h>
+#include <hag/drivers/s3/crtc/bkwcomp1.h>
 #include <hag/drivers/s3/crtc/bkwcomp3.h>
+#include <hag/drivers/s3/crtc/chipidrv.h>
 #include <hag/drivers/s3/crtc/conf1.h>
 #include <hag/drivers/s3/crtc/devidhi.h>
 #include <hag/drivers/s3/crtc/devidlo.h>
+#include <hag/drivers/s3/crtc/exbiosf1.h>
+#include <hag/drivers/s3/crtc/exbiosf3.h>
+#include <hag/drivers/s3/crtc/exbiosf4.h>
 #include <hag/drivers/s3/crtc/exhorovf.h>
 #include <hag/drivers/s3/crtc/exmemct2.h>
 #include <hag/drivers/s3/crtc/exmemct3.h>
@@ -52,6 +64,8 @@
 #include <hag/drivers/s3/crtc/exverovf.h>
 #include <hag/drivers/s3/crtc/itlrtst.h>
 #include <hag/drivers/s3/crtc/linawctr.h>
+#include <hag/drivers/s3/crtc/lnawposh.h>
+#include <hag/drivers/s3/crtc/lnawposl.h>
 #include <hag/drivers/s3/crtc/memconf.h>
 #include <hag/drivers/s3/crtc/misc1.h>
 #include <hag/drivers/s3/crtc/modectrl.h>
@@ -63,12 +77,13 @@
 #include <hag/drivers/s3/sqrc/clksync2.h>
 #include <hag/drivers/s3/sqrc/dclkvhi.h>
 #include <hag/drivers/s3/sqrc/dclkvlow.h>
+#include <hag/drivers/s3/sqrc/extseq9.h>
+#include <hag/drivers/s3/sqrc/extseqd.h>
 #include <hag/drivers/s3/sqrc/mclkvhi.h>
 #include <hag/drivers/s3/sqrc/mclkvlow.h>
 #include <hag/drivers/s3/sqrc/rclksync.h>
 #include <hag/drivers/s3/sqrc/regs.h>
 #include <hag/drivers/s3/sqrc/unlexseq.h>
-#include <hag/drivers/s3/sqrc/extseqd.h>
 
 #if 0
 #define LABEL(F, L)         \
@@ -136,7 +151,7 @@ void ModeSetBDA(Hag::VGA::VideoMode_t& mode)
 
     uint8_t flags = 0;
     if ((mode == VideoMode::T80x25x2M) || (mode == VideoMode::G640x350x2M) ||
-        (S3::TrioBase::GetVideoModeFlags(mode, flags) && ((flags & S3::VESAVideoModeFlags::Unknown1) == 0)))
+        (S3::TrioBase::GetVideoModeFlags(mode, flags) && ((flags & S3::VESAVideoModeFlags::Color) == 0)))
     {
         if ((S3::TrioBase::m_FirmwareFlag & S3::FirmwareFlag::Color) == 0)
         {
@@ -317,7 +332,7 @@ bool VerifyBDAOrDeactivate(Hag::VGA::VideoMode_t& mode)
             if ((mode != VideoMode::G640x350x2M) &&
                 (mode != VideoMode::T80x25x2M) && 
                 (!S3::TrioBase::GetVideoModeFlags(mode, flags) ||
-                ((flags & S3::VESAVideoModeFlags::Unknown1) == 0)))
+                ((flags & S3::VESAVideoModeFlags::Color) == 0)))
             {                
                 mode = VideoMode::T80x25x2M;
                 VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
@@ -337,7 +352,7 @@ bool VerifyBDAOrDeactivate(Hag::VGA::VideoMode_t& mode)
             if ((mode == VideoMode::G640x350x2M) ||
                 (mode == VideoMode::T80x25x2M) ||
                 (Hag::S3::TrioBase::GetVideoModeFlags(mode, flags) &&
-                (flags & S3::VESAVideoModeFlags::Unknown1) == 0))
+                (flags & S3::VESAVideoModeFlags::Color) == 0))
             {
                 mode = VideoMode::T40x25x16G;
                 VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
@@ -568,7 +583,7 @@ uint8_t FetchBusSpecificSystemConfig(Hag::VGA::Register_t crtcPort)
             TrioBase::m_VLBSystemConfig;
 }
 
-void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint16_t crtcPort)
+void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, Hag::VGA::Register_t crtcPort)
 {
     using namespace Hag;
     using namespace Hag::VGA;
@@ -641,8 +656,7 @@ void ClearMemory(Hag::VGA::Register_t crtcPort)
                                                S3::CRTController::ExtendedMode::UnknownMask);
 
         S3::CRTController::SystemConfiguration_t systemConfiguration = S3::CRTController::SystemConfiguration::Read(crtcPort);
-        S3::CRTController::SystemConfiguration::Write(crtcPort, systemConfiguration |
-                                                      S3::CRTController::SystemConfiguration::EnableEnhancedRegisterAccess);
+        S3::CRTController::SystemConfiguration::Unlock(crtcPort);
 
         S3::AdvancedFunctionControl::WriteLower(S3::AdvancedFunctionControl::EnableEnhancedFunctions |
                                                 S3::AdvancedFunctionControl::ReservedAs1 |
@@ -841,9 +855,7 @@ void ConfigureExtraVESAModeSettings(Hag::S3::VideoMode_t mode, Hag::VGA::Registe
     S3::CRTController::InterlaceRetraceStart::Write(crtcPort, S3::CRTController::InterlaceRetraceStart_t(horizontalTotal >> 1));
     S3::CRTController::StartDisplayFIFO::Write(crtcPort, horizontalTotal - 7);
 
-    S3::CRTController::SystemConfiguration::Write(crtcPort,
-                                                  S3::CRTController::SystemConfiguration::Read(crtcPort) |
-                                                  S3::CRTController::SystemConfiguration::EnableEnhancedRegisterAccess);
+    S3::CRTController::SystemConfiguration::Unlock(crtcPort);
 
     if ((mode != S3::VideoMode::T132x25x16C) &&
         (mode != S3::VideoMode::T132x43x16C) &&
@@ -883,1812 +895,443 @@ void ConfigureExtraVESAModeSettings(Hag::S3::VideoMode_t mode, Hag::VGA::Registe
     }
 }
 
-void EnableOver256KAddressingAndSetAddressWindow(uint8_t mode, uint16_t crtcPort)
+void Configure256KAddressingAndAddressWindow(Hag::S3::VideoMode_t mode, Hag::VGA::Register_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.h.al = mode;
-    r.w.dx = crtcPort;
+    using namespace Hag;
+    using namespace Hag::VGA;
 
-//     push ax
-//     mov  bl, al
-    r.h.bl = r.h.al;
+    if (mode > VideoMode::MaxValid)
+        S3::CRTController::BackwardCompatibility1::Write(crtcPort,
+                                                         S3::CRTController::BackwardCompatibility1::Read(crtcPort) &
+                                                         ~S3::CRTController::BackwardCompatibility1::StandardVGAMemoryMapping);
 
-//     cmp  bl, 13h
-//     jbe  Label0x307                     ;Offset 0x307
-    if (r.h.bl <= 0x13)
-        goto Label0x307;
-
-//     mov  al, 32h                        ;CR32 - Backward Compatibility 1 register
-    r.h.al = 0x32;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0bfh                       ;set bit 6 to 0 - Memory accesses extending past a 256K boundary do not wrap
-    r.h.ah &= 0xbf;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-// Label0x307:                             ;Offset 0x307
-LABEL(EnableOver256KAddressingAndSetAddressWindow, Label0x307);
-
-//     mov  al, 6bh                        ;CR6B - Extended BIOS Flag 3 register
-    r.h.al = 0x6b;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     mov  al, 59h                        ;CR59 - Linear Address Window Position register MSB
-    r.h.al = 0x59;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 6ch                        ;CR6C - Extended BIOS Flag 4 register
-    r.h.al = 0x6c;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 80h                        ;Only keep the top bit
-    r.h.ah &= 0x80;
-
-//     mov  al, 5ah                        ;CR5A - Linear Address Window Position register LSB
-    r.h.al = 0x5a;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop  ax
-//     ret  
+    //TODO: This information should come from the PCI configuration space.
+    //Depending on the BIOS flags puts a dependency on the BIOS internal implementation.
+    S3::CRTController::ExtendedBIOSFlag3_t biosFlags3 = S3::CRTController::ExtendedBIOSFlag3::Read(crtcPort);
+    S3::CRTController::LinearAddressWindowPositionH::Write(crtcPort, biosFlags3);
+    S3::CRTController::ExtendedBIOSFlag4_t biosFlags4 = S3::CRTController::ExtendedBIOSFlag4::Read(crtcPort);
+    S3::CRTController::LinearAddressWindowPositionL::Write(crtcPort, biosFlags4 & 0x80);
 }
 
-// ;inputs:
-// ;al = video mode
-void SetColorMode(uint8_t mode)
+void SetColorMode(Hag::S3::VideoMode_t mode, Hag::S3::ColorMode_t colorMode, Hag::VGA::Register_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.h.al = mode;
-    Hag::S3::VESAVideoModeData* videoModeData = NULL;
+    using namespace Hag;
+    using namespace Hag::VGA;
 
-//     push dx
-//     push bx
-//     call FindVideoModeData              ;Offset 0x103a
-    videoModeData = Hag::S3::TrioBase::FindVideoModeData(mode);
+    S3::CRTController::ExtendedMiscellaneousControl2_t cMode = 
+        S3::CRTController::ExtendedMiscellaneousControl2::ColorMode0;
 
-//     cmp  al, 13h
-//     jbe  LegacyMode                     ;Offset 0xe18
-    if (r.h.al <= 0x13)
-        goto LegacyMode;
+    if (mode > VideoMode::MaxValid)
+    {
+        switch (colorMode)
+        {
+        case S3::ColorMode::C8bpp2px:
+            cMode = S3::CRTController::ExtendedMiscellaneousControl2::ColorMode8;
+            break;
+        case S3::ColorMode::C24bpp1px:
+            cMode = S3::CRTController::ExtendedMiscellaneousControl2::ColorMode13;
+            break;
+        case S3::ColorMode::C24bppPacked:
+            cMode = S3::CRTController::ExtendedMiscellaneousControl2::ColorMode12;
+            break;
+        case S3::ColorMode::C16bpp1px:
+            cMode = S3::CRTController::ExtendedMiscellaneousControl2::ColorMode10;
+            break;
+        case S3::ColorMode::C15bpp1px:
+            cMode = S3::CRTController::ExtendedMiscellaneousControl2::ColorMode9;
+            break;
+        }
+    }
 
-//     mov  al, (VideoModeData ptr es:[di + offset VESAVideoModeData]).ColorMode;Offset 0x527 - Translate video mode
-    r.h.al = videoModeData->ColorMode;
-    
-//     cmp  al, 05h
-//     je   ColorMode8                     ;Offset 0xe31
-    if (r.h.al == 0x05)
-        goto ColorMode8;
+    S3::Sequencer::UnlockExtendedSequencer::Unlock();
 
-//     cmp  al, 04h
-//     je   ColorMode13                    ;Offset 0xe1d
-    if (r.h.al == 0x04)
-        goto ColorMode13;
+    if (cMode == S3::CRTController::ExtendedMiscellaneousControl2::ColorMode8)
+    {
+        S3::Sequencer::RAMDACClockSynthControl::Write(S3::Sequencer::RAMDACClockSynthControl::LUTWriteCycleControl |
+                                                      S3::Sequencer::RAMDACClockSynthControl::EnableClockDoubleMode);
 
-//     cmp  al, 03h
-//     je   ColorMode12                    ;Offset 0xe22
-    if (r.h.al ==0x03)
-        goto ColorMode12;
+        S3::Sequencer::ClockSynthControl2::Write(S3::Sequencer::ClockSynthControl2::Read() |
+                                                 S3::Sequencer::ClockSynthControl2::DivideDClockByTwo);
+    }
+    else
+    {
+        S3::Sequencer::RAMDACClockSynthControl::Write(S3::Sequencer::RAMDACClockSynthControl::LUTWriteCycleControl);
+        
+        S3::Sequencer::ClockSynthControl2::Write(S3::Sequencer::ClockSynthControl2::Read() & 
+                                                 ~(S3::Sequencer::ClockSynthControl2::DivideDClockByTwo |
+                                                   S3::Sequencer::ClockSynthControl2::InvertDClock));
+    }
 
-//     cmp  al, 02h
-//     je   ColorMode10                    ;Offset 0xe27
-    if (r.h.al == 0x02)
-        goto ColorMode10;
-
-//     cmp  al, 01h
-//     je   ColorMode9                     ;Offset 0xe2c
-    if (r.h.al == 0x01)
-        goto ColorMode9;
-
-// LegacyMode:                             ;Offset 0xe18
-LABEL(SetColorMode, LegacyMode);
-
-//     xor  cx, cx                         ;Color Mode 0000 - Mode 0: 8-bit color, 1 pixel/VCLK
-    r.w.cx = 0x0000;
-
-//     jmp  ConfigureClocks                ;Offset 0xe33
-//     nop
-    goto ConfigureClocks;
-
-// ColorMode13:                            ;Offset 0xe1d
-LABEL(SetColorMode, ColorMode13);
-
-//     mov  cl, 0d0h                       ;Color Mode 1101 - Mode 13: 24-bit color, 1 pixel/VCLK
-    r.h.cl = 0xd0;
-
-//     jmp  ConfigureClocks                ;Offset 0xe33
-//     nop
-    goto ConfigureClocks;
-
-// ColorMode12:                            ;Offset 0xe22
-LABEL(SetColorMode,ColorMode12);
-
-//     mov  cl, 70h                        ;Color Mode 0111 - Mode 12: 640x480x24-bit color (packed), 1 pixel/3 DCLKs (Trio 32 only)
-    r.h.cl = 0x70;
-
-//     jmp  ConfigureClocks                ;Offset 0xe33
-//     nop
-    goto ConfigureClocks;
-
-// ColorMode10:                            ;Offset 0xe27
-LABEL(SetColorMode,ColorMode10);
-
-//     mov  cl, 50h                        ;Color Mode 0101 - Mode 10: 16-bit color, 1 pixel/VCLK
-    r.h.cl = 0x50;
-
-//     jmp  ConfigureClocks                ;Offset 0xe33
-//     nop
-    goto ConfigureClocks;
-
-// ColorMode9:                             ;Offset 0xe2c
-LABEL(SetColorMode, ColorMode9);
-
-//     mov  cl, 30h                        ;Color Mode 0011 - Mode 9: 15-bit color, 1 pixel/VCLK
-    r.h.cl = 0x30;
-
-//     jmp  ConfigureClocks                ;Offset 0xe33
-//     nop
-    goto ConfigureClocks;
-
-// ColorMode8:                             ;Offset 0xe31
-LABEL(SetColorMode, ColorMode8);
-
-//     mov  cl, 10h                        ;Color Mode 0001 - Mode 8: 8-bit color, 2 pixels/VCLK
-    r.h.cl = 0x10;
-
-// ConfigureClocks:                        ;Offset 0xe33
-LABEL(SetColorMode, ConfigureClocks);
-
-//     mov  dx, SequenceIndex              ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     mov  ax, 0608h                      ;SR8 - Unlock Extended Sequencer register 0x06 = unlock code.
-    r.w.ax = 0x0608;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     cmp  cl, 10h                        ;Color Mode 0001 - Mode 8: 8-bit color, 2 pixels/VCLK
-//     jne  NotMode8                       ;Offset 0xe4f
-    if (r.h.cl != 0x10)
-        goto NotMode8;
-
-//     mov  ax, 0c018h                     ;SR18 - RAMDAC/CLKSYN Control register
-//                                         ;bit 6 = 1 - DCLK LUT write cycle
-//                                         ;but 7 = 1 - RAMDAC clock doubled mode (0001) enabled
-    r.w.ax = 0xc018;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 15h                        ;SR15 - CLKSYN Control 2 register
-    r.h.al = 0x15;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     or   ah, 10h                        ;bit 4 = 1 - Divide DCLK by 2
-    r.h.ah |= 0x10;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     jmp  ApplyColorMode                 ;Offset 0xe5c
-//     nop
-    goto ApplyColorMode;
-
-// NotMode8:                               ;Offset 0xe4f
-LABEL(SetColorMode, NotMode8);
-//     mov  ax, 4018h                      ;SR18 - RAMDAC/CLKSYN Control register
-//                                         ;bit 6 - Invert DCLK - Either this bit or bit 4 of this register
-//                                         ;                      must be set to 1 for clock doubled RAMDAC
-//                                         ;                      Operation (mode 0001).
-    r.w.ax = 0x4018;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 15h                        ;SR15 - CLKSYN Control 2 register
-    r.h.al = 0x15;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0afh                       ;bit 6 = 0 - DCLK unchanged (not inverted)
-//                                         ;bit 4 = 0 - DCLK unchanged (not divided by 2)
-    r.h.ah &= 0xaf;
-    
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-// ApplyColorMode:                         ;Offset 0xe5c
-LABEL(SetColorMode, ApplyColorMode);
-
-//     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = GetCRTControllerIndexRegister();
-
-//     mov  al, 67h                        ;CR67 - Extended Miscellaneous Control 2 register
-    r.h.al = 0x67;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0fh                        ;Clear out top 4 bits - Color Mode
-    r.h.ah &= 0x0f;
-
-//     or   ah, cl                         ;Set Color Mode
-    r.h.ah |= r.h.cl;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop  bx
-//     pop  dx
-//     ret
+    S3::CRTController::ExtendedMiscellaneousControl2::Write(crtcPort,
+                                                            (S3::CRTController::ExtendedMiscellaneousControl2::Read(crtcPort) &
+                                                             ~S3::CRTController::ExtendedMiscellaneousControl2::ColorMode) |
+                                                             cMode);
 }
 
-void ApplyVESAOverrideData(uint8_t mode)
+void ApplyVESAOverrideData(uint8_t mode, Hag::VGA::Register_t crtcPort, Hag::S3::VESAVideoModeData* overrideTable)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.h.al = mode;
-    uint32_t offset = 0;
-    uint16_t idx = 0;
-    uint16_t crtIdx = 0;
-    Hag::VGA::Register_t crtcPort = GetCRTControllerIndexRegister();
-    Hag::S3::VESAVideoModeData* overrideTable = NULL;
-    Hag::S3::VESAResolutionVariant* modeData = NULL;
+    using namespace Hag;
+    using namespace Hag::VGA;
 
-//     push ax
-//     push bx
-//     push cx
-//     push es
-//     mov  bl, al
-    r.h.bl = r.h.al;
+    S3::Sequencer::UnlockExtendedSequencer::Unlock();
 
-//     call UnlockExtendedSequencerRegisters;Offset 0xf92
-    Hag::S3::Sequencer::UnlockExtendedSequencer::Unlock();
+    S3::Sequencer::ExtendedSequencer9::Write(S3::Sequencer::ExtendedSequencer9::Read() &
+                                             ~S3::Sequencer::ExtendedSequencer9::MemoryMappedIOOnly);
 
-//     mov  dx, SequenceIndex              ;port - 0x3c4
-    r.w.dx = 0x3c4;
+    //This is a read-only register according to the spec...
+    S3::CRTController::ChipIDRevision::Write(crtcPort, 0x55);
+    if (S3::CRTController::ChipIDRevision::Read(crtcPort) != 0x55)
+    {
+        S3::CRTController::SystemConfiguration::Unlock(crtcPort);
 
-//     mov  al, 09h                        ;SR9 - Extended Sequencer register 9
-    r.h.al = 0x09;
+        S3::AdvancedFunctionControl::WriteLower(S3::AdvancedFunctionControl::ReservedAs1);
 
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
+        InitializeCRTControllerAndSequencer(Hag::S3::TrioBase::m_CRTControllerInitData, crtcPort);
+    }
 
-//     and  ah, 7fh                        ;Set bit 7 to 0 - Turn off Memory IO only mode. Both programmed IO and memory IO are allowed.
-    r.h.ah &= 0x7f;
+    if (overrideTable != NULL)
+    {
+        Hag::S3::VESAResolutionVariant* modeData = overrideTable->VariantData;
 
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+        ClearMemory(crtcPort);
 
-//     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = crtcPort;
+        //TODO: refresh rate limit should be passed in.
+        uint16_t refreshRateCap = (uint16_t(S3::CRTController::BIOSFlag::Read(crtcPort)) << 4) |
+                                  (S3::CRTController::ExtendedBIOSFlag1::Read(crtcPort) >> 4);
 
-//     mov  al, 30h                        ;CR30 - Chip ID / Revision register
-    r.h.al = 0x30;
+        for (int i = 0; i < 3; ++i)
+        {
+            if (overrideTable->OverrideTable == Hag::S3::TrioBase::m_VesaResolutions[i + 3])
+                break;
 
-//     mov  ah, 55h                        ;Unknown... We are writing to what the documentation says is a read-only register...
-    r.h.ah = 0x55;
+            refreshRateCap >>= 3;
+        }
+        refreshRateCap &= 7;
 
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+        Sequencer::MemoryModeControl::Write(overrideTable->MemoryModeControl);
 
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
+        S3::CRTController::SystemConfiguration::Unlock(crtcPort);
+        CRTController::VerticalRetraceEnd::Unlock(crtcPort);
 
-//     cmp  ah, 55h                        ;Check if the write worked
-//     je   Label0x10b9                    ;Offset 0x10b9
-    if (r.h.ah == 0x55)
-        goto Label0x10b9;
+        S3::AdvancedFunctionControl::WriteLower(overrideTable->AdvancedFunction);
 
-//     mov  al, 40h                        ;CR40 - System Configuration register
-    r.h.al = 0x40;
+        while (((modeData->FlagsAndFilter & S3::VESAFlagsAndFilter::Terminate) == 0) && 
+               ((modeData->FlagsAndFilter & ~S3::VESAFlagsAndFilter::Terminate) > refreshRateCap))
+        {
+            ++modeData;
+        }
 
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
+        SetupClocks(crtcPort, modeData->ClockConfigIndex);
 
-//     or   ah, 01h                        ;Set bit 0 to 1 - Enhanced register (x2e8h) access enabled
-    r.h.ah |= 0x01;
+        for (CRTControllerIndex_t i = 0; i < 25; ++i)
+        {
+            CRTControllerData::Write(crtcPort, i, modeData->CRTCRegisters[i]);
+        }
 
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+        ConfigureExtraVESAModeSettings(mode, crtcPort, overrideTable, modeData);
+    }
 
-//     push dx
-//     mov  dx, AdvancedFunctionControl    ;port - 0x4ae8
-    r.w.dx = 0x4ae8;
+    Configure256KAddressingAndAddressWindow(mode, crtcPort);
 
-//     mov  al, 02h                        ;Set bit 1 to 1 - Unknown
-    r.h.al = 0x02;
+    Hag::S3::ColorMode_t colorMode = 0;
+    if (overrideTable != NULL)
+        colorMode = overrideTable->ColorMode;
 
-//     out  dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
+    SetColorMode(mode, colorMode, crtcPort);
 
-    r.w.dx = crtcPort;
-//     push si
-//     mov  si, word ptr cs:[CRTControllerInitPtr];Offset 0x1bd points to CRTControllerInitData
-//     call InitializeCRTControllerAndSequencer;Offset 0xfee
-    InitializeCRTControllerAndSequencer(Hag::S3::TrioBase::m_CRTControllerInitData, crtcPort);
-
-//     pop  si
-// Label0x10b9:                            ;Offset 0x10b9
-LABEL(ApplyVESAOverrideData, Label0x10b9);
-
-//     mov  al, bl
-    r.h.al = r.h.bl;
-//     call FindVideoModeData              ;Offset 0x103a
-//     je   Found                          ;Offset 0x10c3
-    if (overrideTable = Hag::S3::TrioBase::FindVideoModeData(r.h.al))
-        goto Found;
-
-//     jmp  NotVESAMode                    ;Offset 0x115c
-    goto NotVESAMode;
-
-// Found:                                  ;Offset 0x10c3
-LABEL(ApplyVESAOverrideData, Found);
-    modeData = overrideTable->VariantData;
-
-//     call ClearMemory                    ;Offset 0x121e
-    ClearMemory(crtcPort);
-
-//     call EmptyFunction1                 ;Offset 0x230
-//     mov  al, 41h                        ;CR41 - BIOS Flag register
-    r.h.al = 0x41;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     mov  bh, ah                         ;
-    r.h.bh = r.h.ah;
-
-//     mov  al, 52h                        ;CR52 - Extended BIOS Flag 1 register
-    r.h.al = 0x52;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0f0h                       ;
-    r.h.ah &= 0xf0;
-
-//     mov  bl, ah
-    r.h.bl = r.h.ah;
-
-//     shr  bx, 04h                        ;
-    r.w.bx >>= 4;
-
-//     mov  ax, offset VESAVideoParameters640x480;Offset 0x6f1
-    idx = 3; //VESAVideoParameters640x480 sits at index 3 in VESAVideoParameters
-
-//     mov  cx, 03h                        ;Loop 3 times. Every time the Override table doesn't match,
-    r.w.cx = 0x0003;
-
-//                                         ;we move up to a higher resolution. 800x600, 1024x768, 1280x1024
-//                                         ;While we do that, we drop 3 bits off the low end of bx.
-// FindOverrideTable:                      ;Offset 0x10e3
-LABEL(ApplyVESAOverrideData, FindOverrideTable);
-
-//     cmp  (VideoModeData ptr es:[di + offset VESAVideoModeData]).OverrideTable, ax;Offset 0x523
-//     je   OverrideTableFound             ;Offset 0x10f2
-    if (overrideTable->OverrideTable == Hag::S3::TrioBase::m_VesaResolutions[idx])
-        goto OverrideTableFound;
-
-//     shr  bx, 03h
-    r.w.bx >>= 3;
-
-//     DB 05h,40h,00h                      ;add  ax, 40h - masm encoding is different, but it's the same instruction
-    ++idx;
-
-//     loop FindOverrideTable              ;Offset 0x10e3
-    --r.w.cx;
-    if(r.w.cx != 0x0000)
-        goto FindOverrideTable;
-
-// OverrideTableFound:                     ;Offset 0x10f2
-LABEL(ApplyVESAOverrideData, OverrideTableFound);
-//     and  bx, 07h                        ;Whatever we found (or didn't find), we are using the bottom 3 bits of bx.
-    r.w.bx &= 0x0007;
-
-//     mov  dx, SequenceIndex              ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     mov  al, 04h                        ;SR4 - MemoryModeControl
-    r.h.al = 0x04;
-
-//     mov  ah, (VideoModeData ptr es:[di + offset VESAVideoModeData]).MemoryMode;Offset 0x528
-    r.h.ah = overrideTable->MemoryModeControl;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     call GetCRTControllerIndexRegister  ;Offset 0xfdd
-    r.w.dx = GetCRTControllerIndexRegister();
-
-//     push dx
-//     mov  al, 40h                        ;CR40 - System Configuration register
-    r.h.al = 0x40;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     or   ah, 01h                        ;Set bit 0 to 1 - Enable Enhanced (x2e8h) register access
-    r.h.ah |= 0x01;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, 11h                        ;CR11 - Vertical Retrace End register
-    r.h.al = 0x11;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 7fh                        ;Set bit 7 to 0 - Enable writes to CRT controller registers
-    r.h.ah &= 0x7f;
-    
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  dx, AdvancedFunctionControl    ;port - 0x4ae8 - Advanced Function Control
-    r.w.dx = 0x4ae8;
-
-//     mov  al, (VideoModeData ptr es:[di + offset VESAVideoModeData]).AdvancedFunction;Offset 0x526
-    r.h.al = overrideTable->AdvancedFunction;
-
-//     out  dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     pop  dx                             ;Restore CRTC register
-    r.w.dx = crtcPort;
-
-//     mov  ah, bl
-    r.h.ah = r.h.bl;
-
-//     xor  bh, bh
-    r.h.bh = 0x00;
-
-//     mov  bl, byte ptr cs:[Data019E]     ;offset 0x19e
-//Data019E                DB 0Ch                      ;Offset 0x19e - This is the size of... something
-    r.h.bl = 0x0c;
-
-//     mov  di, (VideoModeData ptr es:[di + offset VESAVideoModeData]).Value7;Offset 0x529
-
-// DataSearch:                             ;Offset 0x112e
-LABEL(ApplyVESAOverrideData, DataSearch);
-
-//     mov  al, byte ptr es:[di + 02h]     ;Flag and 0..7 index
-    r.h.al = modeData->FlagsAndFilter;
-
-//     test al, 80h                        ;If top bit set, exit. we're at the "end" (actually start)
-//     jne  DataFound                      ;Offset 0x1141
-    if ((r.h.al & 0x80) != 0x00)
-        goto DataFound;
-
-//     and  ax, 0f0fh                      ;This and should be 0707h
-    r.w.ax &= 0x0f0f;
-//     DB 3Ah, 0C4h                        ;cmp  al, ah    masm encoding difference
-//     jbe  DataFound                      ;Offset 0x1141
-    if (r.h.al <= r.h.ah)
-        goto DataFound;
-
-//     sub  di, bx                         ;Move backwards
-    ++modeData;
-
-//     jmp  DataSearch                     ;Offset 0x112e
-    goto DataSearch;
-
-// DataFound:                              ;Offset 0x1141
-LABEL(ApplyVESAOverrideData, DataFound);
-
-//     mov  ah, byte ptr es:[di + 03h]     ;Clock config index
-    r.h.ah = modeData->ClockConfigIndex;
-
-//     call SetupClocks                    ;Offset 0x31c
-    SetupClocks(crtcPort, r.h.ah);
-
-//     mov  cx, 19h                        ;25 CRTC registers
-    r.w.cx = 0x0019;
-
-//     xor  al, al                         ;CR0
-    r.h.al = 0x00;
-
-//     mov  si, word ptr es:[di]           ;Load CRTC register data pointer
-    //crtData
-
-// WriteCRTCRegisters:                     ;Offset 0x1150
-LABEL(ApplyVESAOverrideData, WriteCRTCRegisters);
-
-//     mov  ah, byte ptr es:[si]           ;
-    r.h.ah = modeData->CRTCRegisters[crtIdx];
-
-//     out  dx, ax                         ;Write CR0 - CR18
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc  al
-    ++r.h.al;
-
-//     inc  si
-    ++crtIdx;
-
-//     loop WriteCRTCRegisters             ;Offset 0x1150
-    --r.w.cx;
-    if(r.w.cx != 0x0000)
-        goto WriteCRTCRegisters;
-
-//     call ConfigureExtraVESAModeSettings ;Offset 0x3d9
-    ConfigureExtraVESAModeSettings(mode, r.w.dx, overrideTable, modeData);
-
-// NotVESAMode:                            ;Offset 0x115c
-LABEL(ApplyVESAOverrideData, NotVESAMode);
-
-//     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    r.h.al = Hag::System::BDA::DisplayMode::Get();
-
-//     call EnableOver256KAddressingAndSetAddressWindow;Offset 0x2f6
-    EnableOver256KAddressingAndSetAddressWindow(r.h.al, r.w.dx);
-
-//     call SetColorMode                   ;Offset 0xdf6
-    SetColorMode(r.h.al);
-
-//     call LockExtendedSequencerRegisters ;Offset 0xf9c
     Hag::S3::Sequencer::UnlockExtendedSequencer::Lock();
-
-//     pop  es
-//     pop  cx
-//     pop  bx
-//     pop  ax
-//     ret
 }
 
-// ;inputs:
-// ;si = pointer to Palette data
-// ;outputs:
-// ;ah = red
-// ;ch = green
-// ;cl = blue
-// ;si = points to next palette entry
-// ;Palette color data is 6 bits. the top two bits are used
-// ;as a compression scheme. 
-// ;Bits in red:
-// ;00 = Load Green
-// ;01 = Green = Red
-// ;10 = Blue = Green = Red
-// ;11 = Load Green, Blue = Red
-// ;Bits in Green:
-// ;00 = Load Blue
-// ;01 = Blue = Green
-void DecompressPaletteColor(uint8_t*& paletteData, uint8_t& red, uint8_t& green, uint8_t& blue)
+uint8_t* DecompressPaletteColor(uint8_t* paletteData, uint8_t& red, uint8_t& green, uint8_t& blue)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-//     lodsb cs:[si]
-    r.h.al = *paletteData;
+    uint8_t redSettings = *paletteData & 0xC0;//Top 2 bits hold compression information
+    red = *paletteData & 0x3F;//6 bit color data
     ++paletteData;
 
-//     mov   ah, al                        ;Set red
-    r.h.ah = r.h.al;
-
-//     and   ah, 03fh                      ;Isolate red color data
-    r.h.ah &= 0x3f;
-
-//     and   al, 0c0h                      ;Isolate compression data
-    r.h.al &= 0xc0;
-
-//     je    LoadGreen                     ;Offset 0x49f3
-    if (r.h.al == 0x00)
-        goto LoadGreen;
-
-//     cmp   al, 40h                       ;
-//     je    GreenIsRed                    ;Offset 0x4a01
-    if (r.h.al == 0x40)
-        goto GreenIsRed;
-
-//     cmp   al, 80h
-//     je    GreenAndBlueIsRed             ;Offset 0x49ee
-    if (r.h.al == 0x80)
-        goto GreenAndBlueIsRed;
-
-//     mov   cl, ah                        ;Else C0h - Blue is Red
-    r.h.cl = r.h.ah;
-
-//     lodsb cs:[si]
-    r.h.al = *paletteData;
-    ++paletteData;
-
-//     mov   ch, al                        ;Load Green
-    r.h.ch = r.h.al;
-
-//     ret
-    red = r.h.ah;
-    green = r.h.ch;
-    blue = r.h.cl;
-    return;
-
-// GreenAndBlueIsRed:                      ;Offset 0x49ee
-LABEL(DecompressPaletteColor, GreenAndBlueIsRed);
-
-//     mov   ch, ah
-    r.h.ch = r.h.ah;
-
-//     mov   cl, ah
-    r.h.cl = r.h.ah;
-
-//     ret
-    red = r.h.ah;
-    green = r.h.ch;
-    blue = r.h.cl;
-    return;
-
-// LoadGreen:                              ;Offset 0x49f3
-LABEL(DecompressPaletteColor, LoadGreen);
-
-//     lodsb cs:[si]
-    r.h.al = *paletteData;
-    ++paletteData;
-
-//     mov   ch, al
-    r.h.ch = r.h.al;
-
-//     test  al, 40h
-//     je    LoadBlue                      ;Offset 0x4a03
-    if ((r.h.al & 0x40) == 0x00)
-        goto LoadBlue;
-
-//     and   ch, 0bfh                      ;1011 1111
-    r.h.ch &= 0xbf;
-
-//     mov   cl, ch                        ;Blue is Green
-    r.h.cl = r.h.ch;
-
-//     ret
-    red = r.h.ah;
-    green = r.h.ch;
-    blue = r.h.cl;
-    return;
-
-// GreenIsRed:                             ;Offset 0x4a01
-LABEL(DecompressPaletteColor, GreenIsRed);
-
-//     mov   ch, ah
-    r.h.ch = r.h.ah;
-
-// LoadBlue:                               ;Offset 0x4a03
-LABEL(DecompressPaletteColor, LoadBlue);
-
-//     lodsb cs:[si]                       ;Load blue
-    r.h.al = *paletteData;
-    ++paletteData;
-
-//     mov   cl, al
-    r.h.cl = r.h.al;
-
-//     ret
-    red = r.h.ah;
-    green = r.h.ch;
-    blue = r.h.cl;
+    if (redSettings == 0)
+    {
+        uint8_t greenSettings = *paletteData & 0x40;
+        green = *paletteData & 0x3F;//6 bit color data
+        ++paletteData;
+        if (greenSettings == 0)
+        {
+            blue = *paletteData;
+            ++paletteData;
+        }
+        else
+        {
+            blue = green;
+        }
+    }
+    else if (redSettings == 0x40)
+    {
+        green = red;
+        blue = *paletteData;
+        ++paletteData;
+    }
+    else if (redSettings == 0x80)
+    {
+        green = blue = red;
+    }
+    else
+    {
+        blue = red;
+        green = *paletteData;
+        ++paletteData;
+    }
+    return paletteData;
 }
 
-void SetPaletteColorInternal(uint16_t& colorIndex, uint8_t red, uint8_t green, uint8_t blue)
+uint16_t SetPaletteColor(uint16_t colorIndex, uint8_t red, uint8_t green, uint8_t blue)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.w.bx = colorIndex;
-    r.h.ah = red;
-    r.h.ch = green;
-    r.h.cl = blue;
+    using namespace Hag::VGA;
 
-//     mov   dx, DACWriteIndex             ;port - 03c8h
-    r.w.dx = 0x3c8;
-
-//     mov   al, bl
-    r.h.al = r.h.bl;
-
-//     out   dx, al                        ;Write color index
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     inc   dx                            ;port - 03c9h - RAMDACData
-    ++r.w.dx;
-
-//     mov   al, ah
-    r.h.al = r.h.ah;
-
-//     out   dx, al                        ;Write red
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     mov   al, ch
-    r.h.al = r.h.ch;
-
-//     out   dx, al                        ;Write green
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     mov   al, cl
-    r.h.al = r.h.cl;
-
-//     out   dx, al                        ;Write blue
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     inc   bx
-    ++colorIndex;
-
-//     popf
+    SYS_ClearInterrupts();
+    DACWriteIndex::Write(colorIndex);
+    RAMDACData::Write(red);
+    RAMDACData::Write(green);
+    RAMDACData::Write(blue);
     SYS_RestoreInterrupts();
 
-//     ret
+    return colorIndex + 1;
 }
 
-// ;inputs:
-// ;bl = color index
-// ;ah = red
-// ;ch = green
-// ;cl = blue
-// ;outputs:
-// ;bx = bx + 1
-// ;destroys dx
-void SetPaletteColor(uint16_t& colorIndex, uint8_t red, uint8_t green, uint8_t blue)
-{
-//     pushf
-//     cli
-    SYS_ClearInterrupts();
-    SetPaletteColorInternal(colorIndex, red, green, blue);
-}
-
-// ;continue!
-// ;inputs:
-// ;bx = color index
-// ;di = count
-// ;si = pointer to Palette data
-void ApplyPalette(uint16_t& colorIndex, uint16_t count, uint8_t* paletteData)
+uint16_t ApplyPalette(uint16_t colorIndex, uint16_t count, uint8_t* paletteData)
 {
     uint8_t red = 0;
     uint8_t green = 0;
     uint8_t blue = 0;
 
-LABEL(ApplyPalette, NextColor);
-
-//     call  DecompressPaletteColor        ;Offset 0x49d4
-    DecompressPaletteColor(paletteData, red, green, blue);
-
-//     call  SetPaletteColor               ;Offset 0x47d8
-    SetPaletteColor(colorIndex, red, green, blue);
-
-//     dec   di
-//     jne   ApplyPalette                  ;Offset 0x498e
-    --count;
-    if (count != 0x0000)
-        goto NextColor;
-
-//     ret
-}
-
-uint16_t Data2ee7 = 0x2666;
-uint16_t Data2ee9 = 0x4B85;
-uint16_t Data2eeb = 0x0E14;
-
-// ;inputs:
-// ;ah = red
-// ;ch = green
-// ;cl = blue
-void MakeColorGreyscale(uint8_t& red, uint8_t& green, uint8_t& blue)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.h.ah = red;
-    r.h.ch = green;
-    r.h.cl = blue;
-
-//     push bx
-//     push dx
-//     and  ax, 3f00h
-    r.w.ax &= 0x3f00;
-//     xchg al, ah
-    r.h.al = r.h.ah;
-    r.h.ah = 0x00;
-
-//     mul  word ptr cs:[Data2ee7]         ;Offset 0x2ee7
-//     push dx
-//     push ax
-    uint32_t v1 = r.w.ax * Data2ee7;
-    
-//     mov  al, ch
-    r.h.al = r.h.ch;
-
-//     and  al, 3fh
-    r.h.al &= 0x3f;
-
-//     xor  ah, ah
-    r.h.ah = 0x00;
-//     mul  word ptr cs:[Data2ee9]         ;Offset 0x2ee9
-//     push dx
-//     push ax
-    uint32_t v2 = r.w.ax * Data2ee9;
-
-//     mov  al, cl
-    r.h.al = r.h.cl;
-
-//     and  al, 3fh
-    r.h.al &= 0x3f;
-
-//     xor  ah, ah
-    r.h.ah = 0x00;
-
-//     mul  word ptr cs:[Data2eeb]         ;Offset 0x2eeb
-    uint32_t v3 = r.w.ax * Data2eeb;
-
-//     pop  bx
-//     add  ax, bx
-//     pop  bx
-//     adc  dx, bx
-    v3 += v2;
-
-//     pop  bx
-//     add  ax, bx
-//     pop  bx
-//     adc  dx, bx
-    v3 += v1;
-
-//     add  ax, ax
-//     adc  dx, dx
-    v3 <<= 1;
-
-//     add  ax, 8000h
-//     adc  dx, 0
-    v3 += 0x8000;
-    v3 >>= 16;
-    v3 &= 0xff;    
-
-//     mov  ah, dl
-    red = uint8_t(v3);
-
-//     mov  cl, dl
-    blue = uint8_t(v3);
-
-//     mov  ch, dl
-    green = uint8_t(v3);
-
-//     pop  dx
-//     pop  bx
-//     ret;done
-}
-
-void MakeColorGreyscaleIfNeeded(uint8_t& red, uint8_t& green, uint8_t& blue)
-{
-//     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0x489, 0x6
-//     je   EmptyFunction8                 ;Offset 0x2f38
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) != 0x00)
+    for (uint16_t i = 0; i < count; ++i)
     {
-        MakeColorGreyscale(red, green, blue);
+        paletteData = DecompressPaletteColor(paletteData, red, green, blue);
+        colorIndex = SetPaletteColor(colorIndex, red, green, blue);
     }
+    return colorIndex;
 }
 
-uint8_t Data43b1[] =
+void Set248ColorPalette()
 {
-    0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A, 0x2A,
-    0x40, 0xEA, 0x00, 0x2A, 0x15, 0x00, 0xAA, 0x95,
-    0x55, 0x3F, 0xD5, 0x3F, 0x15, 0x7F, 0x3F, 0x55,
-    0xFF, 0x15, 0x7F, 0x15, 0xBF
-};
+    using namespace Hag;
+    using namespace Hag::System::BDA;
 
-uint8_t Data43ce[] =
-{ 
-    0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
-    0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF
-};
-
-uint8_t Data43de[] =
-{
-    0x80, 0x85, 0x88, 0x8B, 0x8E, 0x91, 0x94, 0x98,
-    0x9C, 0xA0, 0xA4, 0xA8, 0xAD, 0xB2, 0xB8, 0xBF
-};
-
-uint8_t Data43ee[] =
-{
-    0x40, 0x3F, 0x10, 0x00, 0x3F, 0x1F, 0x00, 0x3F,
-    0x2F, 0x00, 0x3F, 0xFF, 0x00, 0x3F, 0x00, 0x2F,
-    0x3F, 0x00, 0x1F, 0x3F, 0x00, 0x10, 0x3F, 0x40,
-    0x3F, 0x10, 0x00, 0x3F, 0x1F, 0x00, 0x3F, 0x2F,
-    0x00, 0x7F, 0x00, 0x2F, 0x3F, 0x00, 0x1F, 0x3F,
-    0x00, 0x10, 0x3F, 0x00, 0xC0, 0x3F, 0x00, 0x3F,
-    0x10, 0x00, 0x3F, 0x1F, 0x00, 0x3F, 0x2F, 0x00,
-    0x7F, 0x00, 0x2F, 0x3F, 0x00, 0x1F, 0x3F, 0x00,
-    0x10, 0x3F, 0x5F, 0x3F, 0x27, 0x1F, 0x3F, 0x2F,
-    0x1F, 0x3F, 0x37, 0x1F, 0x3F, 0xFF, 0x1F, 0x3F,
-    0x1F, 0x37, 0x3F, 0x1F, 0x2F, 0x3F, 0x1F, 0x27,
-    0x3F, 0x5F, 0x3F, 0x27, 0x1F, 0x3F, 0x2F, 0x1F,
-    0x3F, 0x37, 0x1F, 0x7F, 0x1F, 0x37, 0x3F, 0x1F,
-    0x2F, 0x3F, 0x1F, 0x27, 0x3F, 0x1F, 0xDF, 0x3F,
-    0x1F, 0x3F, 0x27, 0x1F, 0x3F, 0x2F, 0x1F, 0x3F,
-    0x37, 0x1F, 0x7F, 0x1F, 0x37, 0x3F, 0x1F, 0x2F,
-    0x3F, 0x1F, 0x27, 0x3F, 0x6D, 0x3F, 0x31, 0x2D,
-    0x3F, 0x36, 0x2D, 0x3F, 0x3A, 0x2D, 0x3F, 0xFF,
-    0x2D, 0x3F, 0x2D, 0x3A, 0x3F, 0x2D, 0x36, 0x3F,
-    0x2D, 0x31, 0x3F, 0x6D, 0x3F, 0x31, 0x2D, 0x3F,
-    0x36, 0x2D, 0x3F, 0x3A, 0x2D, 0x7F, 0x2D, 0x3A,
-    0x3F, 0x2D, 0x36, 0x3F, 0x2D, 0x31, 0x3F, 0x2D,
-    0xED, 0x3F, 0x2D, 0x3F, 0x31, 0x2D, 0x3F, 0x36,
-    0x2D, 0x3F, 0x3A, 0x2D, 0x7F, 0x2D, 0x3A, 0x3F,
-    0x2D, 0x36, 0x3F, 0x2D, 0x31, 0x3F, 0x40, 0x1C,
-    0x07, 0x00, 0x1C, 0x0E, 0x00, 0x1C, 0x15, 0x00,
-    0x1C, 0xDC, 0x00, 0x1C, 0x00, 0x15, 0x1C, 0x00,
-    0x0E, 0x1C, 0x00, 0x07, 0x1C, 0x40, 0x1C, 0x07,
-    0x00, 0x1C, 0x0E, 0x00, 0x1C, 0x15, 0x00, 0x5C,
-    0x00, 0x15, 0x1C, 0x00, 0x0E, 0x1C, 0x00, 0x07,
-    0x1C, 0x00, 0xC0, 0x1C, 0x00, 0x1C, 0x07, 0x00,
-    0x1C, 0x0E, 0x00, 0x1C, 0x15, 0x00, 0x5C, 0x00,
-    0x15, 0x1C, 0x00, 0x0E, 0x1C, 0x00, 0x07, 0x1C,
-    0x4E, 0x1C, 0x11, 0x0E, 0x1C, 0x15, 0x0E, 0x1C,
-    0x18, 0x0E, 0x1C, 0xDC, 0x0E, 0x1C, 0x0E, 0x18,
-    0x1C, 0x0E, 0x15, 0x1C, 0x0E, 0x11, 0x1C, 0x4E,
-    0x1C, 0x11, 0x0E, 0x1C, 0x15, 0x0E, 0x1C, 0x18,
-    0x0E, 0x5C, 0x0E, 0x18, 0x1C, 0x0E, 0x15, 0x1C,
-    0x0E, 0x11, 0x1C, 0x0E, 0xCE, 0x1C, 0x0E, 0x1C,
-    0x11, 0x0E, 0x1C, 0x15, 0x0E, 0x1C, 0x18, 0x0E,
-    0x5C, 0x0E, 0x18, 0x1C, 0x0E, 0x15, 0x1C, 0x0E,
-    0x11, 0x1C, 0x54, 0x1C, 0x16, 0x14, 0x1C, 0x18,
-    0x14, 0x1C, 0x1A, 0x14, 0x1C, 0xDC, 0x14, 0x1C,
-    0x14, 0x1A, 0x1C, 0x14, 0x18, 0x1C, 0x14, 0x16,
-    0x1C, 0x54, 0x1C, 0x16, 0x14, 0x1C, 0x18, 0x14,
-    0x1C, 0x1A, 0x14, 0x5C, 0x14, 0x1A, 0x1C, 0x14,
-    0x18, 0x1C, 0x14, 0x16, 0x1C, 0x14, 0xD4, 0x1C,
-    0x14, 0x1C, 0x16, 0x14, 0x1C, 0x18, 0x14, 0x1C,
-    0x1A, 0x14, 0x5C, 0x14, 0x1A, 0x1C, 0x14, 0x18,
-    0x1C, 0x14, 0x16, 0x1C, 0x40, 0x10, 0x04, 0x00,
-    0x10, 0x08, 0x00, 0x10, 0x0C, 0x00, 0x10, 0xD0,
-    0x00, 0x10, 0x00, 0x0C, 0x10, 0x00, 0x08, 0x10,
-    0x00, 0x04, 0x10, 0x40, 0x10, 0x04, 0x00, 0x10,
-    0x08, 0x00, 0x10, 0x0C, 0x00, 0x50, 0x00, 0x0C,
-    0x10, 0x00, 0x08, 0x10, 0x00, 0x04, 0x10, 0x00,
-    0xC0, 0x10, 0x00, 0x10, 0x04, 0x00, 0x10, 0x08,
-    0x00, 0x10, 0x0C, 0x00, 0x50, 0x00, 0x0C, 0x10,
-    0x00, 0x08, 0x10, 0x00, 0x04, 0x10, 0x48, 0x10,
-    0x0A, 0x08, 0x10, 0x0C, 0x08, 0x10, 0x0E, 0x08,
-    0x10, 0xD0, 0x08, 0x10, 0x08, 0x0E, 0x10, 0x08,
-    0x0C, 0x10, 0x08, 0x0A, 0x10, 0x48, 0x10, 0x0A,
-    0x08, 0x10, 0x0C, 0x08, 0x10, 0x0E, 0x08, 0x50,
-    0x08, 0x0E, 0x10, 0x08, 0x0C, 0x10, 0x08, 0x0A,
-    0x10, 0x08, 0xC8, 0x10, 0x08, 0x10, 0x0A, 0x08,
-    0x10, 0x0C, 0x08, 0x10, 0x0E, 0x08, 0x50, 0x08,
-    0x0E, 0x10, 0x08, 0x0C, 0x10, 0x08, 0x0A, 0x10,
-    0x4B, 0x10, 0x0C, 0x0B, 0x10, 0x0D, 0x0B, 0x10,
-    0x0F, 0x0B, 0x10, 0xD0, 0x0B, 0x10, 0x0B, 0x0F,
-    0x10, 0x0B, 0x0D, 0x10, 0x0B, 0x0C, 0x10, 0x4B,
-    0x10, 0x0C, 0x0B, 0x10, 0x0D, 0x0B, 0x10, 0x0F,
-    0x0B, 0x50, 0x0B, 0x0F, 0x10, 0x0B, 0x0D, 0x10,
-    0x0B, 0x0C, 0x10, 0x0B, 0xCB, 0x10, 0x0B, 0x10,
-    0x0C, 0x0B, 0x10, 0x0D, 0x0B, 0x10, 0x0F, 0x0B,
-    0x50, 0x0B, 0x0F, 0x10, 0x0B, 0x0D, 0x10, 0x0B,
-    0x0C, 0x10
-};
-
-uint8_t Data4371[] =
-{
-    0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-    0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-    0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-    0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF,
-    0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
-    0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-    0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
-    0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF
-};
-
-uint8_t Data41e9[] =
-{
-    0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A, 0x2A,
-    0x40, 0xEA, 0x00, 0x2A, 0x15, 0x00, 0xAA, 0x80,
-    0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A, 0x2A, 0x40,
-    0xEA, 0x00, 0x2A, 0x15, 0x00, 0xAA, 0x95, 0x55,
-    0x3F, 0xD5, 0x3F, 0x15, 0x7F, 0x3F, 0x55, 0xFF,
-    0x15, 0x7F, 0x15, 0xBF, 0x95, 0x55, 0x3F, 0xD5,
-    0x3F, 0x15, 0x7F, 0x3F, 0x55, 0xFF, 0x15, 0x7F,
-    0x15, 0xBF, 0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00,
-    0x6A, 0x2A, 0x40, 0xEA, 0x00, 0x2A, 0x15, 0x00,
-    0xAA, 0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A,
-    0x2A, 0x40, 0xEA, 0x00, 0x2A, 0x15, 0x00, 0xAA,
-    0x95, 0x55, 0x3F, 0xD5, 0x3F, 0x15, 0x7F, 0x3F,
-    0x55, 0xFF, 0x15, 0x7F, 0x15, 0xBF, 0x95, 0x55,
-    0x3F, 0xD5, 0x3F, 0x15, 0x7F, 0x3F, 0x55, 0xFF,
-    0x15, 0x7F, 0x15, 0xBF
-};
-
-uint8_t Data425d[] =
-{
-    0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
-    0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
-    0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF,
-    0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF,
-    0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
-    0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
-    0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF,
-    0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF
-};
-
-uint8_t Data429d[] =
-{
-    0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A, 0x2A,
-    0x40, 0xEA, 0x00, 0x6A, 0x00, 0xAA, 0x40, 0x15,
-    0x40, 0x3F, 0x00, 0x2A, 0x15, 0x00, 0x2A, 0x3F,
-    0x2A, 0x00, 0x15, 0x2A, 0x00, 0x3F, 0x6A, 0x15,
-    0x6A, 0x3F, 0xC0, 0x15, 0x00, 0x15, 0x2A, 0xC0,
-    0x3F, 0x00, 0x3F, 0x2A, 0x2A, 0x15, 0x00, 0xEA,
-    0x15, 0x2A, 0x3F, 0x00, 0xEA, 0x3F, 0x00, 0x55,
-    0x00, 0x15, 0x3F, 0x00, 0x3F, 0x15, 0x00, 0x7F,
-    0x2A, 0x55, 0x2A, 0x15, 0x3F, 0x2A, 0x3F, 0x15,
-    0x2A, 0x7F, 0x15, 0x40, 0x15, 0x00, 0x2A, 0x15,
-    0x2A, 0x00, 0x15, 0x6A, 0x3F, 0x40, 0x3F, 0x00,
-    0x2A, 0x3F, 0x2A, 0x00, 0x3F, 0x6A, 0xD5, 0x00,
-    0x15, 0x00, 0x3F, 0xD5, 0x2A, 0x15, 0x2A, 0x3F,
-    0x3F, 0x00, 0x15, 0xFF, 0x00, 0x3F, 0x2A, 0x15,
-    0xFF, 0x2A, 0x55, 0x00, 0x55, 0x2A, 0x15, 0x3F,
-    0x00, 0x15, 0x3F, 0x2A, 0x3F, 0x15, 0x00, 0x3F,
-    0x15, 0x2A, 0x7F, 0x00, 0x7F, 0x2A, 0x95, 0x55,
-    0x3F, 0xD5, 0x3F, 0x15, 0x7F, 0x3F, 0x55, 0xFF,
-    0x15, 0x7F, 0x15, 0xBF
-};
-
-uint8_t Data4331[] =
-{
-    0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0xA5, 0xA8,
-    0x82, 0x87, 0x9B, 0xA0, 0x8F, 0x94, 0xA8, 0xAC,
-    0x8C, 0x91, 0xA5, 0xAA, 0x94, 0x9E, 0xB2, 0xB6,
-    0x8F, 0x93, 0xA7, 0xAC, 0x9B, 0xA0, 0xB4, 0xB9,
-    0x86, 0x8B, 0x9F, 0xA4, 0x93, 0x98, 0xAC, 0xB0,
-    0x89, 0x8D, 0xA1, 0xA6, 0x95, 0x9A, 0xAE, 0xB3,
-    0x93, 0x97, 0xAB, 0xB0, 0x9F, 0xA4, 0xB8, 0xBD,
-    0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF
-};
-
-void Set248ColorPalette(uint16_t& colorIndex)
-{
-   REGPACK r;
-    memset(&r, 0, sizeof(r));
-    uint8_t* palettePtr = NULL;
+    uint16_t colorIndex = 0;
     uint8_t red = 0;
     uint8_t green = 0;
     uint8_t blue = 0;
  
- //     mov   di, 0010h                     ;Count 16
-    r.w.di = 0x0010;
+    colorIndex = ApplyPalette(colorIndex, 16, ((VideoDisplayDataArea::Get() &
+                                               (VideoDisplayDataArea::GrayScale |
+                                                VideoDisplayDataArea::MonochromeMonitor)) == 0) ?
+                                                S3::TrioBase::m_ColorPalette : S3::TrioBase::m_MonochromePalette);
 
-//     mov   si, offset Data43b1           ;Offset 0x43b1
-    palettePtr = Data43b1;
+    colorIndex = ApplyPalette(colorIndex, 16, S3::TrioBase::m_SecondPalette);
 
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
-//     je    Label0x49a8                   ;Offset 0x49a8
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
-        goto Label0x49a8;
-
-//     mov   si, offset Data43ce           ;Offset 0x43ce
-    palettePtr = Data43ce;
-
-// Label0x49a8:                            ;Offset 0x49a8
-LABEL(Set248ColorPalette, Label0x49a8);
-
-//     call  ApplyPalette                  ;Offset 0x498e
-    ApplyPalette(colorIndex, r.w.di, palettePtr);
-
-//     mov   di, 0010h                     ;count 16
-    r.w.di = 0x10;
-
-//     mov   bx, 0010h                     ;color index 16
-    colorIndex = 0x10;
-
-//     mov   si, offset Data43de           ;Offset 0x43de
-    palettePtr = Data43de;
-
-//     call  ApplyPalette                  ;Offset 0x498e
-    ApplyPalette(colorIndex, r.w.di, palettePtr);
-
-//     mov   di, 00d8h                     ;count 216
-    r.w.di = 0x00d8;
-
-//     mov   bx, 0020h                     ;color index 32
-    colorIndex = 0x20;
-
-//     mov   si, offset Data43ee           ;Offset 0x43ee
-    palettePtr = Data43ee;
-
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
-//     je    ApplyPalette                  ;Offset 0x498e
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
+    if ((VideoDisplayDataArea::Get() & (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0)
     {
-        ApplyPalette(colorIndex, r.w.di, palettePtr);
-        return;
+        ApplyPalette(colorIndex, 216, S3::TrioBase::m_Color216Palette);
     }
-
-// ApplyGreyscalePalette:                  ;Offset 0x49c7
-LABEL(Set248ColorPalette, ApplyGreyscalePalette);
-
-//     call  DecompressPaletteColor        ;Offset 0x49d4
-    DecompressPaletteColor(palettePtr, red, green, blue);
-
-//     call  MakeColorGreyscaleIfNeeded    ;Offset 0x2eed
-    MakeColorGreyscaleIfNeeded(red, green, blue);
-
-//     call  SetPaletteColor               ;Offset 0x47d8
-    SetPaletteColor(colorIndex, red, green, blue);
-
-//     dec   di
-    --r.w.di;
-
-//     jne   ApplyGreyscalePalette         ;Offset 0x49c7
-    if (r.w.di != 0x00)
-        goto ApplyGreyscalePalette;
-
-//     ret
+    else
+    {
+        uint8_t* palettePtr = S3::TrioBase::m_Color216Palette;
+        for (int i = 0; i < 216; ++i)
+        {
+            palettePtr = DecompressPaletteColor(palettePtr, red, green, blue);
+            red = green = blue = ((blue * 36043 + green * 19333 + red * 9830 + 16384) >> 15) & 0xFF;
+            colorIndex = SetPaletteColor(colorIndex, red, green, blue);
+        }
+    }
 }
 
-void SetPalette()
+void SetPalette(Hag::S3::VideoMode_t mode)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    uint8_t* palettePtr = NULL;
-    uint8_t flags = 0;
+    using namespace Hag;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x08
-//     je    PaletteLoadingEnabled         ;Offset 0x4911
-//     ret
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
-        return;
-        
-// PaletteLoadingEnabled:                  ;Offset 0x4911
-//     mov   dx, DACMask                   ;port - 0x3c6
-    r.w.dx = 0x3c6;
-
-//     in    al, dx
-    r.h.al = SYS_ReadPortByte(r.w.dx);
-
-//     inc   al                            ;If DAC mask was 0xff, jump
-    ++r.h.al;
-
-//     je    IsFF                          ;Offset 0x491c
-    if (r.h.al == 0x00)
-        goto IsFF;
-
-//     mov   al, 0ffh
-    r.h.al = 0xFF;
-
-//     out   dx, al                        ;set to 0xff
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-// IsFF:                                   ;Offset 0x491c
-LABEL(SetPalette, IsFF);
-
-//     mov   di, 0040h                     ;count 64
-    r.w.di = 0x0040;
-
-//     xor   bx, bx
-    r.w.bx = 0x0000;
-
-//     mov   al, byte ptr ds:[BDA_DisplayMode];Offset 0449h
-    r.h.al = Hag::System::BDA::DisplayMode::Get();
-
-//     mov   si, offset Data4371           ;Offset 0x4371
-    palettePtr = Data4371;
-
-//     cmp   al, BDA_DM_80x25_Monochrome_Text;0x07
-//     je    ApplyPalette                  ;Offset 0x498e
-    if (r.h.al == 0x07)
+    if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) == 0)
     {
-        ApplyPalette(r.w.bx, r.w.di, palettePtr);
-        return;
+        if (DACMask::Read() != 0xFF)
+            DACMask::Write(0xFF);
+
+        bool paletteNotSet = false;
+        if ((mode == VideoMode::T80x25x2M) ||
+            (mode == VideoMode::G640x350x2M))
+        {
+            ApplyPalette(0, 64, S3::TrioBase::m_Monochrome64Palette);
+        }
+        else if (mode == VideoMode::G320x200x256C)
+        {
+            Set248ColorPalette();
+        }
+        else if (mode > VideoMode::MaxValid)
+        {
+            S3::VESAVideoModeFlags_t flags = 0;
+            S3::TrioBase::GetVideoModeFlags(mode, flags);
+
+            if ((flags & S3::VESAVideoModeFlags::Color) == 0x00)
+            {
+                ApplyPalette(0, 64, S3::TrioBase::m_Monochrome64Palette);
+            }
+            else if ((flags & S3::VESAVideoModeFlags::Palette256) != 0x00)
+            {
+                Set248ColorPalette();
+            }
+            else paletteNotSet = true;
+        }
+        else paletteNotSet = true;
+
+        if (paletteNotSet)
+        {
+            bool paletteSet3 = false;
+            if (mode < VideoMode::G320x200x4C)
+            {
+                EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() & EGAFeatureBitSwitches::AdapterTypeMask;
+
+                paletteSet3 = (((VideoDisplayDataArea::Get() & VideoDisplayDataArea::LineMode400) == 0) &&
+                               (adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced) &&
+                               (adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced_2));
+            }
+            else
+            {
+                paletteSet3 = ((mode != VideoMode::Unknown1) && (mode <= VideoMode::G640x200x16C));
+            }
+
+            if (paletteSet3)
+            {
+                if ((VideoDisplayDataArea::Get() & (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0)
+                {
+                    ApplyPalette(0, 64, S3::TrioBase::m_ColorPalette3);
+                }
+                else
+                {
+                    ApplyPalette(0, 64, S3::TrioBase::m_MonochromePalette3);
+                }
+            }
+            else
+            {
+                if ((VideoDisplayDataArea::Get() & (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0)
+                {
+                    ApplyPalette(0, 64, S3::TrioBase::m_ColorPalette2);
+                }
+                else
+                {
+                    ApplyPalette(0, 64, S3::TrioBase::m_MonochromePalette2);
+                }
+            }
+        }
     }
-
-//     cmp   al, BDA_DM_640x350_Monochrome_Graphics;0x0f
-//     je    ApplyPalette                  ;Offset 0x498e
-    if (r.h.al == 0x0f)
-    {
-        ApplyPalette(r.w.bx, r.w.di, palettePtr);
-        return;
-    }
-
-//     cmp   al, BDA_DM_320x200_256_Color_Graphics;0x13
-//     je    Set248ColorPalette            ;Offset 0x4998
-    if (r.h.al == 0x13)
-    {
-        Set248ColorPalette(r.w.bx);
-        return;
-    }
-
-//     jb    LegacyMode                    ;Offset 0x4948
-    if (r.h.al < 0x13)
-        goto LegacyMode;
-
-//     mov   ah, al
-    r.h.ah = r.h.al;
-
-//     call  GetVideoModeFlags             ;Offset 0x105d
-    Hag::S3::TrioBase::GetVideoModeFlags(r.h.al, flags);
-
-//     xchg  ah, al
-    r.h.al = r.h.ah;
-    r.h.ah = flags;
-
-//     test  ah, 02h
-//     je    ApplyPalette                  ;Offset 0x498e
-    if ((r.h.ah & 0x02) == 0x00)
-    {
-        ApplyPalette(r.w.bx, r.w.di, palettePtr);
-        return;
-    }
-
-//     test  ah, 04h
-//     je    Label0x4981                   ;Offset 0x4981
-    if ((r.h.ah & 0x04) == 0x00)
-        goto Label0x4981;
-
-//     jmp   Set248ColorPalette            ;Offset 0x4998
-    Set248ColorPalette(r.w.bx);
-    return;
-
-// LegacyMode:                             ;Offset 0x4948
-LABEL(SetPalette, LegacyMode);
-
-//     cmp   al, BDA_DM_320x200_4_Color_Graphics1;0x04
-//     jb    Label0x495a                   ;Offset 0x495a
-    if (r.h.al < 0x04)
-        goto Label0x495a;
-
-//     cmp   al, BDA_DM_640x200_BW_Graphics;0x06
-//     jbe   Label0x4972                   ;Offset 0x4972
-    if (r.h.al <= 0x06)
-        goto Label0x4972;
-
-//     cmp   al, BDA_DM_Unknown1           ;0x08
-//     je    Label0x4981                   ;Offset 0x4981
-    if (r.h.al == 0x08)
-        goto Label0x4981;
-        
-//     cmp   al, BDA_DM_640x200_16_Color_Graphics;0xe
-//     jbe   Label0x4972                   ;Offset 0x4972
-    if (r.h.al <= 0x0e)
-        goto Label0x4972;
-
-//     jmp   Label0x4981                   ;Offset 0x4981
-    goto Label0x4981;
-
-// Label0x495a:                            ;Offset 0x495a
-LABEL(SetPalette, Label0x495a);
-
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0489h, 0x10
-//     jne   Label0x4981                   ;Offset 0x4981
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x10) != 0x00)
-        goto Label0x4981;
-
-//     mov   ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0448h
-    r.h.ah = Hag::System::BDA::EGAFeatureBitSwitches::Get();
-
-//     and   ah, 0fh
-    r.h.ah &= 0x0f;
-
-//     cmp   ah, 03h
-//     je    Label0x4981                   ;Offset 0x4981
-    if (r.h.ah == 0x03)
-        goto Label0x4981;
-
-//     cmp   ah, 09h
-//     je    Label0x4981                   ;Offset 0x4981
-    if (r.h.ah == 0x09)
-        goto Label0x4981;
-
-// Label0x4972:                            ;Offset 0x4972
-LABEL(SetPalette, Label0x4972);
-
-//     mov   si, offset Data41e9           ;Offset 0x41e9
-    palettePtr = Data41e9;
-
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
-//     je    ApplyPalette                  ;Offset 0x498e
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
-    {
-        ApplyPalette(r.w.bx, r.w.di, palettePtr);
-        return;
-    }
-
-//     mov   si, offset Data425d           ;Offset 0x425d
-    palettePtr = Data425d;
-
-//     jmp   ApplyPalette                  ;Offset 0x498e
-    ApplyPalette(r.w.bx, r.w.di, palettePtr);
-    return;
-
-// Label0x4981:                            ;Offset 0x4981
-LABEL(SetPalette, Label0x4981);
-
-//     mov   si, offset Data429d           ;Offset 0x429d
-    palettePtr = Data429d;
-
-//     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;Offset 0489h, 0x06
-//     je    ApplyPalette                  ;Offset 0x498e
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x06) == 0x00)
-    {
-        ApplyPalette(r.w.bx, r.w.di, palettePtr);
-        return;
-    }
-
-//     mov   si, offset Data4331           ;Offset 0x4331
-    palettePtr = Data4331;
-
-//     jmp  ApplyPalette
-    ApplyPalette(r.w.bx, r.w.di, palettePtr);
 }
 
-// ;inputs:
-// ;al = ?
-// ;bl = character generator ram bank
-void Func0x227(uint8_t function, uint8_t& ramBank)
+void UploadFont(uint8_t* src, uint8_t* dst, uint16_t characters, uint8_t bytesPerCharacter, uint16_t destWidth)
 {
-//     push ax
-//     cmp  al, 55h
-//     jne  Label0x22f                     ;Offset 0x22f
-//     and  bl, 3fh                        ;if al == 55h, and off the top 2 bits from bl
-    if (function == 0x55)
-        ramBank &= 0x3f;
-// Label0x22f:                             ;Offset 0x22f
-//     pop  ax
-}
-
-// ;inputs:
-// ;cx = number of lines
-// ;bh = bytes per line
-// ;dx bytes to skip in destination
-// ;ds:si = source
-// ;es:di = destination
-// ;preserves ax
-bool CopyRect(uint8_t* src, uint8_t* dst, uint16_t lines, uint8_t bytesPerLine, uint16_t skipCount)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-//     push      ax                        ;store ax
-// LineLoop:
-LABEL(CopyRect, LineLoop);
-
-//     push      cx                        ;Preserve line count
-//     mov       cl, bh                    ;set byte count
-//     xor       ch, ch                    ;zero out top of count
-    r.w.cx = bytesPerLine;
-
-//     rep movsb                           ;move cl bytes
-    while (r.w.cx != 0x0000)
+    for (uint16_t i = 0; i < characters; ++i)
     {
-        *dst = *src;
-        ++src;
-        ++dst;
-        --r.w.cx;
+        memcpy(dst, src, bytesPerCharacter);
+        dst += destWidth;
+        src += bytesPerCharacter;
     }
-
-//     pop       cx                        ;restore line count
-//     add       di, dx                    ;add bytes to skip in destination
-    dst += skipCount;
-
-//     loop      LineLoop                  ;Offset 0xeaa - loop cx times
-    --lines;
-    if (lines != 0x0000)
-        goto LineLoop;
-
-//     or        al, 0ffh                  ;Set flags?
-//     pop       ax                        ;restore ax
-//     ret
-    return true;
 }
 
-uint8_t Patch8x14[] =
+void PatchFont(uint8_t flags)
 {
-    0x1D, 0x00, 0x00, 0x00, 0x00, 0x24, 0x66, 0xFF, 0x66, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x22, 0x00, 0x63, 0x63, 0x63, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x2B, 0x00, 0x00, 0x00, 0x18, 0x18, 0x18, 0xFF, 0x18, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00,
-    0x2D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x4D, 0x00, 0x00, 0xC3, 0xE7, 0xFF, 0xDB, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0x00, 0x00, 0x00,
-    0x54, 0x00, 0x00, 0xFF, 0xDB, 0x99, 0x18, 0x18, 0x18, 0x18, 0x18, 0x3C, 0x00, 0x00, 0x00,
-    0x57, 0x00, 0x00, 0xC3, 0xC3, 0xC3, 0xC3, 0xDB, 0xDB, 0xFF, 0x66, 0x66, 0x00, 0x00, 0x00,
-    0x58, 0x00, 0x00, 0xC3, 0xC3, 0x66, 0x3C, 0x18, 0x3C, 0x66, 0xC3, 0xC3, 0x00, 0x00, 0x00,
-    0x5A, 0x00, 0x00, 0xFF, 0xC3, 0x86, 0x0C, 0x18, 0x30, 0x61, 0xC3, 0xFF, 0x00, 0x00, 0x00,
-    0x5B, 0x00, 0x00, 0x3E, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x3E, 0x00, 0x00, 0x00,
-    0x5D, 0x00, 0x00, 0x3E, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x3E, 0x00, 0x00, 0x00,
-    0x6D, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE6, 0xFF, 0xDB, 0xDB, 0xDB, 0xDB, 0x00, 0x00, 0x00,
-    0x77, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC3, 0xC3, 0xDB, 0xDB, 0xFF, 0x66, 0x00, 0x00, 0x00,
-    0x91, 0x00, 0x00, 0x00, 0x00, 0x6E, 0x3B, 0x1B, 0x7E, 0xD8, 0xDC, 0x77, 0x00, 0x00, 0x00,
-    0x9D, 0x00, 0x00, 0xC3, 0x66, 0x3C, 0x18, 0x7E, 0x18, 0x7E, 0x18, 0x18, 0x00, 0x00, 0x00,
-    0x9E, 0x00, 0xFC, 0x66, 0x66, 0x7C, 0x62, 0x66, 0x6F, 0x66, 0x66, 0xF3, 0x00, 0x00, 0x00,
-    0xF1, 0x00, 0x00, 0x18, 0x18, 0x18, 0xFF, 0x18, 0x18, 0x18, 0x00, 0xFF, 0x00, 0x00, 0x00,
-    0xF6, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00,
-    0x00, 0x00
-};
+    using namespace Hag;
 
-uint8_t Patch8x16[] =
-{
-    0x1D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x24, 0x66, 0xFF, 0x66, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x22, 0x00, 0x63, 0x63, 0x63, 0x22, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x2B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x18, 0xFF, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x2D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x4D, 0x00, 0x00, 0xC3, 0xE7, 0xFF, 0xDB, 0xDB, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0x00, 0x00, 0x00, 0x00,
-    0x54, 0x00, 0x00, 0xFF, 0xDB, 0x99, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x3C, 0x00, 0x00, 0x00, 0x00,
-    0x57, 0x00, 0x00, 0xC3, 0xC3, 0xC3, 0xC3, 0xC3, 0xDB, 0xDB, 0xFF, 0x66, 0x66, 0x00, 0x00, 0x00, 0x00,
-    0x5A, 0x00, 0x00, 0xFF, 0xC3, 0x83, 0x06, 0x0C, 0x18, 0x30, 0x61, 0xC3, 0xFF, 0x00, 0x00, 0x00, 0x00,
-    0x5B, 0x00, 0x00, 0x3E, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x3E, 0x00, 0x00, 0x00, 0x00,
-    0x5D, 0x00, 0x00, 0x3E, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x3E, 0x00, 0x00, 0x00, 0x00,
-    0x6D, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE6, 0xFF, 0xDB, 0xDB, 0xDB, 0xDB, 0xDB, 0x00, 0x00, 0x00, 0x00,
-    0x77, 0x00, 0x00, 0x00, 0x00, 0x00, 0xC3, 0xC3, 0xC3, 0xDB, 0xDB, 0xFF, 0x66, 0x00, 0x00, 0x00, 0x00,
-    0x91, 0x00, 0x00, 0x00, 0x00, 0x00, 0x6E, 0x3B, 0x1B, 0x7E, 0xD8, 0xDC, 0x77, 0x00, 0x00, 0x00, 0x00,
-    0x9D, 0x00, 0x00, 0xC3, 0x66, 0x3C, 0x18, 0x7E, 0x18, 0x7E, 0x18, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00,
-    0x9E, 0x00, 0xFC, 0x66, 0x66, 0x7C, 0x62, 0x66, 0x6F, 0x66, 0x66, 0x66, 0xF3, 0x00, 0x00, 0x00, 0x00,
-    0xF1, 0x00, 0x00, 0x00, 0x00, 0x18, 0x18, 0xFF, 0x18, 0x18, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00,
-    0xF6, 0x00, 0x00, 0x00, 0x00, 0x18, 0x18, 0x00, 0xFF, 0x00, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00
-};
-
-// ;inputs:
-// ;bl = flags 0x80 = 8 lines, 0x40 = 7 lines
-// ;
-void PatchCharacterSet(uint8_t flags)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    FARPointer dst(0xA000, 0x0000);
-    uint8_t* src = NULL;
-
-//     push      ax
-//     push      cx
-//     push      di
-//     push      si
-//     push      es
-//     mov       cx, 0a000h
-//     mov       es, cx                    ;es points to video segment
-//     test      bl, 0c0h                  ;bl & 0c0h == 0 -> exit
-//     je        Exit                      ;Offset 0x4797
-    if ((flags & 0xC0) == 0x00)
-        return;
-        
-//     mov       cx, 0007h                 ;8x14
-    r.w.cx = 0x0007;
-
-//     mov       si, offset Patch8x14      ;Offset 0x6d20
-    src = Patch8x14;
-
-//     test      bl, 80h                   ;bit 7 set -> Start copy of 8x14 patch
-//     jne       NextCharacter             ;Offset 0x477f
-    if ((r.h.bl & 0x80) != 0x00)
-        goto NextCharacter;
-
-//     mov       si, offset Patch8x16      ;Offset 0x7e30
-    src = Patch8x16;
-
-//     mov       cl, 08h                   ;8x16
-    r.h.cl = 0x08;
-
-// NextCharacter:                          ;Offset 0x477f
-LABEL(PatchCharacterSet, NextCharacter);
-
-//     mov       ah, byte ptr cs:[si]      ;read byte
-    r.h.ah = *src;
-
-//     inc       si                        ;point to next one
-    ++src;
-
-//     or        ah, ah                    ;is ah zero? -> Exit
-//     je        Exit                      ;Offset 0x4797
-    if (r.h.ah == 0x00)
-        return;
-
-//     xor       al, al                    ;empty al
-    r.h.al = 0x00;
-
-//     shr       ax, 03h                   ;ax = ax / 8
-    r.w.ax >>= 3;
-
-//     mov       di, ax                    ;new destination
-    r.w.di = r.w.ax;
-
-//     push      cx                        ;store count
-//     cli                                 ;clear interrupts
-    SYS_ClearInterrupts();
-
-//     rep movsw es:[di], cs:[si]          ;move cx words
-    dst.Offset = r.w.di;
-    uint8_t* dstPtr = dst.ToPointer<uint8_t>(r.w.cx << 1);
-    for (int i = 0; i < r.w.cx; ++i)
+    //0x40 = 8x14, 0x80 = 8x16, 0x00 = no patch.
+    if ((flags & 0xC0) != 0x00)
     {
-        *dstPtr = *src;
-        ++dstPtr;
-        ++src;
-        *dstPtr = *src;
-        ++dstPtr;
-        ++src;
+        bool is8x16 = (flags & 0x80) == 0x00;
+        uint16_t count = is8x16 ? 16 : 14;
+        uint8_t* src = is8x16 ? S3::TrioBase::m_CharacterPatch8x16 : S3::TrioBase::m_CharacterPatch8x14;
+
+        FARPointer dst(0xA000, 0x0000);
+
+        while (true)
+        {
+            dst.Offset = uint16_t(*src) << 5;
+            ++src;
+
+            if (dst.Offset == 0)
+                break;
+
+            uint8_t* dstPtr = dst.ToPointer<uint8_t>(count);
+
+            SYS_ClearInterrupts();
+            memcpy(dstPtr, src, count);
+            SYS_RestoreInterrupts();
+            src += count;
+        }
     }
-//     sti                                 ;restore interrupts
-    SYS_RestoreInterrupts();
-//     pop       cx                        ;restore count
-//     jmp       NextCharacter             ;Offset 0x477f
-    goto NextCharacter;
-// Exit:                                   ;Offset 0x4797
-//     pop       es
-//     pop       si
-//     pop       di
-//     pop       cx
-//     pop       ax
-//     ret       
 }
 
-void EnablePaletteBasedVideo()
+void EnablePaletteBasedVideo(Hag::VGA::Register_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
+    using namespace Hag::VGA;
 
-//     push      dx                        ;preserve dx
-//     mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0463h = port - 0x3?4
-    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
-
-//     add       dl, 06h                   ;port - 0x3?A - Input Status 1
-    r.h.dl += 0x06;
-
-//     in        al, dx                    ;
-    r.h.al = SYS_ReadPortByte(r.w.dx);
-
-//     mov       dx, 03c0h                 ;port 0x3c0 - Attribute Controller Index
-    r.w.dx = 0x3c0;
-
-//     mov       al, 20h                   ;Enable Video Display = 1, Display video using the palette registers enabled (normal display operation).
-    r.h.al = 0x20;
-
-//     out       dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-//     pop       dx                        ;restore dx
-//     ret       
+    Register_t inputStatus = crtcPort + (Register::InputStatus1D - Register::CRTControllerIndexD);
+    AttributeControllerIndex::ResetIndex(inputStatus);
+    AttributeControllerIndex::Write(AttributeControllerIndex::EnableVideoDisplay);
 }
 
-uint16_t RamBankOffset[] =
+void SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank)
 {
-    0x0000, //(0)
-    0x4000, //(1)
-    0x8000, //(2)
-    0xC000, //(3)
-    0x2000, //(4)
-    0x6000, //(5)
-    0xA000, //(6)
-    0xE000  //(7)
-};
+    using namespace Hag;
+    using namespace Hag::VGA;
 
-// ;inputs:
-// ;es:si pointer to character font
-// ;dx = offset into ?
-// ;cx = Number of characters
-// ;bh = character height
-// ;bl = character generator ram bank
-// ;outputs:
-// ;nothing. all registers preserved
-void SetTextFontAndAddressing(uint8_t* font, uint16_t someOffset, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
+    static uint16_t RamBankOffset[] =
+    {
+        0x0000, //(0)
+        0x4000, //(1)
+        0x8000, //(2)
+        0xC000, //(3)
+        0x2000, //(4)
+        0x6000, //(5)
+        0xA000, //(6)
+        0xE000  //(7)
+    };
+
     FARPointer dest(0xA000, 0x0000);
-    r.w.dx = someOffset;
-    r.w.cx = numCharacters;
-    r.h.bh = charHeight;
-    r.h.bl = ramBank;
 
-//     push      ax
-//     push      bx
-//     push      cx
-//     push      dx
-//     push      di
-//     push      si
-//     push      ds
-//     push      es
-//     call      PrepareAttributeController;Offset 0x47ae
     PrepareAttributeController();
     
-//     push      dx                        ;Store dx //Some offset
-//     mov       dx, SequenceIndex         ;port - 0x3c4 - Sequence Index register
-    r.w.dx = 0x3c4;
+    Sequencer::EnableWritePlane::Write(Sequencer::EnableWritePlane::Plane2);
+    Sequencer::MemoryModeControl::Write(Sequencer::MemoryModeControl::Unknown |
+                                        Sequencer::MemoryModeControl::ExtendedMemoryAddress |
+                                        Sequencer::MemoryModeControl::SequentialAddressingMode);
 
-//     mov       ax, 0402h                 ;SR2 - Enable Write Plane Register
-    r.w.ax = 0x0402;
+    GraphicsController::ReadPlaneSelect::Write(GraphicsController::ReadPlaneSelect::Plane2);
+    GraphicsController::GraphicsControllerMode::Write(GraphicsController::GraphicsControllerMode::Mode0);
+    GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::A0000HtoAFFFFH);
 
-//     out       dx, ax                    ;bit 2 = 1 - Enable plane 3 (counting from 1)
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+    dest.Offset = RamBankOffset[ramBank & 0x07] + (startCharacter << 5);
 
-//     mov       ax, 0704h                 ;SR4 - Memory Mode Control register
-    r.w.ax = 0x0704;
+    UploadFont(font, dest.ToPointer<uint8_t>(0x2000), numCharacters, charHeight, 32);
+    PatchFont(ramBank);
 
-//     out       dx, ax                    ;bit 0 = 1 - Unknown, bit 1 = 1 - 256kb memory access, bit 2 = 1 - Sequential Addressing Mode
-    SYS_WritePortShort(r.w.dx, r.w.ax);
+    Sequencer::EnableWritePlane::Write(Sequencer::EnableWritePlane::Plane1 |
+                                       Sequencer::EnableWritePlane::Plane2);
+    Sequencer::MemoryModeControl::Write(Sequencer::MemoryModeControl::Unknown |
+                                        Sequencer::MemoryModeControl::ExtendedMemoryAddress);
 
-//     mov       dx, GraphicsControllerIndex;port - 0x3ce - Graphics Controller Index register
-    r.w.dx = 0x3ce;
+    GraphicsController::ReadPlaneSelect::Write(GraphicsController::ReadPlaneSelect::None);
 
-//     mov       ax, 0204h                 ;GR4 - Read Plane Select Register
-    r.w.ax = 0x0204;
+    GraphicsController::GraphicsControllerMode::Write(GraphicsController::GraphicsControllerMode::OddEvenAddressing);
 
-//     out       dx, ax                    ;bit 1 = 1 - Enable plane 2 (counting from 1) 
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov       ax, 0005h                 ;GR5 - Graphics Controller Mode register
-    r.w.ax = 0x0005;
-
-//     out       dx, ax                    ;bit 1-0 = 00 - Write Mode 0. Each of four video memory planes is written with the CPU data
-//                                         ;               rotated by the number of counts in the rotate register. If the Set/Reset
-//                                         ;               register is enabled for any of four planes, the corresponding plane is written
-//                                         ;               with the data stored in the set/reset register. Raster operations and bit mask 
-//                                         ;               registers are effective
-//                                         ;bit 3 = 0 - The CPU reads data from the video memory planes. The plane is selected by the
-//                                         ;            Read Plane Select register. This is called read mode 0
-//                                         ;bit 4 = 0 - Standard addressing.
-//                                         ;bit 5 = 0 - Normal shift mode
-//                                         ;bit 6 = 0 - Bit 5 in this register controls operation ofthe video shift registers
-//                                         ;
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov       ax, 0406h                 ;GR6 - Memory Map Mode Control register
-    r.w.ax = 0x0406;
-
-//     out       dx, ax                    ;bit 0 = 0 - Text mode display addressing selected
-//                                         ;bit 1 = 0 - AO address bit unchanged
-//                                         ;bit 3-2 = 01 - AOOOOH to AFFFFH (64 KBytes)
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     pop       dx                        ;Restore dx
-    r.w.dx = someOffset;
-
-//     mov       ax, es
-//     mov       ds, ax
-//     mov       ax, 0a000h                ;Video memory
-//     mov       es, ax
-//     push      bx                        ;store bh = character height, bl = character generator ram bank
-    uint16_t bxsave = r.w.bx;
-
-//     and       bl, 07h                   ;0x00           ;0x01           ;0x02           ;0x03           ;0x04           ;0x05           ;0x06           ;0x07
-    r.h.bl &= 0x07;
-
-//     ror       bl, 01h                   ;0x00 - C = 0   ;0x80 - C = 1   ;0x01 - C = 0   ;0x81 - C = 1   ;0x02 - C = 0   ;0x82 - C = 1   ;0x03 - C = 0   ;0x83 - C = 1
-//     ror       bl, 01h                   ;0x00 - C = 0   ;0x40 - C = 0   ;0x80 - C = 1   ;0xC0 - C = 1   ;0x01 - C = 0   ;0x41 - C = 0   ;0x81 - C = 1   ;0xC1 - C = 1
-//     rcr       bl, 01h                   ;0x00 - C = 0   ;0x20 - C = 0   ;0x40 - C = 0   ;0x60 - C = 0   ;0x00 - C = 1   ;0x20 - C = 1   ;0xD0 - C = 1   ;0xE0 - C = 1
-//     jae       NoCarry                   ;Offset 0x4701 - same as jnc = jump no carry
-//     add       bl, 10h                   ;0x10           ;0x30           ;0x50           ;0x70           ;               ;               ;               ;
-// NoCarry:                                ;Offset 0x4701
-//     shl       bl, 01h                   ;0x20           ;0x60           ;0xA0           ;0xE0           ;0x00           ;0x40           ;0x80           ;0xC0
-//     mov       ah, bl
-//     mov       al, 00h
-//     mov       di, ax                    ;di = 0x0000(4), 0x2000(0), 0x4000(5), 0x6000(1), 0x8000(6), 0xA000(2), 0xC000(7), 0xE000(3)
-    r.w.di = RamBankOffset[r.h.bl]; //Yeah, I'm not doing that funky math up there. Also, my math was apparently wrong. darn ror's.
-
-//     or        dx, dx
-//     je        NoOffset                  ;Offset 0x4714
-    if (r.w.dx != 0x0000)
-    {
-//     mov       ax, 20h
-//     mul       dx
-//     add       di, ax
-    r.w.di += r.w.dx << 5;
-    }
-    
-// NoOffset:                               ;Offset 0x4714
-    dest.Offset = r.w.di;
-
-//     mov       dx, 20h
-    r.w.dx = 0x0020;
-
-//     sub       dl, bh                    ;32 - character height
-    r.h.dl -= r.h.bh;
-
-//     jcxz      CopyDone                  ;Offset 0x472c - if no characters, bail
-    if (r.w.cx != 0x0000)
-    {
-//     call      CopyRect                  ;Offset 0xea9
-//     jne       CopyDone                  ;Offset 0x472c
-        if (!CopyRect(font, dest.ToPointer<uint8_t>(0x2000), r.w.cx, r.h.bh, r.w.dx))//Always true.
-        {
-// Label0x4720:                            ;Offset 0x4720
-//     push      cx
-//     mov       cl, bh
-//     mov       ch, 0
-//     rep movsb
-//     add       di, dx
-//     pop       cx
-//     loop      Label0x4720               ;Offset 0x4720
-        }
-// CopyDone:                               ;Offset 0x472c
-    }
-
-//     pop       bx                        ;restore bh = character height, bl = character generator ram bank
-    r.w.bx = bxsave;
-
-//     pop       es                        ;
-//     pop       ds                        ;
-//     call      PatchCharacterSet         ;Offset 0x4760
-    PatchCharacterSet(r.h.bl);
-
-//     mov       dx, SequenceIndex         ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     mov       ax, 0302h                 ;SR2 - Enable Write Plane register
-//                                         ;bits 3-0 = 0011 - Enable writing to plane 0 and 1
-    r.w.ax = 0x0302;
-    
-//     out       dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-//     mov       ax, 0304h                 ;SR4 - Memory Mode Control register
-//                                         ;bit 0 = 1 - Unknown
-//                                         ;bit 1 = 1 - Allows complete memory access to 256KiB
-//                                         ;bit 2 = 0 - Sequential Addressing Mode.
-//                                         ;            Enables the odd/even addressing mode.
-//                                         ;            Even addresses access planes 0 and 2.
-//                                         ;            Odd addresses access planes 1 and 3.
-    r.w.ax = 0x0304;
-
-//     out       dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov       dx, GraphicsControllerIndex;port - 0x3ce
-    r.w.dx = 0x3ce;
-
-//     mov       ax, 0004h                 ;GR4 - Read Plane Select Register
-//                                         ;bits 1-0 = 00 - Plane 0
-    r.w.ax = 0x0004;
-
-//     out       dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov       ax, 1005h                 ;GR5 - Graphics Controller Mode register
-//                                         ;bit 4 = 1 - Odd/Even addressing mode. Even CPU addresses access plane 0 and 2,
-//                                         ;            while odd CPU addresses access plane 1 and 3. This option is useful
-//                                         ;            for emulating the CGA compatible mode. The value of this bit should be
-//                                         ;            the inverted value programmed in bit 2 of the Sequencer Memory Mode register
-//                                         ;            SR4. This bit affects reading of display memory by the CPU.
-    r.w.ax = 0x1005;
-
-//     out       dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov       ax, 0a06h                 ;GR6 - Memory Map Mode Control register
-//                                         ;bit 0 = 0 - Text mode display addressing selected
-//                                         ;bit 1 = 1 - Chain odd / even planes
-//                                         ;bits 3-2 = 10 - B0000 - B7FFF (32KiB)
-    r.w.ax = 0x0a06;
-
-//     cmp       word ptr ds:[BDA_VideoBaseIOPort], 03b4h;Offset 0463h
-//     je        Label0x4755               ;Offset 0x4755
     if (Hag::System::BDA::VideoBaseIOPort::Get() != 0x03b4)
     {
-
-//     mov       ah, 0eh                   ;GR6 - Memory Map Mode Control register
-//                                         ;bit 0 = 0 - Text mode display addressing selected
-//                                         ;bit 1 = 1 - Chain odd / even planes
-//                                         ;bits 3-2 = 11 - B8000 - BFFFF (32KiB)
-        r.h.ah = 0x0e;
-// Label0x4755:                            ;Offset 0x4755
+        GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes |
+                                                        GraphicsController::MemoryMapModeControl::B8000HtoBFFFFH);
+    }
+    else
+    {
+        GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes |
+                                                        GraphicsController::MemoryMapModeControl::B0000HtoB7FFFH);
     }
 
-//     out       dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     call      EnablePaletteBasedVideo   ;Offset 0x479d
-    EnablePaletteBasedVideo();
-    
-//     pop       si
-//     pop       di
-//     pop       dx
-//     pop       cx
-//     pop       bx
-//     pop       ax
-//     ret
+    //TODO: Remove this BDA reference.
+    EnablePaletteBasedVideo(Hag::System::BDA::VideoBaseIOPort::Get());
 }
 
-// ;inputs:
-// ;bh = point height of character
-// ;
 void ConfigureCursorPropertiesAndVerticalDisplayEnd(uint8_t characterPointHeight)
 {
     REGPACK r;
@@ -2949,457 +1592,47 @@ LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, Not200Height);
 //     ret
 }
 
-// ;inputs:
-// ;bl = character generator ram bank
-void Set8x14TextFontAndAddressing(uint8_t ramBank)
+void SetFont()
 {
-//     mov  si, offset Characters8x14      ;Offset 0x5f20
-//     mov  ax, cs
-//     mov  es, ax
-//     xor  dx, dx
-//     mov  cx, 0100h
-//     mov  bh, 0eh
-//     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
-    SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x14, 0x0000, 0x0100, 0x0e, ramBank);
-}
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-// ;inputs:
-// ;bl = character generator ram bank
-void Set8x8TextFontAndAddressing(uint8_t ramBank)
-{
-//     mov  si, offset LowerCharacters8x8  ;Offset 0x5720
-//     mov  ax, cs
-//     mov  es, ax
-//     xor  dx, dx
-//     mov  cx, 100h
-//     mov  bh, 08h
-//     jmp  SetTextFontAndAddressing       ;Offset 0x46c2
-    SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x8, 0x0000, 0x0100, 0x08, ramBank);
-}
-
-// ;inputs:
-// ;bl = character generator ram bank
-void SelectCharacterFont(uint8_t ramBank)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-
-//     mov  al, 03h                        ;SR3 - Character Font Select register
-    r.h.al = 0x03;
-
-//     mov  ah, bl
-    r.h.ah = ramBank;
-
-//     mov  dx, SequenceIndex              ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-//     ret  
-}
-
-
-// ;inputs:
-// ;bl = character generator ram bank
-void Set8x16TextFontAndAddressing(uint8_t ramBank)
-{
-    // mov  si, offset Characters8x16      ;Offset 0x6e30
-    // mov  ax, cs
-    // mov  es, ax
-    // xor  dx, dx
-    // mov  cx, 100h
-    // mov  bh, 10h
-    // jmp  SetTextFontAndAddressing       ;Offset 0x46c2
-    SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x16, 0x0000, 0x0100, 0x10, ramBank);
-}
-
-void SetTextFontAddressingAndCursor(uint8_t* font, uint16_t someOffset, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank)
-{
-    // call SetTextFontAndAddressing       ;Offset 0x46c2
-    SetTextFontAndAddressing(font, someOffset, numCharacters, charHeight, ramBank);
-
-    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
-    ConfigureCursorPropertiesAndVerticalDisplayEnd(charHeight);
-
-    // nop
-}
-
-void Set8x14TextFontAddressingAndCursor(uint8_t ramBank)
- {
-    // mov  si, offset Characters8x14      ;Offset 0x5f20
-    // mov  ax, cs
-    // mov  es, ax
-    // xor  dx, dx
-    // mov  cx, 100h
-    // mov  bh, 0eh
-    // call SetTextFontAndAddressing       ;Offset 0x46c2
-    SetTextFontAddressingAndCursor(Hag::S3::TrioBase::m_Characters8x14, 0x0000, 0x0100, 0x0E, ramBank);
-    
-    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
-    ConfigureCursorPropertiesAndVerticalDisplayEnd(0x0E);
-
-    // nop
-}
-
-void Set8x8TextFontAddressingAndCursor(uint8_t ramBank)
- {
-    // mov  si, offset LowerCharacters8x8  ;Offset 0x5720
-    // mov  ax, cs
-    // mov  es, ax
-    // xor  dx, dx
-    // mov  cx, 100h
-    // mov  bh, 08h
-    // call SetTextFontAndAddressing       ;Offset 0x46c2
-    SetTextFontAddressingAndCursor(Hag::S3::TrioBase::m_Characters8x8, 0x0000, 0x0100, 0x08, ramBank);
-
-    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
-    ConfigureCursorPropertiesAndVerticalDisplayEnd(0x08);
-
-    // nop
-}
-
-void Set8x16TextFontAddressingAndCursor(uint8_t ramBank)
-{
-    // mov  si, offset Characters8x16      ;Offset 0x6e30
-    // mov  ax, cs
-    // mov  es, ax
-    // xor  dx, dx
-    // mov  cx, 100h
-    // mov  bh, 10h
-    // call SetTextFontAndAddressing       ;Offset 0x46c2
-    SetTextFontAddressingAndCursor(Hag::S3::TrioBase::m_Characters8x16, 0x0000, 0x0100, 0x10, ramBank);
-
-    // jmp  ConfigureCursorPropertiesAndVerticalDisplayEnd;Offset 0x3010
-    ConfigureCursorPropertiesAndVerticalDisplayEnd(0x10);
-
-    // nop  
-}
-
-uint8_t NumberOfRows[] = { 0x0D, 0x18, 0x2A };
-
-
-// ;inputs:
-// ;bl = row specifier (00 = user set)
-// ;dl = row count index = 01 = 14, 02 = 25, 03 = 43 or if bl == 00, any number (that's valid)
-// ;cx = character height
-void SetUserFont(uint8_t* font, uint8_t rowSpecifier, uint8_t rowCountIndex, uint16_t charHeight)
-{
-    printf("SetUserFont - Not supported!\n"); //Let's hope the mode set doesn't use this.
-
-//     cli
-//     mov  word ptr es:[010ch], si        ;Offset 0x10c - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
-//     mov  word ptr es:[010eh], di        ;Offset 0x10e
-//     sti
-//     cmp  bl, 04h
-//     jb   Label0x313f                    ;Offset 0x313f
-//     mov  bl, 02h
-// Label0x313f:                            ;Offset 0x313f
-//     dec  dl
-//     or   bl, bl
-//     je   Label0x314e                    ;Offset 0x314e
-//     dec  bl
-//     mov  bh, 00h
-//     mov  dl, byte ptr cs:[bx + offset NumberOfRows]
-// Label0x314e:                            ;Offset 0x314e
-//     mov  word ptr ds:[BDA_PointHeightOfCharacterMatrix], cx;Offset 0x485
-//     mov  byte ptr ds:[BDA_RowsOnScreen], dl;Offset 0x484
-//     mov  byte ptr [bp + 10h], dl
-//     ret
-}
-
-void Func0x3125(uint8_t* font, uint8_t rowSpecifier, uint8_t rowCountIndex, uint16_t charHeight)
-{
-//     mov  di, es
-//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
-    SetUserFont(font, rowSpecifier, rowCountIndex, charHeight);
-}
-
-void SetUserUpper8x8Font()
-{
-    printf("SetUserUpper8x8Font - Not supported!\n"); //Let's hope the mode set doesn't use this.
-//     mov  di, es
-//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
-//     cli
-//     mov  word ptr es:[7ch], si          ;Offset 0x7c - SYSTEM DATA - 8x8 GRAPHICS FONT
-//     mov  word ptr es:[7eh], di          ;Offset 0x7e
-//     sti
-//     ret
-}
-
-void Set8x14Font(uint8_t rowSpecifier, uint8_t rowCountIndex)
-{
-//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
-//     mov  si, offset Characters8x14      ;Offset 0x5f20
-//     mov  di, cs
-//     mov  cx, 0eh
-//     jmp  SetUserFont                    ;Offset 0x312c
-    SetUserFont(Hag::S3::TrioBase::m_Characters8x14, rowSpecifier, rowCountIndex, 0x0E);
-}
-
-void Set8x8Font(uint8_t rowSpecifier, uint8_t rowCountIndex)
-{
-//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
-//     mov  si, offset LowerCharacters8x8  ;Offset 0x5720
-//     mov  di, cs
-//     mov  cx, 08h
-//     jmp  SetUserFont                    ;Offset 0x312c
-    SetUserFont(Hag::S3::TrioBase::m_Characters8x8, rowSpecifier, rowCountIndex, 0x08);
-}
-
-void Set8x16Font(uint8_t rowSpecifier, uint8_t rowCountIndex)
-{
-//     mov  es, word ptr cs:[Data1488]     ;Offset 0x1488
-//     mov  si, offset Characters8x16      ;Offset 0x6e30
-//     mov  di, cs
-//     mov  cx, 10h
-//     jmp  SetUserFont                    ;Offset 0x312c
-    SetUserFont(Hag::S3::TrioBase::m_Characters8x16, rowSpecifier, rowCountIndex, 0x10);
-}
-
-// ;inputs:
-// ;bh = font index
-// ;     00 = Upper 8x8 graphics font
-// ;     01 = Current character font
-// ;     02 = 8x14 font
-// ;     03 = 8x8 character font
-// ;     04 = 8x8 graphics font
-// ;     05 = 8x14 font patch data
-// ;     06 = 8x16 font
-// ;     07 = 8x16 font patch data
-
-void GetFontInfo()
-{
-    printf("GetFontInfo - Not supported!\n"); //Let's hope the mode set doesn't use this.
-//     mov es, word ptr cs:[Data1488]      ;Offset 0x1488
-//     or  bh, bh
-//     jne NotUpperFont                    ;Offset 0x3176
-//     les bx, es:[7ch]                    ;Offset 0x7c - SYSTEM DATA - 8x8 GRAPHICS FONT
-//     jmp ReturnFontInfo                  ;Offset 0x3197
-// NotUpperFont:                           ;Offset 0x3176
-//     dec bh
-//     jne NotCurrentFont                  ;Offset 0x3181
-//     les bx, es:[10ch]                   ;Offset 0x10c - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
-//     jmp ReturnFontInfo                  ;Offset 0x3197
-// NotCurrentFont:                         ;Offset 0x3181
-//     dec bh
-//     cmp bh, 05h
-//     ja  Exit                            ;Offset 0x31ae
-//     mov ax, cs
-//     mov es, ax
-//     mov bl, bh
-//     mov bh, 00h
-//     add bx, bx
-//     mov bx, word ptr cs:[bx + offset Data315a];Offset 0x315a
-// ReturnFontInfo:                         ;Offset 0x3197
-//     mov word ptr ss:[bp + 04h], bx
-//     mov word ptr ss:[bp + 02h], es
-//     mov ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-//     mov word ptr ss:[bp + 0ch], ax
-//     mov al, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
-//     mov byte ptr ss:[bp + 0ah], al
-//     mov word ptr ss:[bp + 10h], 0000h
-// Exit:                                   ;Offset 0x31ae
-//     ret
-}
-
-// ;inputs:
-// ;al = function + flag bit 4 = configure cursor
-// ;bl = character generator ram bank
-void TextModeCharFunctionsInternal(uint8_t function, 
-    uint8_t* font, uint16_t someOffset, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank, uint8_t rowSpecifier, uint8_t rowCountIndex)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    r.h.al = function;
-    r.h.bl = ramBank;
-//     call Func0x227                      ;Offset 0x227 ands the top 2 bits off bl if al == 55
-    Func0x227(r.h.al, r.h.bl);
-
-//     mov  ah, al                         ;ah is now function
-    r.h.ah = r.h.al;
-
-//     and  al, 0fh                        ;keep bits 3-0
-    r.h.al &= 0xf;
-
-//     and  ah, 30h                        ;keep bits 5-4
-    r.h.ah &= 0x30;
-
-//     shr  ah, 01h                        ;now 4-3 
-    r.h.ah >>= 1;
-//     or   al, ah                         ;mush together. Effectively, bit 4 and 3 overlap. If either is set, or neither is set.
-    r.h.al |= r.h.ah;
-
-//     cmp  al, 19h                        ;if 25 or over, leave
-//     jae  EmptyFunction9                 ;Offset 0x2f8e
-    if (r.h.al >= 0x19)
-        return;
-
-//     mov  ah, 00h
-    r.h.ah = 0x00;
-//     mov  di, ax
-//     shl  di, 01h
-//     jmp  word ptr cs:[di + TextModeCharCallTable];Offset 0x2f39
-    switch(r.h.al)
+    if (PointHeightOfCharacterMatrix::Get() == 14)
     {
-    case 0:
-        SetTextFontAndAddressing(font, someOffset, numCharacters, charHeight, ramBank);
-        break;
-    case 1:
-        Set8x14TextFontAndAddressing(ramBank);
-        break;
-    case 2:
-        Set8x8TextFontAndAddressing(ramBank);
-        break;
-    case 3:
-        SelectCharacterFont(ramBank);
-        break;
-    case 4:
-        Set8x16TextFontAndAddressing(ramBank);
-        break;
-    case 8:
-        SetTextFontAddressingAndCursor(font, someOffset, numCharacters, charHeight, ramBank);
-        break;
-    case 9:
-        Set8x14TextFontAddressingAndCursor(ramBank);
-        break;
-    case 10:
-        Set8x8TextFontAddressingAndCursor(ramBank);
-        break;
-    case 12:
-        Set8x16TextFontAddressingAndCursor(ramBank);
-        break;
-    case 16:
-        SetUserUpper8x8Font();
-        break;
-    case 17:
-        Func0x3125(font, rowSpecifier, rowCountIndex, charHeight);
-        break;
-    case 18:
-        Set8x14Font(rowSpecifier, rowCountIndex);
-        break;
-    case 19:
-        Set8x8Font(rowSpecifier, rowCountIndex);
-        break;
-    case 20:
-        Set8x16Font(rowSpecifier, rowCountIndex);
-        break;
-    case 24:
-        GetFontInfo();
-        break;
-    default:
-        break;
+        SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x14, 0, 256, 14, DisplayMode::Get() == VideoMode::T80x25x2M ? 0x80 : 0);
+    }
+    else if (PointHeightOfCharacterMatrix::Get() == 8)
+    {
+        SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x8, 0, 256, 8, 0);
+    }
+    else
+    {
+        SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x16, 0, 256, 16, 0x40);
     }
 }
 
-void SetFont()
+bool CheckValidInCurrentMode(uint8_t* ptr, uint16_t offset)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-//     xor   bl, bl
-    r.h.bl = 0x00;
-
-//     mov   al, 01h
-    r.h.al = 0x01;
-
-//     cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 0eh;Offset 0x485 8x14
-//     je    Is8x14                        ;Offset 0x1c80
-    if (Hag::System::BDA::PointHeightOfCharacterMatrix::Get() == 0x0e)
-        goto Is8x14;
-
-//     mov   al, 02h
-    r.h.al = 0x02;
-
-//     cmp   word ptr ds:[BDA_PointHeightOfCharacterMatrix], 08h;Offset 0x485 8x8
-//     je    Label0x1c8a                   ;Offset 0x1c8a
-    if (Hag::System::BDA::PointHeightOfCharacterMatrix::Get() == 0x08)
-        goto Label0x1c8a;
-
-//     mov   al, 04h
-    r.h.al = 0x04;
-
-//     or    bl, 40h
-    r.h.bl |= 0x40;
-
-//     jmp   Label0x1c8a                   ;Offset 0x1c8a
-    goto Label0x1c8a;
-
-// Is8x14:                                 ;Offset 0x1c80
-LABEL(SetFont, Is8x14);
-
-//     cmp   byte ptr ds:[BDA_DisplayMode], 07h;Offset 0x449
-//     jne   Label0x1c8a                   ;Offset 0x1c8a
-    if (Hag::System::BDA::DisplayMode::Get() != 0x07)
-        goto Label0x1c8a;
-
-//     or    bl, 80h
-    r.h.bl |= 0x80;
-
-// Label0x1c8a:                            ;Offset 0x1c8a
-LABEL(SetFont, Label0x1c8a);
-
-//     call  TextModeCharFunctionsInternal ;Offset 0x2f71
-    TextModeCharFunctionsInternal(r.h.al, NULL, 0x0000, 0x0000, 0x00, r.h.bl, 0x00, 0x00);//the 0 arguments aren't used.
-
-//     ret   
-}
-
-// ;inputs:
-// ;ax = offset in to es:bx table
-bool CheckCurrentModeExists(uint8_t* ptr, uint16_t offset)
-{
-//     push bx
-//     add  bx, ax
+    using namespace Hag::System::BDA;
     ptr += offset;
 
-//     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    uint8_t displayMode = Hag::System::BDA::DisplayMode::Get();
-    uint8_t mode = 0;
-// FindMode:                               ;Offset 0x1bd7
+    uint8_t displayMode = DisplayMode::Get();
     do
     {
-//     mov  ah, byte ptr es:[bx]
-        mode = *ptr;
-
-//     inc  bx
-        ++ptr;
-//     cmp  ah, 0ffh
-//     je   NotFound                       ;Offset 0x1be6
-        if(mode == 0xFF)
+        if(*ptr == 0xFF)
             return false;
 
-//     DB 03Ah, 0C4h                       ;cmp  ah, al - masm encoding difference
-//     jne  FindMode                       ;Offset 0x1bd7
-        if (mode == displayMode)
+        if (*ptr == displayMode)
             return true;
 
+        ++ptr;
     } while (true);
-//     pop  bx
-//     ret
-// NotFound:                               ;Offset 0x1be6
-//     or   al, 0ffh
-//     pop  bx
-//     ret
 }
 
-// ;inputs:
-// ;bx is index into video parameter table
-// ;ax sub index into pulled table
-// ;outputs:
-// ;es:bx is new pointer - can be null
-// ;al = 0xff if fail. unmodified otherwise.
-// ;
-// ;Fetches a pointer from the parameter block and then
-// ;adds ax to it. after that, it runs through until 0xff or until current video mode found
-// ;if found, it returns unmodified bx and al = video mode.
-// ;if not found, it returns unmodified bx and al = 0xff
 bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement, uint16_t size = sizeof(FARPointer))
 {
-//     call GetVideoParameterBlockElement  ;Offset 0x1d95
     if (GetVideoParameterBlockElement(paramTableIdx, parameterBlockElement, size))
-        return CheckCurrentModeExists(parameterBlockElement, subIdx);
-//     jne  CheckCurrentModeExists         ;Offset 0x1bd1
-//     or   al, 0ffh                       ;
-//     ret
+        return CheckValidInCurrentMode(parameterBlockElement, subIdx);
     return false;
 }
 
@@ -3435,11 +1668,8 @@ void ConfigureFontAndCursor(uint8_t* fontDefinition)
 //     and  bl, 3fh                        ;keep the lowest 6 bits
     r.h.bl &= 0x3F;
 
-//     mov  al, 10h                        ;SetTextFontAddressingAndCursor
-    r.h.al = 0x10;
-
-//     call TextModeCharFunctionsInternal  ;Offset 0x2f71
-    TextModeCharFunctionsInternal(r.h.al, font, r.w.dx, r.w.cx, r.h.bh, r.h.bl, 0x00, 0x00);
+    SetTextFontAndAddressing(font, r.w.dx, r.w.cx, r.h.bh, r.h.bl);
+    ConfigureCursorPropertiesAndVerticalDisplayEnd(r.h.bh);
 
 //     pop  ax
     r.w.ax = axtmp;
@@ -3491,12 +1721,7 @@ void ConfigureFontRamBank(uint8_t* fontDefinition)
 //     and   bl, 3fh
     r.h.bl &= 0x3f;
 
-//     mov   al, 00h
-    r.h.al = 0x00;
-
-//     push  bx
-//     call  TextModeCharFunctionsInternal ;Offset 0x2f71
-    TextModeCharFunctionsInternal(r.h.al, font, r.w.dx, r.w.cx, r.h.bh, r.h.bl, 0x00, 0x00);
+    SetTextFontAndAddressing(font, r.w.dx, r.w.cx, r.h.bh, r.h.bl);
 
 //     mov   dx, 03c4h                     ;port - 0x3c4
     r.w.dx = 0x3c4;
@@ -3684,8 +1909,8 @@ void SetPaletteProfile()
     paletteProfile = ((FARPointer*)secondarySavePointerTable + 0x0A)->ToPointer<uint8_t>(0x14 + 0x14);
 
     //     mov   ax, 14h                       ;array of applicable video modes for this font
-    //     call  CheckCurrentModeExists        ;Offset 0x1bd1
-    if (!CheckCurrentModeExists(paletteProfile, 0x14))
+    //     call  CheckValidInCurrentMode        ;Offset 0x1bd1
+    if (!CheckValidInCurrentMode(paletteProfile, 0x14))
         return;
 
     //     je    Label0x1ccf                   ;Offset 0x1ccf
@@ -3924,13 +2149,17 @@ void SetGraphicsCharacterFont(uint8_t* graphicsCharacterFontDefinition)
 // ;al = requested video mode
 bool SetVideoMode(uint8_t mode)
 {
+    using namespace Hag::VGA;
+
     REGPACK r;
     memset(&r, 0, sizeof(r));
     uint32_t offset = 0;
     Hag::S3::VideoParameters* overrideTable = NULL;
     uint8_t* fontDefinition = NULL;
     uint8_t* graphicsCharacterFontDefinition = NULL;
+    Hag::S3::VESAVideoModeData* vesaData = NULL;
     uint8_t* paramBlock = NULL;
+    Register_t crtcPort = Hag::System::BDA::VideoBaseIOPort::Get();
     uint8_t modeDataIndex = 0;
     uint8_t flags = 0;
     r.h.al = mode;
@@ -3953,7 +2182,7 @@ bool SetVideoMode(uint8_t mode)
 
 //     call FindVideoModeData              ;Offset 0x103a
 //     je   ValidVideoMode                 ;Offset 0x182c
-    if (Hag::S3::TrioBase::FindVideoModeData(r.h.al) != NULL)
+    if (vesaData = Hag::S3::TrioBase::FindVideoModeData(r.h.al))
         goto ValidVideoMode;
 
 // Failure:                                ;Offset 0x182b
@@ -4016,13 +2245,13 @@ LABEL(SetVideoMode, IsVESAMode);
     r.h.al = Hag::System::BDA::DisplayMode::Get();
 
 //     call ApplyVESAOverrideData          ;Offset 0x1079
-    ApplyVESAOverrideData(r.h.al);
+    ApplyVESAOverrideData(r.h.al, GetCRTControllerIndexRegister(), vesaData);
 
 //     call SetPalette                     ;Offset 0x4909
-    SetPalette();
+    SetPalette(mode);
 
 //     mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
+    r.w.dx = crtcPort;
 
 //     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     r.h.al = Hag::System::BDA::DisplayMode::Get();
@@ -4093,9 +2322,9 @@ LABEL(SetVideoMode, CharacterSetNotFound);
 //     mov  ax, 0007h
     r.w.ax = 0x0007;
 
-//     call CheckCurrentModeExists         ;Offset 0x1bd1
+//     call CheckValidInCurrentMode         ;Offset 0x1bd1
 //     jne  Label0x18c9                    ;Offset 0x18c9
-    if (!CheckCurrentModeExists(fontDefinition, r.w.ax))
+    if (!CheckValidInCurrentMode(fontDefinition, r.w.ax))
         goto Label0x18c9;
 
 //     call Func0x1c19                     ;Offset 0x1c19
@@ -4150,7 +2379,7 @@ LABEL(SetVideoMode, Label0x18da);
     SetPaletteProfile();
 
 //     call EnablePaletteBasedVideo        ;Offset 0x479d
-    EnablePaletteBasedVideo();
+    EnablePaletteBasedVideo(crtcPort);
 
 //     call TurnOnScreen                   ;Offset 0x4800
     Hag::VGA::Sequencer::ClockingMode::TurnScreenOn();

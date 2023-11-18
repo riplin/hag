@@ -15,19 +15,19 @@ namespace GraphicsControllerMode
     {
         SelectWriteMode = 0x03,         //These bits select the CPU write mode into video memory.
                                         //The function of each mode is defined as follows:
-                                        //00 = Write Mode o. Each of four video memory planes is
+        Mode0 = 0x00,                   //00 = Write Mode o. Each of four video memory planes is
                                         //     written with the CPU data rotated by the number of 
                                         //     counts in the rotate register. If the Set/Reset
                                         //     register is enabled for any of four planes, the
                                         //     corresponding plane is written with the data stored
                                         //     in the set/reset register. Raster operations and bit
                                         //     mask registers are effective.
-                                        //01 = Write Mode 1. Each of four video memory planes is written
+        Mode1 = 0x01,                   //01 = Write Mode 1. Each of four video memory planes is written
                                         //     with the data in the processor latches. These latches are
                                         //     loaded during previous CPU read opera- tions. Raster
                                         //     operation, rotate count, set/reset data, enable
                                         //     set/reset data and bit mask registers are not effective.
-                                        //10 = Write Mode 2. Memory planes 0-3 are filled with B bits of
+        Mode2 = 0x02,                   //10 = Write Mode 2. Memory planes 0-3 are filled with B bits of
                                         //     the value of CPU write data bits 0-3, respectively.
                                         //     For example, if write data bit 0 is a 1, eight 1's are
                                         //     written to memory plane O. The data on the CPU data bus is
@@ -39,7 +39,7 @@ namespace GraphicsControllerMode
                                         //     pixel in the addressed byte to the corresponding pixel in the
                                         //     processor latches. The Set/Reset, Enable Set/Reset and
                                         //     Rotate Count registers are ignored.
-                                        //11 = Write Mode 3. Each of four video memory planes is written with
+        Mode3 = 0x03,                   //11 = Write Mode 3. Each of four video memory planes is written with
                                         //     B bits of the color value contained in the set/reset register
                                         //     for that plane. The Enable Set/ Reset register is not effective.
                                         //     Rotated CPU write data is ANDed with the bit mask register to
