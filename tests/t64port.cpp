@@ -1508,13 +1508,19 @@ bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint
     returnPointer = NULL;
 //    push di
 //    les  di, ds:[BDA_VideoParameterControlBlockPointer];Offset 0x4a8 load segment:offset of video parameter control block into es:di
-        Hag::System::BDA::VideoParameterControlBlockPointer_t& controlBlockPointer = Hag::System::BDA::VideoParameterControlBlockPointer::Get();
-        FARPointer* realControlBlockPointer = controlBlockPointer.ToPointer<FARPointer>(0x1D);
-        bool ret = !realControlBlockPointer->IsNull();
+    bool ret = false;
+
+    Hag::System::BDA::VideoParameterControlBlockPointer_t& controlBlockPointer = Hag::System::BDA::VideoParameterControlBlockPointer::Get();
+    if (!controlBlockPointer.IsNull())
+    {
+        FARPointer* realControlBlockPointer = controlBlockPointer.ToPointer<FARPointer>(0x1C);
 //    les  bx, es:[bx + di]               ;Load segment:offset from video override table into es:bx
-        if (!ret)
-            returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>(size);
-        ret = !realControlBlockPointer[index].IsNull();
+        if (!realControlBlockPointer[index >> 2].IsNull())
+        {
+            ret = true;
+            returnPointer = realControlBlockPointer[index >> 2].ToPointer<uint8_t>(size);
+        }
+    }
 //    mov  di, es                         ;
 //    or   di, bx                         ;or together segment and offset (not null test?)
 //    pop  di
@@ -1884,7 +1890,7 @@ void SaveDynamicParameterData(uint8_t* overrideTable)
 //     call      GetVideoParameterBlockElement;Offset 0x1d95
 //     pop       ds
 //     je        Exit                      ;Offset 0x1bc5
-    if (!GetVideoParameterBlockElement(1, savePointer, 0x100))
+    if (!GetVideoParameterBlockElement(4, savePointer, 0x100))
         goto Exit;
 
 //     add       si, 23h

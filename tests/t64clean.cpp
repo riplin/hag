@@ -14,11 +14,16 @@
 #include <hag/drivers/vga/instat1.h>
 #include <hag/drivers/vga/regs.h>
 #include <hag/drivers/vga/attribc/data.h>
+#include <hag/drivers/vga/crtc/curendsl.h>
+#include <hag/drivers/vga/crtc/curstrsl.h>
 #include <hag/drivers/vga/crtc/enhorsyn.h>
 #include <hag/drivers/vga/crtc/hortotal.h>
+#include <hag/drivers/vga/crtc/maxscanl.h>
 #include <hag/drivers/vga/crtc/scrnoffs.h>
 #include <hag/drivers/vga/crtc/sthorbln.h>
 #include <hag/drivers/vga/crtc/sthorsyn.h>
+#include <hag/drivers/vga/crtc/undloc.h>
+#include <hag/drivers/vga/crtc/verdisen.h>
 #include <hag/drivers/vga/crtc/verrtcen.h>
 #include <hag/drivers/vga/gfxc/data.h>
 #include <hag/drivers/vga/gfxc/gfxcmode.h>
@@ -379,17 +384,18 @@ bool VerifyBDAOrDeactivate(Hag::VGA::VideoMode_t& mode)
 bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer))
 {
     using namespace Hag::System::BDA;
-
+    bool ret = false;
     returnPointer = NULL;
 
-    FARPointer* realControlBlockPointer = VideoParameterControlBlockPointer::Get().ToPointer<FARPointer>(0x1D);
-    bool ret = !realControlBlockPointer->IsNull();
-
-    if (!ret)
-        returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>(size);
-
-    ret = !realControlBlockPointer[index].IsNull();
-
+    if (!VideoParameterControlBlockPointer::Get().IsNull())
+    {
+        FARPointer* realControlBlockPointer = VideoParameterControlBlockPointer::Get().ToPointer<FARPointer>(0x1C);
+        if (!realControlBlockPointer[index].IsNull())
+        {
+            ret = true;
+            returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>(size);
+        }
+    }
     return ret;
 }
 
@@ -1332,264 +1338,95 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t n
     EnablePaletteBasedVideo(Hag::System::BDA::VideoBaseIOPort::Get());
 }
 
-void ConfigureCursorPropertiesAndVerticalDisplayEnd(uint8_t characterPointHeight)
+void ConfigureCursorPropertiesAndVerticalDisplayEnd(Hag::S3::VideoMode_t mode, uint8_t characterPointHeight)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-//     mov  byte ptr ds:[BDA_PointHeightOfCharacterMatrix], bh;Offset 0x485
-    Hag::System::BDA::PointHeightOfCharacterMatrix::Get() = characterPointHeight;
-
-//     mov  bx, 0190h                      ;400
-    r.w.bx = 0x0190;
-
-//     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    r.h.al = Hag::System::BDA::DisplayMode::Get();
-
-//     cmp  al, BDA_DM_640x480_BW_Graphics ;11h
-//     je   HeightSet                      ;Offset 0x306c
-    if (r.h.al == 0x11)
-        goto HeightSet;
-
-//     cmp  al, BDA_DM_640x480_16_Color_Graphics;12h
-//     je   HeightSet                      ;Offset 0x306c
-    if (r.h.al == 0x12)
-        goto HeightSet;
-
-//     mov  bx, 0c8h                       ;200
-    r.w.bx = 0xC8;
-
-//     cmp  al, BDA_DM_320x200_256_Color_Graphics;13h
-//     je   HeightSet                      ;Offset 0x306c
-    if (r.h.al == 0x13)
-        goto HeightSet;
-
-//     cmp  al, BDA_DM_320x200_4_Color_Graphics1;04h
-//     jb   Label0x3040                    ;Offset 0x3040
-    if (r.h.al < 0x04)
-        goto Label0x3040;
-
-//     cmp  al, BDA_DM_640x200_BW_Graphics ;06h
-//     jbe  HeightSet                      ;Offset 0x306c
-    if (r.h.al <= 0x06)
-        goto HeightSet;
-
-//     cmp  al, BDA_DM_Unknown2            ;09h
-//     jb   Label0x3040                    ;Offset 0x3040
-    if (r.h.al < 0x09)
-        goto Label0x3040;
-
-//     cmp  al, BDA_DM_640x200_16_Color_Graphics;0eh
-//     jbe  HeightSet                      ;Offset 0x306c
-    if (r.h.al <= 0x0e)
-        goto HeightSet;
-
-//     mov  bx, 015eh                      ;350
-    r.w.bx = 0x015e;
-
-//     cmp  al, BDA_DM_640x350_16_Color_Graphics;10h
-//     jbe  HeightSet                      ;Offset 0x306c
-    if (r.h.al <= 0x10)
-        goto HeightSet;
-
-// Label0x3040:                            ;Offset 0x3040
-LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, Label0x3040);
-
-//     mov  bx, 190h                       ;400
-    r.w.bx = 0x0190;
-
-//     test byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0x489, 0x10
-//     jne  HeightSet                      ;Offset 0x306c
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x10) != 0x00)
-        goto HeightSet;
-
-//     mov  bx, 015eh                      ;350
-    r.w.bx = 0x015e;
-
-//     test byte ptr ds:[BDA_VideoModeOptions], BDA_VDDA_GrayScale;Offset 0x487, 0x2
-//     jne  HeightSet                      ;Offset 0x306c
-    if ((Hag::System::BDA::VideoModeOptions::Get() & 0x02) != 0x00)
-        goto HeightSet;
-
-//     mov  ah, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
-    r.h.ah = Hag::System::BDA::EGAFeatureBitSwitches::Get();
-
-//     and  ah, BDA_EFBS_AdapterTypeMask   ;0x0f
-    r.h.ah &= 0x0F;
-
-//     cmp  ah, BDA_EFBS_MDAHiResEnhanced  ;0x03
-//     je   HeightSet                      ;Offset 0x306c
-    if (r.h.ah == 0x03)
-        goto HeightSet;
-
-//     cmp  ah, BDA_EFBS_MDAHiResEnhanced_2;0x09
-//     je   HeightSet                      ;Offset 0x306c
-    if (r.h.ah == 0x09)
-        goto HeightSet;
-
-//     cmp  al, BDA_DM_80x25_Monochrome_Text;07h
-//     je   HeightSet                      ;Offset 0x306c
-    if (r.h.al == 0x07)
-        goto HeightSet;
-
-//     mov  bx, 0c8h                       ;200
-    r.w.bx = 0x00C8;
-
-// HeightSet:                              ;Offset 0x306c
-LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, HeightSet);
-
-//     mov  ax, bx                         ;ax = screen height
-    r.w.ax = r.w.bx;
-
-//     xor  dx, dx                         ;dx:ax = screen height
-//     div  word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485 - divide by height of a character
-    r.w.ax /= Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
-
-//     dec  al                             ;decrease by 1
-    --r.h.al;
-
-//     mov  byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484 - set number of rows on screen minus one.
-    Hag::System::BDA::RowsOnScreen::Get() = r.h.al;
-
-//     inc  al                             ;restore to number of rows on screen.
-    ++r.h.al;
-
-//     mov  cx, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a - fetch number of screen columns
-    r.w.cx = Hag::System::BDA::NumberOfScreenColumns::Get();
-
-//     shl  cx, 01h                        ;two bytes per character (char + attribute)
-    r.w.cx <<= 1;
-
-//     xor  ah, ah                         ;ax = number of rows on screen
-    r.h.ah = 0x00;
-
-//     mul  cx                             ;dx:ax = screen size in bytes
-    r.w.ax *= r.w.cx;
-
-//     add  ax, 100h                       ;screen size + 256
-    r.w.ax += 0x0100;
-
-//     mov  word ptr ds:[BDA_VideoBufferSize], ax;Offset 0x44c
-    Hag::System::BDA::VideoBufferSize::Get() = r.w.ax;
-
-//     mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463 CRTC register
-    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
-
-//     mov  ah, byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    r.h.ah = Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
-
-//     dec  ah                             ;character height minus one
-    --r.h.ah;
-
-//     cmp  byte ptr ds:[BDA_DisplayMode], BDA_DM_80x25_Monochrome_Text;Offset 0x449, 0x7
-//     jne  DontSetUnderline               ;Offset 0x309f
-    if (Hag::System::BDA::DisplayMode::Get() != 0x07)
-        goto DontSetUnderline;
-
-//     mov  al, 14h                        ;CR14 - Underline Location register
-    r.h.al = 0x14;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-// DontSetUnderline:                       ;Offset 0x309f
-LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, DontSetUnderline);
-
-//     mov  ch, ah                         ;character height minus one
-    r.h.ch = r.h.ah;
-
-//     mov  cl, ah                         ;character height minus one
-    r.h.cl = r.h.ah;
-
-//     mov  al, 09h                        ;CR9 - Maximum Scan Line register
-    r.h.al = 0x09;
-
-//     call ReadDataWithIndexRegister      ;Offset 0x4640
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and  ah, 0e0h                       ;Preserve top 3 bits
-    r.h.ah &= 0xe0;
-
-//     or   ah, ch                         ;bits 4-0 - Number of scan lines per character row minus one
-    r.h.ah |= r.h.ch;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     dec  ch                             ;character height minus two
-    --r.h.ch;
-
-//     mov  ah, cl                         ;character height minus one
-    r.h.ah = r.h.cl;
-
-//     cmp  ah, 0ch                        ;if less than or equal to twelve 12
-//     jbe  LessThanTwelve                 ;Offset 0x30bb
-    if (r.h.ah <= 0x0C)
-        goto LessThanTwelve;
-
-//     sub  cx, 0101h                      ;ch = character height minus three, cl = character height minus two
-    r.w.cx -= 0x0101;
-
-// LessThanTwelve:                         ;Offset 0x30bb
-LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, LessThanTwelve);
-
-//     mov  word ptr ds:[BDA_CursorEndScanLine], cx;Offset 0x460 update BDA
-    Hag::System::BDA::CursorScanLines::Get().End = r.h.cl;
-    Hag::System::BDA::CursorScanLines::Get().Start = r.h.ch;
-
-//     mov  al, 0ah                        ;CRA - Cursor Start Scan Line register
-    r.h.al = 0x0A;
-
-//     mov  ah, ch                         ;character height minus two/three
-    r.h.ah = r.h.ch;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     inc  al                             ;CRB - Cursor End Scan Line register
-    ++r.h.al;
-
-//     mov  ah, cl                         ;character height minus one/two
-    r.h.ah = r.h.cl;
-
-//     out  dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     mov  al, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484 - rows on screen minus one
-    r.h.al = Hag::System::BDA::RowsOnScreen::Get();
-
-//     inc  al                             ;rows on screen
-    ++r.h.al;
-
-//     mul  byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485 - ax = height in pixels
-    r.h.ah = 0x00;
-    r.w.ax *= Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
-
-//     cmp  bx, 0c8h                       ;200
-//     jne  Not200Height                   ;Offset 0x30da
-    if (r.w.bx != 0xC8)
-        goto Not200Height;
-
-//     shl  ax, 01h                        ;height in pixels * 2
-    r.w.ax <<= 1;
-
-// Not200Height:                           ;Offset 0x30da
-LABEL(ConfigureCursorPropertiesAndVerticalDisplayEnd, Not200Height);
-
-//     dec  ax                             ;height in pixels (* 2) minus one
-    --r.w.ax;
-
-//     mov  ah, al                         ;lower bits
-    r.h.ah = r.h.al;
-
-//     mov  al, 12h                        ;CR12 - Vertical Display End Register
-//                                         ;11-bit value = (number of scan lines of active display) - 1. 
-//                                         ;This register contains the least significant 8 bits of this value.
-    r.h.al = 0x12;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    Register_t crtcPort = VideoBaseIOPort::Get();
+
+    PointHeightOfCharacterMatrix::Get() = characterPointHeight;
+
+    uint16_t screenHeight = 0;
+
+    if ((mode == VideoMode::G640x480x2M) ||
+        (mode == VideoMode::G640x480x16C))
+    {
+        screenHeight = 400;
+    }
+    else if ((mode == VideoMode::G320x200x256C) ||
+        (mode == VideoMode::G640x200x2M) ||
+        (mode == VideoMode::G320x200x4G) ||
+        ((mode >= VideoMode::Unknown2) &&
+        (mode <= VideoMode::G640x200x16C)))
+    {
+        screenHeight = 200;
+    }
+    else if ((mode >= VideoMode::Unknown2) &&
+        (mode <= VideoMode::G640x350x4C))
+    {
+        screenHeight = 350;
+    }
+    else
+    {
+        EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() & EGAFeatureBitSwitches::AdapterTypeMask;
+
+        if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::LineMode400) != 0)
+        {
+            screenHeight = 400;
+        }
+        else if (((VideoModeOptions::Get() & 0x02) != 0) ||
+                (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced) ||
+                (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2) ||
+                (mode == VideoMode::T80x25x2M))
+        {
+            screenHeight = 350;
+        }
+        else
+        {
+            screenHeight = 200;
+        }
+    }
+
+    uint8_t rowsOnScreen = uint8_t(screenHeight / characterPointHeight);
+    RowsOnScreen::Get() = rowsOnScreen - 1;
+
+    NumberOfScreenColumns_t bytesPerLine = Hag::System::BDA::NumberOfScreenColumns::Get() << 1;
+
+    VideoBufferSize::Get() = bytesPerLine * rowsOnScreen + 256;
+
+    uint8_t charPointHeightMinusOne = characterPointHeight - 1;
+
+    if (mode == VideoMode::T80x25x2M)
+        CRTController::UnderlineLocation::Write(crtcPort, charPointHeightMinusOne);
+
+    CRTController::MaximumScanLine::Write(crtcPort, (CRTController::MaximumScanLine::Read(crtcPort) &
+                                                    ~CRTController::MaximumScanLine::MaximumScanLineCount) |
+                                                    charPointHeightMinusOne);
+
+    uint8_t cursorBottom = charPointHeightMinusOne;
+    uint8_t cursorTop = charPointHeightMinusOne - 1;
+
+    if (charPointHeightMinusOne > 12)
+    {
+        --cursorBottom;
+        --cursorTop;
+    }
+
+    Hag::System::BDA::CursorScanLines::Get().End = cursorBottom;
+    Hag::System::BDA::CursorScanLines::Get().Start = cursorTop;
+
+    CRTController::CursorStartScanLine::Write(crtcPort, cursorTop);
+    CRTController::CursorEndScanLine::Write(crtcPort, cursorBottom);
+
+    uint16_t vertDisplayEnd = (rowsOnScreen - 1) * characterPointHeight;
+
+    if (screenHeight == 200)
+        vertDisplayEnd <<= 1;
+
+    --vertDisplayEnd;
     
-//     out  dx, ax                         ;
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-//     ret
+    CRTController::VerticalDisplayEnd::Write(crtcPort, uint8_t(vertDisplayEnd));
 }
 
 void SetFont()
@@ -1636,250 +1473,99 @@ bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t sub
     return false;
 }
 
-void ConfigureFontAndCursor(uint8_t* fontDefinition)
+void ConfigureFontAndCursor(Hag::S3::VideoMode_t mode, Hag::S3::AlphanumericCharSet* fontDefinition)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
+    using namespace Hag::System::BDA;
+    
+    uint8_t* font = fontDefinition->FontData.ToPointer<uint8_t>(fontDefinition->CharacterHeight * fontDefinition->NumCharacters);
 
-//     mov  al, byte ptr es:[bx + 0ah]     ;number of character rows displayed
-    r.h.al = fontDefinition[0x0A];
-    uint16_t axtmp = r.w.ax;
+    SetTextFontAndAddressing(font,
+                             fontDefinition->FirstCharacter,
+                             fontDefinition->NumCharacters,
+                             fontDefinition->CharacterHeight,
+                             fontDefinition->RamBank & 0x3F);
+    ConfigureCursorPropertiesAndVerticalDisplayEnd(mode, fontDefinition->CharacterHeight);
 
-//     push ax                             ;save that
-//     mov  cx, word ptr es:[bx + 02h]     ;number of characters defined
-    r.h.cl = fontDefinition[0x02];
-    r.h.ch = fontDefinition[0x03];
-
-//     mov  dx, word ptr es:[bx + 04h]     ;first character code in table
-    r.h.dl = fontDefinition[0x04];
-    r.h.dh = fontDefinition[0x05];
-
-//These lines sat below the font pointer fetching code, but i needed the character length for the size.
-//     mov  bx, word ptr es:[bx]           ;bl = length of each character, bh = character generator ram bank
-//     xchg bl, bh                         ;bh = length of each character, bl = character generator ram bank
-    r.h.bh = fontDefinition[0x00];
-    r.h.bl = fontDefinition[0x01];
-
-//     mov  si, word ptr es:[bx + 06h]     ;offset to character font
-//     mov  ax, word ptr es:[bx + 08h]     ;segment to character font
-//     mov  es, ax                         ;segment to character font   //I moved this line from further down.
-    uint8_t* font = ((FARPointer*)(fontDefinition + 0x06))->ToPointer<uint8_t>(r.h.bh * r.w.cx);
-
-//     and  bl, 3fh                        ;keep the lowest 6 bits
-    r.h.bl &= 0x3F;
-
-    SetTextFontAndAddressing(font, r.w.dx, r.w.cx, r.h.bh, r.h.bl);
-    ConfigureCursorPropertiesAndVerticalDisplayEnd(r.h.bh);
-
-//     pop  ax
-    r.w.ax = axtmp;
-//     cmp  al, 0ffh
-//     je   Failure                        ;Offset 0x1c18
-    if (r.h.al != 0xFF)
+    if (fontDefinition->Rows != 0xFF)
     {
-//     sub  al, 01h
-        --r.h.al;
-//     mov  byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
-        Hag::System::BDA::RowsOnScreen::Get() = r.h.al;
+        RowsOnScreen::Get() = fontDefinition->Rows - 1;
     }
-// Failure:                                ;Offset 0x1c18
-//     ret
 }
 
-void ConfigureFontRamBank(uint8_t* fontDefinition)
+void ConfigureFontRamBank(Hag::S3::GraphicsCharSet* fontDefinition)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-//     mov   al, byte ptr es:[bx]          ;
-    r.h.al = *fontDefinition;
+    if (fontDefinition->CharacterHeight != PointHeightOfCharacterMatrix::Get())
+    {
+        uint8_t* font = fontDefinition->FontData.ToPointer<uint8_t>(fontDefinition->CharacterHeight * 256);
+        SetTextFontAndAddressing(font, 0, 256, fontDefinition->CharacterHeight, fontDefinition->RamBank & 0x3f);
 
-//     xor   ah, ah                        ;
-    r.h.ah = 0x00;
-
-//     cmp   ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-//     jne   AlreadySet                    ;Offset 0x1c64
-    if (r.w.ax == Hag::System::BDA::PointHeightOfCharacterMatrix::Get())
-        return;
-
-//     mov   cx, 100h
-    r.w.cx = 0x0100;
-
-//     xor   dx, dx
-    r.w.dx = 0x0000;
-
-//     mov   bx, word ptr es:[bx]
-//     xchg  bl, bh
-    r.h.bh = fontDefinition[0x00];
-    r.h.bl = fontDefinition[0x01];
-
-//     mov   si, word ptr es:[bx + 03h]
-//     mov   ax, word ptr es:[bx + 05h]
-//     mov   es, ax
-    uint8_t* font = ((FARPointer*)(fontDefinition + 0x03))->ToPointer<uint8_t>(r.h.bh * r.w.cx);
-
-//     and   bl, 3fh
-    r.h.bl &= 0x3f;
-
-    SetTextFontAndAddressing(font, r.w.dx, r.w.cx, r.h.bh, r.h.bl);
-
-//     mov   dx, 03c4h                     ;port - 0x3c4
-    r.w.dx = 0x3c4;
-
-//     mov   al, 03h
-    r.h.al = 0x03;
-
-//     call  ReadDataWithIndexRegisterNext ;Offset 0x4649
-    r.h.ah = ReadDataWithIndexRegister(r.w.dx, r.h.al);
-
-//     and   ah, 13h
-    r.h.ah &= 0x13;
-
-//     pop   bx
-//     mov   bh, bl
-    r.h.bh = r.h.bl;
-
-//     and   bl, 03h
-    r.h.bl &= 0x03;
-
-//     mov   cl, 02h
-    r.h.cl = 0x02;
-
-//     shl   bl, cl
-    r.h.bl <<= r.h.cl;
-
-//     and   bh, 04h
-    r.h.bh &= 0x04;
-
-//     inc   cl
-    ++r.h.cl;
-
-//     shl   bh, cl
-    r.h.bh <<= r.h.cl;
-
-//     or    ah, bl
-    r.h.ah |= r.h.bl;
-
-//     or    ah, bh
-    r.h.ah |= r.h.bh;
-
-//     mov   al, 03h
-    r.h.al = 0x03;
-
-//     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-// AlreadySet :                            ;Offset 0x1c64
-//     ret
+        //This is the weirdest piece of code so far.
+        Sequencer::CharacterFontSelect::Write((Sequencer::MemoryModeControl::Read() &
+                                              (Sequencer::MemoryModeControl::Unknown |
+                                               Sequencer::MemoryModeControl::ExtendedMemoryAddress |
+                                               Sequencer::MemoryModeControl::Unknown2)) |
+                                              ((fontDefinition->RamBank & 0x03) << 2) |
+                                              ((fontDefinition->RamBank & 0x04) << 3));
+    }
 }
 
-void ClearScreen()
+void ClearScreen(Hag::S3::VideoMode_t mode)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
+    using namespace Hag::VGA;
+
+    uint16_t size =  0x4000;
+    uint16_t segment = 0;
+    uint16_t value = 0;
+
     uint8_t flags = 0;
-    uint16_t* ptr = NULL;
+    if ((mode > VideoMode::MaxValid) &&
+        Hag::S3::TrioBase::GetVideoModeFlags(mode, flags))
+    {
+        segment = 0xB800;
+        value = 0x720;
 
-//     mov       cx, 4000h
-    r.w.cx = 0x4000;
+        if ((flags & Hag::S3::VESAVideoModeFlags::Color) == 0x00)
+        {
+            segment = 0xB000;
+        }
+        if ((flags & Hag::S3::VESAVideoModeFlags::WindowGranularity64KiB) == 0x00)
+            return;
+    }
+    else
+    {
+        if (mode == VideoMode::T80x25x2M)
+        {
+            segment = 0xB000;
+            value = 0x720;
+        }
+        else if (mode <= VideoMode::T80x25x16C)
+        {
+            segment = 0xB800;
+            value = 0x720;
+        }
+        else if (mode <= VideoMode::G640x200x2M)
+        {
+            segment = 0xB800;
+        }
+        else
+        {
+            segment = 0xA000;
+            size = 0x8000;
+        }
+    }
 
-//     mov       bl, byte ptr ds:[BDA_DisplayMode];Offset 0449h
-    r.h.bl = Hag::System::BDA::DisplayMode::Get();
-
-//     cmp       bl, 13h
-//     jbe       Label0x1d70
-    if (r.h.bl <= 0x13)
-        goto Label0x1d70;
-
-//     mov       al, bl
-    r.h.al = r.h.bl;
-
-//     call      GetVideoModeFlags
-//     jne       Label0x1d70
-    if (!Hag::S3::TrioBase::GetVideoModeFlags(r.h.al, flags))
-        goto Label0x1d70;
-
-//     mov       bl, al
-    r.h.bl = flags;
-
-//     mov       bh, 0b8h
-    r.h.bh = 0xB8;
-
-//     mov       ax, 0720h
-    r.w.ax = 0x720;
-
-//     test      bl, 02h
-//     jne       Label0x1d68
-    if ((r.h.bl & 0x02) != 0x00)
-        goto Label0x1d68;
-
-//     mov       bh, 0b0h
-    r.h.bh = 0xB0;
-
-// Label0x1d68:
-LABEL(ClearScreen, Label0x1d68);
-
-//     test      bl, 01h                   ;text
-//     jne       Label0x1d8c
-    if ((r.h.bl & 0x01) != 0x00)
-        goto Label0x1d8c;
-
-//     jmp       EmptyFunction2            ;Offset 0x121d Tail call.
-    return;
-
-// Label0x1d70:                            ;Offset 0x1d70
-LABEL(ClearScreen, Label0x1d70);
-
-//     mov       bh, 0b0h
-    r.h.bh = 0xB0;
-
-//     mov       ax, 0720h
-    r.w.ax = 0x720;
-
-//     cmp       bl, 07h
-//     je        Label0x1d8c
-    if (r.h.bl == 0x07)
-        goto Label0x1d8c;
-        
-//     mov       bh, 0b8h
-    r.h.bh = 0xB8;
-//     cmp       bl, 03h
-//     jbe       Label0x1d8c
-    if (r.h.bl <= 0x03)
-        goto Label0x1d8c;
-
-//     xor       ax, ax
-    r.w.ax = 0x0000;
-
-//     cmp       bl, 06h
-//     jbe       Label0x1d8c
-    if (r.h.bl <= 0x06)
-        goto Label0x1d8c;
-
-//     mov       bh, 0a0h
-    r.h.bh = 0xA0;
-
-//     mov       ch, 80h
-    r.h.ch = 0x80;
-
-// Label0x1d8c:
-LABEL(ClearScreen, Label0x1d8c);
-//     xor       bl, bl
-    r.h.bl = 0x00;
-
-//     mov       es, bx
-    ptr = FARPointer(r.w.bx, 0x0000).ToPointer<uint16_t>(r.w.cx << 1);
-
-//     xor       di, di
-//     rep       stosw
+    uint16_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint16_t>(size << 1);
+    
+    //TODO: Faster memset?
     do
     {
-        *ptr = r.w.ax;
+        *ptr = value;
         ++ptr;
-        --r.w.cx;
-    } while (r.w.cx != 0x0000);
-
-//     ret
+        --size;
+    } while (size != 0x0000);
 }
 
 void SetPaletteProfile()
@@ -1896,7 +1582,7 @@ void SetPaletteProfile()
     r.w.bx = 0x10;
 
     //     call  GetVideoParameterBlockElement ;Offset 0x1d95
-    if (!GetVideoParameterBlockElement(r.w.bx, secondarySavePointerTable, 0x20))
+    if (!GetVideoParameterBlockElement(4, secondarySavePointerTable, 0x20))
         return;
 
     //     je    NotFound                      ;Offset 0x1cce
@@ -2293,11 +1979,11 @@ LABEL(SetVideoMode, Label0x1885);
 
 //     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
 //     jne  CharacterSetNotFound           ;Offset 0x1896
-    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, fontDefinition, 0x0B + 0x14))
+    if (!FetchCheckedVideoParameterBlockElement(2, r.w.ax, fontDefinition, 0x0B + 0x14))
         goto CharacterSetNotFound;
 
 //     call ConfigureFontAndCursor         ;Offset 0x1bea
-    ConfigureFontAndCursor(fontDefinition);
+    ConfigureFontAndCursor(mode, (Hag::S3::AlphanumericCharSet*)fontDefinition);
 
 // CharacterSetNotFound:                   ;Offset 0x1896
 LABEL(SetVideoMode, CharacterSetNotFound);
@@ -2307,7 +1993,7 @@ LABEL(SetVideoMode, CharacterSetNotFound);
 
 //     call GetVideoParameterBlockElement  ;Offset 0x1d95
 //     je   Label0x18c9                    ;Offset 0x18c9
-    if (!GetVideoParameterBlockElement(r.w.bx, paramBlock, 0x20))
+    if (!GetVideoParameterBlockElement(4, paramBlock, 0x20))
         goto Label0x18c9;
 
 //     or   ax, bx
@@ -2328,7 +2014,7 @@ LABEL(SetVideoMode, CharacterSetNotFound);
         goto Label0x18c9;
 
 //     call Func0x1c19                     ;Offset 0x1c19
-    ConfigureFontRamBank(fontDefinition);
+    ConfigureFontRamBank((Hag::S3::GraphicsCharSet*)fontDefinition);
 
 //     jmp  Label0x18c9                    ;Offset 0x18c9
     goto Label0x18c9;
@@ -2347,7 +2033,7 @@ LABEL(SetVideoMode, IsGraphicsMode);
 
 //     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
 //     jne  Label0x18c9                    ;Offset 0x18c9
-    if (!FetchCheckedVideoParameterBlockElement(r.w.bx, r.w.ax, graphicsCharacterFontDefinition, 0x07 + 0x14))
+    if (!FetchCheckedVideoParameterBlockElement(3, r.w.ax, graphicsCharacterFontDefinition, 0x07 + 0x14))
         goto Label0x18c9;
 
 //     call SetGraphicsCharacterFont       ;Offset 0x1c8e
@@ -2370,7 +2056,7 @@ LABEL(SetVideoMode, Label0x18c9);
         goto Label0x18da;
 
 //     call ClearScreen                     ;Offset 0x1d47
-    ClearScreen();
+    ClearScreen(mode);
 
 // Label0x18da:                            ;Offset 0x18da
 LABEL(SetVideoMode, Label0x18da);

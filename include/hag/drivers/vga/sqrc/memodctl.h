@@ -17,7 +17,8 @@ namespace MemoryModeControl
         Unknown = 0x01,
         ExtendedMemoryAddress = 0x02,       //EXT MEM 0 = Memory access restricted to 16/32 KBytes. 1 = Allow complete memory access to 256 KBytes. Required for VGA
         SequentialAddressingMode = 0x04,    //SEQ MODE 0 = CPU writes are odd/even. Even = planes 0 and 2. Odd = planes 1 and 3, 1 = Sequential addressing.
-        SelectChain4Mode = 0x08             //CHN 4M 0  = Odd/even mode. 1 = Chain 4 mode. This bit selects modulo 4 addressinf for CPU access to display memory.
+        SelectChain4Mode = 0x08,            //CHN 4M 0  = Odd/even mode. 1 = Chain 4 mode. This bit selects modulo 4 addressinf for CPU access to display memory.
+        Unknown2 = 0x10
     };
 
     namespace Shift

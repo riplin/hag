@@ -9532,6 +9532,197 @@ Hag::Testing::Mock::PortAndIndex SetFontTest_ignoreIndexedPorts[] =
 
 uint16_t SetFontTest_ignoreIndexedPortsCount = sizeof(SetFontTest_ignoreIndexedPorts) / sizeof(Hag::Testing::Mock::PortAndIndex);
 
+Hag::Testing::Mock::MemoryAccess SetVideoModeInternalsTest_memoryAccess0[] =
+{
+    { 0, 0 }
+};
+
+Hag::Testing::Mock::MemoryAccess SetVideoModeInternalsTest_memoryAccess1[] =
+{
+    { 0x000A0000, 0x00002000 },
+    { 0x000A03A0, 0x00000010 },
+    { 0x000A0440, 0x00000010 },
+    { 0x000A0560, 0x00000010 },
+    { 0x000A05A0, 0x00000010 },
+    { 0x000A09A0, 0x00000010 },
+    { 0x000A0A80, 0x00000010 },
+    { 0x000A0AE0, 0x00000010 },
+    { 0x000A0B40, 0x00000010 },
+    { 0x000A0B60, 0x00000010 },
+    { 0x000A0BA0, 0x00000010 },
+    { 0x000A0DA0, 0x00000010 },
+    { 0x000A0EE0, 0x00000010 },
+    { 0x000A1220, 0x00000010 },
+    { 0x000A13A0, 0x00000010 },
+    { 0x000A13C0, 0x00000010 },
+    { 0x000A1E20, 0x00000010 },
+    { 0x000A1EC0, 0x00000010 },
+    { 0x000B8000, 0x00008000 },
+    { 0x000C3A09, 0x0000001C },
+    { 0x000C3A41, 0x00000020 }
+};
+
+Hag::Testing::Mock::MemoryAccess SetVideoModeInternalsTest_memoryAccess2[] =
+{
+    { 0x000B8000, 0x00008000 },
+    { 0x000C3A09, 0x0000001C },
+    { 0x000C3A41, 0x00000020 }
+};
+
+Hag::Testing::Mock::MemoryAccess SetVideoModeInternalsTest_memoryAccess3[] =
+{
+    { 0x000A0000, 0x00002000 },
+    { 0x000A03A0, 0x00000010 },
+    { 0x000A0440, 0x00000010 },
+    { 0x000A0560, 0x00000010 },
+    { 0x000A05A0, 0x00000010 },
+    { 0x000A09A0, 0x00000010 },
+    { 0x000A0A80, 0x00000010 },
+    { 0x000A0AE0, 0x00000010 },
+    { 0x000A0B40, 0x00000010 },
+    { 0x000A0B60, 0x00000010 },
+    { 0x000A0BA0, 0x00000010 },
+    { 0x000A0DA0, 0x00000010 },
+    { 0x000A0EE0, 0x00000010 },
+    { 0x000A1220, 0x00000010 },
+    { 0x000A13A0, 0x00000010 },
+    { 0x000A13C0, 0x00000010 },
+    { 0x000A1E20, 0x00000010 },
+    { 0x000A1EC0, 0x00000010 },
+    { 0x000B0000, 0x00008000 },
+    { 0x000C3A09, 0x0000001C },
+    { 0x000C3A41, 0x00000020 }
+};
+
+Hag::Testing::Mock::MemoryAccess SetVideoModeInternalsTest_memoryAccess4[] =
+{
+    { 0x000A0000, 0x00010000 },
+    { 0x000C3A09, 0x0000001C },
+    { 0x000C3A41, 0x00000020 }
+};
+
+Hag::Testing::Mock::MemoryAccess SetVideoModeInternalsTest_memoryAccess5[] =
+{
+    { 0x000C3A09, 0x0000001C },
+    { 0x000C3A41, 0x00000020 }
+};
+
+Hag::Testing::Mock::MemoryAccess SetVideoModeInternalsTest_memoryAccess6[] =
+{
+    { 0x000A0000, 0x00002000 },
+    { 0x000B8000, 0x00008000 },
+    { 0x000C3A09, 0x0000001C },
+    { 0x000C3A41, 0x00000020 }
+};
+
+Hag::Testing::Mock::MemoryAccess* SetVideoModeInternalsTest_memoryAccess[] =
+{
+    SetVideoModeInternalsTest_memoryAccess0,     //0
+    SetVideoModeInternalsTest_memoryAccess1,     //1
+    SetVideoModeInternalsTest_memoryAccess1,     //2
+    SetVideoModeInternalsTest_memoryAccess1,     //3
+    SetVideoModeInternalsTest_memoryAccess2,     //4
+    SetVideoModeInternalsTest_memoryAccess2,     //5
+    SetVideoModeInternalsTest_memoryAccess2,     //6
+    SetVideoModeInternalsTest_memoryAccess3,     //7
+    SetVideoModeInternalsTest_memoryAccess4,     //8
+    SetVideoModeInternalsTest_memoryAccess5,     //9
+    SetVideoModeInternalsTest_memoryAccess4,     //10
+    SetVideoModeInternalsTest_memoryAccess5,     //11
+    SetVideoModeInternalsTest_memoryAccess5,     //12
+    SetVideoModeInternalsTest_memoryAccess4,     //13
+    SetVideoModeInternalsTest_memoryAccess4,     //14
+    SetVideoModeInternalsTest_memoryAccess4,     //15
+    SetVideoModeInternalsTest_memoryAccess4,     //16
+    SetVideoModeInternalsTest_memoryAccess4,     //17
+    SetVideoModeInternalsTest_memoryAccess4,     //18
+    SetVideoModeInternalsTest_memoryAccess4,     //19
+    SetVideoModeInternalsTest_memoryAccess5,     //20
+    SetVideoModeInternalsTest_memoryAccess5,     //21
+    SetVideoModeInternalsTest_memoryAccess5,     //22
+    SetVideoModeInternalsTest_memoryAccess5,     //23
+    SetVideoModeInternalsTest_memoryAccess5,     //24
+    SetVideoModeInternalsTest_memoryAccess5,     //25
+    SetVideoModeInternalsTest_memoryAccess5,     //26
+    SetVideoModeInternalsTest_memoryAccess5,     //27
+    SetVideoModeInternalsTest_memoryAccess6,     //28
+    SetVideoModeInternalsTest_memoryAccess1,     //29
+    SetVideoModeInternalsTest_memoryAccess5,     //30
+    SetVideoModeInternalsTest_memoryAccess5,     //31
+    SetVideoModeInternalsTest_memoryAccess5,     //32
+    SetVideoModeInternalsTest_memoryAccess5,     //33
+    SetVideoModeInternalsTest_memoryAccess5,     //34
+    SetVideoModeInternalsTest_memoryAccess5,     //35
+    SetVideoModeInternalsTest_memoryAccess5,     //36
+    SetVideoModeInternalsTest_memoryAccess5,     //37
+    SetVideoModeInternalsTest_memoryAccess5,     //38
+    SetVideoModeInternalsTest_memoryAccess5,     //39
+    SetVideoModeInternalsTest_memoryAccess5,     //40
+    SetVideoModeInternalsTest_memoryAccess5,     //41
+    SetVideoModeInternalsTest_memoryAccess5,     //42
+    SetVideoModeInternalsTest_memoryAccess5,     //43
+    SetVideoModeInternalsTest_memoryAccess5,     //44
+    SetVideoModeInternalsTest_memoryAccess5,     //45
+    SetVideoModeInternalsTest_memoryAccess5,     //46
+    SetVideoModeInternalsTest_memoryAccess5,     //47
+    SetVideoModeInternalsTest_memoryAccess5,     //48
+    SetVideoModeInternalsTest_memoryAccess5,     //49
+};
+
+int SetVideoModeInternalsTest_memoryAccessCount[] =
+{
+    sizeof(SetVideoModeInternalsTest_memoryAccess0) / sizeof(Hag::Testing::Mock::MemoryAccess),  //0
+    sizeof(SetVideoModeInternalsTest_memoryAccess1) / sizeof(Hag::Testing::Mock::MemoryAccess),  //1
+    sizeof(SetVideoModeInternalsTest_memoryAccess1) / sizeof(Hag::Testing::Mock::MemoryAccess),  //2
+    sizeof(SetVideoModeInternalsTest_memoryAccess1) / sizeof(Hag::Testing::Mock::MemoryAccess),  //3
+    sizeof(SetVideoModeInternalsTest_memoryAccess2) / sizeof(Hag::Testing::Mock::MemoryAccess),  //4
+    sizeof(SetVideoModeInternalsTest_memoryAccess2) / sizeof(Hag::Testing::Mock::MemoryAccess),  //5
+    sizeof(SetVideoModeInternalsTest_memoryAccess2) / sizeof(Hag::Testing::Mock::MemoryAccess),  //6
+    sizeof(SetVideoModeInternalsTest_memoryAccess3) / sizeof(Hag::Testing::Mock::MemoryAccess),  //7
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //8
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //9
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //10
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //11
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //12
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //13
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //14
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //15
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //16
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //17
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //18
+    sizeof(SetVideoModeInternalsTest_memoryAccess4) / sizeof(Hag::Testing::Mock::MemoryAccess),  //19
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //20
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //21
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //22
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //23
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //24
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //25
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //26
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //27
+    sizeof(SetVideoModeInternalsTest_memoryAccess6) / sizeof(Hag::Testing::Mock::MemoryAccess),  //28
+    sizeof(SetVideoModeInternalsTest_memoryAccess1) / sizeof(Hag::Testing::Mock::MemoryAccess),  //29
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //30
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //31
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //32
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //33
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //34
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //35
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //36
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //37
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //38
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //39
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //40
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //41
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //42
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //43
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //44
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //45
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //46
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //47
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //48
+    sizeof(SetVideoModeInternalsTest_memoryAccess5) / sizeof(Hag::Testing::Mock::MemoryAccess),  //49
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                            S3 Trio64 86C764X rev 20                                        //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////

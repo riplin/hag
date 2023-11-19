@@ -65,7 +65,10 @@ Hag::VGA::Register_t Registers[] =
     Hag::S3::Register::PatternX
 };
 
-bool SetVideoMode(uint8_t mode);
+namespace Clean
+{
+    bool SetVideoMode(uint8_t mode);
+}
 
 void regdump(const char* filename)
 {
@@ -556,7 +559,6 @@ int main(void)
     char filename[50];
     for (uint16_t i = 0; i < sizeof(modeTests) / sizeof(ModeTest); ++i)
     {
-        /*
         r.w.ax = 0x0003;
         intr(0x10, &r);
 
@@ -578,17 +580,16 @@ int main(void)
         r.w.ax = 0x0003;
         intr(0x10, &r);
 
-        SetVideoMode(modeTests[i].mode);
+        Clean::SetVideoMode(modeTests[i].mode);
 
         sprintf(filename, "me%02X.txt", modeTests[i].mode);
         regdump(filename);
-        */
 
-
+        /*
         uint8_t* address = modeTests[i].address;
         if (modeTests[i].address == NULL)
             address = linearFrameBuffer;
-        
+
         if (address == NULL)
             continue;
 
@@ -599,17 +600,18 @@ int main(void)
         r.w.bx = modeTests[i].vesaMode;
         intr(0x10, &r);
 
-        //SetVideoMode(modeTests[i].mode);
+        //Clean::SetVideoMode(modeTests[i].mode);
         modeTests[i].DrawTestPattern(modeTests[i].width, modeTests[i].height, address);
         getchar();
+        */
     }
 
-    //SetVideoMode(Hag::S3::VideoMode::G1024x768x64K);
+    //Clean::SetVideoMode(Hag::S3::VideoMode::G1024x768x64K);
     //drawTestPattern16bpp(1024, 768, linearFrameBuffer);
     //getchar();
 
     //r.w.ax = 0x0003;
     //intr(0x10, &r);
 
-    SetVideoMode(0x03);//80x25x16C
+    Clean::SetVideoMode(0x03);//80x25x16C
 }

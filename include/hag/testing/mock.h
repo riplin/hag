@@ -114,6 +114,7 @@ void FetchModifiedRegisters(int instance, RegisterCheckCallback_t callback, void
 void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* context);
 
 void SetMemoryAccessCallback(MemoryAccessCallback_t callback, void* context);
+void CompareMemoryRegions(MemoryAccess* memoryRegions, int count, int& matches);
 
 void Report();
 bool HasDifferences();

@@ -171,6 +171,28 @@ struct VESAVideoModeData
     VGA::Sequencer::MemoryModeControl_t MemoryModeControl;
 };
 
+struct AlphanumericCharSet
+{
+    uint8_t CharacterHeight;                //00   byte    length of each character definition in bytes
+    uint8_t RamBank;                        //01   byte    character generator RAM bank
+    uint16_t NumCharacters;                 //02   word    count of characters defined
+    uint16_t FirstCharacter;                //04   word    first character code in table
+    FARPointer FontData;                    //06   dword   pointer to character font definition table
+    uint8_t Rows;                           //0A   byte    number of character rows displayed
+    VGA::VideoMode_t ApplicableModes[1];    //0B   nbytes  array of applicable video modes
+	                                        //0B+n byte    FFh end of mode list marker
+};
+
+struct GraphicsCharSet
+{
+    uint8_t CharacterHeight;                //00   byte    count of displayed character rows
+    uint8_t RamBank;                        //01   byte    character generator RAM bank
+    uint8_t Unknown;                        //02   byte    length of each character definition in bytes
+    FARPointer FontData;                    //03   dword   pointer to character font definition table
+    VGA::VideoMode_t ApplicableModes[1];    //07   nbytes  array of applicable video modes
+                                            //07+n byte    FFh end of mode list marker
+};
+
 typedef uint8_t FirmwareFlag_t;
 namespace FirmwareFlag
 {

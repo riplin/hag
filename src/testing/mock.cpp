@@ -123,7 +123,6 @@ void Instance::Initialize(IAllocator& allocator, PortAndValue* defaultValues, ui
     DefaultPortValuesCount = defaultValuesCount;
 
     Reset();
-    SelectInstance(0);
 }
 
 void Instance::Snapshot()
@@ -1152,6 +1151,8 @@ void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint
         RAMDACPortHandler(allocator, ramdacRegisters);
     ramdac1->SetNext(s_Instance1.PortHandlers);
     s_Instance1.PortHandlers = ramdac1;
+
+    SelectInstance(0);
 }
 
 void AddReadOnlyPort(const char* name, uint16_t port)
@@ -1638,6 +1639,72 @@ void SetMemoryAccessCallback(MemoryAccessCallback_t callback, void* context)
     s_MemoryAccessContext = context;
 }
 
+void CompareMemoryRegions(MemoryAccess* memoryRegions, int count, int& matches)
+{
+    for (int i = 0; i < count; ++i)
+    {
+        uint8_t* ptr0 = s_Instance0.Memory + memoryRegions[i].Offset;
+        uint8_t* ptr1 = s_Instance1.Memory + memoryRegions[i].Offset;
+        bool matching = true;
+        bool fullyMatched = true;
+        uint32_t mismatchStart = 0;
+        for (uint32_t j = 0; j < memoryRegions[i].Size; ++j)
+        {
+            if (*ptr0 != *ptr1)
+            {
+                if (matching)
+                {
+                    matching = false;
+                    fullyMatched = false;
+                    mismatchStart = ptr0 - s_Instance0.Memory;
+                }
+            }
+            else
+            {
+                if (!matching)
+                {
+                    uint32_t count = (ptr0 - s_Instance0.Memory) - mismatchStart;
+                    printf("Mismatch in region: 0x%08X - %i\n", mismatchStart, count);
+                    uint8_t* diffPtr0 = s_Instance0.Memory + mismatchStart;
+                    uint8_t* diffPtr1 = s_Instance1.Memory + mismatchStart;
+                    if (count > 10)
+                    {
+                        count = 10;
+                    }
+                    for (uint32_t j = 0; j < count; ++j)
+                    {
+                        printf("Instance 0: 0x%02X, Instance 1: 0x%02X\n", *diffPtr0, *diffPtr1);
+                        ++diffPtr0;
+                        ++diffPtr1;
+                    }
+                    matching = true;
+                }
+            }
+            ++ptr0;
+            ++ptr1;
+        }
+        if (!matching)
+        {
+            uint32_t count = (ptr0 - s_Instance0.Memory) - mismatchStart;
+            printf("Mismatch in region: 0x%08X - %i\n", mismatchStart, count);
+            uint8_t* diffPtr0 = s_Instance0.Memory + mismatchStart;
+            uint8_t* diffPtr1 = s_Instance1.Memory + mismatchStart;
+            if (count > 10)
+            {
+                count = 10;
+            }
+            for (uint32_t j = 0; j < count; ++j)
+            {
+                printf("Instance 0: 0x%02X, Instance 1: 0x%02X\n", *diffPtr0, *diffPtr1);
+                ++diffPtr0;
+                ++diffPtr1;
+            }
+        }
+        if (fullyMatched)
+            ++matches;
+    }
+}
+
 void SelectInstance(int instance)
 {
     s_CurrentInstance = (instance & 1) == 0 ? &s_Instance0 : &s_Instance1;
@@ -1659,6 +1726,8 @@ void Reset()
 {
     s_Instance0.Reset();
     s_Instance1.Reset();
+
+    SelectInstance(0);
 }
 
 bool HasDifferences()
