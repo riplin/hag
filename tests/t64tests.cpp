@@ -16,8 +16,6 @@
 namespace Clean
 {
     uint16_t GetCRTControllerIndexRegister();
-    bool UnlockExtendedCRTRegistersSafe();
-    void LockExtendedCRTRegisters();
     void ModeSetBDA(uint8_t& al);
     bool VerifyBDAOrDeactivate(uint8_t& al);
     Hag::S3::VideoParameters* SetTextModeBiosData(uint8_t mode);
@@ -25,11 +23,8 @@ namespace Clean
     void SaveDynamicParameterData(Hag::S3::VideoParameters* overrideTable);
     void ApplyVideoParameters(Hag::S3::VideoParameters* overrideTable);
     uint8_t FetchBusSpecificSystemConfig(uint16_t crtcPort);
-    bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement, uint16_t size = sizeof(FARPointer));
-    bool CheckValidInCurrentMode(uint8_t* ptr, uint16_t offset);
     void ConfigureFontRamBank(Hag::S3::GraphicsCharSet* fontDefinition);
     void ConfigureFontAndCursor(Hag::S3::VideoMode_t mode, Hag::S3::AlphanumericCharSet* fontDefinition);
-    void SetGraphicsCharacterFont(uint8_t* graphicsCharacterFontDefinition);
     void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, uint16_t crtcPort);
     Hag::S3::VideoParameters* GetVideoModeOverrideTable(uint8_t mode);
     void SetupClocks(Hag::VGA::Register_t crtcPort, uint8_t clockConfig);
@@ -38,12 +33,13 @@ namespace Clean
     void Configure256KAddressingAndAddressWindow(uint8_t mode, uint16_t crtcReg);
     void SetColorMode(Hag::S3::VideoMode_t mode, Hag::S3::ColorMode_t colorMode, Hag::VGA::Register_t crtcPort);
     void ClearMemory(Hag::VGA::Register_t crtcPort);
-    void SetPaletteProfile();
+    void SetPaletteProfile(Hag::VGA::Register_t crtcPort);
     void EnablePaletteBasedVideo(Hag::VGA::Register_t crtcPort);
     void ApplyVESAOverrideData(uint8_t mode, Hag::VGA::Register_t crtcPort, Hag::S3::VESAVideoModeData* overrideTable);
     void SetPalette(Hag::S3::VideoMode_t mode);
     void SetFont();
     void ClearScreen(Hag::S3::VideoMode_t mode);
+    bool SetVideoMode(Hag::S3::VideoMode_t mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,104 +250,6 @@ int CRTCIndexRegisterTest()
 
         ret -= VERIFYPORTCONTENT(0, modifiedPorts, readPorts, modifiedIndexedPorts, readIndexedPorts);
         ret -= VERIFYPORTCONTENT(1, modifiedPorts, readPorts, modifiedIndexedPorts, readIndexedPorts);
-
-    return ret + Hag::Testing::Mock::Shutdown();
-}
-
-int CRTCRegisterLockingTest()
-{
-    int ret = 9;
-    uint16_t crtIndex = GetCRTControllerIndexRegister();
-
-    Support::Allocator allocator;
-    S3Trio64MockConfigSetup(allocator);
-
-    {
-        Hag::Testing::Mock::SelectInstance(0);
-        bool success1 = UnlockExtendedCRTRegistersSafe();
-
-        Hag::Testing::Mock::SelectInstance(1);
-        bool success2 = Clean::UnlockExtendedCRTRegistersSafe();
-        if (success1 && success2)
-        {
-            --ret;
-        }else
-        {
-            printf("UnlockExtendedCRTRegistersSafe returned false\n");
-        }
-
-        uint16_t ignorePorts[] =
-        {
-            Hag::VGA::Register::MiscellaneousR,
-            crtIndex,
-            crtIndex + 1
-        };
-        
-        Hag::Testing::Mock::PortAndIndexAndValue modifiedIndexedPorts[] =
-        {
-            {
-                crtIndex + 1,
-                Hag::S3::CRTControllerRegister::RegisterLock1,
-                Hag::S3::CRTController::RegisterLock1::UnlockCode
-            },
-            {
-                crtIndex + 1,
-                Hag::S3::CRTControllerRegister::RegisterLock2,
-                Hag::S3::CRTController::RegisterLock2::UnlockCode
-            }
-        };
-        
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL, 0,
-                                                           NULL, 0,
-                                                           modifiedIndexedPorts, sizeof(modifiedIndexedPorts) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),
-                                                           NULL, 0,
-                                                           ignorePorts, sizeof(ignorePorts) / sizeof(uint16_t));
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL, 0,
-                                                           NULL, 0,
-                                                           modifiedIndexedPorts, sizeof(modifiedIndexedPorts) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),
-                                                           NULL, 0,
-                                                           ignorePorts, sizeof(ignorePorts) / sizeof(uint16_t));
-    }
-
-    {
-        Hag::Testing::Mock::SelectInstance(0);
-        LockExtendedCRTRegisters();
-
-        Hag::Testing::Mock::SelectInstance(1);
-        Clean::LockExtendedCRTRegisters();
-
-        uint16_t ignorePorts[] =
-        {
-            Hag::VGA::Register::MiscellaneousR,
-            crtIndex,
-            crtIndex + 1
-        };
-        
-        Hag::Testing::Mock::PortAndIndexAndValue modifiedIndexedPorts[] =
-        {
-            {
-                crtIndex + 1,
-                Hag::S3::CRTControllerRegister::RegisterLock1,
-                Hag::S3::CRTController::RegisterLock1::LockCode
-            },
-            {
-                crtIndex + 1,
-                Hag::S3::CRTControllerRegister::RegisterLock2,
-                Hag::S3::CRTController::RegisterLock2::LockCode
-            }
-        };
-        
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL, 0,
-                                                           NULL, 0,
-                                                           modifiedIndexedPorts, sizeof(modifiedIndexedPorts) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),
-                                                           NULL, 0,
-                                                           ignorePorts, sizeof(ignorePorts) / sizeof(uint16_t));
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL, 0,
-                                                           NULL, 0,
-                                                           modifiedIndexedPorts, sizeof(modifiedIndexedPorts) / sizeof(Hag::Testing::Mock::PortAndIndexAndValue),
-                                                           NULL, 0,
-                                                           ignorePorts, sizeof(ignorePorts) / sizeof(uint16_t));
-    }
 
     return ret + Hag::Testing::Mock::Shutdown();
 }
@@ -805,8 +703,9 @@ int ApplyVideoParametersTest()
         {
             //printf("\n%i: 0x%02X instance 1\n", i, mode);
             Hag::Testing::Mock::SelectInstance(1);
-            if (!Clean::UnlockExtendedCRTRegistersSafe())
-                continue;
+            Hag::VGA::Register_t crtcPort = Clean::GetCRTControllerIndexRegister();
+            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
             
             if (mode > 0x13 && Hag::S3::TrioBase::FindVideoModeData(mode) == NULL)
                 continue; //Failure.
@@ -1393,8 +1292,9 @@ int ApplyVESAOverrideDataTest()
         //printf("\n%i: 0x%02X instance 1\n", i, mode);
         {
             Hag::Testing::Mock::SelectInstance(1);
-            if (!Clean::UnlockExtendedCRTRegistersSafe())
-                continue;
+            Hag::VGA::Register_t crtcPort = Clean::GetCRTControllerIndexRegister();
+            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
             Hag::S3::VESAVideoModeData* vesaData = Hag::S3::TrioBase::FindVideoModeData(mode);
@@ -1525,8 +1425,9 @@ int SetPaletteTest()
         //printf("\n%i: 0x%02X instance 1\n", i, mode);
         {
             Hag::Testing::Mock::SelectInstance(1);
-            if (!Clean::UnlockExtendedCRTRegistersSafe())
-                continue;
+            Hag::VGA::Register_t crtcPort = Clean::GetCRTControllerIndexRegister();
+            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
             Hag::S3::VESAVideoModeData* vesaData = Hag::S3::TrioBase::FindVideoModeData(mode);
@@ -1706,8 +1607,9 @@ int SetFontTest()
 
         {
             Hag::Testing::Mock::SelectInstance(1);
-            if (!Clean::UnlockExtendedCRTRegistersSafe())
-                continue;
+            Hag::VGA::Register_t crtcPort = Clean::GetCRTControllerIndexRegister();
+            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
             Hag::S3::VESAVideoModeData* vesaData = Hag::S3::TrioBase::FindVideoModeData(mode);
@@ -1739,8 +1641,6 @@ int SetFontTest()
             Hag::Testing::Mock::Snapshot();
 
             Clean::SetPalette(mode);
-
-            uint16_t crtReg = Hag::System::BDA::VideoBaseIOPort::Get();
 
             uint8_t flags = 0;
             if ((mode < 0x04) ||
@@ -1899,8 +1799,9 @@ int SetVideoModeInternalsTest()
             Hag::Testing::Mock::SelectInstance(1);
             Hag::Testing::Mock::SetMemoryAccessCallback(Memory_VerifyCallback, &context);
 
-            if (!Clean::UnlockExtendedCRTRegistersSafe())
-                continue;
+            Hag::VGA::Register_t crtcPort = Clean::GetCRTControllerIndexRegister();
+            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
             Hag::S3::VESAVideoModeData* vesaData = Hag::S3::TrioBase::FindVideoModeData(mode);
@@ -1923,8 +1824,6 @@ int SetVideoModeInternalsTest()
                         ~(Hag::System::BDA::VideoModeOptions::Unknown |
                         Hag::System::BDA::VideoModeOptions::Inactive);
 
-            uint16_t crtcPort = Hag::System::BDA::VideoBaseIOPort::Get();
-
             Clean::SaveDynamicParameterData(overrideTable);
             Clean::ApplyVideoParameters(overrideTable);
             Clean::ApplyVESAOverrideData(mode, crtcPort, vesaData);
@@ -1937,34 +1836,37 @@ int SetVideoModeInternalsTest()
             {
                 Clean::SetFont();
 
-                uint8_t* fontDefinition = NULL;
-                if (Clean::FetchCheckedVideoParameterBlockElement(2, 11, fontDefinition, 0x0B + 0x14))
-                    Clean::ConfigureFontAndCursor(mode, (Hag::S3::AlphanumericCharSet*)fontDefinition);
+                Hag::S3::AlphanumericCharSet* fontDefinition = NULL;
+                if (Hag::System::BDA::GetVideoParameterBlockElementAs<Hag::S3::AlphanumericCharSet>(2, fontDefinition, 0x0B + 0x14) &&
+                    Hag::System::BDA::CheckValidInCurrentMode(fontDefinition->ApplicableModes))
+                    Clean::ConfigureFontAndCursor(mode, fontDefinition);
 
-                uint8_t* paramBlock = NULL;
-                if (Clean::GetVideoParameterBlockElement(4, paramBlock, 0x20) &&
-                    !((FARPointer*)(paramBlock + 0x06))->IsNull())
+                Hag::System::BDA::SecondarySavePointerTable* paramBlock = NULL;
+                if (Hag::System::BDA::GetVideoParameterBlockElementAs<Hag::System::BDA::SecondarySavePointerTable>(4, paramBlock, 0x20) &&
+                    !paramBlock->SecondaryAlphanumericCharacterSetOverride.IsNull())
                 {
+                    Hag::S3::GraphicsCharSet* graphicsFont = paramBlock->SecondaryAlphanumericCharacterSetOverride.
+                        ToPointer<Hag::S3::GraphicsCharSet>(0x0B + 0x14);
 
-                    fontDefinition = ((FARPointer*)(paramBlock + 0x06))->ToPointer<uint8_t>(0x0B + 0x14);//there's a 0xFF terminated list of modes. max is 14h
-                    if (Clean::CheckValidInCurrentMode(fontDefinition, 7))
-                        Clean::ConfigureFontRamBank((Hag::S3::GraphicsCharSet*)fontDefinition);
+                    if (Hag::System::BDA::CheckValidInCurrentMode(graphicsFont->ApplicableModes))
+                        Clean::ConfigureFontRamBank(graphicsFont);
                 }
             }
             else
             {
                 Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
                 
-                uint8_t* graphicsCharacterFontDefinition = NULL;
-                if (Clean::FetchCheckedVideoParameterBlockElement(3, 7, graphicsCharacterFontDefinition, 0x07 + 0x14))
-                    Clean::SetGraphicsCharacterFont(graphicsCharacterFontDefinition); //Sets the pointer in the interrupt table.
+                Hag::System::BDA::GraphicsCharacterSetOverride* graphicsCharacterFontDefinition = NULL;
+                if (Hag::System::BDA::GetVideoParameterBlockElementAs<Hag::System::BDA::GraphicsCharacterSetOverride>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
+                    Hag::System::BDA::CheckValidInCurrentMode(graphicsCharacterFontDefinition->ApplicableVideoModes))
+                    Hag::System::BDA::SetGraphicsCharacterFont(graphicsCharacterFontDefinition);
             }
 
             if (((Hag::System::BDA::VideoModeOptions::Get() & 0x80) == 0x00) &&
                 (Hag::System::BDA::VideoBufferSize::Get() != 0x0000))
                 Clean::ClearScreen(mode);
 
-            Clean::SetPaletteProfile();
+            Clean::SetPaletteProfile(crtcPort);
             Clean::EnablePaletteBasedVideo(crtcPort);
             Hag::VGA::Sequencer::ClockingMode::TurnScreenOn();
 
@@ -2008,9 +1910,15 @@ int SetVideoModeTest()
     for (uint8_t i = 0; i < modesCount; ++i)
     {
         uint8_t mode = modes[i];
-        //printf("\n%i: 0x%02X\n", i, mode);
-
+        //printf("\n%i: 0x%02X instance 0\n", i, mode);
+        Hag::Testing::Mock::SelectInstance(0);
         SetVideoMode(mode);
+
+
+        //printf("\n%i: 0x%02X instance 1\n", i, mode);
+        Hag::Testing::Mock::SelectInstance(1);
+        Clean::SetVideoMode(mode);
+
 /*
         ret -= context.Verified;
 

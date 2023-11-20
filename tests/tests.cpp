@@ -5,7 +5,6 @@
 int MockSetupTeardownTest();
 int SquenceRegisterLockingTest();
 int CRTCIndexRegisterTest();
-int CRTCRegisterLockingTest();
 int FindVideoModeDataTest();
 int GetVideoModeFlagsTest();
 int GetVESAVideoModeOverrideTableTest();
@@ -59,7 +58,6 @@ int main(void)
     TESTFUNCTION(MockSetupTeardownTest);
     TESTFUNCTION(SquenceRegisterLockingTest);
     TESTFUNCTION(CRTCIndexRegisterTest);
-    TESTFUNCTION(CRTCRegisterLockingTest);
     TESTFUNCTION(FindVideoModeDataTest);
     TESTFUNCTION(GetVideoModeFlagsTest);
     TESTFUNCTION(GetVESAVideoModeOverrideTableTest);

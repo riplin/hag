@@ -1,6 +1,5 @@
 //Copyright 2023-Present riplin
 
-#include <i86.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -113,32 +112,6 @@ Hag::VGA::Register_t GetCRTControllerIndexRegister()
             MiscellaneousOutput::IOAddressSelect ?
             Register::CRTControllerIndexD :
             Register::CRTControllerIndexB;
-}
-
-void LockExtendedCRTRegisters()
-{
-    using namespace Hag;
-    using namespace Hag::VGA;
-
-    Register_t crtc = GetCRTControllerIndexRegister();
-    S3::CRTController::RegisterLock1::Lock(crtc);
-    S3::CRTController::RegisterLock2::Lock(crtc);
-}
-
-void UnlockExtendedCRTRegisters()
-{
-    using namespace Hag;
-    using namespace Hag::VGA;
-
-    Register_t crtc = GetCRTControllerIndexRegister();
-    S3::CRTController::RegisterLock1::Unlock(crtc);
-    S3::CRTController::RegisterLock2::Unlock(crtc);
-}
-
-bool UnlockExtendedCRTRegistersSafe()
-{
-    UnlockExtendedCRTRegisters();
-    return true;
 }
 
 void ModeSetBDA(Hag::VGA::VideoMode_t& mode)
@@ -356,7 +329,7 @@ bool VerifyBDAOrDeactivate(Hag::VGA::VideoMode_t& mode)
         {
             if ((mode == VideoMode::G640x350x2M) ||
                 (mode == VideoMode::T80x25x2M) ||
-                (Hag::S3::TrioBase::GetVideoModeFlags(mode, flags) &&
+                (S3::TrioBase::GetVideoModeFlags(mode, flags) &&
                 (flags & S3::VESAVideoModeFlags::Color) == 0))
             {
                 mode = VideoMode::T40x25x16G;
@@ -381,24 +354,6 @@ bool VerifyBDAOrDeactivate(Hag::VGA::VideoMode_t& mode)
     return ret;
 }
 
-bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer))
-{
-    using namespace Hag::System::BDA;
-    bool ret = false;
-    returnPointer = NULL;
-
-    if (!VideoParameterControlBlockPointer::Get().IsNull())
-    {
-        FARPointer* realControlBlockPointer = VideoParameterControlBlockPointer::Get().ToPointer<FARPointer>(0x1C);
-        if (!realControlBlockPointer[index].IsNull())
-        {
-            ret = true;
-            returnPointer = realControlBlockPointer[index].ToPointer<uint8_t>(size);
-        }
-    }
-    return ret;
-}
-
 Hag::S3::VideoParameters* GetVideoModeOverrideTable(Hag::VGA::VideoMode_t mode)
 {
     using namespace Hag;
@@ -409,7 +364,7 @@ Hag::S3::VideoParameters* GetVideoModeOverrideTable(Hag::VGA::VideoMode_t mode)
 
     if (mode <= VideoMode::MaxValid)
     {
-        uint8_t* translationTable = Hag::S3::TrioBase::m_VideoModeOverrideTranslationTable1;
+        uint8_t* translationTable = S3::TrioBase::m_VideoModeOverrideTranslationTable1;
         if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::LineMode400) == 0)
         {
             translationTable = S3::TrioBase::m_VideoModeOverrideTranslationTable2;
@@ -482,6 +437,8 @@ Hag::S3::VideoParameters* SetTextModeBiosData(uint8_t mode)
 
 void SaveDynamicParameterData(Hag::S3::VideoParameters* overrideTable)
 {
+    using namespace Hag::System::BDA;
+
     uint8_t* savePointer;
     if (!GetVideoParameterBlockElement(1, savePointer, 0x100))
         return;
@@ -572,12 +529,6 @@ void ApplyVideoParameters(Hag::S3::VideoParameters* overrideTable)
     }
 }
 
-uint8_t ReadDataWithIndexRegister(uint16_t port, uint8_t index)
-{
-    SYS_WritePortByte(port, index);
-    return SYS_ReadPortByte(port + 1);
-}
-
 uint8_t FetchBusSpecificSystemConfig(Hag::VGA::Register_t crtcPort)
 {
     using namespace Hag::S3;
@@ -644,7 +595,8 @@ void ClearMemory(Hag::VGA::Register_t crtcPort)
 
     if ((VideoModeOptions::Get() & VideoModeOptions::DontClearDisplay) == 0)
     {
-        UnlockExtendedCRTRegisters();
+        S3::CRTController::RegisterLock1::Unlock(crtcPort);
+        S3::CRTController::RegisterLock2::Unlock(crtcPort);
 
         S3::CRTController::LinearAddressWindowControl_t linearAddressControl = 
             S3::CRTController::LinearAddressWindowControl::Read(crtcPort);
@@ -758,7 +710,8 @@ uint8_t GetMemorySizeInMiB(Hag::VGA::Register_t crtcPort)
 {
     using namespace Hag;
 
-    UnlockExtendedCRTRegisters();
+    S3::CRTController::RegisterLock1::Unlock(crtcPort);
+    S3::CRTController::RegisterLock2::Unlock(crtcPort);
 
     uint8_t size;
     switch (S3::CRTController::Configuration1::Read(crtcPort) & S3::CRTController::Configuration1::DisplayMemorySize)
@@ -1283,6 +1236,7 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t n
 {
     using namespace Hag;
     using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
     static uint16_t RamBankOffset[] =
     {
@@ -1323,7 +1277,7 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t n
 
     GraphicsController::GraphicsControllerMode::Write(GraphicsController::GraphicsControllerMode::OddEvenAddressing);
 
-    if (Hag::System::BDA::VideoBaseIOPort::Get() != 0x03b4)
+    if (VideoBaseIOPort::Get() != Register::CRTControllerIndexB)
     {
         GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes |
                                                         GraphicsController::MemoryMapModeControl::B8000HtoBFFFFH);
@@ -1333,9 +1287,7 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t n
         GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes |
                                                         GraphicsController::MemoryMapModeControl::B0000HtoB7FFFH);
     }
-
-    //TODO: Remove this BDA reference.
-    EnablePaletteBasedVideo(Hag::System::BDA::VideoBaseIOPort::Get());
+    EnablePaletteBasedVideo(VideoBaseIOPort::Get());
 }
 
 void ConfigureCursorPropertiesAndVerticalDisplayEnd(Hag::S3::VideoMode_t mode, uint8_t characterPointHeight)
@@ -1431,46 +1383,22 @@ void ConfigureCursorPropertiesAndVerticalDisplayEnd(Hag::S3::VideoMode_t mode, u
 
 void SetFont()
 {
+    using namespace Hag;
     using namespace Hag::VGA;
     using namespace Hag::System::BDA;
 
     if (PointHeightOfCharacterMatrix::Get() == 14)
     {
-        SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x14, 0, 256, 14, DisplayMode::Get() == VideoMode::T80x25x2M ? 0x80 : 0);
+        SetTextFontAndAddressing(S3::TrioBase::m_Characters8x14, 0, 256, 14, DisplayMode::Get() == VideoMode::T80x25x2M ? 0x80 : 0);
     }
     else if (PointHeightOfCharacterMatrix::Get() == 8)
     {
-        SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x8, 0, 256, 8, 0);
+        SetTextFontAndAddressing(S3::TrioBase::m_Characters8x8, 0, 256, 8, 0);
     }
     else
     {
-        SetTextFontAndAddressing(Hag::S3::TrioBase::m_Characters8x16, 0, 256, 16, 0x40);
+        SetTextFontAndAddressing(S3::TrioBase::m_Characters8x16, 0, 256, 16, 0x40);
     }
-}
-
-bool CheckValidInCurrentMode(uint8_t* ptr, uint16_t offset)
-{
-    using namespace Hag::System::BDA;
-    ptr += offset;
-
-    uint8_t displayMode = DisplayMode::Get();
-    do
-    {
-        if(*ptr == 0xFF)
-            return false;
-
-        if (*ptr == displayMode)
-            return true;
-
-        ++ptr;
-    } while (true);
-}
-
-bool FetchCheckedVideoParameterBlockElement(uint16_t paramTableIdx, uint16_t subIdx, uint8_t*& parameterBlockElement, uint16_t size = sizeof(FARPointer))
-{
-    if (GetVideoParameterBlockElement(paramTableIdx, parameterBlockElement, size))
-        return CheckValidInCurrentMode(parameterBlockElement, subIdx);
-    return false;
 }
 
 void ConfigureFontAndCursor(Hag::S3::VideoMode_t mode, Hag::S3::AlphanumericCharSet* fontDefinition)
@@ -1516,16 +1444,16 @@ void ClearScreen(Hag::S3::VideoMode_t mode)
 {
     using namespace Hag::VGA;
 
-    uint16_t size =  0x4000;
+    uint32_t size =  0x2000;
     uint16_t segment = 0;
-    uint16_t value = 0;
+    uint32_t value = 0;
 
     uint8_t flags = 0;
     if ((mode > VideoMode::MaxValid) &&
         Hag::S3::TrioBase::GetVideoModeFlags(mode, flags))
     {
         segment = 0xB800;
-        value = 0x720;
+        value = 0x07200720;
 
         if ((flags & Hag::S3::VESAVideoModeFlags::Color) == 0x00)
         {
@@ -1539,12 +1467,12 @@ void ClearScreen(Hag::S3::VideoMode_t mode)
         if (mode == VideoMode::T80x25x2M)
         {
             segment = 0xB000;
-            value = 0x720;
+            value = 0x07200720;
         }
         else if (mode <= VideoMode::T80x25x16C)
         {
             segment = 0xB800;
-            value = 0x720;
+            value = 0x07200720;
         }
         else if (mode <= VideoMode::G640x200x2M)
         {
@@ -1553,527 +1481,166 @@ void ClearScreen(Hag::S3::VideoMode_t mode)
         else
         {
             segment = 0xA000;
-            size = 0x8000;
+            size = 0x4000;
         }
     }
 
-    uint16_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint16_t>(size << 1);
+    uint32_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint32_t>(size << 2);
     
-    //TODO: Faster memset?
     do
     {
         *ptr = value;
         ++ptr;
         --size;
-    } while (size != 0x0000);
+    } while (size != 0);
 }
 
-void SetPaletteProfile()
+void SetPaletteProfile(Hag::VGA::Register_t crtcPort)
 {
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    uint8_t* secondarySavePointerTable = NULL;
-    uint8_t* paletteProfile = NULL;
-    uint8_t* paletteColors = NULL;
-    uint8_t* attributeRegisters = NULL;
-    uint8_t t = 0;
-
-    //     mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
-    r.w.bx = 0x10;
-
-    //     call  GetVideoParameterBlockElement ;Offset 0x1d95
-    if (!GetVideoParameterBlockElement(4, secondarySavePointerTable, 0x20))
-        return;
-
-    //     je    NotFound                      ;Offset 0x1cce
-    //     les   bx, es:[bx + 0ah]             ;pointer to user palette profile table  (VGA)
-    //     mov   ax, es
-    //     or    ax, bx
-    //     je    NotFound                      ;Offset 0x1cce
-    if (((FARPointer*)secondarySavePointerTable + 0x0A)->IsNull())
-        return;
-    paletteProfile = ((FARPointer*)secondarySavePointerTable + 0x0A)->ToPointer<uint8_t>(0x14 + 0x14);
-
-    //     mov   ax, 14h                       ;array of applicable video modes for this font
-    //     call  CheckValidInCurrentMode        ;Offset 0x1bd1
-    if (!CheckValidInCurrentMode(paletteProfile, 0x14))
-        return;
-
-    //     je    Label0x1ccf                   ;Offset 0x1ccf
-    // NotFound:                               ;Offset 0x1cce
-    //     ret
-    // Label0x1ccf:                            ;Offset 0x1ccf
-    //     test  byte ptr ds:[BDA_VideoDisplayDataArea], 08h;Offset 0x489 //BDA_VDDA_PaletteLoadingEnabled
-    //     jne   Label0x1d2b                   ;Offset 0x1d2b
-    if ((Hag::System::BDA::VideoDisplayDataArea::Get() & 0x08) != 0x00)
-        goto Label0x1d2b;
-
-    //     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
-
-    //     add   dx, 06h                       ;0x3?A - InputStatus1 - reset attribute controller register flip flop
-    r.w.dx += 0x06;
-
-    //     in    al, dx
-    r.h.al = SYS_ReadPortByte(r.w.dx);
-
-    //     push  ds
-    //     push  bx
-    //     mov   ax, word ptr es:[bx + 0eh]    ;first video DAC color register number
-    r.h.al = paletteProfile[0x0e];
-
-    //     mov   ah, al                        ;
-    r.h.ah = r.h.al;
-
-    //     mov   bx, word ptr es:[bx + 0ch]    ;count of video DAC color registers in table
-    r.h.bl = paletteProfile[0x0c];
-    r.h.bh = paletteProfile[0x0d];
-
-    //     lds   si, es:[bx + 10h]             ;video DAC color register table pointer
-    paletteColors = ((FARPointer*)paletteProfile + 0x10)->ToPointer<uint8_t>(r.w.cx);
-
-    //     or    bx, bx                        ;
-    //     je    NoColorData                   ;Offset 0x1d06
-    if (r.h.bh == 0x0000)
-        goto NoColorData;
-
-    //     mov   dx, DACWriteIndex             ;port - 0x3c8 - DACWriteIndex
-    r.w.dx = Hag::VGA::Register::DACWriteIndex;
-
-    // NextColor:                              ;Offset 0x1cf5
-LABEL(SetPaletteProfile, NextColor);
-
-    //     mov   al, ah
-    r.h.al = r.h.ah;
-
-    //     out   dx, al                        ;index
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-    //     inc   dx                            ;port - 0x3c9 - RAMDACData
-    ++r.w.dx;
-
-    //     mov   cx, 03h                       ;3 colors
-    r.w.cx = 0x03;
-
-    // WriteColors:                            ;Offset 0x1cfc
-LABEL(SetPaletteProfile, WriteColors);
-
-    //     lodsb byte ptr ds:[si]              ;write out R, G, B
-    r.h.al = *paletteColors;
-    ++paletteColors;
-
-    //     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-    //     loop  WriteColors                   ;Offset 0x1cfc
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto WriteColors;
-
-    //     inc   ah
-    ++r.h.ah;
-
-    //     dec   dx
-    --r.w.dx;
-
-    //     dec   bx
-    --r.w.bx;
-
-    //     jne   NextColor                     ;Offset 0x1cf5
-    if (r.w.bx != 0x0000)
-        goto NextColor;
-
-    // NoColorData:                            ;Offset 0x1d06
-LABEL(SetPaletteProfile, NoColorData);
-    //     pop   bx
-    //     mov   ax, word ptr es:[bx + 06h]    ;first attribute controller register number
-    r.h.al = paletteProfile[0x06];
-
-    //     mov   ah, al
-    r.h.ah = r.h.al;
-
-    //     mov   cx, word ptr es:[bx + 04h]    ;count of attribute controller regs in table
-    r.h.cl = paletteProfile[0x04];
-    r.h.ch = paletteProfile[0x05];
-
-    //     lds   si, es:[bx + 08h]             ;pointer to attribute controller reg table
-    attributeRegisters = ((FARPointer*)paletteProfile + 0x08)->ToPointer<uint8_t>(r.w.cx);
-
-    //     jcxz  NoAttributes                  ;Offset 0x1d2a
-    if (r.w.cx == 0x0000)
-        goto NoAttributes;
-        
-    //     mov   dx, AttributeControllerIndex  ;port - 0x3c0
-    r.w.dx = 0x03c0;
-
-    // NextAttribute:                          ;Offset 0x1d1a
-LABEL(SetPaletteProfile, NextAttribute);
-
-    //     mov   al, ah
-    r.h.al = r.h.ah;
-
-    //     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-    //     lodsb byte ptr ds:[si]
-    r.h.al = *attributeRegisters;
-    ++attributeRegisters;
-
-    //     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-    //     inc   ah
-    ++r.h.ah;
-
-    //     loop  NextAttribute                 ;Offset 0x1d1a
-    --r.w.cx;
-    if (r.w.cx != 0x0000)
-        goto NextAttribute;
-
-    //     inc   ah
-    ++r.h.ah;
-
-    //     mov   al, ah
-    r.h.al = r.h.ah;
-
-    //     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-
-    //     lodsb byte ptr ds:[si]
-    r.h.al = *attributeRegisters;
-    ++attributeRegisters;
-
-    //     out   dx, al
-    SYS_WritePortByte(r.w.dx, r.h.al);
-    
-    // NoAttributes:                           ;Offset 0x1d2a
-LABEL(SetPaletteProfile, NoAttributes);
-
-    //     pop   ds
-    // Label0x1d2b:                            ;Offset 0x1d2b
-LABEL(SetPaletteProfile, Label0x1d2b);
-
-    //     mov   al, byte ptr es:[bx]          ;1 - enable underlining in all alphanumeric modes
-    // 		                                   ;0 - enable underlining in monochrome alpha modes
-    // 		                                   ;-1 - disable underlining in all alpha modes
-    r.h.al = paletteProfile[0x00];
-
-    //     or    al, al
-    //     je    Label0x1d46                   ;Offset 0x1d46
-    if (r.h.al == 0x00)
-        goto Label0x1d46;
-
-    //     test  al, 80h
-    t = r.h.al;
-    r.h.al = 0x1f;
-
-    //     mov   al, 1fh
-    //     jne   Label0x1d3d                   ;Offset 0x1d3d
-    if ((t & 0x80) != 0x00)
-        goto Label0x1d3d;
-
-    //     mov   ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    r.w.ax = Hag::System::BDA::PointHeightOfCharacterMatrix::Get();
-
-    //     dec   al
-    --r.h.al;
-
-    // Label0x1d3d:                            ;Offset 0x1d3d
-LABEL(SetPaletteProfile, Label0x1d3d);
-
-    //     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    r.w.dx = Hag::System::BDA::VideoBaseIOPort::Get();
-
-    //     mov   ah, al
-    r.h.ah = r.h.al;
-
-    //     mov   al, 14h
-    r.h.al = 0x4;
-    
-    //     out   dx, ax
-    SYS_WritePortShort(r.w.dx, r.w.ax);
-
-    // Label0x1d46:                            ;Offset 0x1d46
-LABEL(SetPaletteProfile, Label0x1d46);
-    
-    //     ret
-}
-
-void SetGraphicsCharacterFont(uint8_t* graphicsCharacterFontDefinition)
-{
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    // mov   al, byte ptr es:[bx]          ;number of displayed character rows
-    r.h.al = graphicsCharacterFontDefinition[0];
-
-    // dec   al
-    --r.h.al;
-
-    // mov   byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
-    Hag::System::BDA::RowsOnScreen::Get() = r.h.al;
-
-    // mov   ax, word ptr es:[bx + 01h]    ;length of character definition in bytes
-    r.h.al = graphicsCharacterFontDefinition[1];
-    r.h.ah = graphicsCharacterFontDefinition[2];
-
-    // mov   word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
-    Hag::System::BDA::PointHeightOfCharacterMatrix::Get() = r.w.ax;
-    
-    // mov   ax, word ptr es:[bx + 03h]    ;offset of character font
-    // mov   bx, word ptr es:[bx + 05h]    ;segment of character font
-    // mov   es, word ptr cs:[Data1488]    ;Offset 0x1488
-    // mov   di, 010ch                     ;Offset 0x10c int 0x43 - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
-    // cli
-    // stosw word ptr es:[di]
-    // mov   ax, bx
-    // stosw word ptr es:[di]
-    // sti
-    // ret
-}
-
-// ;inputs:
-// ;al = requested video mode
-bool SetVideoMode(uint8_t mode)
-{
+    using namespace Hag;
     using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-    REGPACK r;
-    memset(&r, 0, sizeof(r));
-    uint32_t offset = 0;
-    Hag::S3::VideoParameters* overrideTable = NULL;
-    uint8_t* fontDefinition = NULL;
-    uint8_t* graphicsCharacterFontDefinition = NULL;
-    Hag::S3::VESAVideoModeData* vesaData = NULL;
-    uint8_t* paramBlock = NULL;
-    Register_t crtcPort = Hag::System::BDA::VideoBaseIOPort::Get();
-    uint8_t modeDataIndex = 0;
-    uint8_t flags = 0;
-    r.h.al = mode;
+    SecondarySavePointerTable* secondarySavePointerTable = NULL;
+    if (GetVideoParameterBlockElementAs<SecondarySavePointerTable>(4, secondarySavePointerTable, 32) &&
+        !secondarySavePointerTable->UserPaletteProfileTable.IsNull())
+    {
+        PaletteProfile* paletteProfile = secondarySavePointerTable->UserPaletteProfileTable.ToPointer<PaletteProfile>(0x14 + 0x14);
+        if (CheckValidInCurrentMode(paletteProfile->ApplicableModes))
+        {
+            if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) != 0)
+            {
+                InputStatus1::Read(crtcPort + (Register::InputStatus1D - Register::CRTControllerIndexD));
 
-//     call UnlockExtendedCRTRegistersSafe ;Offset 0x1374
-//     jne  Failure                        ;Offset 0x182b
-    if (!UnlockExtendedCRTRegistersSafe())
-        goto Failure;
+                uint16_t colorCount = (paletteProfile->DACRegisterCount << 1) +
+                                       paletteProfile->DACRegisterCount;
 
-//     mov  ah, al                         ;al = requested video mode
-    r.h.ah = r.h.al;
+                uint8_t* paletteColors = paletteProfile->DACRegisterTable.ToPointer<uint8_t>(colorCount);
+                DACWriteIndex::Write(uint8_t(paletteProfile->DACRegisterStartIndex));
+                while (colorCount != 0)
+                {
+                    RAMDACData::Write(*paletteColors);
+                    ++paletteColors;
+                    --colorCount;
+                }
 
-//     and  al, NOT INT10_00_xx_DontClearDisplay;0x7f
-    r.h.al &= 0x7f;
+                if (paletteProfile->AttributeRegisterCount != 0)
+                {
+                    uint8_t* attributeRegisters = paletteProfile->AttributeRegisterTable.ToPointer<uint8_t>(paletteProfile->AttributeRegisterCount);
+                    
+                    for (uint16_t attrIdx = 0; attrIdx < paletteProfile->AttributeRegisterCount; ++attrIdx)
+                    {
+                        AttributeControllerData::Write(paletteProfile->AttributeRegisterStartIndex + attrIdx,
+                                                    *attributeRegisters);
+                        ++attributeRegisters;
+                    }
+                    AttributeControllerData::Write(paletteProfile->AttributeRegisterCount + 1, *attributeRegisters);
+                }
+            }
 
-//     cmp  al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
-//     jbe  ValidVideoMode                 ;Offset 0x182c
-    if (r.h.al <= 0x13)
-        goto ValidVideoMode;
+            if (paletteProfile->Underlining != 0)
+            {
+                CRTController::StartHorizontalSyncPosition_t horizontalSyncPos = 31;
+                if (paletteProfile->Underlining > 0)
+                    horizontalSyncPos = CRTController::StartHorizontalSyncPosition_t(PointHeightOfCharacterMatrix::Get() - 1);
 
-//     call FindVideoModeData              ;Offset 0x103a
-//     je   ValidVideoMode                 ;Offset 0x182c
-    if (vesaData = Hag::S3::TrioBase::FindVideoModeData(r.h.al))
-        goto ValidVideoMode;
+                CRTController::StartHorizontalSyncPosition::Write(crtcPort, horizontalSyncPos);
+            }
+        }
+    }
+}
 
-// Failure:                                ;Offset 0x182b
-LABEL(SetVideoMode, Failure);
+bool SetVideoMode(Hag::S3::VideoMode_t mode)
+{
+    using namespace Hag;
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-//     ret
-    return false;
+    Hag::VGA::Register_t crtcPort = GetCRTControllerIndexRegister();
+    
+    S3::CRTController::RegisterLock1::Unlock(crtcPort);
+    S3::CRTController::RegisterLock2::Unlock(crtcPort);
 
-// ValidVideoMode:                         ;Offset 0x182c
-LABEL(SetVideoMode, ValidVideoMode);
+    S3::VideoMode_t dontClearDisplay = mode & VideoMode::DontClearDisplay;
 
-//     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_DontClearDisplay;Offset 0x487, 0x7f
-    Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
+    mode &= ~VideoMode::DontClearDisplay;
 
-//     and  ah, INT10_00_xx_DontClearDisplay;0x80
-    r.h.ah &= 0x80;
+    S3::VESAVideoModeData* vesaData = NULL;
 
-//     or   byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487
-    Hag::System::BDA::VideoModeOptions::Get() |= r.h.ah;
+    if ((mode <= VideoMode::MaxValid) &&
+        (vesaData = S3::TrioBase::FindVideoModeData(mode)))
+    {
+        VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
+        VideoModeOptions::Get() |= dontClearDisplay;
 
-//     call ModeSetBDA                     ;Offset 0x18e8
-    ModeSetBDA(r.h.al);
-//     cmp  al, INT10_00_13_G_40x25_8x8_320x200_256C_x_A000;0x13
-//     ja   IsVESAMode                     ;Offset 0x1850
-    if (r.h.al > 0x13)
-        goto IsVESAMode;
+        ModeSetBDA(mode);
 
-//     call VerifyBDAOrDeactivate               ;Offset 0x1a4e - This function seems to destroy al?
-//     je   IsVESAMode                     ;Offset 0x1850
-    if (VerifyBDAOrDeactivate(r.h.al))
-        goto IsVESAMode;
+        if ((mode <= VideoMode::MaxValid) &&
+            !VerifyBDAOrDeactivate(mode))
+        {
+            //Video card deactivated.
+            return false;
+        }
 
-//     and  al, 0dfh                       ;bit 5 = 0
-//     mov  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
-//     call EmptyFunction3                 ;Offset 0x1380
-//     call SetSystemAdapterVideoMode      ;Offset 0x1acc
-//     ret
-        return false; //We're not doing the above. We're not calling into the system BIOS.
+        DisplayMode::Get() = mode;
 
-// IsVESAMode:                             ;Offset 0x1850
-LABEL(SetVideoMode, IsVESAMode);
+        S3::VideoParameters* overrideTable = SetTextModeBiosData(mode);
 
-//     push cx
-//     mov  byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
-    Hag::System::BDA::DisplayMode::Get() = r.h.al;
+        VideoModeOptions::Get() &= ~(VideoModeOptions::Unknown |
+                                     VideoModeOptions::Inactive);
 
-//     call SetTextModeBiosData            ;Offset 0x1b05
-    overrideTable = SetTextModeBiosData(r.h.al);
+        SaveDynamicParameterData(overrideTable);
+        ApplyVideoParameters(overrideTable);
+        ApplyVESAOverrideData(mode, crtcPort, vesaData);
+        SetPalette(mode);
 
-//     and  byte ptr ds:[BDA_VideoModeOptions], 0f3h;Offset 0x487
-    Hag::System::BDA::VideoModeOptions::Get() &= 0xf3;
+        S3::VESAVideoModeFlags_t flags = 0;
 
-//     call SaveDynamicParameterData       ;Offset 0x1bac
-    SaveDynamicParameterData(overrideTable);
+        if ((mode < VideoMode::G320x200x4C) ||
+            (mode == VideoMode::T80x25x2M) ||
+            (S3::TrioBase::GetVideoModeFlags(mode, flags) &&
+            ((flags & S3::VESAVideoModeFlags::WindowGranularity64KiB) != 0)))
+        {
+            SetFont();
 
-//     call ApplyVideoParameters           ;Offset 0x4829
-    ApplyVideoParameters(overrideTable);
+            S3::AlphanumericCharSet* fontDefinition = NULL;
+            if (GetVideoParameterBlockElementAs<S3::AlphanumericCharSet>(2, fontDefinition, 0x0B + 0x14) &&
+                CheckValidInCurrentMode(fontDefinition->ApplicableModes))
+                ConfigureFontAndCursor(mode, fontDefinition);
 
-//     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    r.h.al = Hag::System::BDA::DisplayMode::Get();
+            SecondarySavePointerTable* paramBlock = NULL;
+            if (GetVideoParameterBlockElementAs<SecondarySavePointerTable>(4, paramBlock, 0x20) &&
+                !paramBlock->SecondaryAlphanumericCharacterSetOverride.IsNull())
+            {
+                S3::GraphicsCharSet* graphicsFont = paramBlock->SecondaryAlphanumericCharacterSetOverride.
+                    ToPointer<S3::GraphicsCharSet>(0x0B + 0x14);
 
-//     call ApplyVESAOverrideData          ;Offset 0x1079
-    ApplyVESAOverrideData(r.h.al, GetCRTControllerIndexRegister(), vesaData);
+                if (CheckValidInCurrentMode(graphicsFont->ApplicableModes))
+                    ConfigureFontRamBank(graphicsFont);
+            }
+        }
+        else
+        {
+            CursorScanLines::Get().End = 0;
+            CursorScanLines::Get().Start = 0;
 
-//     call SetPalette                     ;Offset 0x4909
-    SetPalette(mode);
+            GraphicsCharacterSetOverride* graphicsCharacterFontDefinition = NULL;
+            if (GetVideoParameterBlockElementAs<GraphicsCharacterSetOverride>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
+                CheckValidInCurrentMode(graphicsCharacterFontDefinition->ApplicableVideoModes))
+                SetGraphicsCharacterFont(graphicsCharacterFontDefinition);
+        }
 
-//     mov  dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    r.w.dx = crtcPort;
+        if (((VideoModeOptions::Get() & VideoModeOptions::DontClearDisplay) == 0x00) &&
+            (VideoBufferSize::Get() != 0))
+            ClearScreen(mode);
 
-//     mov  al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    r.h.al = Hag::System::BDA::DisplayMode::Get();
+        SetPaletteProfile(crtcPort);
+        EnablePaletteBasedVideo(crtcPort);
+        Sequencer::ClockingMode::TurnScreenOn();
 
-//     cmp  al, BDA_DM_320x200_4_Color_Graphics1;0x04
-//     jb   Label0x1885                    ;Offset 0x1885
-    if (r.h.al < 0x04)
-        goto Label0x1885;
-
-//     cmp  al, BDA_DM_80x25_Monochrome_Text;0x07
-//     je   Label0x1885                    ;Offset 0x1885
-    if (r.h.al == 0x07)
-        goto Label0x1885;
-
-//     cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
-//     jbe  Label0x18b5                    ;Offset 0x18b5
-    if (r.h.al <= 0x13)
-        goto IsGraphicsMode;
-
-//     call GetVideoModeFlags              ;Offset 0x105d
-    Hag::S3::TrioBase::GetVideoModeFlags(r.h.al, flags);
-
-//     test al, 01h                        ;Text
-//     je   Label0x18b5                    ;Offset 0x18b5
-    if ((flags & 0x01) == 0x00)
-        goto IsGraphicsMode;
-
-// Label0x1885:                            ;Offset 0x1885
-LABEL(SetVideoMode, Label0x1885);
-
-//     call Func0x1c65                     ;Offset 0x1c65
-    SetFont();
-
-//     mov  ax, 000bh                      ;ax = sub index to mode list
-    r.w.ax = 0x000b;
-
-//     mov  bx, 0008h                      ;Fetch element 3 - Alphanumeric Character Set Override pointer
-    r.w.bx = 0x0008;
-
-//     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
-//     jne  CharacterSetNotFound           ;Offset 0x1896
-    if (!FetchCheckedVideoParameterBlockElement(2, r.w.ax, fontDefinition, 0x0B + 0x14))
-        goto CharacterSetNotFound;
-
-//     call ConfigureFontAndCursor         ;Offset 0x1bea
-    ConfigureFontAndCursor(mode, (Hag::S3::AlphanumericCharSet*)fontDefinition);
-
-// CharacterSetNotFound:                   ;Offset 0x1896
-LABEL(SetVideoMode, CharacterSetNotFound);
-
-//     mov  bx, 0010h                      ;Secondary Save Pointer Table pointer (VGA)
-    r.w.bx = 0x0010;
-
-//     call GetVideoParameterBlockElement  ;Offset 0x1d95
-//     je   Label0x18c9                    ;Offset 0x18c9
-    if (!GetVideoParameterBlockElement(4, paramBlock, 0x20))
-        goto Label0x18c9;
-
-//     or   ax, bx
-//     je   Label0x18c9                    ;Offset 0x18c9 - No font definition found
-    if (((FARPointer*)(paramBlock + 0x06))->IsNull())
-        goto Label0x18c9;
-
-//     les  bx, es:[bx + 06h]              ;Pointer to Character font definition table
-//     mov  ax, es
-    fontDefinition = ((FARPointer*)(paramBlock + 0x06))->ToPointer<uint8_t>(0x0B + 0x14);//there's a 0xFF terminated list of modes. max is 14h
-
-//     mov  ax, 0007h
-    r.w.ax = 0x0007;
-
-//     call CheckValidInCurrentMode         ;Offset 0x1bd1
-//     jne  Label0x18c9                    ;Offset 0x18c9
-    if (!CheckValidInCurrentMode(fontDefinition, r.w.ax))
-        goto Label0x18c9;
-
-//     call Func0x1c19                     ;Offset 0x1c19
-    ConfigureFontRamBank((Hag::S3::GraphicsCharSet*)fontDefinition);
-
-//     jmp  Label0x18c9                    ;Offset 0x18c9
-    goto Label0x18c9;
-
-// Label0x18b5:                            ;Offset 0x18b5
-LABEL(SetVideoMode, IsGraphicsMode);
-//     mov  word ptr ds:[BDA_CursorEndScanLine], 00h;Offset 0x460
-    Hag::System::BDA::CursorScanLines::Get().End = 0x00;
-    Hag::System::BDA::CursorScanLines::Get().Start = 0x00;
-
-//     mov  ax, 0007h                      ;ax = sub index to mode list
-    r.w.ax = 0x0007;
-
-//     mov  bx, 000ch                      ;Fetch element 4 - Graphics Character Set Override pointer
-    r.w.bx = 0x000C;
-
-//     call FetchCheckedVideoParameterBlockElement;Offset 0x1bc9
-//     jne  Label0x18c9                    ;Offset 0x18c9
-    if (!FetchCheckedVideoParameterBlockElement(3, r.w.ax, graphicsCharacterFontDefinition, 0x07 + 0x14))
-        goto Label0x18c9;
-
-//     call SetGraphicsCharacterFont       ;Offset 0x1c8e
-    SetGraphicsCharacterFont(graphicsCharacterFontDefinition); //Sets the pointer in the interrupt table.
-
-// Label0x18c9:                            ;Offset 0x18c9
-LABEL(SetVideoMode, Label0x18c9);
-
-//     test byte ptr ds:[BDA_VideoModeOptions], 80h;Offset 0x487
-//     jne  Label0x18da                    ;Offset 0x18da
-    if ((Hag::System::BDA::VideoModeOptions::Get() & 0x80) != 0x00)
-        goto Label0x18da;
-
-//     mov  ax, word ptr ds:[BDA_VideoBufferSize];Offset 0x44c
-    r.w.ax = Hag::System::BDA::VideoBufferSize::Get();
-
-//     or   ax, ax
-//     je   Label0x18da                    ;Offset 0x18da
-    if (r.w.ax == 0x0000)
-        goto Label0x18da;
-
-//     call ClearScreen                     ;Offset 0x1d47
-    ClearScreen(mode);
-
-// Label0x18da:                            ;Offset 0x18da
-LABEL(SetVideoMode, Label0x18da);
-
-//     call Func0x1cb4                     ;Offset 0x1cb4
-    SetPaletteProfile();
-
-//     call EnablePaletteBasedVideo        ;Offset 0x479d
-    EnablePaletteBasedVideo(crtcPort);
-
-//     call TurnOnScreen                   ;Offset 0x4800
-    Hag::VGA::Sequencer::ClockingMode::TurnScreenOn();
-
-//     pop  cx
-//     call EmptyFunction3                 ;Offset 0x1380
-//     ret  
-    return true;
+        return true;
+    }
+    return false;//invalid video mode.
 }
 
 }

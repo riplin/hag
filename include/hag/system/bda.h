@@ -329,7 +329,7 @@ namespace Hag { namespace System { namespace BDA
     struct GraphicsCharacterSetOverride
     {
         uint8_t NumberOfCharacterRowsDisplayed;
-        uint8_t CharacterLength;
+        uint16_t CharacterLength;
         FARPointer CharacterFontDefinitionTable;
         uint8_t ApplicableVideoModes[];//Terminated by 0xFF
     };
@@ -372,6 +372,35 @@ namespace Hag { namespace System { namespace BDA
         */
     };
 
+    struct PaletteProfile
+    {
+        int8_t Underlining;                     //00   byte    1 - enable underlining in all alphanumeric modes
+                                                //             0 - enable underlining in monochrome alpha modes
+                                                //            -1 - disable underlining in all alpha modes
+        uint8_t Reserved1;                      //01   byte   reserved
+        uint16_t Reserved2;                     //02   word   reserved
+        uint16_t AttributeRegisterCount;        //04   word   count of attribute controller regs in table
+        uint16_t AttributeRegisterStartIndex;   //06   word   first attribute controller register number
+        FARPointer AttributeRegisterTable;      //08   dword  pointer to attribute controller reg table
+        uint16_t DACRegisterCount;              //0C   word   count of video DAC color registers in table
+        uint16_t DACRegisterStartIndex;         //0E   word   first video DAC color register number
+        FARPointer DACRegisterTable;            //10   dword  video DAC color register table pointer
+        VGA::VideoMode_t ApplicableModes[1];    //14   nbytes array of applicable video modes for this font
+                                                //14+n byte   FFh end of video mode list marker
+    };
+
+    bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer));
+    bool CheckValidInCurrentMode(uint8_t* ptr);
+    void SetGraphicsCharacterFont(GraphicsCharacterSetOverride* graphicsCharacterFontDefinition);
+
+    template<typename T>
+    bool GetVideoParameterBlockElementAs(uint16_t index, T*& returnPointer, uint16_t size = sizeof(FARPointer))
+    {
+        uint8_t* ptr = NULL;
+        bool ret = GetVideoParameterBlockElement(index, ptr, size);
+        returnPointer = (T*)ptr;
+        return ret;
+    }
 
 /*
 
@@ -385,24 +414,6 @@ Secondary Alpha Mode Auxillary Character Generator Table
 03   dword   font table pointer
 07   nbytes  array of mode values for this font
 07+n byte    FFh end of mode list marker
-
-
-Palette Profile Table (VGA only)
-
-00   byte    1 - enable underlining in all alphanumeric modes
-            0 - enable underlining in monochrome alpha modes
-        -1 - disable underlining in all alpha modes
-01   byte   reserved
-02   word   reserved
-04   word   count of attribute controller regs in table
-06   word   first attribute controller register number
-08   dword  pointer to attribute controller reg table
-0C   word   count of video DAC color registers in table
-0E   word   first video DAC color register number
-10   dword  video DAC color register table pointer
-14   nbytes array of applicable video modes for this font
-14+n byte   FFh end of video mode list marker
-
 
 */
 
