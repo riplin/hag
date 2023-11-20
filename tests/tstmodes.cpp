@@ -70,6 +70,8 @@ namespace Clean
     bool SetVideoMode(uint8_t mode);
 }
 
+bool SetVideoMode(uint8_t mode);
+
 void regdump(const char* filename)
 {
     //Write code to CR38 to provide access to the S3 VGA registers (CR30-CR3F)
@@ -495,23 +497,23 @@ ModeTest modeTests[] =
     {Hag::VGA::VideoMode::G640x200x2M, 0x00, 640, 200, (uint8_t*)0xB8000, drawTestPattern1bpp},
     {Hag::VGA::VideoMode::G320x200x16C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
     {Hag::VGA::VideoMode::G640x200x16C, 0x00, 640, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    //{Hag::VGA::VideoMode::G640x350x2M, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::VGA::VideoMode::G640x350x2M, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
     {Hag::VGA::VideoMode::G640x350x4C, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    //{Hag::VGA::VideoMode::G640x480x2M, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::VGA::VideoMode::G640x480x2M, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
     {Hag::VGA::VideoMode::G640x480x16C, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern4bpp},
     {Hag::VGA::VideoMode::G320x200x256C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern8bpp},
 
     //VESA modes:
     {Hag::S3::VideoMode::G640x400x256C, 0x100, 640, 400, NULL, drawTestPattern8bpp}, //VESA Mode 0x100
     {Hag::S3::VideoMode::G640x480x256C, 0x101, 640, 480, NULL, drawTestPattern8bpp}, //VESA Mode 0x101
-    //{Hag::S3::VideoMode::G800x600x16C, 0x102, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
+    {Hag::S3::VideoMode::G800x600x16C, 0x102, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
     {Hag::S3::VideoMode::G800x600x256C, 0x103, 800, 600, NULL, drawTestPattern8bpp}, //VESA Mode 0x103
-    //{Hag::S3::VideoMode::G1024x768x16C, 0x104, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
+    {Hag::S3::VideoMode::G1024x768x16C, 0x104, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
     {Hag::S3::VideoMode::G1024x768x256C, 0x105, 1024, 768, NULL, drawTestPattern8bpp}, //VESA Mode 0x105
     //{Hag::S3::VideoMode::G1280x1024x16C, 0x106, 1280, 1024, NULL, drawTestPattern4bpp}, //VESA Mode 0x106
     //{Hag::S3::VideoMode::G1280x1024x256C, 0x107, 1280, 1024, NULL, drawTestPattern8bpp}, //VESA Mode 0x107
     {Hag::S3::VideoMode::T132x43x16C, 0x10A, 132, 43, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x10A
-    //Doesn't work? {Hag::S3::VideoMode::T132x25x16C, 0x109, 132, 25, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x109
+    {Hag::S3::VideoMode::T132x25x16C, 0x109, 132, 25, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x109
     {Hag::S3::VideoMode::G640x480x32K, 0x110, 640, 480, NULL, drawTestPattern15bpp}, //VESA Mode 0x110
     {Hag::S3::VideoMode::G640x480x64K, 0x111, 640, 480, NULL, drawTestPattern16bpp}, //VESA Mode 0x111
     {Hag::S3::VideoMode::G640x480x16M, 0x112, 640, 480, NULL, drawTestPattern32bpp}, //VESA Mode 0x112
@@ -526,14 +528,14 @@ ModeTest modeTests[] =
 
     //Proprietary modes:
     //Out of range {Hag::S3::VideoMode::P1600x1200x256C, 0x120, 1600, 1200, NULL, drawTestPattern8bpp}, //VESA Mode 0x120
-    //Corrupt rendering? {Hag::S3::VideoMode::P640x480x256C, 0x201, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
-    //{Hag::S3::VideoMode::P800x600x16C, 0x202, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
-    //{Hag::S3::VideoMode::P800x600x256C, 0x203, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
-    //{Hag::S3::VideoMode::P1024x768x16C, 0x204, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
-    //{Hag::S3::VideoMode::P1024x768x256C, 0x205, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
+    {Hag::S3::VideoMode::P640x480x256C, 0x201, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
+    {Hag::S3::VideoMode::P800x600x16C, 0x202, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
+    {Hag::S3::VideoMode::P800x600x256C, 0x203, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
+    {Hag::S3::VideoMode::P1024x768x16C, 0x204, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
+    {Hag::S3::VideoMode::P1024x768x256C, 0x205, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
     //{Hag::S3::VideoMode::P1152x864x256C, 0x207, 1152, 864, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x207
     //{Hag::S3::VideoMode::P1280x1024x16C, 0x208, 1280, 1024, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x208
-    //{Hag::S3::VideoMode::P640x400x16M, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
+    {Hag::S3::VideoMode::P640x400x16M, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
 };
 
 uint8_t* GetLinearFrameBuffer(uint16_t vendorId, uint16_t deviceId)
@@ -580,9 +582,15 @@ int main(void)
         r.w.ax = 0x0003;
         intr(0x10, &r);
 
-        Clean::SetVideoMode(modeTests[i].mode);
+        SetVideoMode(modeTests[i].mode);
+        sprintf(filename, "port%02X.txt", modeTests[i].mode);
+        regdump(filename);
 
-        sprintf(filename, "me%02X.txt", modeTests[i].mode);
+        r.w.ax = 0x0003;
+        intr(0x10, &r);
+
+        Clean::SetVideoMode(modeTests[i].mode);
+        sprintf(filename, "clean%02X.txt", modeTests[i].mode);
         regdump(filename);
 
         /*
@@ -606,12 +614,6 @@ int main(void)
         */
     }
 
-    //Clean::SetVideoMode(Hag::S3::VideoMode::G1024x768x64K);
-    //drawTestPattern16bpp(1024, 768, linearFrameBuffer);
-    //getchar();
-
-    //r.w.ax = 0x0003;
-    //intr(0x10, &r);
-
-    Clean::SetVideoMode(0x03);//80x25x16C
+    r.w.ax = 0x0003;
+    intr(0x10, &r);
 }

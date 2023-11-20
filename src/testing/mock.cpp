@@ -319,7 +319,6 @@ bool Instance::MarkMemory(uint32_t offset)
     bool ret = (MemoryMap[index] & bit) == 0x00;
     MemoryMap[index] |= bit;
     return ret;
-
 }
 
 uint8_t dummy[16] = { 0 };
@@ -629,24 +628,12 @@ public:
     {
         IndexedPort* inst0 = this;
         IndexedPort* inst1 = (IndexedPort*)instance1;
-        for (uint16_t i = 0; i < m_RegisterCount; ++i)
-        {
-            uint16_t index = i >> 3;
-            uint8_t bits = 1 << (uint8_t(i) & 0x07);
-            if ((inst0->m_DataMask[index] & bits) !=
-                (inst1->m_DataMask[index] & bits))
-            {
-                return true;
-            }
-            else if ((inst0->m_DataMask[index] & bits) != 0 &&
-                     (inst1->m_DataMask[index] & bits) != 0)
-            {
-                if (inst0->m_Data[i] != inst1->m_Data[i])
-                {
-                    return true;
-                }
-            }
-        }
+
+        if (memcmp(inst0->m_DataMask, inst1->m_DataMask, inst0->m_RegisterCount >> 3) != 0)
+            return true;
+
+        if (memcmp(inst0->m_Data, inst1->m_Data, inst0->m_RegisterCount) != 0)
+            return true;
 
         return false;
     }
@@ -895,14 +882,51 @@ public:
         }
     }
 
-    virtual void Report(CustomPortHandler* instance1)
-    {
-
-    }
-
     virtual bool HasDifferences(CustomPortHandler* instance1)
     {
+        AttributePortHandler* inst0 = this;
+        AttributePortHandler* inst1 = (AttributePortHandler*)instance1;
+
+        if (memcmp(inst0->Mask, inst1->Mask, 4) != 0)
+            return true;
+
+        if (memcmp(inst0->Data, inst1->Data, 32) != 0)
+            return true;
+
         return false;
+    }
+
+    virtual void Report(CustomPortHandler* instance1)
+    {
+        printf("\n%s report:\n", GetName());
+        AttributePortHandler* inst0 = this;
+        AttributePortHandler* inst1 = (AttributePortHandler*)instance1;
+        for (uint16_t i = 0; i < 32; ++i)
+        {
+            uint16_t index = i >> 3;
+            uint8_t bits = 1 << (uint8_t(i) & 0x07);
+            if ((inst0->Mask[index] & bits) !=
+                (inst1->Mask[index] & bits))
+            {
+                if ((inst0->Mask[index] & bits) != 0)
+                {
+                    printf("Only instance 0 has content in register 0x%02X = 0x%02X\n", i, inst0->Data[i]);
+                }
+
+                if ((inst1->Mask[index] & bits) != 0)
+                {
+                    printf("Only instance 1 has content in register 0x%02X = 0x%02X\n", i, inst1->Data[i]);
+                }
+            }
+            else if ((inst0->Mask[index] & bits) != 0 &&
+                     (inst1->Mask[index] & bits) != 0)
+            {
+                if (inst0->Data[i] != inst1->Data[i])
+                {
+                    printf("Content of register 0x%02X differs: 0x%02X != 0x%02X\n", i, inst0->Data[i], inst1->Data[i]);
+                }
+            }
+        }
     }
 
 protected:
@@ -1099,16 +1123,53 @@ public:
         }
     }
 
-    virtual void Report(CustomPortHandler* instance1)
-    {
-
-    }
-
     virtual bool HasDifferences(CustomPortHandler* instance1)
     {
+        RAMDACPortHandler* inst0 = this;
+        RAMDACPortHandler* inst1 = (RAMDACPortHandler*)instance1;
+
+        if (memcmp(inst0->Mask, inst1->Mask, 96) != 0)
+            return true;
+
+        if (memcmp(inst0->Data, inst1->Data, 768) != 0)
+            return true;
+
         return false;
     }
 
+    virtual void Report(CustomPortHandler* instance1)
+    {
+        printf("\n%s report:\n", GetName());
+        RAMDACPortHandler* inst0 = this;
+        RAMDACPortHandler* inst1 = (RAMDACPortHandler*)instance1;
+        for (uint16_t i = 0; i < 768; ++i)
+        {
+            uint16_t index = i >> 3;
+            uint8_t bits = 1 << (uint8_t(i) & 0x07);
+            if ((inst0->Mask[index] & bits) !=
+                (inst1->Mask[index] & bits))
+            {
+                if ((inst0->Mask[index] & bits) != 0)
+                {
+                    printf("Only instance 0 has content in register 0x%02X = 0x%02X\n", i, inst0->Data[i]);
+                }
+
+                if ((inst1->Mask[index] & bits) != 0)
+                {
+                    printf("Only instance 1 has content in register 0x%02X = 0x%02X\n", i, inst1->Data[i]);
+                }
+            }
+            else if ((inst0->Mask[index] & bits) != 0 &&
+                     (inst1->Mask[index] & bits) != 0)
+            {
+                if (inst0->Data[i] != inst1->Data[i])
+                {
+                    printf("Content of register 0x%02X differs: 0x%02X != 0x%02X\n", i, inst0->Data[i], inst1->Data[i]);
+                }
+            }
+        }
+    }
+    
 protected:
     template<typename T> friend T* customporthandler_cast(CustomPortHandler* ptr);
     virtual CustomPortHandler* CheckTypeId(uint32_t id)
@@ -1735,24 +1796,11 @@ bool HasDifferences()
     if (s_Instance0.Allocator == NULL)
         return false;
 
-    for (uint32_t i = 0; i < 0x10000; ++i)
-    {
-        uint16_t blockIndex = uint16_t(i >> 3);
-        uint8_t bits = 1 << (uint8_t(i) & 0x07);
-        if ((s_Instance0.PortMap[blockIndex] & bits) !=
-            (s_Instance1.PortMap[blockIndex] & bits))
-        {
-            return true;
-        }
-        else if ((s_Instance0.PortMap[blockIndex] & bits) != 0 &&
-                 (s_Instance1.PortMap[blockIndex] & bits) != 0)
-        {
-            if (s_Instance0.Ports[i] != s_Instance1.Ports[i])
-            {
-                return true;
-            }
-        }
-    }
+    if (memcmp(s_Instance0.PortMap, s_Instance1.PortMap, 0x10000 >> 3) != 0)
+        return true;
+
+    if (memcmp(s_Instance0.Ports, s_Instance1.Ports, 0x10000) != 0)
+        return true;
 
     CustomPortHandler* ptr0 = s_Instance0.PortHandlers;
     CustomPortHandler* ptr1 = s_Instance1.PortHandlers;
@@ -1760,35 +1808,16 @@ bool HasDifferences()
     {
         if (ptr0->HasDifferences(ptr1))
             return true;
+
         ptr0 = ptr0->GetNext();
         ptr1 = ptr1->GetNext();
     }
 
-    for (uint32_t i = 0; i < (1024 * 1024) >> 3; ++i)
-    {
-        if (s_Instance0.MemoryMap[i] != 0 ||
-            s_Instance1.MemoryMap[i] != 0)
-        {
-            for (uint32_t j = 0; j < 8; ++j)
-            {
-                uint8_t bits = uint8_t(1 << j);
-                if ((s_Instance0.MemoryMap[i] & bits) !=
-                    (s_Instance1.MemoryMap[i] & bits))
-                {
-                    return true;
-                }
-                else if ((s_Instance0.MemoryMap[i] & bits) != 0 &&
-                    (s_Instance1.MemoryMap[i] & bits) != 0)
-                {
-                    if (s_Instance0.Memory[(i << 3) + j] !=
-                        s_Instance1.Memory[(i << 3) + j])
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-    }
+    if (memcmp(s_Instance0.MemoryMap, s_Instance1.MemoryMap, (1024 * 1024) >> 3) != 0)
+        return true;
+
+    if (memcmp(s_Instance0.Memory, s_Instance1.Memory, 1024 * 1024) != 0)
+        return true;
 
     return false;
 }
@@ -1798,30 +1827,36 @@ void Report()
     if (s_Instance0.Allocator == NULL)
         return;
 
-    printf("\nDifference report: \n");
+    bool portsHaveDifferences = memcmp(s_Instance0.PortMap, s_Instance1.PortMap, 0x10000 >> 3) != 0;
+    portsHaveDifferences |= memcmp(s_Instance0.Ports, s_Instance1.Ports, 0x10000) != 0;
 
-    for (uint32_t i = 0; i < 0x10000; ++i)
+    if (portsHaveDifferences)
     {
-        uint16_t blockIndex = uint16_t(i >> 3);
-        uint8_t bits = 1 << (uint8_t(i) & 0x07);
-        if ((s_Instance0.PortMap[blockIndex] & bits) !=
-            (s_Instance1.PortMap[blockIndex] & bits))
+        printf("\nPorts report: \n");
+
+        for (uint32_t i = 0; i < 0x10000; ++i)
         {
-            if (s_Instance0.PortMap[blockIndex] & bits)
+            uint16_t blockIndex = uint16_t(i >> 3);
+            uint8_t bits = 1 << (uint8_t(i) & 0x07);
+            if ((s_Instance0.PortMap[blockIndex] & bits) !=
+                (s_Instance1.PortMap[blockIndex] & bits))
             {
-                printf("Only instance 0 has content in port 0x%04X = 0x%02X\n", i, s_Instance0.Ports[i]);
+                if (s_Instance0.PortMap[blockIndex] & bits)
+                {
+                    printf("Only instance 0 has content in port 0x%04X = 0x%02X\n", i, s_Instance0.Ports[i]);
+                }
+                if (s_Instance1.PortMap[blockIndex] & bits)
+                {
+                    printf("Only instance 1 has content in port 0x%04X = 0x%02X\n", i, s_Instance1.Ports[i]);
+                }
             }
-            if (s_Instance1.PortMap[blockIndex] & bits)
+            else if ((s_Instance0.PortMap[blockIndex] & bits) != 0 &&
+                    (s_Instance1.PortMap[blockIndex] & bits) != 0)
             {
-                printf("Only instance 1 has content in port 0x%04X = 0x%02X\n", i, s_Instance1.Ports[i]);
-            }
-        }
-        else if ((s_Instance0.PortMap[blockIndex] & bits) != 0 &&
-                 (s_Instance1.PortMap[blockIndex] & bits) != 0)
-        {
-            if (s_Instance0.Ports[i] != s_Instance1.Ports[i])
-            {
-                printf("Content of register 0x%02X differs: 0x%02X != 0x%02X\n", i, s_Instance0.Ports[i], s_Instance1.Ports[i]);
+                if (s_Instance0.Ports[i] != s_Instance1.Ports[i])
+                {
+                    printf("Content of register 0x%02X differs: 0x%02X != 0x%02X\n", i, s_Instance0.Ports[i], s_Instance1.Ports[i]);
+                }
             }
         }
     }
@@ -1830,60 +1865,68 @@ void Report()
     CustomPortHandler* ptr1 = s_Instance1.PortHandlers;
     while (ptr0 != NULL && ptr1 != NULL)
     {
-        ptr0->Report(ptr1);
+        if (ptr0->HasDifferences(ptr1))
+            ptr0->Report(ptr1);
         ptr0 = ptr0->GetNext();
         ptr1 = ptr1->GetNext();
     }
 
-    uint8_t* realmem = 0x00000000;
+    bool memoryHasDifferences = false;
+    memoryHasDifferences |= memcmp(s_Instance0.MemoryMap, s_Instance1.MemoryMap, (1024*1024)>>3) != 0;
+    memoryHasDifferences |= memcmp(s_Instance0.Memory, s_Instance1.Memory, 1024*1024) != 0;
 
-    printf("\nMemory report:\n");
-    for (uint32_t i = 0; i < (1024 * 1024) >> 3; ++i)
+    if (memoryHasDifferences)
     {
-        if (s_Instance0.MemoryMap[i] != 0 ||
-            s_Instance1.MemoryMap[i] != 0)
+        printf("\nMemory report:\n");
+
+        uint8_t* realmem = s_Instance0.DefaultMemory;
+        for (uint32_t i = 0; i < (1024 * 1024) >> 3; ++i)
         {
-            for (uint32_t j = 0; j < 8; ++j)
+            if (s_Instance0.MemoryMap[i] != 0 ||
+                s_Instance1.MemoryMap[i] != 0)
             {
-                uint8_t bits = uint8_t(1 << j);
-                if ((s_Instance0.MemoryMap[i] & bits) !=
-                    (s_Instance1.MemoryMap[i] & bits))
+                for (uint32_t j = 0; j < 8; ++j)
                 {
-                    if ((s_Instance0.MemoryMap[i] & bits) != 0)
+                    uint8_t bits = uint8_t(1 << j);
+                    if ((s_Instance0.MemoryMap[i] & bits) !=
+                        (s_Instance1.MemoryMap[i] & bits))
                     {
-                        printf("Only Instance 0 has content in memory offset 0x%05X = 0x%02X",
-                            (i << 3) + j, s_Instance0.Memory[(i << 3) + j]);
-                        if (realmem[(i << 3) + j] != s_Instance0.Memory[(i << 3) + j])
+                        if ((s_Instance0.MemoryMap[i] & bits) != 0)
                         {
-                            printf(" original: 0x%02X\n", realmem[(i << 3) + j]);
+                            printf("Only Instance 0 has content in memory offset 0x%05X = 0x%02X",
+                                (i << 3) + j, s_Instance0.Memory[(i << 3) + j]);
+                            if (realmem[(i << 3) + j] != s_Instance0.Memory[(i << 3) + j])
+                            {
+                                printf(" original: 0x%02X\n", realmem[(i << 3) + j]);
+                            }
+                            else
+                            {
+                                printf("\n");
+                            }
                         }
-                        else
+                        if ((s_Instance1.MemoryMap[i] & bits) != 0)
                         {
-                            printf("\n");
+                            printf("Only Instance 1 has content in memory offset 0x%05X = 0x%02X",
+                                (i << 3) + j, s_Instance1.Memory[(i << 3) + j]);
+                            if (realmem[(i << 3) + j] != s_Instance1.Memory[(i << 3) + j])
+                            {
+                                printf(" original: 0x%02X\n", realmem[(i << 3) + j]);
+                            }
+                            else
+                            {
+                                printf("\n");
+                            }
                         }
                     }
-                    if ((s_Instance1.MemoryMap[i] & bits) != 0)
+                    else if ((s_Instance0.MemoryMap[i] & bits) != 0 &&
+                        (s_Instance1.MemoryMap[i] & bits) != 0)
                     {
-                        printf("Only Instance 1 has content in memory offset 0x%05X = 0x%02X",
-                            (i << 3) + j, s_Instance1.Memory[(i << 3) + j]);
-                        if (realmem[(i << 3) + j] != s_Instance1.Memory[(i << 3) + j])
+                        if (s_Instance0.Memory[(i << 3) + j] !=
+                            s_Instance1.Memory[(i << 3) + j])
                         {
-                            printf(" original: 0x%02X\n", realmem[(i << 3) + j]);
+                            printf("Content of memory offset 0x%05X differs: 0x%02X != 0x%02X original: 0x%02X\n", (i << 3) + j,
+                                s_Instance0.Memory[(i << 3) + j], s_Instance1.Memory[(i << 3) + j], realmem[(i << 3) + j]);
                         }
-                        else
-                        {
-                            printf("\n");
-                        }
-                    }
-                }
-                else if ((s_Instance0.MemoryMap[i] & bits) != 0 &&
-                    (s_Instance1.MemoryMap[i] & bits) != 0)
-                {
-                    if (s_Instance0.Memory[(i << 3) + j] !=
-                        s_Instance1.Memory[(i << 3) + j])
-                    {
-                        printf("Content of memory offset 0x%05X differs: 0x%02X != 0x%02X original: 0x%02X\n", (i << 3) + j,
-                            s_Instance0.Memory[(i << 3) + j], s_Instance1.Memory[(i << 3) + j], realmem[(i << 3) + j]);
                     }
                 }
             }

@@ -499,7 +499,7 @@ void ApplyVideoParameters(Hag::S3::VideoParameters* overrideTable)
     InputStatus1::Read(inputStatus1);
 
     if ((DisplayMode::Get() == VideoMode::Unknown2) ||
-        (DisplayMode::Get() != VideoMode::Reserved1))
+        (DisplayMode::Get() == VideoMode::Reserved1))
     {
         InputStatus1::Read(Register::InputStatus1B);
     }
@@ -1223,11 +1223,12 @@ void PatchFont(uint8_t flags)
     }
 }
 
-void EnablePaletteBasedVideo(Hag::VGA::Register_t crtcPort)
+void EnablePaletteBasedVideo()
 {
     using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
 
-    Register_t inputStatus = crtcPort + (Register::InputStatus1D - Register::CRTControllerIndexD);
+    Register_t inputStatus = VideoBaseIOPort::Get() + (Register::InputStatus1D - Register::CRTControllerIndexD);
     AttributeControllerIndex::ResetIndex(inputStatus);
     AttributeControllerIndex::Write(AttributeControllerIndex::EnableVideoDisplay);
 }
@@ -1287,7 +1288,7 @@ void SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t n
         GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes |
                                                         GraphicsController::MemoryMapModeControl::B0000HtoB7FFFH);
     }
-    EnablePaletteBasedVideo(VideoBaseIOPort::Get());
+    EnablePaletteBasedVideo();
 }
 
 void ConfigureCursorPropertiesAndVerticalDisplayEnd(Hag::S3::VideoMode_t mode, uint8_t characterPointHeight)
@@ -1635,7 +1636,7 @@ bool SetVideoMode(Hag::S3::VideoMode_t mode)
             ClearScreen(mode);
 
         SetPaletteProfile(crtcPort);
-        EnablePaletteBasedVideo(crtcPort);
+        EnablePaletteBasedVideo();
         Sequencer::ClockingMode::TurnScreenOn();
 
         return true;

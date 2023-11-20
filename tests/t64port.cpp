@@ -2332,26 +2332,8 @@ void TurnOffScreen()
 
 void TurnOnScreen()
 {
-//     push  dx
-//     mov   dx, SequenceIndex             ;port - 03c4h
-//     in    al, dx                        ;Read current index number
-    uint8_t currIdx = SYS_ReadPortByte(0x3c4);
-
-//     push  ax                            ;Store it
-//     mov   al, 01h                       ;SR1 - Clocking Mode register
-//     call  ReadDataWithIndexRegister     ;Offset 0x4640
-//     and   ah, 0dfh                      ;Turn on screen
     uint8_t tmp = ReadDataWithIndexRegister(0x3c4, 0x01) & ~0x20;
-
-//     out   dx, ax                        ;Write
     SYS_WritePortShort(0x3c4, (uint16_t(tmp) << 8) | 0x01);
-
-//     pop   ax                            ;Load back original value of index
-//     out   dx, al                        ;Write back original index
-    SYS_WritePortByte(0x3c4, currIdx);
-
-//     pop   dx
-//     ret
 }
 
 uint8_t CRTControllerInitData[] =

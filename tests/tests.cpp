@@ -24,6 +24,7 @@ int SetPaletteTest();
 int SetFontTest();
 int SetVideoModeInternalsTest();
 int SetVideoModeTest();
+int SetVideoModeInternalsCompareTest();
 
 #define TESTFUNCTION(F)                             \
 {                                                   \
@@ -76,6 +77,7 @@ int main(void)
     TESTFUNCTION(SetPaletteTest);
     TESTFUNCTION(SetFontTest);
     TESTFUNCTION(SetVideoModeInternalsTest);
+    TESTFUNCTION(SetVideoModeInternalsCompareTest);
     TESTFUNCTION(SetVideoModeTest);
 
     return ret;
