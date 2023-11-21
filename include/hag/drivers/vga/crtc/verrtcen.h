@@ -72,22 +72,23 @@ namespace VerticalRetraceEnd
         Write(controllerIndexRegister, value | previousValue);
     }
 
-    template <Register_t CrtControllerIndex>
     class SoftUnlock
     {
     public:
-        inline SoftUnlock()
-            : m_previousValue(Unlock(CrtControllerIndex))
+        inline SoftUnlock(Register_t crtcPort)
+            : m_previousValue(Unlock(crtcPort))
+            , m_crtcPort(crtcPort)
         {
         }
 
         inline ~SoftUnlock()
         {
-            Unlock(m_previousValue);
+            Lock(m_crtcPort, m_previousValue);
         }
 
     private:
         VerticalRetraceEnd_t m_previousValue;
+        Register_t m_crtcPort;
     };
 
 }

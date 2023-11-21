@@ -39,23 +39,24 @@ namespace RegisterLock1
         Write(controllerIndexRegister, previousValue);
     }
 
-    template <VGA::Register_t CrtControllerIndex>
     class SoftUnlock
     {
     public:
-        inline SoftUnlock()
-            : m_previousValue(Read(CrtControllerIndex))
+        inline SoftUnlock(VGA::Register_t crtcPort)
+            : m_previousValue(Read(crtcPort))
+            , m_crtcPort(crtcPort)
         {
-            Unlock(CrtControllerIndex);
+            Unlock(m_crtcPort);
         }
 
         inline ~SoftUnlock()
         {
-            Lock(CrtControllerIndex, m_previousValue);
+            Lock(m_crtcPort, m_previousValue);
         }
 
     private:
         RegisterLock1_t m_previousValue;
+        VGA::Register_t m_crtcPort;
     };
 
 }

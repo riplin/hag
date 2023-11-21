@@ -2,18 +2,102 @@
 
 //https://projectf.io/posts/video-timings-vga-720p-1080p/
 
-#include <hag/drivers/s3/trio.h>
 #include <stdio.h>
+#include <string.h>
+#include <hag/system/bda.h>
+#include <hag/system/pci.h>
+#include <hag/system/sysasm.h>
+#include <hag/drivers/vga/dacdata.h>
+#include <hag/drivers/vga/dacmask.h>
+#include <hag/drivers/vga/dacwridx.h>
+#include <hag/drivers/vga/miscout.h>
+#include <hag/drivers/vga/instat1.h>
+#include <hag/drivers/vga/regs.h>
+#include <hag/drivers/vga/attribc/data.h>
+#include <hag/drivers/vga/crtc/curendsl.h>
+#include <hag/drivers/vga/crtc/curstrsl.h>
+#include <hag/drivers/vga/crtc/enhorsyn.h>
+#include <hag/drivers/vga/crtc/hortotal.h>
+#include <hag/drivers/vga/crtc/maxscanl.h>
+#include <hag/drivers/vga/crtc/scrnoffs.h>
+#include <hag/drivers/vga/crtc/sthorbln.h>
+#include <hag/drivers/vga/crtc/sthorsyn.h>
+#include <hag/drivers/vga/crtc/undloc.h>
+#include <hag/drivers/vga/crtc/verdisen.h>
+#include <hag/drivers/vga/crtc/verrtcen.h>
+#include <hag/drivers/vga/gfxc/data.h>
+#include <hag/drivers/vga/gfxc/gfxcmode.h>
+#include <hag/drivers/vga/gfxc/mmmctrl.h>
+#include <hag/drivers/vga/gfxc/rdplnsel.h>
+#include <hag/drivers/vga/sqrc/reset.h>
+#include <hag/drivers/vga/sqrc/clkmod.h>
+#include <hag/drivers/vga/sqrc/data.h>
+#include <hag/drivers/vga/sqrc/enwrtpl.h>
+#include <hag/drivers/vga/sqrc/chfntsel.h>
+#include <hag/drivers/vga/sqrc/memodctl.h>
+#include <hag/drivers/s3/advfnctl.h>
+#include <hag/drivers/s3/bitplnwm.h>
+#include <hag/drivers/s3/curxpos.h>
+#include <hag/drivers/s3/curypos.h>
+#include <hag/drivers/s3/drawcmd.h>
+#include <hag/drivers/s3/fgcolor.h>
+#include <hag/drivers/s3/fgmix.h>
+#include <hag/drivers/s3/gfxprocs.h>
+#include <hag/drivers/s3/majapcnt.h>
+#include <hag/drivers/s3/trio.h>
+#include <hag/drivers/s3/vidmodes.h>
+#include <hag/drivers/s3/wregdata.h>
+#include <hag/drivers/s3/crtc/biosflag.h>
+#include <hag/drivers/s3/crtc/bkwcomp1.h>
+#include <hag/drivers/s3/crtc/bkwcomp3.h>
+#include <hag/drivers/s3/crtc/chipidrv.h>
+#include <hag/drivers/s3/crtc/conf1.h>
+#include <hag/drivers/s3/crtc/devidhi.h>
+#include <hag/drivers/s3/crtc/devidlo.h>
+#include <hag/drivers/s3/crtc/exbiosf1.h>
+#include <hag/drivers/s3/crtc/exbiosf3.h>
+#include <hag/drivers/s3/crtc/exbiosf4.h>
+#include <hag/drivers/s3/crtc/exhorovf.h>
+#include <hag/drivers/s3/crtc/exmemct2.h>
+#include <hag/drivers/s3/crtc/exmemct3.h>
+#include <hag/drivers/s3/crtc/exmscct2.h>
+#include <hag/drivers/s3/crtc/exsysct1.h>
+#include <hag/drivers/s3/crtc/exsysct2.h>
+#include <hag/drivers/s3/crtc/exsysct3.h>
+#include <hag/drivers/s3/crtc/extmode.h>
+#include <hag/drivers/s3/crtc/exverovf.h>
+#include <hag/drivers/s3/crtc/itlrtst.h>
+#include <hag/drivers/s3/crtc/linawctr.h>
+#include <hag/drivers/s3/crtc/lnawposh.h>
+#include <hag/drivers/s3/crtc/lnawposl.h>
+#include <hag/drivers/s3/crtc/memconf.h>
+#include <hag/drivers/s3/crtc/misc1.h>
+#include <hag/drivers/s3/crtc/modectrl.h>
+#include <hag/drivers/s3/crtc/reglock1.h>
+#include <hag/drivers/s3/crtc/reglock2.h>
+#include <hag/drivers/s3/crtc/revision.h>
+#include <hag/drivers/s3/crtc/stdsfifo.h>
+#include <hag/drivers/s3/crtc/sysconf.h>
+#include <hag/drivers/s3/sqrc/clksync2.h>
+#include <hag/drivers/s3/sqrc/dclkvhi.h>
+#include <hag/drivers/s3/sqrc/dclkvlow.h>
+#include <hag/drivers/s3/sqrc/extseq9.h>
+#include <hag/drivers/s3/sqrc/extseqd.h>
+#include <hag/drivers/s3/sqrc/mclkvhi.h>
+#include <hag/drivers/s3/sqrc/mclkvlow.h>
+#include <hag/drivers/s3/sqrc/rclksync.h>
+#include <hag/drivers/s3/sqrc/regs.h>
+#include <hag/drivers/s3/sqrc/unlexseq.h>
 
 namespace Hag { namespace S3
 {
 
-TrioBase::~TrioBase()
+Trio64::~Trio64()
 {
 
 }
 
-TrioBase::VideoModeTranslation TrioBase::m_VideoModeTranslation[] =
+Trio64::VideoModeTranslation Trio64::m_VideoModeTranslation[] =
 {
     { VesaVideoMode::G640x400x256C, VideoMode::G640x400x256C },
     { VesaVideoMode::G640x480x256C, VideoMode::G640x480x256C },
@@ -731,7 +815,7 @@ VideoParameters VESAVideoParameters1600x1200 =
     }
 };
 
-VideoParameters TrioBase::m_LegacyVideoModes[] =
+VideoParameters Trio64::m_LegacyVideoModes[] =
 {
 {
     0x28,
@@ -2852,7 +2936,7 @@ VideoParameters TrioBase::m_LegacyVideoModes[] =
 }
 };
 
-VideoParameters* TrioBase::m_VesaResolutions[] =
+VideoParameters* Trio64::m_VesaResolutions[] =
 {
     &VESAVideoParameters132x43,
     &VESAVideoParameters132x25,
@@ -2865,13 +2949,13 @@ VideoParameters* TrioBase::m_VesaResolutions[] =
     &VESAVideoParameters1600x1200
 };
 
-uint8_t TrioBase::m_VideoModeOverrideTranslationTable1[] =
+uint8_t Trio64::m_VideoModeOverrideTranslationTable1[] =
 { 0x17, 0x17, 0x18, 0x18, 0x04, 0x05, 0x06, 0x19, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x11, 0x12, 0x1A, 0x1B, 0x1C };
 
-uint8_t TrioBase::m_VideoModeOverrideTranslationTable2[] =
+uint8_t Trio64::m_VideoModeOverrideTranslationTable2[] =
 { 0x13, 0x14, 0x15, 0x16, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x11, 0x12, 0x1A, 0x1B, 0x1C };
 
-uint8_t TrioBase::m_VideoModeOverrideTranslationTable3[] =
+uint8_t Trio64::m_VideoModeOverrideTranslationTable3[] =
 { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x11, 0x12, 0x1A, 0x1B, 0x1C };
 
 //Data0BD0
@@ -4593,7 +4677,7 @@ VESAModeInfo VESAModeInfo_4E_1152x864x256C = { 0x1B, 0x0480, 0x0480, 0x0360, 0x1
 VESAModeInfo VESAModeInfo_4F_1280x1024x16C = { 0x1B, 0x0400, 0x0500, 0x0400, 0x10, 0x01, 0x04, 0x01, 0x04 };
 VESAModeInfo VESAModeInfo_52_640x400x16M = { 0x1B, 0x0A00, 0x0280, 0x0190, 0x10, 0x01, 0x20, 0x01, 0x06 };
 
-VESAVideoModeData TrioBase::m_VesaVideoModes[] = 
+VESAVideoModeData Trio64::m_VesaVideoModes[] = 
 {
     {
         &VESAVideoParameters132x43,
@@ -4985,7 +5069,7 @@ VESAVideoModeData TrioBase::m_VesaVideoModes[] =
     }
 };
 
-uint8_t TrioBase::m_CRTControllerInitData[] =
+uint8_t Trio64::m_CRTControllerInitData[] =
 {
     0x1A,
     0x38, 0x48,
@@ -5016,7 +5100,7 @@ uint8_t TrioBase::m_CRTControllerInitData[] =
     0x45, 0x00
 };
 
-uint8_t TrioBase::m_SequenceInitData[] =
+uint8_t Trio64::m_SequenceInitData[] =
 {
     0x03,
     0x08, 0x06,
@@ -5024,11 +5108,11 @@ uint8_t TrioBase::m_SequenceInitData[] =
     0x14, 0x00
 };
 
-uint8_t TrioBase::m_PCISystemConfig = 0xD0;
-uint8_t TrioBase::m_VLBSystemConfig = 0xF0;
+uint8_t Trio64::m_PCISystemConfig = 0xD0;
+uint8_t Trio64::m_VLBSystemConfig = 0xF0;
 
 //;DCLK High/Low values
-uint8_t TrioBase::m_ClockData[] =
+uint8_t Trio64::m_ClockData[] =
 {
     0x28, 0x61, //00h
     0x55, 0x49, //01h
@@ -5050,7 +5134,7 @@ uint8_t TrioBase::m_ClockData[] =
 };
 
 //;DCLK High/Low values - revision 03h data
-uint8_t TrioBase::m_ClockDataRev3[] =
+uint8_t Trio64::m_ClockDataRev3[] =
 {
     0x28, 0x61, //00h
     0x55, 0x49, //01h
@@ -5071,7 +5155,7 @@ uint8_t TrioBase::m_ClockDataRev3[] =
     0x51, 0x44  //10h  <- Interlaced
 };
 
-uint8_t TrioBase::m_ColorPalette[] =
+uint8_t Trio64::m_ColorPalette[] =
 {
     0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A, 0x2A,
     0x40, 0xEA, 0x00, 0x2A, 0x15, 0x00, 0xAA, 0x95,
@@ -5079,19 +5163,19 @@ uint8_t TrioBase::m_ColorPalette[] =
     0xFF, 0x15, 0x7F, 0x15, 0xBF
 };
 
-uint8_t TrioBase::m_MonochromePalette[] =
+uint8_t Trio64::m_MonochromePalette[] =
 { 
     0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
     0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF
 };
 
-uint8_t TrioBase::m_SecondPalette[] =
+uint8_t Trio64::m_SecondPalette[] =
 {
     0x80, 0x85, 0x88, 0x8B, 0x8E, 0x91, 0x94, 0x98,
     0x9C, 0xA0, 0xA4, 0xA8, 0xAD, 0xB2, 0xB8, 0xBF
 };
 
-uint8_t TrioBase::m_Color216Palette[] =
+uint8_t Trio64::m_Color216Palette[] =
 {
     0x40, 0x3F, 0x10, 0x00, 0x3F, 0x1F, 0x00, 0x3F,
     0x2F, 0x00, 0x3F, 0xFF, 0x00, 0x3F, 0x00, 0x2F,
@@ -5170,7 +5254,7 @@ uint8_t TrioBase::m_Color216Palette[] =
     0x0C, 0x10
 };
 
-uint8_t TrioBase::m_Monochrome64Palette[] =
+uint8_t Trio64::m_Monochrome64Palette[] =
 {
     0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80, 0x80,
     0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA,
@@ -5182,7 +5266,7 @@ uint8_t TrioBase::m_Monochrome64Palette[] =
     0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF
 };
 
-uint8_t TrioBase::m_ColorPalette3[] =
+uint8_t Trio64::m_ColorPalette3[] =
 {
     0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A, 0x2A,
     0x40, 0xEA, 0x00, 0x2A, 0x15, 0x00, 0xAA, 0x80,
@@ -5201,7 +5285,7 @@ uint8_t TrioBase::m_ColorPalette3[] =
     0x15, 0x7F, 0x15, 0xBF
 };
 
-uint8_t TrioBase::m_MonochromePalette3[] =
+uint8_t Trio64::m_MonochromePalette3[] =
 {
     0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
     0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0x94, 0xA8,
@@ -5213,7 +5297,7 @@ uint8_t TrioBase::m_MonochromePalette3[] =
     0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF
 };
 
-uint8_t TrioBase::m_ColorPalette2[] =
+uint8_t Trio64::m_ColorPalette2[] =
 {
     0x80, 0x40, 0x2A, 0xC0, 0x2A, 0x00, 0x6A, 0x2A,
     0x40, 0xEA, 0x00, 0x6A, 0x00, 0xAA, 0x40, 0x15,
@@ -5236,7 +5320,7 @@ uint8_t TrioBase::m_ColorPalette2[] =
     0x15, 0x7F, 0x15, 0xBF
 };
 
-uint8_t TrioBase::m_MonochromePalette2[] =
+uint8_t Trio64::m_MonochromePalette2[] =
 {
     0x80, 0x85, 0x91, 0x9C, 0x88, 0x8B, 0xA5, 0xA8,
     0x82, 0x87, 0x9B, 0xA0, 0x8F, 0x94, 0xA8, 0xAC,
@@ -5248,9 +5332,9 @@ uint8_t TrioBase::m_MonochromePalette2[] =
     0x8E, 0x98, 0xAD, 0xB2, 0xA0, 0xA4, 0xB8, 0xBF
 };
 
-FirmwareFlag_t TrioBase::m_FirmwareFlag = FirmwareFlag::Color | FirmwareFlag::Unknown3;
+FirmwareFlag_t Trio64::m_FirmwareFlag = FirmwareFlag::Color | FirmwareFlag::Unknown3;
 
-VideoMode_t TrioBase::ConvertVesaModeToLegacy(Vesa::VideoMode_t mode)
+VideoMode_t Trio64::ConvertVesaModeToLegacy(Vesa::VideoMode_t mode)
 {
     for (int i = 0; i < sizeof(m_VideoModeTranslation) / sizeof(VideoModeTranslation); ++i)
     {
@@ -5260,7 +5344,7 @@ VideoMode_t TrioBase::ConvertVesaModeToLegacy(Vesa::VideoMode_t mode)
     return VideoMode::Invalid;
 }
 
-VideoModeError_t TrioBase::CheckValidVideoMode(VideoMode_t mode)
+VideoModeError_t Trio64::CheckValidVideoMode(VideoMode_t mode)
 {
     //Check legacy
     if (mode <= VGA::VideoMode::MaxValid)
@@ -5275,7 +5359,7 @@ VideoModeError_t TrioBase::CheckValidVideoMode(VideoMode_t mode)
     return VideoModeError::UnknownVideoMode;
 }
 
-VESAVideoModeData* TrioBase::FindVideoModeData(VideoMode_t mode)
+VESAVideoModeData* Trio64::FindVideoModeData(VideoMode_t mode)
 {
     VESAVideoModeData* videoModeData = NULL;
     for (int i = 0; i < sizeof(m_VesaVideoModes) / sizeof(VESAVideoModeData); ++i)
@@ -5289,7 +5373,7 @@ VESAVideoModeData* TrioBase::FindVideoModeData(VideoMode_t mode)
     return videoModeData;
 }
 
-bool TrioBase::GetVideoModeFlags(VideoMode_t mode, VESAVideoModeFlags_t& flags)
+bool Trio64::GetVideoModeFlags(VideoMode_t mode, VESAVideoModeFlags_t& flags)
 {
     flags = 0;
     VESAVideoModeData* videoModeData = NULL;
@@ -5299,6 +5383,1594 @@ bool TrioBase::GetVideoModeFlags(VideoMode_t mode, VESAVideoModeFlags_t& flags)
     }
 
     return videoModeData != NULL;
+}
+
+uint16_t Trio64::GetDisplayMemoryInKiB()
+{
+    static uint16_t memorySizeInKB = 0xFFFF;
+
+    //Early out.
+    if (memorySizeInKB != 0xFFFF)
+        return memorySizeInKB;
+
+    memorySizeInKB = CRTController::Configuration1::GetDisplayMemorySizeInKiB(CRTControllerIndex());
+
+    return memorySizeInKB;
+}
+
+VGA::Register_t Trio64::GetCRTControllerIndexRegister()
+{
+    return (VGA::MiscellaneousOutput::Read() & 
+            VGA::MiscellaneousOutput::IOAddressSelect) == 
+            VGA::MiscellaneousOutput::IOAddressSelect ?
+            VGA::Register::CRTControllerIndexD :
+            VGA::Register::CRTControllerIndexB;
+}
+
+void Trio64::ModeSetBDA(VideoMode_t& mode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    if (((VideoDisplayDataArea::Get() & VideoDisplayDataArea::VGA) != VideoDisplayDataArea::VGA) ||
+        (DisplayMode::Get() == mode))
+        return;
+
+    DetectedHardware_t initialVideoMode = DetectedHardware::Get() & DetectedHardware::InitialVideoModeMask;
+    EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() & EGAFeatureBitSwitches::AdapterTypeMask;
+
+    uint8_t flags = 0;
+    if ((mode == VideoMode::T80x25x2M) || (mode == VideoMode::G640x350x2M) ||
+        (GetVideoModeFlags(mode, flags) && ((flags & VESAVideoModeFlags::Color) == 0)))
+    {
+        if ((m_FirmwareFlag & FirmwareFlag::Color) == 0)
+        {
+            if ((VideoBaseIOPort::Get() != VGA::Register::CRTControllerIndexB) &&
+                (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2))
+            {
+                if (initialVideoMode != DetectedHardware::Monochrome80x25)
+                {
+                    mode = VideoMode::T40x25x16G;
+                }
+                else
+                {
+                    if (adapterType <= EGAFeatureBitSwitches::CGAMono80x25)
+                    {
+                        VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                    }
+                    else if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+                    {
+                        VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                        VideoDisplayDataArea::Get() |= VideoDisplayDataArea::LineMode200;
+                        EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                        Hag::System::BDA::EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                        if ((m_FirmwareFlag & FirmwareFlag::Color) != 0)
+                        {
+                            DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+                        }
+                    }
+                    else 
+                    {
+                        VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                        VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+                        EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                        EGAFeatureBitSwitches::Get() |= adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2 ?
+                                                                  EGAFeatureBitSwitches::CGAMono80x25_2 :
+                                                                  EGAFeatureBitSwitches::MDAHiRes80x25_2;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if (VideoBaseIOPort::Get() == VGA::Register::CRTControllerIndexB)
+            {
+                DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+            }
+            else if ((adapterType <= EGAFeatureBitSwitches::CGAMono80x25) ||
+                (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2))
+            {
+                VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+                EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+            }
+            else
+            {
+                if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+                {
+                    VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                    VideoDisplayDataArea::Get() |= VideoDisplayDataArea::LineMode200;
+                    EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                    EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                    if ((m_FirmwareFlag & FirmwareFlag::Color) != 0)
+                    {
+                        DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+                    }
+                }
+                else if (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2)
+                {
+                    VideoModeOptions::Get() &= ~VideoModeOptions::Monochrome;
+                    EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                    EGAFeatureBitSwitches::Get() |= ((~VideoDisplayDataArea::Get()) >> 7) | EGAFeatureBitSwitches::MDAHiRes80x25_2;
+                    VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+
+                    if ((m_FirmwareFlag & FirmwareFlag::Color) != 0)
+                    {
+                        DetectedHardware::Get() &= DetectedHardware::InitialVideoModeMask;
+                        DetectedHardware::Get() |= DetectedHardware::Color80x25;
+                    }
+                }
+            }
+        }
+    }
+    else if ((m_FirmwareFlag & FirmwareFlag::Color) != 0)
+    {
+        if (VideoBaseIOPort::Get() == VGA::Register::CRTControllerIndexD)
+        {
+            DetectedHardware::Get() &= ~DetectedHardware::InitialVideoModeMask;
+            DetectedHardware::Get() |= DetectedHardware::Color80x25;
+        }
+        else if ((adapterType > EGAFeatureBitSwitches::CGAMono80x25) &&
+            (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2))
+        {
+            if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+            {
+                VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                VideoDisplayDataArea::Get() |= VideoDisplayDataArea::LineMode200;
+                EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                if ((m_FirmwareFlag & FirmwareFlag::Color) != 0)
+                {
+                    DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+                }
+            }
+            else if (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2)
+            {
+                VideoModeOptions::Get() |= VideoModeOptions::Monochrome;
+                VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+                EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+                EGAFeatureBitSwitches::Get() |= EGAFeatureBitSwitches::CGAMono80x25_2;
+                DetectedHardware::Get() |= DetectedHardware::Monochrome80x25;
+            }
+        }
+        else
+        {
+            VideoModeOptions::Get() &= ~VideoModeOptions::Monochrome;
+            EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+            EGAFeatureBitSwitches::Get() |= ((~VideoDisplayDataArea::Get()) >> 7) | EGAFeatureBitSwitches::MDAHiRes80x25_2;
+            VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+
+            if ((m_FirmwareFlag & FirmwareFlag::Color) != 0)
+            {
+                DetectedHardware::Get() &= DetectedHardware::InitialVideoModeMask;
+                DetectedHardware::Get() |= DetectedHardware::Color80x25;
+            }
+        }
+    }
+    else if (VideoBaseIOPort::Get() != VGA::Register::CRTControllerIndexD)
+    {
+        if (initialVideoMode == DetectedHardware::Monochrome80x25)
+        {
+            mode = VideoMode::T80x25x2M;
+        }
+        else if (adapterType > EGAFeatureBitSwitches::CGAMono80x25)
+        {
+            EGAFeatureBitSwitches_t newAdapterType = 0;
+            if (adapterType <= EGAFeatureBitSwitches::MDAHiRes80x25_2)
+            {
+                newAdapterType = EGAFeatureBitSwitches::CGAMono80x25_2 | EGAFeatureBitSwitches::FeatureConnector1;
+            }
+            else if (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2)
+            {
+                newAdapterType = EGAFeatureBitSwitches::CGAMono80x25_2;
+            }
+            else if (adapterType <= EGAFeatureBitSwitches::CGAMono80x25_2)
+            {
+                newAdapterType = EGAFeatureBitSwitches::MDAHiRes80x25_2 | EGAFeatureBitSwitches::FeatureConnector0;
+            }
+
+            VideoModeOptions::Get() &= ~VideoModeOptions::Monochrome;
+            EGAFeatureBitSwitches::Get() &= EGAFeatureBitSwitches::FeatureConnectorMask;
+            EGAFeatureBitSwitches::Get() |= ((~VideoDisplayDataArea::Get()) >> 7) | newAdapterType;
+            VideoDisplayDataArea::Get() &= ~VideoDisplayDataArea::LineMode200;
+
+            if ((m_FirmwareFlag & FirmwareFlag::Color) != 0)
+            {
+                DetectedHardware::Get() &= DetectedHardware::InitialVideoModeMask;
+                DetectedHardware::Get() |= DetectedHardware::Color80x25;
+            }
+        }
+    }
+}
+
+void* Trio64::GetLinearFrameBuffer()
+{
+    void* ret = NULL;
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::System::BDA;
+    
+    VESAVideoModeData* vesaData = NULL;
+    if (DisplayMode::Get() > VideoMode::MaxValid &&
+        (vesaData = FindVideoModeData(DisplayMode::Get())))
+    {
+        Register_t crtcPort = VideoBaseIOPort::Get();
+        CRTController::RegisterLock1_t rl1 = CRTController::RegisterLock1::Read(crtcPort);
+        CRTController::RegisterLock2_t rl2 = CRTController::RegisterLock2::Read(crtcPort);
+        CRTController::RegisterLock1::Unlock(crtcPort);
+        CRTController::RegisterLock2::Unlock(crtcPort);
+
+        uint16_t deviceId = (uint16_t(CRTController::DeviceIDHigh::Read(crtcPort)) << 8) |
+                                      CRTController::DeviceIDLow::Read(crtcPort);
+
+        uint8_t bus = 0xFF;
+        uint8_t slot = 0xFF;
+        uint8_t function = 0xFF;
+        if (PCI::FindDevice(0x5333, deviceId, bus, slot, function))
+        {
+            ret = (void*)PCI::Read32(bus, slot, function, PCI::Header0::BaseAddress0);
+
+            CRTController::SystemConfiguration::Unlock(crtcPort);
+
+            CRTController::LinearAddressWindowControl_t linearAddressControl = 
+                CRTController::LinearAddressWindowControl::Read(crtcPort);
+            CRTController::LinearAddressWindowControl::Write(crtcPort, linearAddressControl |
+                                                                 CRTController::LinearAddressWindowControl::EnableLinearAddressing);
+        }
+        CRTController::RegisterLock2::Lock(crtcPort, rl2);
+        CRTController::RegisterLock1::Lock(crtcPort, rl1);
+    }
+    return ret;
+}
+
+bool Trio64::VerifyBDAOrDeactivate(VideoMode_t& mode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    uint8_t flags = 0;
+    bool ret = false;
+    PointHeightOfCharacterMatrix_t newPointHeight = 0;
+
+    if ((DetectedHardware::Get() & DetectedHardware::InitialVideoModeMask) == DetectedHardware::Monochrome80x25)
+    {
+        if ((VideoModeOptions::Get() & VideoModeOptions::Monochrome) != 0)
+        {
+            if ((mode != VideoMode::G640x350x2M) &&
+                (mode != VideoMode::T80x25x2M) && 
+                (!GetVideoModeFlags(mode, flags) ||
+                ((flags & VESAVideoModeFlags::Color) == 0)))
+            {                
+                mode = VideoMode::T80x25x2M;
+                VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
+            }
+            ret = mode != VideoMode::T40x25x16G;
+        }
+        else
+        {
+            VideoModeOptions::Get() |= VideoModeOptions::Inactive;
+            newPointHeight = 14;
+        }
+    }
+    else
+    {
+        if ((Hag::System::BDA::VideoModeOptions::Get() & VideoModeOptions::Monochrome) == 0)
+        {
+            if ((mode == VideoMode::G640x350x2M) ||
+                (mode == VideoMode::T80x25x2M) ||
+                (GetVideoModeFlags(mode, flags) &&
+                (flags & VESAVideoModeFlags::Color) == 0))
+            {
+                mode = VideoMode::T40x25x16G;
+                VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
+            }
+            ret = mode != VideoMode::T40x25x16G;
+        }
+        else
+        {
+            VideoModeOptions::Get() |= mode == VideoMode::T80x25x16C ?
+                                               VideoModeOptions::Inactive | VideoModeOptions::Unknown :
+                                               VideoModeOptions::Inactive;
+            newPointHeight = 8;
+        }
+    }
+
+    if (newPointHeight != 0)
+    {
+        RowsOnScreen::Get() = 24;
+        PointHeightOfCharacterMatrix::Get() = newPointHeight;
+    }
+    return ret;
+}
+
+VideoParameters* Trio64::GetVideoModeOverrideTable(VideoMode_t mode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    VideoParameters* overrideTable = NULL;
+
+    if (mode <= VideoMode::MaxValid)
+    {
+        uint8_t* translationTable = m_VideoModeOverrideTranslationTable1;
+        if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::LineMode400) == 0)
+        {
+            translationTable = m_VideoModeOverrideTranslationTable2;
+            EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() &
+                                                  EGAFeatureBitSwitches::AdapterTypeMask;
+
+            if ((adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced) &&
+                (adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced_2) &&
+                (adapterType != EGAFeatureBitSwitches::MDAColor80x25_2))
+            {
+                translationTable = m_VideoModeOverrideTranslationTable3;
+            }
+        }
+        overrideTable = &m_LegacyVideoModes[translationTable[mode]];
+    }
+    else
+    {
+        VESAVideoModeData* vesaModeData = NULL;
+        if (vesaModeData = FindVideoModeData(mode))
+            overrideTable = vesaModeData->OverrideTable;
+    }
+    return overrideTable;
+}
+
+VideoParameters* Trio64::GetCurrentVideoModeOverrideTable()
+{
+    return GetVideoModeOverrideTable(Hag::System::BDA::DisplayMode::Get());
+}
+
+VideoParameters* Trio64::SetTextModeBiosData(uint8_t mode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    static uint8_t Mode0_7ControlRegValue[] = { 0x2C, 0x28, 0x2D, 0x29, 0x2A, 0x2E, 0x1E, 0x29 };
+
+    for (int i = 0; i < 8; ++i)
+    {
+        CursorPositions::Get()[i].Column = 0;
+        CursorPositions::Get()[i].Row = 0;
+    }
+
+    ActiveDisplayNumber::Get() = 0;
+    VideoBufferOffset::Get() = 0;
+
+    if (DisplayMode::Get() <= VideoMode::T80x25x2M)
+    {
+        CGAColorPaletteMaskSetting::Get() = DisplayMode::Get() == VideoMode::G640x200x2M ?
+                                            CGAColorPaletteMaskSetting::Blue |
+                                            CGAColorPaletteMaskSetting::Green |
+                                            CGAColorPaletteMaskSetting::Red |
+                                            CGAColorPaletteMaskSetting::BorderAndBackgroundColorIntensity |
+                                            CGAColorPaletteMaskSetting::BackgroundColor |
+                                            CGAColorPaletteMaskSetting::ForgroundColorSelect :
+                                            CGAColorPaletteMaskSetting::BackgroundColor |
+                                            CGAColorPaletteMaskSetting::ForgroundColorSelect;
+        CRTModeControlRegValue::Get() = Mode0_7ControlRegValue[DisplayMode::Get()];
+    }
+
+    VideoParameters* overrideTable = GetCurrentVideoModeOverrideTable();
+    NumberOfScreenColumns::Get() = overrideTable->DisplayedCharacterColumns;
+    RowsOnScreen::Get() = overrideTable->DisplayedRowsMinus1;
+    PointHeightOfCharacterMatrix::Get() = overrideTable->CharacterMatrixHeightPoints;
+    VideoBufferSize::Get() = overrideTable->VideoBufferSize;
+    CursorScanLines::Get().End = overrideTable->CRTCRegisters[11];
+    CursorScanLines::Get().Start = overrideTable->CRTCRegisters[10];
+    return overrideTable;
+}
+
+void Trio64::SaveDynamicParameterData(VideoParameters* overrideTable)
+{
+    using namespace Hag::System::BDA;
+
+    uint8_t* savePointer;
+    if (!GetVideoParameterBlockElement(1, savePointer, 0x100))
+        return;
+
+    memcpy(savePointer, overrideTable->AttributeControllerRegs, 16);
+    savePointer += 16;
+    *savePointer = overrideTable->AttributeControllerRegs[17];
+}
+
+void Trio64::PrepareAttributeController()
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    InputStatus1::Read(VideoBaseIOPort::Get() + (VGA::Register::InputStatus1D - VGA::Register::CRTControllerIndexD));
+    AttributeControllerIndex::Write(AttributeControllerRegister::Palette0);
+}
+
+void Trio64::ApplyVideoParameters(VideoParameters* overrideTable)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    PrepareAttributeController();
+
+    SYS_ClearInterrupts();
+    VGA::Sequencer::Reset::Write(VGA::Sequencer::Reset::AsynchronousReset);
+    VGA::Sequencer::ClockingMode::Write(VGA::Sequencer::ClockingMode::ScreenOff);
+    VGA::Sequencer::ClockingMode::Write(VGA::Sequencer::ClockingMode::ScreenOff | overrideTable->SequencerRegisters[0]);
+    MiscellaneousOutput::Write(overrideTable->MiscOutputRegisterValues);
+    VGA::Sequencer::Reset::Write(VGA::Sequencer::Reset::AsynchronousReset | VGA::Sequencer::Reset::SynchronousReset);
+    SYS_RestoreInterrupts();
+
+    VGA::Sequencer::EnableWritePlane::Write(overrideTable->SequencerRegisters[1]);
+    VGA::Sequencer::CharacterFontSelect::Write(overrideTable->SequencerRegisters[2]);
+    VGA::Sequencer::MemoryModeControl::Write(overrideTable->SequencerRegisters[3]);
+
+    Register_t crtRegister = VideoBaseIOPort::Get();
+
+    if ((DisplayMode::Get() < VideoMode::Unknown1) ||
+        (DisplayMode::Get() > VideoMode::Reserved2))
+    {
+        crtRegister = (overrideTable->MiscOutputRegisterValues & MiscellaneousOutput::IOAddressSelect) == 0 ? 
+                        VGA::Register::CRTControllerIndexB :
+                        VGA::Register::CRTControllerIndexD;
+    }
+    VideoBaseIOPort::Get() = crtRegister;
+    VGA::CRTController::VerticalRetraceEnd::Write(crtRegister, 0);
+
+    for (uint8_t crtIndex = 0; crtIndex < 25; ++crtIndex)
+    {
+        CRTControllerData::Write(crtRegister, crtIndex, overrideTable->CRTCRegisters[crtIndex]);
+    }
+    
+    //Reset Attribute Controller port 0x3c0 to point to index register
+    Register_t inputStatus1 = crtRegister + (VGA::Register::InputStatus1D - VGA::Register::CRTControllerIndexD);
+    InputStatus1::Read(inputStatus1);
+
+    if ((DisplayMode::Get() == VideoMode::Unknown2) ||
+        (DisplayMode::Get() == VideoMode::Reserved1))
+    {
+        InputStatus1::Read(VGA::Register::InputStatus1B);
+    }
+
+    if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) == 0)
+    {
+        for (uint8_t attribIndex = 0; attribIndex < 16; ++attribIndex)
+        {
+            AttributeControllerData::Write(attribIndex, overrideTable->AttributeControllerRegs[attribIndex]);
+        }
+    }
+
+    uint8_t attribIndex = 16;
+    for (uint8_t attribCount = 0; attribCount < 5; ++attribCount)
+    {
+        if ((attribIndex != 17) || ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) == 0))
+        {
+            AttributeControllerData_t value = attribIndex == 20 ? 0 :overrideTable->AttributeControllerRegs[16 + attribCount];
+            AttributeControllerData::Write(attribIndex, value);
+        }
+        ++attribIndex;
+    }
+
+    for (uint8_t gfxIndex = 0; gfxIndex < 9; ++gfxIndex)
+    {
+        GraphicsControllerData::Write(gfxIndex, overrideTable->GraphicsControllerRegs[gfxIndex]);
+    }
+}
+
+uint8_t Trio64::FetchBusSpecificSystemConfig(VGA::Register_t crtcPort)
+{
+    return ((CRTController::Configuration1::Read(crtcPort) & 
+            CRTController::Configuration1::SystemBusSelect) == 
+            CRTController::Configuration1::PCIBus) ?
+            m_PCISystemConfig :
+            m_VLBSystemConfig;
+}
+
+void Trio64::InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, VGA::Register_t crtcPort)
+{
+    using namespace Hag::VGA;
+
+    for (uint8_t crtcCount = 0; crtcCount < CRTCInitData[0]; ++crtcCount)
+    {
+        CRTControllerData::Write(crtcPort, CRTCInitData[1 + (crtcCount << 1)], CRTCInitData[2 + (crtcCount << 1)]);
+    }
+
+    for (uint8_t sequenceCount = 0; sequenceCount < m_SequenceInitData[0]; ++sequenceCount)
+    {
+        SequencerIndex_t index = m_SequenceInitData[1 + (sequenceCount << 1)];
+        SequencerData_t value = m_SequenceInitData[2 + (sequenceCount << 1)];
+
+        //Don't write the hsync / vsync data.
+        if (index == SequencerRegister::ExtendedSequencerD)
+            value &= ~Sequencer::ExtendedSequencerD::SyncMask;
+
+        SequencerData::Write(index, value);
+    }
+
+    CRTController::SystemConfiguration_t sysConf = CRTController::SystemConfiguration::Read(crtcPort);
+    sysConf &= CRTController::SystemConfiguration::UpperBitsMask;
+    sysConf |= FetchBusSpecificSystemConfig(crtcPort);
+    CRTController::SystemConfiguration::Write(crtcPort, sysConf);
+
+    CRTControllerIndex::Write(crtcPort, CRTControllerRegister::ModeControl);
+    CRTController::ModeControl_t modeControl = CRTControllerData::Read(crtcPort + 1) & ~CRTController::ModeControl::Interlaced;
+    CRTControllerData::Write(crtcPort + 1, modeControl);
+}
+
+void Trio64::WaitGraphicsEngineReady(VGA::Register_t crtcPort)
+{
+    using namespace Hag::VGA;
+
+    CRTController::SystemConfiguration_t systemConfig = CRTController::SystemConfiguration::Read(crtcPort);
+    if (((systemConfig & CRTController::SystemConfiguration::EnableEnhancedRegisterAccess) != 0) &&
+        GraphicsProcessorStatus::Read() != GraphicsProcessorStatus::FIFOStatusInvalid)
+    {
+        GraphicsProcessorStatus_t status = 0;
+        do
+        {
+            status = GraphicsProcessorStatus::Read();
+        } while ((status & GraphicsProcessorStatus::GraphicsEngineBusy) != 0);
+    }
+}
+
+void Trio64::ClearMemory(VGA::Register_t crtcPort)
+{
+    using namespace Hag::System::BDA;
+
+    if ((VideoModeOptions::Get() & VideoModeOptions::DontClearDisplay) == 0)
+    {
+        CRTController::RegisterLock1::Unlock(crtcPort);
+        CRTController::RegisterLock2::Unlock(crtcPort);
+
+        CRTController::LinearAddressWindowControl_t linearAddressControl = 
+            CRTController::LinearAddressWindowControl::Read(crtcPort);
+        CRTController::LinearAddressWindowControl::Write(crtcPort, linearAddressControl &
+                                                             ~CRTController::LinearAddressWindowControl::EnableLinearAddressing);
+
+        CRTController::ExtendedSystemControl1_t extendedSystemControl = 
+            CRTController::ExtendedSystemControl1::Read(crtcPort) & 
+            CRTController::ExtendedSystemControl1::LowerMask;
+        CRTController::ExtendedSystemControl1::Write(crtcPort, extendedSystemControl |
+                                                         CRTController::ExtendedSystemControl1::Length16Bpp);
+
+        CRTController::ExtendedMode_t extendedMode = CRTController::ExtendedMode::Read(crtcPort);
+        CRTController::ExtendedMode::Write(crtcPort, extendedMode &
+                                               CRTController::ExtendedMode::UnknownMask);
+
+        CRTController::SystemConfiguration_t systemConfiguration = CRTController::SystemConfiguration::Read(crtcPort);
+        CRTController::SystemConfiguration::Unlock(crtcPort);
+
+        AdvancedFunctionControl::WriteLower(AdvancedFunctionControl::EnableEnhancedFunctions |
+                                                AdvancedFunctionControl::ReservedAs1 |
+                                                AdvancedFunctionControl::EnhancedModePixelLength);
+
+        WriteRegisterData::WriteTopScissors(WriteRegisterData::MinValue);
+        WriteRegisterData::WriteLeftScissors(WriteRegisterData::MinValue);
+        WriteRegisterData::WriteBottomScissors(WriteRegisterData::MaxValue);
+        WriteRegisterData::WriteRightScissors(WriteRegisterData::MaxValue);
+
+        WriteRegisterData::WriteMultifunctionControlMisc(MultifunctionControlMiscellaneous::SelectSlowReadModifyWriteCycle);
+
+        BitplaneWriteMask::Write16x2(BitplaneWriteMask::AllSet);
+
+        ForegroundColor::Write16x2(0);
+
+        ForegroundMix::Write(ForegroundMix::MixNew | ForegroundMix::SelectForegroundColor);
+
+        WriteRegisterData::WritePixelControl(PixelControl::MixForeground);
+
+        CurrentXPosition::Write(0);
+        CurrentYPosition::Write(0);
+
+        MajorAxisPixelCount::Write(MajorAxisPixelCount::MaxValue);
+
+        WriteRegisterData::WriteMinorAxisPixelCount(MinorAxisPixelCount::MaxValue);
+
+        DrawingCommand::Write(DrawingCommand::MustBe1 |
+                              DrawingCommand::AcrossThePlanePixelMode |
+                              DrawingCommand::DrawPixel |
+                              DrawingCommand::PosYXmajPosX |
+                              DrawingCommand::CommandRectangleFill);
+
+        WaitGraphicsEngineReady(crtcPort);
+    }
+}
+
+void Trio64::ConfigureDCLKAndMCLK(uint8_t idx, uint8_t* data)
+{
+    using namespace Hag::VGA;
+
+    Sequencer::UnlockExtendedSequencer::Unlock();
+    Sequencer::ClockSynthControl2_t clockSynthControl2;
+    if (idx == 0x22)
+    {
+        SequencerData::Write(SequencerRegister::Unknown1B, 0x00);
+        SequencerData::Write(SequencerRegister::Unknown1A, 0x46);
+
+        Sequencer::MClockValueLow::Write(0x46);
+        Sequencer::MClockValueHigh::Write(0x79);
+        Sequencer::DClockValueLow::Write(0x49);
+        Sequencer::DClockValueHigh::Write(0x55);
+
+        clockSynthControl2 = Sequencer::ClockSynthControl2::EnableNewMClockFrequencyLoad |
+                             Sequencer::ClockSynthControl2::EnableNewDClockFrequencyLoad;
+    }
+    else
+    {
+        Sequencer::DClockValueLow::Write(data[1]);
+        Sequencer::DClockValueHigh::Write(data[0]);
+
+        clockSynthControl2 = Sequencer::ClockSynthControl2::EnableNewDClockFrequencyLoad;
+    }
+
+    Sequencer::RAMDACClockSynthControl::Write(0);
+
+    Sequencer::ClockSynthControl2_t originalClockSynthControl2 = Sequencer::ClockSynthControl2::Read();
+
+    originalClockSynthControl2 &= ~(Sequencer::ClockSynthControl2::EnableNewMClockFrequencyLoad |
+                                    Sequencer::ClockSynthControl2::EnableNewDClockFrequencyLoad |
+                                    Sequencer::ClockSynthControl2::DivideDClockByTwo);
+    
+    Sequencer::ClockSynthControl2::Write(originalClockSynthControl2);
+    Sequencer::ClockSynthControl2::Write(originalClockSynthControl2 | clockSynthControl2);
+}
+
+void Trio64::SetupClocks(VGA::Register_t crtcPort, uint8_t clockConfig)
+{
+    uint8_t* clockDataPtr = CRTController::Revision::Read(crtcPort) != 0x03 ?
+                            m_ClockData :
+                            m_ClockDataRev3;
+
+    uint32_t offset = (clockConfig & 0x1f) << 1;
+    ConfigureDCLKAndMCLK(clockConfig, clockDataPtr + offset);
+
+    CRTController::ModeControl::Write(crtcPort, clockConfig & CRTController::ModeControl::Interlaced);
+}
+
+uint8_t Trio64::GetMemorySizeInMiB(VGA::Register_t crtcPort)
+{
+    CRTController::RegisterLock1::Unlock(crtcPort);
+    CRTController::RegisterLock2::Unlock(crtcPort);
+
+    uint8_t size;
+    switch (CRTController::Configuration1::Read(crtcPort) & CRTController::Configuration1::DisplayMemorySize)
+    {
+    case CRTController::Configuration1::Size05MiB:
+        size = 0;      //0.5MiB == 0 for some reason.
+        break;
+    case CRTController::Configuration1::Size1MiB:
+        size = 1;
+        break;
+    case CRTController::Configuration1::Size2MiB:
+        size = 2;
+        break;
+    case CRTController::Configuration1::Size4MiB:
+        size = 4;
+        break;
+    default:
+        size = 1;
+        break;
+    }
+    return size;
+}
+
+void Trio64::ConfigureExtraVESAModeSettings(VideoMode_t mode, VGA::Register_t crtcPort, VESAVideoModeData* overrideTable, VESAResolutionVariant* modeData)
+{
+    using namespace Hag::VGA;
+
+    uint16_t logicalScreenWidth = overrideTable->ModeInfo->BytesPerScanline;
+
+    if (overrideTable->ModeInfo->MemoryModelType == VESAModeMemoryModel::Text)
+        logicalScreenWidth <<= 1;
+    
+    if (overrideTable->ModeInfo->MemoryModelType == VESAModeMemoryModel::EGA16ColorGraphics)
+        logicalScreenWidth <<= 2;
+
+    logicalScreenWidth >>= 3;
+    uint8_t logicalScreenWidthHigh = uint8_t(logicalScreenWidth >> 8);
+    VGA::CRTController::ScreenOffset::Write(crtcPort, uint8_t(logicalScreenWidth));
+    CRTController::ExtendedSystemControl2::Write(crtcPort, logicalScreenWidthHigh <<
+                                                     CRTController::ExtendedSystemControl2::Shift::LogicalScreenWidthHigh);
+
+    CRTController::Miscellaneous1_t miscellaneous1 = CRTController::Miscellaneous1::RefreshCount1 |
+                                                         CRTController::Miscellaneous1::EnableAlternateRefreshCount;
+
+    CRTController::MemoryConfiguration_t memoryConfiguration = CRTController::MemoryConfiguration::EnableBaseAddressOffset |
+                                                                   CRTController::MemoryConfiguration::EnableVGA16BitMemoryBusWidth;    
+
+    if (overrideTable->ModeInfo->BitsPerPixel >= 8)
+    {
+        miscellaneous1 |= CRTController::Miscellaneous1::Enable8bppOrGreaterColorEnhancedMode;
+        memoryConfiguration = CRTController::MemoryConfiguration::EnableBaseAddressOffset |
+                              CRTController::MemoryConfiguration::UseEnhancedModeMemoryMapping;
+    }
+
+    CRTController::Miscellaneous1::Write(crtcPort, miscellaneous1);
+
+    if ((mode == VideoMode::P800x600x16C) ||
+        (mode == VideoMode::P1024x768x16C) ||
+        (mode == VideoMode::P1280x1024x16C))
+    {
+        memoryConfiguration = CRTController::MemoryConfiguration::EnableBaseAddressOffset |
+                              CRTController::MemoryConfiguration::EnableTwoPageScreenImage |
+                              CRTController::MemoryConfiguration::EnableVGA16BitMemoryBusWidth |
+                              CRTController::MemoryConfiguration::UseEnhancedModeMemoryMapping;
+    }
+
+    CRTController::MemoryConfiguration::Write(crtcPort, memoryConfiguration);
+
+    CRTController::ExtendedSystemControl1::Write(crtcPort, modeData->ExtendedSystemControl1);
+
+    if ((modeData->ExtendedSystemControl1 & CRTController::ExtendedSystemControl1::Unknown) != 0)
+    {
+        MiscellaneousOutput_t miscOutput = MiscellaneousOutput::Read() & 
+                                           ~(MiscellaneousOutput::SelectNegativeHorizontalSyncPulse |
+                                             MiscellaneousOutput::SelectNegativeVerticalSyncPulse);
+        MiscellaneousOutput::Write(miscOutput);
+    }
+
+    CRTController::BackwardCompatibility3::Write(crtcPort, 
+                                                     CRTController::BackwardCompatibility3::EnableStartDisplayFIFOFetch);
+
+    if (GetMemorySizeInMiB(crtcPort) == 1)
+    {
+        CRTController::ExtendedMemoryControl2::Write(crtcPort, modeData->ExtendedMemoryControl2_1MiB);
+        CRTController::ExtendedMemoryControl3::Write(crtcPort, modeData->ExtendedMemoryControl3_1MiB);
+    }
+    else
+    {
+        CRTController::ExtendedMemoryControl2::Write(crtcPort, modeData->ExtendedMemoryControl2);
+        CRTController::ExtendedMemoryControl3::Write(crtcPort, modeData->ExtendedMemoryControl3);
+    }
+
+    CRTController::ExtendedHorizontalOverflow::Write(crtcPort, modeData->ExtendedHorizontalOverflow);
+
+    uint16_t horizontalTotal = (uint16_t(modeData->ExtendedHorizontalOverflow &
+                                  CRTController::ExtendedHorizontalOverflow::HorizontalTotalHigh) << 8) |
+                                  VGA::CRTController::HorizontalTotal::Read(crtcPort);
+
+    CRTController::InterlaceRetraceStart::Write(crtcPort, CRTController::InterlaceRetraceStart_t(horizontalTotal >> 1));
+    CRTController::StartDisplayFIFO::Write(crtcPort, horizontalTotal - 7);
+
+    CRTController::SystemConfiguration::Unlock(crtcPort);
+
+    if ((mode != VideoMode::T132x25x16C) &&
+        (mode != VideoMode::T132x43x16C) &&
+        ((CRTController::Miscellaneous1::Read(crtcPort) & 
+        CRTController::Miscellaneous1::Enable8bppOrGreaterColorEnhancedMode) == 0))
+    {
+        VGA::CRTController::VerticalRetraceEnd_t verticalRetraceEnd = VGA::CRTController::VerticalRetraceEnd::Unlock(crtcPort);
+
+        //I somehow get the feeling that these are tweaks that could also have been applied to the data.
+        VGA::CRTController::StartHorizontalSyncPosition::Write(crtcPort,
+                                                          VGA::CRTController::StartHorizontalSyncPosition::Read(crtcPort) + 2);
+
+        VGA::CRTController::EndHorizontalSyncPosition::Write(crtcPort,
+                                                        VGA::CRTController::EndHorizontalSyncPosition::Read(crtcPort) + 2);
+        if (mode == VideoMode::P1280x1024x16C)
+        {
+            VGA::CRTController::StartHorizontalBlank::Write(crtcPort,
+                                                       VGA::CRTController::StartHorizontalBlank::Read(crtcPort) - 1);
+        }
+
+        VGA::CRTController::VerticalRetraceEnd::Lock(crtcPort, verticalRetraceEnd);
+    }
+
+    CRTController::ExtendedVerticalOverflow::Write(crtcPort, modeData->ExtendedVerticalOverflow);
+
+    CRTController::ExtendedMiscellaneousControl2::Write(crtcPort, modeData->ExtendedMiscellaneousControl2);
+
+    if (modeData->ExtendedMiscellaneousControl2 == CRTController::ExtendedMiscellaneousControl2::ColorMode13)
+    {
+        VGA::CRTController::VerticalRetraceEnd_t verticalRetraceEnd = VGA::CRTController::VerticalRetraceEnd::Unlock(crtcPort);
+
+        //Another tweak.
+        VGA::CRTController::StartHorizontalBlank::Write(crtcPort,
+                                                   VGA::CRTController::StartHorizontalBlank::Read(crtcPort) + 1);
+
+        VGA::CRTController::VerticalRetraceEnd::Lock(crtcPort, verticalRetraceEnd);
+    }
+}
+
+void Trio64::Configure256KAddressingAndAddressWindow(VideoMode_t mode, VGA::Register_t crtcPort)
+{
+    using namespace Hag::VGA;
+
+    if (mode > VideoMode::MaxValid)
+        CRTController::BackwardCompatibility1::Write(crtcPort,
+                                                         CRTController::BackwardCompatibility1::Read(crtcPort) &
+                                                         ~CRTController::BackwardCompatibility1::StandardVGAMemoryMapping);
+
+    //TODO: This information should come from the PCI configuration space.
+    //Depending on the BIOS flags puts a dependency on the BIOS internal implementation.
+    CRTController::ExtendedBIOSFlag3_t biosFlags3 = CRTController::ExtendedBIOSFlag3::Read(crtcPort);
+    CRTController::LinearAddressWindowPositionH::Write(crtcPort, biosFlags3);
+    CRTController::ExtendedBIOSFlag4_t biosFlags4 = CRTController::ExtendedBIOSFlag4::Read(crtcPort);
+    CRTController::LinearAddressWindowPositionL::Write(crtcPort, biosFlags4 & 0x80);
+}
+
+void Trio64::SetColorMode(VideoMode_t mode, ColorMode_t colorMode, VGA::Register_t crtcPort)
+{
+    using namespace Hag::VGA;
+
+    CRTController::ExtendedMiscellaneousControl2_t cMode = 
+        CRTController::ExtendedMiscellaneousControl2::ColorMode0;
+
+    if (mode > VideoMode::MaxValid)
+    {
+        switch (colorMode)
+        {
+        case ColorMode::C8bpp2px:
+            cMode = CRTController::ExtendedMiscellaneousControl2::ColorMode8;
+            break;
+        case ColorMode::C24bpp1px:
+            cMode = CRTController::ExtendedMiscellaneousControl2::ColorMode13;
+            break;
+        case ColorMode::C24bppPacked:
+            cMode = CRTController::ExtendedMiscellaneousControl2::ColorMode12;
+            break;
+        case ColorMode::C16bpp1px:
+            cMode = CRTController::ExtendedMiscellaneousControl2::ColorMode10;
+            break;
+        case ColorMode::C15bpp1px:
+            cMode = CRTController::ExtendedMiscellaneousControl2::ColorMode9;
+            break;
+        }
+    }
+
+    Sequencer::UnlockExtendedSequencer::Unlock();
+
+    if (cMode == CRTController::ExtendedMiscellaneousControl2::ColorMode8)
+    {
+        Sequencer::RAMDACClockSynthControl::Write(Sequencer::RAMDACClockSynthControl::LUTWriteCycleControl |
+                                                      Sequencer::RAMDACClockSynthControl::EnableClockDoubleMode);
+
+        Sequencer::ClockSynthControl2::Write(Sequencer::ClockSynthControl2::Read() |
+                                                 Sequencer::ClockSynthControl2::DivideDClockByTwo);
+    }
+    else
+    {
+        Sequencer::RAMDACClockSynthControl::Write(Sequencer::RAMDACClockSynthControl::LUTWriteCycleControl);
+        
+        Sequencer::ClockSynthControl2::Write(Sequencer::ClockSynthControl2::Read() & 
+                                                 ~(Sequencer::ClockSynthControl2::DivideDClockByTwo |
+                                                   Sequencer::ClockSynthControl2::InvertDClock));
+    }
+
+    CRTController::ExtendedMiscellaneousControl2::Write(crtcPort,
+                                                            (CRTController::ExtendedMiscellaneousControl2::Read(crtcPort) &
+                                                             ~CRTController::ExtendedMiscellaneousControl2::ColorMode) |
+                                                             cMode);
+}
+
+void Trio64::ApplyVESAOverrideData(VideoMode_t mode, VGA::Register_t crtcPort, VESAVideoModeData* overrideTable)
+{
+    using namespace Hag::VGA;
+
+    Sequencer::UnlockExtendedSequencer::Unlock();
+
+    Sequencer::ExtendedSequencer9::Write(Sequencer::ExtendedSequencer9::Read() &
+                                             ~Sequencer::ExtendedSequencer9::MemoryMappedIOOnly);
+
+    //This is a read-only register according to the spec...
+    CRTController::ChipIDRevision::Write(crtcPort, 0x55);
+    if (CRTController::ChipIDRevision::Read(crtcPort) != 0x55)
+    {
+        CRTController::SystemConfiguration::Unlock(crtcPort);
+
+        AdvancedFunctionControl::WriteLower(AdvancedFunctionControl::ReservedAs1);
+
+        InitializeCRTControllerAndSequencer(m_CRTControllerInitData, crtcPort);
+    }
+
+    if (overrideTable != NULL)
+    {
+        VESAResolutionVariant* modeData = overrideTable->VariantData;
+
+        ClearMemory(crtcPort);
+
+        //TODO: refresh rate limit should be passed in.
+        uint16_t refreshRateCap = (uint16_t(CRTController::BIOSFlag::Read(crtcPort)) << 4) |
+                                  (CRTController::ExtendedBIOSFlag1::Read(crtcPort) >> 4);
+
+        for (int i = 0; i < 3; ++i)
+        {
+            if (overrideTable->OverrideTable == m_VesaResolutions[i + 3])
+                break;
+
+            refreshRateCap >>= 3;
+        }
+        refreshRateCap &= 7;
+
+        VGA::Sequencer::MemoryModeControl::Write(overrideTable->MemoryModeControl);
+
+        CRTController::SystemConfiguration::Unlock(crtcPort);
+        VGA::CRTController::VerticalRetraceEnd::Unlock(crtcPort);
+
+        AdvancedFunctionControl::WriteLower(overrideTable->AdvancedFunction);
+
+        while (((modeData->FlagsAndFilter & VESAFlagsAndFilter::Terminate) == 0) && 
+               ((modeData->FlagsAndFilter & ~VESAFlagsAndFilter::Terminate) > refreshRateCap))
+        {
+            ++modeData;
+        }
+
+        SetupClocks(crtcPort, modeData->ClockConfigIndex);
+
+        for (CRTControllerIndex_t i = 0; i < 25; ++i)
+        {
+            CRTControllerData::Write(crtcPort, i, modeData->CRTCRegisters[i]);
+        }
+
+        ConfigureExtraVESAModeSettings(mode, crtcPort, overrideTable, modeData);
+    }
+
+    Configure256KAddressingAndAddressWindow(mode, crtcPort);
+
+    ColorMode_t colorMode = 0;
+    if (overrideTable != NULL)
+        colorMode = overrideTable->ColorMode;
+
+    SetColorMode(mode, colorMode, crtcPort);
+
+    Sequencer::UnlockExtendedSequencer::Lock();
+}
+
+uint8_t* Trio64::DecompressPaletteColor(uint8_t* paletteData, uint8_t& red, uint8_t& green, uint8_t& blue)
+{
+    uint8_t redSettings = *paletteData & 0xC0;//Top 2 bits hold compression information
+    red = *paletteData & 0x3F;//6 bit color data
+    ++paletteData;
+
+    if (redSettings == 0)
+    {
+        uint8_t greenSettings = *paletteData & 0x40;
+        green = *paletteData & 0x3F;//6 bit color data
+        ++paletteData;
+        if (greenSettings == 0)
+        {
+            blue = *paletteData;
+            ++paletteData;
+        }
+        else
+        {
+            blue = green;
+        }
+    }
+    else if (redSettings == 0x40)
+    {
+        green = red;
+        blue = *paletteData;
+        ++paletteData;
+    }
+    else if (redSettings == 0x80)
+    {
+        green = blue = red;
+    }
+    else
+    {
+        blue = red;
+        green = *paletteData;
+        ++paletteData;
+    }
+    return paletteData;
+}
+
+uint16_t Trio64::SetPaletteColor(uint16_t colorIndex, uint8_t red, uint8_t green, uint8_t blue)
+{
+    using namespace Hag::VGA;
+
+    SYS_ClearInterrupts();
+    DACWriteIndex::Write(colorIndex);
+    RAMDACData::Write(red);
+    RAMDACData::Write(green);
+    RAMDACData::Write(blue);
+    SYS_RestoreInterrupts();
+
+    return colorIndex + 1;
+}
+
+uint16_t Trio64::ApplyPalette(uint16_t colorIndex, uint16_t count, uint8_t* paletteData)
+{
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        paletteData = DecompressPaletteColor(paletteData, red, green, blue);
+        colorIndex = SetPaletteColor(colorIndex, red, green, blue);
+    }
+    return colorIndex;
+}
+
+void Trio64::Set248ColorPalette()
+{
+    using namespace Hag::System::BDA;
+
+    uint16_t colorIndex = 0;
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+ 
+    colorIndex = ApplyPalette(colorIndex, 16, ((VideoDisplayDataArea::Get() &
+                                               (VideoDisplayDataArea::GrayScale |
+                                                VideoDisplayDataArea::MonochromeMonitor)) == 0) ?
+                                                m_ColorPalette : m_MonochromePalette);
+
+    colorIndex = ApplyPalette(colorIndex, 16, m_SecondPalette);
+
+    if ((VideoDisplayDataArea::Get() & (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0)
+    {
+        ApplyPalette(colorIndex, 216, m_Color216Palette);
+    }
+    else
+    {
+        uint8_t* palettePtr = m_Color216Palette;
+        for (int i = 0; i < 216; ++i)
+        {
+            palettePtr = DecompressPaletteColor(palettePtr, red, green, blue);
+            red = green = blue = ((blue * 36043 + green * 19333 + red * 9830 + 16384) >> 15) & 0xFF;
+            colorIndex = SetPaletteColor(colorIndex, red, green, blue);
+        }
+    }
+}
+
+void Trio64::SetPalette(VideoMode_t mode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) == 0)
+    {
+        if (DACMask::Read() != 0xFF)
+            DACMask::Write(0xFF);
+
+        bool paletteNotSet = false;
+        if ((mode == VideoMode::T80x25x2M) ||
+            (mode == VideoMode::G640x350x2M))
+        {
+            ApplyPalette(0, 64, m_Monochrome64Palette);
+        }
+        else if (mode == VideoMode::G320x200x256C)
+        {
+            Set248ColorPalette();
+        }
+        else if (mode > VideoMode::MaxValid)
+        {
+            VESAVideoModeFlags_t flags = 0;
+            GetVideoModeFlags(mode, flags);
+
+            if ((flags & VESAVideoModeFlags::Color) == 0x00)
+            {
+                ApplyPalette(0, 64, m_Monochrome64Palette);
+            }
+            else if ((flags & VESAVideoModeFlags::Palette256) != 0x00)
+            {
+                Set248ColorPalette();
+            }
+            else paletteNotSet = true;
+        }
+        else paletteNotSet = true;
+
+        if (paletteNotSet)
+        {
+            bool paletteSet3 = false;
+            if (mode < VideoMode::G320x200x4C)
+            {
+                EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() & EGAFeatureBitSwitches::AdapterTypeMask;
+
+                paletteSet3 = (((VideoDisplayDataArea::Get() & VideoDisplayDataArea::LineMode400) == 0) &&
+                               (adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced) &&
+                               (adapterType != EGAFeatureBitSwitches::MDAHiResEnhanced_2));
+            }
+            else
+            {
+                paletteSet3 = ((mode != VideoMode::Unknown1) && (mode <= VideoMode::G640x200x16C));
+            }
+
+            if (paletteSet3)
+            {
+                if ((VideoDisplayDataArea::Get() & (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0)
+                {
+                    ApplyPalette(0, 64, m_ColorPalette3);
+                }
+                else
+                {
+                    ApplyPalette(0, 64, m_MonochromePalette3);
+                }
+            }
+            else
+            {
+                if ((VideoDisplayDataArea::Get() & (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0)
+                {
+                    ApplyPalette(0, 64, m_ColorPalette2);
+                }
+                else
+                {
+                    ApplyPalette(0, 64, m_MonochromePalette2);
+                }
+            }
+        }
+    }
+}
+
+void Trio64::UploadFont(uint8_t* src, uint8_t* dst, uint16_t characters, uint8_t bytesPerCharacter, uint16_t destWidth)
+{
+    for (uint16_t i = 0; i < characters; ++i)
+    {
+        memcpy(dst, src, bytesPerCharacter);
+        dst += destWidth;
+        src += bytesPerCharacter;
+    }
+}
+
+void Trio64::PatchFont(uint8_t flags)
+{
+    //0x40 = 8x14, 0x80 = 8x16, 0x00 = no patch.
+    if ((flags & 0xC0) != 0x00)
+    {
+        bool is8x16 = (flags & 0x80) == 0x00;
+        uint16_t count = is8x16 ? 16 : 14;
+        uint8_t* src = is8x16 ? m_CharacterPatch8x16 : m_CharacterPatch8x14;
+
+        FARPointer dst(0xA000, 0x0000);
+
+        while (true)
+        {
+            dst.Offset = uint16_t(*src) << 5;
+            ++src;
+
+            if (dst.Offset == 0)
+                break;
+
+            uint8_t* dstPtr = dst.ToPointer<uint8_t>(count);
+
+            SYS_ClearInterrupts();
+            memcpy(dstPtr, src, count);
+            SYS_RestoreInterrupts();
+            src += count;
+        }
+    }
+}
+
+void Trio64::EnablePaletteBasedVideo()
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    Register_t inputStatus = VideoBaseIOPort::Get() + (VGA::Register::InputStatus1D - VGA::Register::CRTControllerIndexD);
+    AttributeControllerIndex::ResetIndex(inputStatus);
+    AttributeControllerIndex::Write(AttributeControllerIndex::EnableVideoDisplay);
+}
+
+void Trio64::SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    static uint16_t RamBankOffset[] =
+    {
+        0x0000, //(0)
+        0x4000, //(1)
+        0x8000, //(2)
+        0xC000, //(3)
+        0x2000, //(4)
+        0x6000, //(5)
+        0xA000, //(6)
+        0xE000  //(7)
+    };
+
+    FARPointer dest(0xA000, 0x0000);
+
+    PrepareAttributeController();
+    
+    VGA::Sequencer::EnableWritePlane::Write(VGA::Sequencer::EnableWritePlane::Plane3);
+    VGA::Sequencer::MemoryModeControl::Write(VGA::Sequencer::MemoryModeControl::Unknown |
+                                             VGA::Sequencer::MemoryModeControl::ExtendedMemoryAddress |
+                                             VGA::Sequencer::MemoryModeControl::SequentialAddressingMode);
+
+    GraphicsController::ReadPlaneSelect::Write(GraphicsController::ReadPlaneSelect::Plane2);
+    GraphicsController::GraphicsControllerMode::Write(GraphicsController::GraphicsControllerMode::Mode0);
+    GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::A0000HtoAFFFFH);
+
+    dest.Offset = RamBankOffset[ramBank & 0x07] + (startCharacter << 5);
+
+    UploadFont(font, dest.ToPointer<uint8_t>(0x2000), numCharacters, charHeight, 32);
+    PatchFont(ramBank);
+
+    VGA::Sequencer::EnableWritePlane::Write(VGA::Sequencer::EnableWritePlane::Plane1 |
+                                            VGA::Sequencer::EnableWritePlane::Plane2);
+    VGA::Sequencer::MemoryModeControl::Write(VGA::Sequencer::MemoryModeControl::Unknown |
+                                             VGA::Sequencer::MemoryModeControl::ExtendedMemoryAddress);
+
+    GraphicsController::ReadPlaneSelect::Write(GraphicsController::ReadPlaneSelect::Plane1);
+
+    GraphicsController::GraphicsControllerMode::Write(GraphicsController::GraphicsControllerMode::OddEvenAddressing);
+
+    if (VideoBaseIOPort::Get() != VGA::Register::CRTControllerIndexB)
+    {
+        GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes |
+                                                        GraphicsController::MemoryMapModeControl::B8000HtoBFFFFH);
+    }
+    else
+    {
+        GraphicsController::MemoryMapModeControl::Write(GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes |
+                                                        GraphicsController::MemoryMapModeControl::B0000HtoB7FFFH);
+    }
+    EnablePaletteBasedVideo();
+}
+
+void Trio64::ConfigureCursorPropertiesAndVerticalDisplayEnd(VideoMode_t mode, uint8_t characterPointHeight)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    Register_t crtcPort = VideoBaseIOPort::Get();
+
+    PointHeightOfCharacterMatrix::Get() = characterPointHeight;
+
+    uint16_t screenHeight = 0;
+
+    if ((mode == VideoMode::G640x480x2M) ||
+        (mode == VideoMode::G640x480x16C))
+    {
+        screenHeight = 400;
+    }
+    else if ((mode == VideoMode::G320x200x256C) ||
+        (mode == VideoMode::G640x200x2M) ||
+        (mode == VideoMode::G320x200x4G) ||
+        ((mode >= VideoMode::Unknown2) &&
+        (mode <= VideoMode::G640x200x16C)))
+    {
+        screenHeight = 200;
+    }
+    else if ((mode >= VideoMode::Unknown2) &&
+        (mode <= VideoMode::G640x350x4C))
+    {
+        screenHeight = 350;
+    }
+    else
+    {
+        EGAFeatureBitSwitches_t adapterType = EGAFeatureBitSwitches::Get() & EGAFeatureBitSwitches::AdapterTypeMask;
+
+        if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::LineMode400) != 0)
+        {
+            screenHeight = 400;
+        }
+        else if (((VideoModeOptions::Get() & 0x02) != 0) ||
+                (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced) ||
+                (adapterType == EGAFeatureBitSwitches::MDAHiResEnhanced_2) ||
+                (mode == VideoMode::T80x25x2M))
+        {
+            screenHeight = 350;
+        }
+        else
+        {
+            screenHeight = 200;
+        }
+    }
+
+    uint8_t rowsOnScreen = uint8_t(screenHeight / characterPointHeight);
+    RowsOnScreen::Get() = rowsOnScreen - 1;
+
+    NumberOfScreenColumns_t bytesPerLine = Hag::System::BDA::NumberOfScreenColumns::Get() << 1;
+
+    VideoBufferSize::Get() = bytesPerLine * rowsOnScreen + 256;
+
+    uint8_t charPointHeightMinusOne = characterPointHeight - 1;
+
+    if (mode == VideoMode::T80x25x2M)
+        VGA::CRTController::UnderlineLocation::Write(crtcPort, charPointHeightMinusOne);
+
+    VGA::CRTController::MaximumScanLine::Write(crtcPort, (VGA::CRTController::MaximumScanLine::Read(crtcPort) &
+                                                          ~VGA::CRTController::MaximumScanLine::MaximumScanLineCount) |
+                                                          charPointHeightMinusOne);
+
+    uint8_t cursorBottom = charPointHeightMinusOne;
+    uint8_t cursorTop = charPointHeightMinusOne - 1;
+
+    if (charPointHeightMinusOne > 12)
+    {
+        --cursorBottom;
+        --cursorTop;
+    }
+
+    Hag::System::BDA::CursorScanLines::Get().End = cursorBottom;
+    Hag::System::BDA::CursorScanLines::Get().Start = cursorTop;
+
+    VGA::CRTController::CursorStartScanLine::Write(crtcPort, cursorTop);
+    VGA::CRTController::CursorEndScanLine::Write(crtcPort, cursorBottom);
+
+    uint16_t vertDisplayEnd = (rowsOnScreen - 1) * characterPointHeight;
+
+    if (screenHeight == 200)
+        vertDisplayEnd <<= 1;
+
+    --vertDisplayEnd;
+    
+    VGA::CRTController::VerticalDisplayEnd::Write(crtcPort, uint8_t(vertDisplayEnd));
+}
+
+void Trio64::SetFont()
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    if (PointHeightOfCharacterMatrix::Get() == 14)
+    {
+        SetTextFontAndAddressing(m_Characters8x14, 0, 256, 14, DisplayMode::Get() == VideoMode::T80x25x2M ? 0x80 : 0);
+    }
+    else if (PointHeightOfCharacterMatrix::Get() == 8)
+    {
+        SetTextFontAndAddressing(m_Characters8x8, 0, 256, 8, 0);
+    }
+    else
+    {
+        SetTextFontAndAddressing(m_Characters8x16, 0, 256, 16, 0x40);
+    }
+}
+
+void Trio64::ConfigureFontAndCursor(VideoMode_t mode, System::BDA::AlphanumericCharSet* fontDefinition)
+{
+    using namespace Hag::System::BDA;
+    
+    uint8_t* font = fontDefinition->FontData.ToPointer<uint8_t>(fontDefinition->CharacterHeight * fontDefinition->NumCharacters);
+
+    SetTextFontAndAddressing(font,
+                             fontDefinition->FirstCharacter,
+                             fontDefinition->NumCharacters,
+                             fontDefinition->CharacterHeight,
+                             fontDefinition->RamBank & 0x3F);
+    ConfigureCursorPropertiesAndVerticalDisplayEnd(mode, fontDefinition->CharacterHeight);
+
+    if (fontDefinition->Rows != 0xFF)
+    {
+        RowsOnScreen::Get() = fontDefinition->Rows - 1;
+    }
+}
+
+void Trio64::ConfigureFontRamBank(System::BDA::SecondaryAlphaModeAuxillaryCharacterGeneratorTable* fontDefinition)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    if (fontDefinition->CharacterHeight != PointHeightOfCharacterMatrix::Get())
+    {
+        uint8_t* font = fontDefinition->FontData.ToPointer<uint8_t>(fontDefinition->CharacterHeight * 256);
+        SetTextFontAndAddressing(font, 0, 256, fontDefinition->CharacterHeight, fontDefinition->RamBank & 0x3f);
+
+        //This is the weirdest piece of code so far.
+        VGA::Sequencer::CharacterFontSelect::Write((VGA::Sequencer::MemoryModeControl::Read() &
+                                                   (VGA::Sequencer::MemoryModeControl::Unknown |
+                                                    VGA::Sequencer::MemoryModeControl::ExtendedMemoryAddress |
+                                                    VGA::Sequencer::MemoryModeControl::Unknown2)) |
+                                                    ((fontDefinition->RamBank & 0x03) << 2) |
+                                                    ((fontDefinition->RamBank & 0x04) << 3));
+    }
+}
+
+void Trio64::ClearScreen(VideoMode_t mode)
+{
+    using namespace Hag::VGA;
+
+    uint32_t size =  0x2000;
+    uint16_t segment = 0;
+    uint32_t value = 0;
+
+    uint8_t flags = 0;
+    if ((mode > VideoMode::MaxValid) &&
+        GetVideoModeFlags(mode, flags))
+    {
+        segment = 0xB800;
+        value = 0x07200720;
+
+        if ((flags & VESAVideoModeFlags::Color) == 0x00)
+        {
+            segment = 0xB000;
+        }
+        if ((flags & VESAVideoModeFlags::WindowGranularity64KiB) == 0x00)
+            return;
+    }
+    else
+    {
+        if (mode == VideoMode::T80x25x2M)
+        {
+            segment = 0xB000;
+            value = 0x07200720;
+        }
+        else if (mode <= VideoMode::T80x25x16C)
+        {
+            segment = 0xB800;
+            value = 0x07200720;
+        }
+        else if (mode <= VideoMode::G640x200x2M)
+        {
+            segment = 0xB800;
+        }
+        else
+        {
+            segment = 0xA000;
+            size = 0x4000;
+        }
+    }
+
+    uint32_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint32_t>(size << 2);
+    
+    do
+    {
+        *ptr = value;
+        ++ptr;
+        --size;
+    } while (size != 0);
+}
+
+void Trio64::SetPaletteProfile(Hag::VGA::Register_t crtcPort)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    SecondarySavePointerTable* secondarySavePointerTable = NULL;
+    if (GetVideoParameterBlockElementAs<SecondarySavePointerTable>(4, secondarySavePointerTable, 32) &&
+        !secondarySavePointerTable->UserPaletteProfileTable.IsNull())
+    {
+        PaletteProfile* paletteProfile = secondarySavePointerTable->UserPaletteProfileTable.ToPointer<PaletteProfile>(0x14 + 0x14);
+        if (CheckValidInCurrentMode(paletteProfile->ApplicableModes))
+        {
+            if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) != 0)
+            {
+                InputStatus1::Read(crtcPort + (VGA::Register::InputStatus1D - VGA::Register::CRTControllerIndexD));
+
+                uint16_t colorCount = (paletteProfile->DACRegisterCount << 1) +
+                                       paletteProfile->DACRegisterCount;
+
+                uint8_t* paletteColors = paletteProfile->DACRegisterTable.ToPointer<uint8_t>(colorCount);
+                DACWriteIndex::Write(uint8_t(paletteProfile->DACRegisterStartIndex));
+                while (colorCount != 0)
+                {
+                    RAMDACData::Write(*paletteColors);
+                    ++paletteColors;
+                    --colorCount;
+                }
+
+                if (paletteProfile->AttributeRegisterCount != 0)
+                {
+                    uint8_t* attributeRegisters = paletteProfile->AttributeRegisterTable.ToPointer<uint8_t>(paletteProfile->AttributeRegisterCount);
+                    
+                    for (uint16_t attrIdx = 0; attrIdx < paletteProfile->AttributeRegisterCount; ++attrIdx)
+                    {
+                        AttributeControllerData::Write(paletteProfile->AttributeRegisterStartIndex + attrIdx,
+                                                    *attributeRegisters);
+                        ++attributeRegisters;
+                    }
+                    AttributeControllerData::Write(paletteProfile->AttributeRegisterCount + 1, *attributeRegisters);
+                }
+            }
+
+            if (paletteProfile->Underlining != 0)
+            {
+                VGA::CRTController::StartHorizontalSyncPosition_t horizontalSyncPos = 31;
+                if (paletteProfile->Underlining > 0)
+                    horizontalSyncPos = VGA::CRTController::StartHorizontalSyncPosition_t(PointHeightOfCharacterMatrix::Get() - 1);
+
+                VGA::CRTController::StartHorizontalSyncPosition::Write(crtcPort, horizontalSyncPos);
+            }
+        }
+    }
+}
+
+VideoModeError_t Trio64::SetLegacyVideoModeInternal(VideoMode_t mode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System::BDA;
+
+    VGA::Register_t crtcPort = GetCRTControllerIndexRegister();
+    
+    CRTController::RegisterLock1::Unlock(crtcPort);
+    CRTController::RegisterLock2::Unlock(crtcPort);
+
+    VideoMode_t dontClearDisplay = mode & VideoMode::DontClearDisplay;
+
+    mode &= ~VideoMode::DontClearDisplay;
+
+    VESAVideoModeData* vesaData = NULL;
+
+    if ((mode <= VideoMode::MaxValid) ||
+        (vesaData = FindVideoModeData(mode)))
+    {
+        VideoModeOptions::Get() &= ~VideoModeOptions::DontClearDisplay;
+        VideoModeOptions::Get() |= dontClearDisplay;
+
+        ModeSetBDA(mode);
+
+        if ((mode <= VideoMode::MaxValid) &&
+            !VerifyBDAOrDeactivate(mode))
+        {
+            return VideoModeError::AdapterNotActive;
+        }
+
+        DisplayMode::Get() = mode;
+
+        VideoParameters* overrideTable = SetTextModeBiosData(mode);
+
+        VideoModeOptions::Get() &= ~(VideoModeOptions::Unknown |
+                                     VideoModeOptions::Inactive);
+
+        SaveDynamicParameterData(overrideTable);
+        ApplyVideoParameters(overrideTable);
+        ApplyVESAOverrideData(mode, crtcPort, vesaData);
+        SetPalette(mode);
+
+        VESAVideoModeFlags_t flags = 0;
+
+        if ((mode < VideoMode::G320x200x4C) ||
+            (mode == VideoMode::T80x25x2M) ||
+            (GetVideoModeFlags(mode, flags) &&
+            ((flags & VESAVideoModeFlags::WindowGranularity64KiB) != 0)))
+        {
+            SetFont();
+
+            AlphanumericCharSet* fontDefinition = NULL;
+            if (GetVideoParameterBlockElementAs<AlphanumericCharSet>(2, fontDefinition, 0x0B + 0x14) &&
+                CheckValidInCurrentMode(fontDefinition->ApplicableModes))
+                ConfigureFontAndCursor(mode, fontDefinition);
+
+            SecondarySavePointerTable* paramBlock = NULL;
+            if (GetVideoParameterBlockElementAs<SecondarySavePointerTable>(4, paramBlock, 0x20) &&
+                !paramBlock->SecondaryAlphanumericCharacterSetOverride.IsNull())
+            {
+                SecondaryAlphaModeAuxillaryCharacterGeneratorTable* graphicsFont =
+                    paramBlock->SecondaryAlphanumericCharacterSetOverride.
+                    ToPointer<SecondaryAlphaModeAuxillaryCharacterGeneratorTable>(0x0B + 0x14);
+
+                if (CheckValidInCurrentMode(graphicsFont->ApplicableModes))
+                    ConfigureFontRamBank(graphicsFont);
+            }
+        }
+        else
+        {
+            CursorScanLines::Get().End = 0;
+            CursorScanLines::Get().Start = 0;
+
+            GraphicsCharacterSetOverride* graphicsCharacterFontDefinition = NULL;
+            if (GetVideoParameterBlockElementAs<GraphicsCharacterSetOverride>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
+                CheckValidInCurrentMode(graphicsCharacterFontDefinition->ApplicableVideoModes))
+                SetGraphicsCharacterFont(graphicsCharacterFontDefinition);
+        }
+
+        if (((VideoModeOptions::Get() & VideoModeOptions::DontClearDisplay) == 0x00) &&
+            (VideoBufferSize::Get() != 0))
+            ClearScreen(mode);
+
+        SetPaletteProfile(crtcPort);
+        EnablePaletteBasedVideo();
+        VGA::Sequencer::ClockingMode::TurnScreenOn();
+
+        return VideoModeError::Success;
+    }
+    return VideoModeError::UnknownVideoMode;
+}
+
+VideoModeError_t Trio64::SetVesaVideoModeInternal(Vesa::VideoMode_t mode)
+{
+    VideoMode_t legacyMode = VideoMode::Invalid;
+    if ((mode & Vesa::VideoMode::LegacyMask) == 0)
+    {
+        legacyMode = VideoMode_t(mode);//Just drop the top byte
+    }
+    else
+    {
+        Vesa::VideoMode_t actualMode = mode & Vesa::VideoMode_t(~Vesa::VideoMode::DontClearDisplay);
+        legacyMode = ConvertVesaModeToLegacy(actualMode);
+    }
+
+    if (legacyMode == VideoMode::Invalid)
+        return VideoModeError::UnknownVideoMode;
+    
+    if ((mode & Vesa::VideoMode::DontClearDisplay) == Vesa::VideoMode::DontClearDisplay)
+        legacyMode |= VideoMode::DontClearDisplay;
+    
+    return SetLegacyVideoModeInternal(legacyMode);
 }
 
 }}

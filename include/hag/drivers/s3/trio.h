@@ -5,13 +5,14 @@
 #include <hag/system/bda.h>
 #include <hag/drivers/s3/regs.h>
 #include <hag/drivers/s3/advfnctl.h>
-#include <hag/drivers/s3/crtc/reglock2.h>
+#include <hag/drivers/s3/crtc/conf1.h>
 #include <hag/drivers/s3/crtc/exsysct1.h>
 #include <hag/drivers/s3/crtc/exsysct2.h>
 #include <hag/drivers/s3/crtc/exsysct3.h>
 #include <hag/drivers/s3/crtc/exhorovf.h>
 #include <hag/drivers/s3/crtc/exmscct2.h>
 #include <hag/drivers/s3/crtc/exverovf.h>
+#include <hag/drivers/s3/crtc/reglock2.h>
 #include <hag/drivers/s3/vidmodes.h>
 #include <hag/drivers/vga/sqrc/data.h>
 #include <hag/drivers/vga/sqrc/memodctl.h>
@@ -20,6 +21,7 @@
 #include <hag/drivers/vga/miscout.h>
 #include <hag/vesa/vidmodes.h>
 #include <hag/driver.h>
+#include <hag/system/bda.h>
 
 #pragma pack(push, 1);
 
@@ -171,28 +173,6 @@ struct VESAVideoModeData
     VGA::Sequencer::MemoryModeControl_t MemoryModeControl;
 };
 
-struct AlphanumericCharSet
-{
-    uint8_t CharacterHeight;                //00   byte    length of each character definition in bytes
-    uint8_t RamBank;                        //01   byte    character generator RAM bank
-    uint16_t NumCharacters;                 //02   word    count of characters defined
-    uint16_t FirstCharacter;                //04   word    first character code in table
-    FARPointer FontData;                    //06   dword   pointer to character font definition table
-    uint8_t Rows;                           //0A   byte    number of character rows displayed
-    VGA::VideoMode_t ApplicableModes[1];    //0B   nbytes  array of applicable video modes
-	                                        //0B+n byte    FFh end of mode list marker
-};
-
-struct GraphicsCharSet
-{
-    uint8_t CharacterHeight;                //00   byte    count of displayed character rows
-    uint8_t RamBank;                        //01   byte    character generator RAM bank
-    uint8_t Unknown;                        //02   byte    length of each character definition in bytes
-    FARPointer FontData;                    //03   dword   pointer to character font definition table
-    VGA::VideoMode_t ApplicableModes[1];    //07   nbytes  array of applicable video modes
-                                            //07+n byte    FFh end of mode list marker
-};
-
 typedef uint8_t FirmwareFlag_t;
 namespace FirmwareFlag
 {
@@ -209,18 +189,65 @@ namespace FirmwareFlag
     };
 }
 
-class TrioBase : public Hag::Driver
+class Trio64 : public Hag::Driver
 {
 public:
-    TrioBase(IAllocator& allocator)
+    Trio64(IAllocator& allocator)
         : Hag::Driver(allocator)
     {
 
     }
 
-    virtual ~TrioBase();
+    virtual ~Trio64();
 
-//protected:
+    template<typename T>
+    static T* GetLinearFrameBufferAs()
+    {
+        return (T*)GetLinearFrameBuffer();
+    }
+
+//private:
+    static VideoModeError_t SetLegacyVideoModeInternal(VideoMode_t mode);
+    static VideoModeError_t SetVesaVideoModeInternal(Vesa::VideoMode_t mode);
+    static VGA::Register_t Trio64::GetCRTControllerIndexRegister();
+
+    static void ModeSetBDA(VideoMode_t& mode);
+    static bool VerifyBDAOrDeactivate(VideoMode_t& mode);
+    static VideoParameters* GetVideoModeOverrideTable(VideoMode_t mode);
+    static uint16_t GetDisplayMemoryInKiB();
+    static void* GetLinearFrameBuffer();
+    static VideoParameters* Trio64::GetCurrentVideoModeOverrideTable();
+    static VideoParameters* Trio64::SetTextModeBiosData(uint8_t mode);
+    static void PrepareAttributeController();
+    static void SaveDynamicParameterData(VideoParameters* overrideTable);
+    static void ApplyVideoParameters(VideoParameters* overrideTable);
+    static uint8_t FetchBusSpecificSystemConfig(VGA::Register_t crtcPort);
+    static void InitializeCRTControllerAndSequencer(uint8_t* CRTCInitData, VGA::Register_t crtcPort);
+    static void WaitGraphicsEngineReady(VGA::Register_t crtcPort);
+    static void ClearMemory(VGA::Register_t crtcPort);
+    static void ConfigureDCLKAndMCLK(uint8_t idx, uint8_t* data);
+    static void SetupClocks(VGA::Register_t crtcPort, uint8_t clockConfig);
+    static uint8_t GetMemorySizeInMiB(VGA::Register_t crtcPort);
+    static void Trio64::ConfigureExtraVESAModeSettings(VideoMode_t mode, VGA::Register_t crtcPort, VESAVideoModeData* overrideTable, VESAResolutionVariant* modeData);
+    static void Configure256KAddressingAndAddressWindow(VideoMode_t mode, VGA::Register_t crtcPort);
+    static void SetColorMode(VideoMode_t mode, ColorMode_t colorMode, VGA::Register_t crtcPort);
+    static void ApplyVESAOverrideData(VideoMode_t mode, VGA::Register_t crtcPort, VESAVideoModeData* overrideTable);
+    static uint8_t* DecompressPaletteColor(uint8_t* paletteData, uint8_t& red, uint8_t& green, uint8_t& blue);
+    static uint16_t SetPaletteColor(uint16_t colorIndex, uint8_t red, uint8_t green, uint8_t blue);
+    static uint16_t ApplyPalette(uint16_t colorIndex, uint16_t count, uint8_t* paletteData);
+    static void Set248ColorPalette();
+    static void SetPalette(VideoMode_t mode);
+    static void UploadFont(uint8_t* src, uint8_t* dst, uint16_t characters, uint8_t bytesPerCharacter, uint16_t destWidth);
+    static void PatchFont(uint8_t flags);
+    static void EnablePaletteBasedVideo();
+    static void SetTextFontAndAddressing(uint8_t* font, uint16_t startCharacter, uint16_t numCharacters, uint8_t charHeight, uint8_t ramBank);
+    static void ConfigureCursorPropertiesAndVerticalDisplayEnd(VideoMode_t mode, uint8_t characterPointHeight);
+    static void SetFont();
+    static void ConfigureFontAndCursor(VideoMode_t mode, System::BDA::AlphanumericCharSet* fontDefinition);
+    static void ConfigureFontRamBank(System::BDA::SecondaryAlphaModeAuxillaryCharacterGeneratorTable* fontDefinition);
+    static void ClearScreen(VideoMode_t mode);
+    static void SetPaletteProfile(Hag::VGA::Register_t crtcPort);
+
     static VideoMode_t ConvertVesaModeToLegacy(Vesa::VideoMode_t mode);
     static VideoModeError_t CheckValidVideoMode(VideoMode_t mode);
 
@@ -232,6 +259,11 @@ public:
         Vesa::VideoMode_t VesaMode;
         VideoMode_t LegacyMode;
     };
+
+    static Register_t CRTControllerIndex() { return Hag::System::BDA::VideoBaseIOPort::Get(); }
+    static Register_t CRTControllerData() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x01; }
+    static Register_t FeatureControlW() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x06; }
+    static Register_t InputStatus1() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x06; }
 
     static VideoModeTranslation m_VideoModeTranslation[];
     static VESAVideoModeData m_VesaVideoModes[];
@@ -268,98 +300,6 @@ public:
     static uint8_t m_ColorPalette2[];
     static uint8_t m_MonochromePalette2[];
 };
-
-template<Register_t CrtControllerIndex>
-class Trio : public TrioBase
-{
-public:
-    Trio(IAllocator& allocator)
-        : TrioBase(allocator)
-    {
-
-    }
-
-    virtual ~Trio()
-    {
-
-    }
-
-    VideoModeError_t SetLegacyVideoMode(VideoMode_t mode);
-    VideoModeError_t SetVesaVideoMode(Vesa::VideoMode_t mode);
-
-    uint16_t GetDisplayMemoryInKiB();
-
-private:
-    Register_t CRTControllerIndex() { return CrtControllerIndex; }
-    Register_t CRTControllerData() { return CrtControllerData + 0x01; }
-    Register_t FeatureControlW() { return CrtControllerIndex + 0x06; }
-    Register_t InputStatus1() { return CrtControllerIndex + 0x06; }
-};
-
-template<Register_t CrtControllerIndex>
-uint16_t Trio<CrtControllerIndex>::GetDisplayMemoryInKiB()
-{
-    static uint16_t memorySizeInKB = 0xFFFF;
-
-    //Early out.
-    if (memorySizeInKB != 0xFFFF)
-        return memorySizeInKB;
-
-    memorySizeInKB = CRTController::Configuration1::GetDisplayMemorySizeInKiB(CRTControllerIndex());
-
-    return memorySizeInKB;
-}
-
-
-template<Register_t CrtControllerIndex>
-VideoModeError_t Trio<CrtControllerIndex>::SetLegacyVideoMode(VideoMode_t mode)
-{
-    CRTController::RegisterLock2::SoftUnlock<CrtControllerIndex> regLock2;
-    VGA::VideoMode_t actualMode = mode & VGA::VideoMode_t(~VGA::VideoMode::DontClearDisplay);
-
-    //Check the validity of the video mode.
-    VideoModeError ret = CheckValidVideoMode(actualMode)
-    if (ret != VideoModeError::Success)
-        return ret;
-
-    //Check if the VGA adapter is the active output.
-    if ((System::BDA::VideoDisplayDataArea::Get() & System::BDA::VideoDisplayDataArea::VGA) == 0)
-        return VideoModeError::AdapterNotActive;
-
-    //Check to see if the active video mode is the same as the one we're trying to set.
-    if (System::BDA::DisplayMode::Get() == actualMode)
-        return VideoModeError::Success;
-
-    //Prepare the BDA for the new video mode.
-    //SetBDAVideoMode(actualMode);
-
-
-
-    return VideoModeError::Success;
-}
-
-template<Register_t CrtControllerIndex>
-VideoModeError_t Trio<CrtControllerIndex>::SetVesaVideoMode(Vesa::VideoMode_t mode)
-{
-    VideoMode_t legacyMode = VideoMode::Invalid;
-    if ((mode & Vesa::VideoMode::LegacyMask) == 0)
-    {
-        legacyMode = VideoMode_t(mode);//Just drop the top byte
-    }
-    else
-    {
-        Vesa::VideoMode_t actualMode = mode & Vesa::VideoMode_t(~Vesa::VideoMode::DontClearDisplay);
-        legacyMode = ConvertVesaModeToLegacy(actualMode);
-    }
-
-    if (legacyMode == VideoMode::Invalid)
-        return VideoModeError::UnknownVideoMode;
-    
-    if ((mode & Vesa::VideoMode::DontClearDisplay) == Vesa::VideoMode::DontClearDisplay)
-        legacyMode |= VideoMode::DontClearDisplay;
-    
-    return VideoModeError::Success;//SetVideoMode(legacyMode);
-}
 
 }}
 

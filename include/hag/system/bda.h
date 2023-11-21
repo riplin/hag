@@ -345,6 +345,28 @@ namespace Hag { namespace System { namespace BDA
         FARPointer Reserved3;
     };
 
+    struct AlphanumericCharSet
+    {
+        uint8_t CharacterHeight;                //00   byte    length of each character definition in bytes
+        uint8_t RamBank;                        //01   byte    character generator RAM bank
+        uint16_t NumCharacters;                 //02   word    count of characters defined
+        uint16_t FirstCharacter;                //04   word    first character code in table
+        FARPointer FontData;                    //06   dword   pointer to character font definition table
+        uint8_t Rows;                           //0A   byte    number of character rows displayed
+        VGA::VideoMode_t ApplicableModes[1];    //0B   nbytes  array of applicable video modes
+                                                //0B+n byte    FFh end of mode list marker
+    };
+
+    struct SecondaryAlphaModeAuxillaryCharacterGeneratorTable
+    {
+        uint8_t CharacterHeight;                //00   byte    bytes per character
+        uint8_t RamBank;                        //01   byte    block to load
+        uint8_t Unknown;                        //02   byte    reserved
+        FARPointer FontData;                    //03   dword   font table pointer
+        VGA::VideoMode_t ApplicableModes[1];    //07   nbytes  array of mode values for this font
+                                                //07+n byte    FFh end of mode list marker
+    };
+
     struct DisplayCombinationCodeTable
     {
         uint8_t NumTableEntries;
@@ -401,22 +423,6 @@ namespace Hag { namespace System { namespace BDA
         returnPointer = (T*)ptr;
         return ret;
     }
-
-/*
-
-
-
-Secondary Alpha Mode Auxillary Character Generator Table
-
-00   byte    bytes per character
-01   byte    block to load
-02   byte    reserved
-03   dword   font table pointer
-07   nbytes  array of mode values for this font
-07+n byte    FFh end of mode list marker
-
-*/
-
 
     typedef FARPointer VideoParameterControlBlockPointer_t;
     namespace VideoParameterControlBlockPointer

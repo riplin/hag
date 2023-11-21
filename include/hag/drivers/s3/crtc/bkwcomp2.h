@@ -69,22 +69,23 @@ namespace BackwardCompatibility2
         Write(controllerIndexRegister, value | previousValue);
     }
 
-    template <VGA::Register_t CrtControllerIndex>
     class SoftUnlock
     {
         public:
-        inline SoftUnlock()
-            : m_previousValue(UnlockAll(CrtControllerIndex))
+        inline SoftUnlock(VGA::Register_t crtcPort)
+            : m_previousValue(UnlockAll(crtcPort))
+            , m_crtcPort(crtcPort)
         {
         }
 
         inline ~SoftUnlock()
         {
-            LockAll(CrtControllerIndex, m_previousValue);
+            LockAll(m_crtcPort, m_previousValue);
         }
 
     private:
         BackwardCompatibility2_t m_previousValue;
+        VGA::Register_t m_crtcPort;
     };
 
 }

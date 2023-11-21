@@ -17,7 +17,6 @@ namespace ReadPlaneSelect
     enum //Mask
     {
         ReadPlane = 0x03,   //The memory plane is selected as follows:
-        None = 0x00,
         Plane1 = 0x00,      //00 = Plane 1
         Plane2 = 0x01,      //01 = Plane 2
         Plane3 = 0x02,      //10 = Plane 3
