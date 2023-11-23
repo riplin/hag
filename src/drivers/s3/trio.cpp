@@ -3,6 +3,7 @@
 //https://projectf.io/posts/video-timings-vga-720p-1080p/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <hag/system/bda.h>
 #include <hag/system/pci.h>
@@ -20,6 +21,8 @@
 #include <hag/drivers/vga/crtc/hortotal.h>
 #include <hag/drivers/vga/crtc/maxscanl.h>
 #include <hag/drivers/vga/crtc/scrnoffs.h>
+#include <hag/drivers/vga/crtc/staddrhi.h>
+#include <hag/drivers/vga/crtc/staddrlo.h>
 #include <hag/drivers/vga/crtc/sthorbln.h>
 #include <hag/drivers/vga/crtc/sthorsyn.h>
 #include <hag/drivers/vga/crtc/undloc.h>
@@ -40,13 +43,19 @@
 #include <hag/drivers/s3/curxpos.h>
 #include <hag/drivers/s3/curypos.h>
 #include <hag/drivers/s3/drawcmd.h>
+#include <hag/drivers/s3/dxpdsc.h>
+#include <hag/drivers/s3/dypasc.h>
 #include <hag/drivers/s3/fgcolor.h>
 #include <hag/drivers/s3/fgmix.h>
 #include <hag/drivers/s3/gfxprocs.h>
+#include <hag/drivers/s3/linerrtr.h>
 #include <hag/drivers/s3/majapcnt.h>
+#include <hag/drivers/s3/mmio.h>
 #include <hag/drivers/s3/trio.h>
 #include <hag/drivers/s3/vidmodes.h>
 #include <hag/drivers/s3/wregdata.h>
+#include <hag/drivers/s3/xcoord2.h>
+#include <hag/drivers/s3/yc2asc2.h>
 #include <hag/drivers/s3/crtc/biosflag.h>
 #include <hag/drivers/s3/crtc/bkwcomp1.h>
 #include <hag/drivers/s3/crtc/bkwcomp3.h>
@@ -58,6 +67,7 @@
 #include <hag/drivers/s3/crtc/exbiosf3.h>
 #include <hag/drivers/s3/crtc/exbiosf4.h>
 #include <hag/drivers/s3/crtc/exhorovf.h>
+#include <hag/drivers/s3/crtc/exmemct1.h>
 #include <hag/drivers/s3/crtc/exmemct2.h>
 #include <hag/drivers/s3/crtc/exmemct3.h>
 #include <hag/drivers/s3/crtc/exmscct2.h>
@@ -5617,7 +5627,10 @@ void* Trio64::GetLinearFrameBuffer()
             CRTController::LinearAddressWindowControl_t linearAddressControl = 
                 CRTController::LinearAddressWindowControl::Read(crtcPort);
             CRTController::LinearAddressWindowControl::Write(crtcPort, linearAddressControl |
-                                                                 CRTController::LinearAddressWindowControl::EnableLinearAddressing);
+                                                             CRTController::LinearAddressWindowControl::EnableLinearAddressing);
+            CRTController::ExtendedMemoryControl1::Write(crtcPort,
+                                                         CRTController::ExtendedMemoryControl1::Read(crtcPort) |
+                                                         CRTController::ExtendedMemoryControl1::EnableMMIOAccess);
         }
         CRTController::RegisterLock2::Lock(crtcPort, rl2);
         CRTController::RegisterLock1::Lock(crtcPort, rl1);
@@ -6971,6 +6984,227 @@ VideoModeError_t Trio64::SetVesaVideoModeInternal(Vesa::VideoMode_t mode)
         legacyMode |= VideoMode::DontClearDisplay;
     
     return SetLegacyVideoModeInternal(legacyMode);
+}
+
+void Trio64::WaitForVSync()
+{
+    using namespace Hag::VGA;
+
+    VGA::Register_t inputStatus1 = InputStatus1();
+    InputStatus1_t syncStatus = 0;
+
+    do
+    {
+        syncStatus = InputStatus1::Read(inputStatus1) & InputStatus1::VerticalSyncActive;
+    } while (syncStatus != 0);
+
+    do
+    {
+        syncStatus = InputStatus1::Read(inputStatus1) & InputStatus1::VerticalSyncActive;
+    } while (syncStatus == 0);
+}
+
+void Trio64::SetDisplayStart(uint16_t x, uint16_t y)
+{
+    using namespace Hag::VGA;
+
+    VGA::Register_t crtcPort = GetCRTControllerIndexRegister();
+
+    VGA::CRTController::ScreenOffset_t screenOffsetLow = VGA::CRTController::ScreenOffset::Read(crtcPort);
+    CRTController::ExtendedSystemControl2_t screenOffsetHigh = CRTController::ExtendedSystemControl2::Read(crtcPort) &
+                                                               CRTController::ExtendedSystemControl2::LogicalScreenWidthHigh;
+    uint16_t screenOffset = ((uint16_t(screenOffsetHigh) << 4) | uint16_t(screenOffsetLow)) << 1;
+
+    CRTController::ExtendedMiscellaneousControl2_t colorMode = CRTController::ExtendedMiscellaneousControl2::Read(crtcPort) & 
+                                                               CRTController::ExtendedMiscellaneousControl2::ColorMode;
+
+    uint16_t shift = 2;
+    if (colorMode <= CRTController::ExtendedMiscellaneousControl2::ColorMode8)
+    {
+        if (((VGA::Sequencer::MemoryModeControl::Read() & VGA::Sequencer::MemoryModeControl::SelectChain4Mode) == 0))
+        {
+            shift = 3;
+        }
+    }
+    else if (colorMode <= CRTController::ExtendedMiscellaneousControl2::ColorMode10)
+    {
+        shift = 1;
+    }
+    else
+    {
+        shift = 0;
+    }
+
+    uint32_t yStart = screenOffset * y;
+    if ((yStart >> 16) > 0x0F)
+        return; // out of bounds
+
+    uint32_t newStartOffset = yStart + (x >> shift);
+    CRTController::ExtendedSystemControl3::Write(crtcPort, uint8_t(newStartOffset >> 16));
+    VGA::CRTController::StartAddressHigh::Write(crtcPort, uint8_t(newStartOffset >> 8));
+    VGA::CRTController::StartAddressLow::Write(crtcPort, uint8_t(newStartOffset));
+}
+
+void Trio64::WaitGraphicsEngineReadyFast()
+{
+    for (GraphicsProcessorStatus_t status = 0;
+         (status & GraphicsProcessorStatus::GraphicsEngineBusy) != 0;
+          status = MMIO::GraphicsProcessorStatus::Read())
+    {}
+}
+
+void Trio64::SetScissors(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom)
+{
+    WaitGraphicsEngineReadyFast();
+    MMIO::Packed::ScissorsTopLeft::Write(left, top);
+    MMIO::Packed::ScissorsBottomRight::Write(right, bottom);
+}
+
+void Trio64::DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color)
+{
+    WaitGraphicsEngineReadyFast();
+    MMIO::Packed::ForegroundColor::Write(color);
+    MMIO::ForegroundMix::Write(ForegroundMix::MixNew | ForegroundMix::SelectForegroundColor);
+    MMIO::Packed::PixelControlAndMultiFunctionMisc2::Write(0, PixelControl::MixForeground);
+
+    uint16_t width = abs(x1 - x0);
+    uint16_t height = abs(y1 - y0);
+    uint16_t vmax = max(width, height);
+    if (vmax != 0)
+    {
+        uint16_t vmin = min(width, height);
+        MMIO::Packed::CurrentXYPosition::Write(x0, y0);
+        MMIO::Packed::DestinationXYPositionStepConstant::Write((vmin - vmax) << 1, vmin << 1);
+        MMIO::MajorAxisPixelCount::Write(vmax - 1);
+
+        DrawingCommand_t xpos = x0 < x1 ? DrawingCommand::PosX : DrawingCommand::NegX;
+        DrawingCommand_t ypos = y0 < y1 ? DrawingCommand::PosY : DrawingCommand::NegY;
+        DrawingCommand_t xmaj = width > height ? DrawingCommand::XMajor : DrawingCommand::YMajor;
+
+        LineErrorTerm_t errorTerm = (vmin - vmax) << 1;
+        if (xpos != DrawingCommand::PosX)
+            ++errorTerm;
+
+        MMIO::LineErrorTerm::Write(errorTerm);
+
+        MMIO::DrawingCommand::Write(DrawingCommand::MustBe1 |
+                                    DrawingCommand::LastPixelOff |
+                                    DrawingCommand::DrawPixel |
+                                    xpos | ypos | xmaj |
+                                    DrawingCommand::CommandDrawLine);
+    }
+}
+
+void Trio64::DrawTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint32_t color)
+{
+    if (y1 < y0)
+    {
+        uint16_t tmpX = x0;
+        uint16_t tmpY = y0;
+        x0 = x1;
+        y0 = y1;
+        x1 = tmpX;
+        y1 = tmpY;
+    }
+    
+    if (y2 < y0)
+    {
+        uint16_t tmpX = x0;
+        uint16_t tmpY = y0;
+        x0 = x2;
+        y0 = y2;
+        x2 = tmpX;
+        y2 = tmpY;
+    }
+
+    if (x1 > x2)
+    {
+        uint16_t tmpX = x1;
+        uint16_t tmpY = y1;
+        x1 = x2;
+        y1 = y2;
+        x2 = tmpX;
+        y2 = tmpY;
+    }
+
+    WaitGraphicsEngineReadyFast();
+    MMIO::Packed::ForegroundColor::Write(color);
+    MMIO::ForegroundMix::Write(ForegroundMix::MixNew | ForegroundMix::SelectForegroundColor);
+    MMIO::Packed::PixelControlAndMultiFunctionMisc2::Write(0, PixelControl::MixForeground);
+    if ((y0 != y1) && (y0 != y2))//flat top check
+    {
+        MMIO::Packed::CurrentXYPosition::Write(x0, y0);
+        MMIO::Packed::DestinationXYPositionStepConstant::Write(x1, y1);
+        MMIO::Packed::CurrentXYPosition2::Write(x0, y0);
+        MMIO::Packed::XYCoordinate2::Write(x2, y2);
+
+        MMIO::DrawingCommand::Write(DrawingCommand::MustBe1 |
+                                    DrawingCommand::LastPixelOff |
+                                    DrawingCommand::DrawPixel |
+                                    DrawingCommand::CommandPolygonFillSolid);
+        if (y1 != y2)//flat bottom
+        {
+            WaitGraphicsEngineReadyFast();
+            if (y1 < y2)
+            {
+                MMIO::Packed::DestinationXYPositionStepConstant::Write(x2, y2);
+            }
+            else if (y2 < y1)
+            {
+                MMIO::Packed::XYCoordinate2::Write(x1, y1);
+            }
+
+            MMIO::DrawingCommand::Write(DrawingCommand::MustBe1 |
+                                        DrawingCommand::LastPixelOff |
+                                        DrawingCommand::DrawPixel |
+                                        DrawingCommand::CommandPolygonFillSolid);
+        }
+    }
+    //flat top
+    else if (y0 == y1)
+    {
+        MMIO::Packed::CurrentXYPosition::Write(x0, y0);
+        MMIO::Packed::DestinationXYPositionStepConstant::Write(x2, y2);
+        MMIO::Packed::CurrentXYPosition2::Write(x1, y1);
+        MMIO::Packed::XYCoordinate2::Write(x2, y2);
+
+        MMIO::DrawingCommand::Write(DrawingCommand::MustBe1 |
+                                    DrawingCommand::LastPixelOff |
+                                    DrawingCommand::DrawPixel |
+                                    DrawingCommand::CommandPolygonFillSolid);
+    } else //y0 == y2
+    {
+        MMIO::Packed::CurrentXYPosition::Write(x2, y2);
+        MMIO::Packed::DestinationXYPositionStepConstant::Write(x1, y1);
+        MMIO::Packed::CurrentXYPosition2::Write(x0, y0);
+        MMIO::Packed::XYCoordinate2::Write(x1, y1);
+
+        MMIO::DrawingCommand::Write(DrawingCommand::MustBe1 |
+                                    DrawingCommand::LastPixelOff |
+                                    DrawingCommand::DrawPixel |
+                                    DrawingCommand::CommandPolygonFillSolid);
+    }
+}
+
+void Trio64::DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color)
+{
+    WaitGraphicsEngineReadyFast();
+    MMIO::Packed::ForegroundColor::Write(color);
+    MMIO::ForegroundMix::Write(ForegroundMix::MixNew | ForegroundMix::SelectForegroundColor);
+    MMIO::Packed::PixelControlAndMultiFunctionMisc2::Write(0, PixelControl::MixForeground);
+
+    uint16_t px = min(x0, x1);
+    uint16_t py = min(y0, y1);
+    uint16_t pw = (max(x0, x1) - px) - 1;
+    uint16_t ph = (max(y0, y1) - py) - 1;
+
+    MMIO::Packed::CurrentXYPosition::Write(x0, y0);
+    MMIO::Packed::MinorMajorAxisPixelCounts::Write(pw, ph);
+
+    MMIO::DrawingCommand::Write(DrawingCommand::MustBe1 |
+                                DrawingCommand::DrawPixel |
+                                DrawingCommand::PosYXmajPosX |
+                                DrawingCommand::CommandRectangleFill);
 }
 
 }}

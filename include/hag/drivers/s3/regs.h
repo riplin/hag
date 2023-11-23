@@ -26,10 +26,10 @@ enum
     DestinationYPositionAxialStepConstant = 0x8AE8,         //DESTY_AXSTP
     YCoordinate2AxialStepConstant2 = 0x8AEA,                //Y2_AXSTP2
     DestinationXPositionDiagonalStepConstant = 0x8EE8,      //DESTX_DIASTP
-    XCoordinate2 = 0x8EEA,                                  //X2
+    XCoordinate2 = 0x8EEA,                                  //X2_DIASTP2
     LineErrorTerm = 0x92E8,                                 //ERR_TERM
     LineErrorTerm2 = 0x92EA,                                //ERR_TERM2
-    MajorAxisPixelCount = 0x96E8,                          //MAJ_AXIS_PCNT
+    MajorAxisPixelCount = 0x96E8,                           //MAJ_AXIS_PCNT
     MajorAxisPixelCount2 = 0x96EA,                          //MAJ_AXIS_PCNT2
     GraphicsProcessorStatus = 0x9AE8,                       //GP_STAT
     DrawingCommand = 0x9AE8,                                //CMD
@@ -39,7 +39,7 @@ enum
     ForegroundColor = 0xA6E8,                               //FRGD_COLOR
     BitplaneWriteMask = 0xAAE8,                             //WRT_MASK
     BitplaneReadMask = 0xAEE8,                              //RD_MASK
-    ColorCompareRegister = 0xB2E8,                          //COLOR_CMP
+    ColorCompare = 0xB2E8,                                  //COLOR_CMP
     BackgroundMix = 0xB6E8,                                 //BKGD_MIX
     ForegroundMix = 0xBAE8,                                 //FRGD_MIX
     ReadRegisterData = 0xBEE8,                              //RD_REG_DT
@@ -49,6 +49,33 @@ enum
     PatternY = 0xEAE8,                                      //PAT_Y
     PatternX = 0xEAEA                                       //PAT_X
 };
+
+namespace Packed
+{
+    enum
+    {
+        CurrentXYPosition = 0x8100,
+        CurrentXYPosition2 = 0x8104,
+        DestinationXYPositionStepConstant = 0x8108,
+        XYCoordinate2 = 0x810C,
+        LinearErrorTerms = 0x8110,
+        DrawingCommands = 0x8118,
+        ShortStrokeVectorTransfer = 0x811C,
+        BackgroundColor = 0x8120,
+        ForegroundColor = 0x8124,
+        BitplaneWriteMask = 0x8128,
+        BitplaneReadMask = 0x812C,
+        ColorCompare = 0x8130,
+        Mixers = 0x8134,
+        ScissorsTopLeft = 0x8138,
+        ScissorsBottomRight = 0x813C,
+        PixelControlAndMultiFunctionMisc2 = 0x8140,
+        MultiFunctionAndReadSelect = 0x8144,
+        MinorMajorAxisPixelCounts = 0x8148,
+        MajorAxisPixelCount2 = 0x814C,
+        PatternXY = 0x8168
+    };
+}
 
 }
 

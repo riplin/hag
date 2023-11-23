@@ -35,6 +35,7 @@ namespace ForegroundColor
     {
         SYS_WritePortDouble(Register::ForegroundColor, value);
     }
+
 }
 
 }}

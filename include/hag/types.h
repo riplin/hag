@@ -35,3 +35,10 @@ typedef char int8_t;
 typedef short int16_t;
 typedef int int32_t;
 typedef long long int int64_t;
+
+namespace Hag
+{
+    template<typename T> T min(T a, T b) { return a < b ? a : b; }
+    template<typename T> T max(T a, T b) { return a > b ? a : b; }
+    template<typename T> T abs(T a) { return a < T(0) ? -a : a; }
+}

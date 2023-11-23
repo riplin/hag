@@ -29,22 +29,29 @@ namespace DrawingCommand
                                             //or a +X and from right to left for a -X, down for a +Y and up for a -Yo X
                                             //or Y maj specifies the longest axis.
                                             //      Radial (bit 3 = 1)      x-y (Axial - bit 3 = 0)
-        Radial0deg = 0x0000,                //000           0°                      -Y, X maj, -X
-        NegYXMajNegX = 0x0000,
-        Radial45deg = 0x0020,               //001           45°                     -Y, X maj, +X
-        NegYXmajPosX = 0x0020,
-        Radial90deg =0x0040,                //010           90°                     -Y, Y maj, -X
-        NegYYmajNegX = 0x0040,
-        Radial135deg = 0x0060,              //011           135°                    -Y, Y maj, +X
-        NegYYmajPosX = 0x0060,
-        Radial180deg = 0x0080,              //100           180°                    +Y, X maj, -X
-        PosYXmajNegX = 0x0080,
-        Radial225deg = 0x00A0,              //101           225°                    +Y, X maj, +X
-        PosYXmajPosX = 0x00A0,
-        Radial270deg = 0x00C0,              //110           270°                    +Y, Y maj, -X
-        PosYYmajNegX = 0x00C0,
-        Radial315deg = 0x00E0,              //111           315°                    +Y, Y maj, +X
-        PosYYmajPosX = 0x00E0,
+        XMajor = 0x0000,
+        YMajor = 0x0040,
+        NegX = 0x0000,
+        PosX = 0x0020,
+        NegY = 0x0000,
+        PosY = 0x0080,
+        NegYXMajNegX = NegY | XMajor | NegX,
+        Radial0deg = NegYXMajNegX,          //000           0°                      -Y, X maj, -X
+        NegYXmajPosX = NegY | XMajor | PosX,
+        Radial45deg = NegYXmajPosX,         //001           45°                     -Y, X maj, +X
+        NegYYmajNegX = NegY | YMajor | NegX,
+        Radial90deg = NegYYmajNegX,         //010           90°                     -Y, Y maj, -X
+        NegYYmajPosX = NegY | YMajor | PosX,
+        Radial135deg = NegYYmajPosX,        //011           135°                    -Y, Y maj, +X
+        PosYXmajNegX = PosY | XMajor | NegX,
+        Radial180deg = PosYXmajNegX,        //100           180°                    +Y, X maj, -X
+        PosYXmajPosX = PosY | XMajor | PosX,
+        Radial225deg = PosYXmajPosX,        //101           225°                    +Y, X maj, +X
+        PosYYmajNegX = PosY | YMajor | NegX,
+        Radial270deg = PosYYmajNegX,        //110           270°                    +Y, Y maj, -X
+        PosYYmajPosX = PosY | YMajor | PosX,
+        Radial315deg = PosYYmajPosX,        //111           315°                    +Y, Y maj, +X
+
         WaitForCPUData = 0x0100,            //0 = Use Graphics Engine-based data
                                             //1 = Wait for data to be transferred to or from the CPU through the E2E8H port
         BusSize = 0x0600,                   //Select image write (E2E8H, E2EAH) bus transfer width

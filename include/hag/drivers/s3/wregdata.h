@@ -11,6 +11,33 @@ namespace Hag { namespace S3
 
 typedef uint16_t WriteRegisterData_t;
 
+typedef uint16_t ReadSelect_t;
+
+typedef uint16_t MultifunctionControlMiscellaneous2_t;
+
+namespace MultifunctionControlMiscellaneous2
+{
+    enum
+    {
+        DestinationBaseAddress = 0x0007,        //000 = First destination memory address is in the 1st MByte of display memory
+                                                //001 = First destination memory address is in the 2nd MByte of display memory
+                                                //010 = First destination memory address is in the 3rd MByte of display memory
+                                                //011 = First destination memory address is in the 4th MByte of display memory
+                                                //This field supersedes bits 1-0 of BEE8H Index E 
+                                                //(MultifunctionControlMiscellaneous) if any of these 3 bits are 
+                                                //set to 1. The 3- and 4-MByte settings apply only to the Tri064.
+        SourceBaseAddress = 0x0070,             //000 = First source memory address is in the 1st MByte of display memory
+                                                //001 = First source memory address is in the 2nd MByte of display memory
+                                                //010 = First source memory address is in the 3rd MByte of display memory
+                                                //011 = First source memory address is in the 4th MByte of display memory
+                                                //This field supersedes bits 3-2 of BEE8H Index E
+                                                //(MultifunctionControlMiscellaneous) if any of these three bits are
+                                                //set to 1. The 3- and 4-MByte settings apply only to the Tri064.
+    };
+}
+
+typedef uint16_t MultifunctionControlMiscellaneous_t;
+
 namespace MultifunctionControlMiscellaneous
 {
     enum
@@ -57,6 +84,8 @@ namespace MultifunctionControlMiscellaneous
     };
 }
 
+typedef uint16_t PixelControl_t;
+
 namespace PixelControl
 {
     enum
@@ -68,7 +97,53 @@ namespace PixelControl
     };
 }
 
+typedef uint16_t MinorAxisPixelCount_t;
+
 namespace MinorAxisPixelCount
+{
+    enum
+    {
+        MinValue = 0x000,
+        MaxValue = 0xFFF
+    };
+}
+
+typedef uint16_t TopScissors_t;
+
+namespace TopScissors
+{
+    enum
+    {
+        MinValue = 0x000,
+        MaxValue = 0xFFF
+    };
+}
+
+typedef uint16_t LeftScissors_t;
+
+namespace LeftScissors
+{
+    enum
+    {
+        MinValue = 0x000,
+        MaxValue = 0xFFF
+    };
+}
+
+typedef uint16_t BottomScissors_t;
+
+namespace BottomScissors
+{
+    enum
+    {
+        MinValue = 0x000,
+        MaxValue = 0xFFF
+    };
+}
+
+typedef uint16_t RightScissors_t;
+
+namespace RightScissors
 {
     enum
     {

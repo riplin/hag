@@ -5,6 +5,7 @@
 #include <hag/farptr.h>
 #include <i86.h>
 #include <string.h>
+#include <hag/math/fp/fpmath.h>
 #include <hag/system/bda.h>
 #include <hag/system/pci.h>
 #include <hag/system/sysasm.h>
@@ -424,6 +425,31 @@ void drawTestPattern16bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
     }
 }
 
+void drawTestPattern16bpp2(uint16_t width, uint16_t height, uint8_t* videoMemory)
+{
+    if (videoMemory == NULL)
+        return;
+
+    uint16_t* mem = (uint16_t*)videoMemory;
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint16_t borderColorY = 0x0000;
+        borderColorY = y == 0 ? 0xFFFF : borderColorY;
+        borderColorY = y == (height - 1) ? 0xFFFF : borderColorY;
+        for (uint32_t x = 0; x < width; ++x)
+        {
+            uint16_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0xFFFF : 0x00;
+            borderColor |= x == (width - 1) ? 0xFFFF : 0x00;
+            uint32_t red = ((y + 1) * 0x1F) / height;
+            uint32_t blue = 0x1f - red;
+            uint32_t green = 0x3F - (((x + 1) * 0x3F) / width);
+            uint16_t color = uint16_t(blue << 11) | uint16_t(green << 5) | uint16_t(red);
+            mem[y * width + x] = borderColor == 0x0000 ? color : borderColor;
+        }
+    }
+}
+
 void drawTestPattern32bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     if (videoMemory == NULL)
@@ -443,6 +469,31 @@ void drawTestPattern32bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
             uint32_t blue = ((y + 1) * 0xFF) / height;
             uint32_t red = 0xFF - blue;
             uint32_t green = ((x + 1) * 0xFF) / width;
+            uint32_t color = (blue << 16) | (green << 8) | (red);
+            mem[y * width + x] = borderColor == 0x0000 ? color : borderColor;
+        }
+    }
+}
+
+void drawTestPattern32bpp2(uint16_t width, uint16_t height, uint8_t* videoMemory)
+{
+    if (videoMemory == NULL)
+        return;
+
+    uint32_t* mem = (uint32_t*)videoMemory;
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint32_t borderColorY = 0x00000000;
+        borderColorY = y == 0 ? 0xFFFFFFFF : borderColorY;
+        borderColorY = y == (height - 1) ? 0xFFFFFFFF : borderColorY;
+        for (uint32_t x = 0; x < width; ++x)
+        {
+            uint32_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0xFFFFFFFF : 0x00;
+            borderColor |= x == (width - 1) ? 0xFFFFFFFF : 0x00;
+            uint32_t red = ((y + 1) * 0xFF) / height;
+            uint32_t blue = 0xFF - red;
+            uint32_t green = 0xFF - (((x + 1) * 0xFF) / width);
             uint32_t color = (blue << 16) | (green << 8) | (red);
             mem[y * width + x] = borderColor == 0x0000 ? color : borderColor;
         }
@@ -549,6 +600,11 @@ ModeTest modeTests[] =
     {Hag::S3::VideoMode::P640x400x16M, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
 };
 
+uint8_t readKey();
+#pragma aux readKey = \
+    "in al, 60h"    \
+    value [al];
+
 void dumpplanes(const char* start, uint8_t mode)
 {
     char filename[50];
@@ -564,14 +620,137 @@ void dumpplanes(const char* start, uint8_t mode)
     Hag::VGA::GraphicsController::ReadPlaneSelect::Write(orig);
 }
 
+Hag::Math::fp pX = Hag::Math::fp::Divide(5257311, 200000);
+Hag::Math::fp pZ = Hag::Math::fp::Divide(8506508, 200000);
+Hag::Math::fp nX = pX.Neg();
+Hag::Math::fp nZ = pZ.Neg();
+
+Hag::Math::v4 icoVecs[12] =
+{
+    Hag::Math::v4(nX,  0, pZ, 1), Hag::Math::v4(pX,  0, pZ, 1), Hag::Math::v4(nX,  0, nZ, 1), Hag::Math::v4(pX,  0, nZ, 1),
+    Hag::Math::v4( 0, pZ, pX, 1), Hag::Math::v4( 0, pZ, nX, 1), Hag::Math::v4( 0, nZ, pX, 1), Hag::Math::v4( 0, nZ, nX, 1),
+    Hag::Math::v4(pZ, pX,  0, 1), Hag::Math::v4(nZ, pX,  0, 1), Hag::Math::v4(pZ, nX,  0, 1), Hag::Math::v4(nZ, nX,  0, 1),
+};
+
+int32_t icoTri[20][3] =
+{
+    {0,  1,  4}, {0,  4, 9}, {9, 4,  5}, { 4, 8, 5}, {4,  1, 8},
+    {8,  1, 10}, {8, 10, 3}, {5, 8,  3}, { 5, 3, 2}, {2,  3, 7},
+    {7,  3, 10}, {7, 10, 6}, {7, 6, 11}, {11, 6, 0}, {0,  6, 1},
+    {6, 10,  1}, {9, 11, 0}, {9, 2, 11}, { 9, 5, 2}, {7, 11, 2},
+};
+
+bool isBackFace(Hag::Math::v4& vec0, Hag::Math::v4& vec1, Hag::Math::v4& vec2)
+{
+    Hag::Math::fp d01x = vec1.x() - vec0.x();
+    Hag::Math::fp d01y = vec1.y() - vec0.y();
+    Hag::Math::fp d02x = vec2.x() - vec0.x();
+    Hag::Math::fp d02y = vec2.y() - vec0.y();
+    return d01x * d02y - d01y * d02x >= 0;
+}
+
 int main(void)
 {
+    using namespace Hag;
+    using namespace Hag::Math;
+
+    uint16_t screenWidth = 200;
+    uint16_t screenHeight = 200;
+
+    v3 val(0);
+    v3 inc(fp::Pi / 100, fp::Pi / 75, fp::Pi / 55);
+
+    v4 icor[12];
+
+    S3::Trio64::SetLegacyVideoModeInternal(S3::VideoMode::G640x480x64K);
+    uint8_t* linearFrameBuffer = S3::Trio64::GetLinearFrameBufferAs<uint8_t>();
+    
+    drawTestPattern16bpp(640, 480, linearFrameBuffer);
+    drawTestPattern16bpp2(640, 480, linearFrameBuffer + (640 * 480 * 2));
+
+    m44 scale = m44::Scale(v3(3, 3, 3));
+    m44 proj = m44::Projection(screenWidth, screenHeight, fp(90).ToRad(), fp::One, fp(250));
+    fp scrX = 320;
+    fp scrY = 240;
+
+    v4 light = v4(v3(-1, -1, -1).Normalize(), 0);
+
+    uint16_t startY = 0;
+    do
+    {
+        S3::Trio64::SetScissors(0, 0, 639, 479);
+
+        S3::Trio64::DrawRectangle(200, 120, 440, 360, 0x0000FF);
+
+        S3::Trio64::SetScissors(210, 130, 430, 350);
+
+        m44 rot = m44::RotateZ(val.z()) *
+                    m44::RotateY(val.y()) * m44::RotateX(val.x());
+
+        m44 icoTrans = proj * m44::Translate(v3(0, 0, 90)) * rot * scale;
+
+        for (int32_t ij = 0; ij < 12; ++ij)
+        {
+            v4 t = icoTrans * icoVecs[ij];
+            fp invZ = fp::One / t.z();
+            icor[ij] = v4(t.x() * invZ + scrX, t.y() * invZ + scrY, t.z(), t.w());
+        }
+
+        v4 tri[3];
+
+        for (int32_t i1 = 0; i1 < 20; ++i1)
+        {
+            tri[0] = icor[icoTri[i1][0]];
+            tri[1] = icor[icoTri[i1][1]];
+            tri[2] = icor[icoTri[i1][2]];
+            if (isBackFace(tri[0], tri[1], tri[2]))
+                continue;
+
+            uint32_t bits5 = 0x1F;
+            uint32_t bits6 = 0x3F;
+            
+            uint32_t col = 0;
+            switch (i1 & 3)
+            {
+            case 1:
+                col = bits6 << 5;
+                break;
+            case 2:
+                col = (bits5 << 11) | bits5;
+                break;
+            case 3:
+                col = (bits5 << 11) | (bits6 << 6);
+                break;
+            default:
+                col = bits5;
+                break;
+            }
+
+            S3::Trio64::DrawTriangle(tri[0].x().RawFloor(), tri[0].y().RawFloor(),
+                                     tri[1].x().RawFloor(), tri[1].y().RawFloor(),
+                                     tri[2].x().RawFloor(), tri[2].y().RawFloor(),
+                                     col);
+        }
+
+        val = (val + inc) % fp::TwoPi;
+
+        //startY = startY == 0 ? 480 : 0;
+        S3::Trio64::WaitForVSync();
+        //S3::Trio64::SetDisplayStart(0, startY);
+    } while (readKey() != 1);
+
+    S3::Trio64::SetLegacyVideoModeInternal(S3::VideoMode::T80x25x16C);
+}
+
+
+
+/*
     REGPACK r;
     memset(&r, 0, sizeof(r));
     char filename[50];
     for (uint16_t i = 0; i < sizeof(modeTests) / sizeof(ModeTest); ++i)
     {
-        /*
+/////////
         r.w.ax = modeTests[i].mode != 3 ? 0x0003 : 0x0002;
         intr(0x10, &r);
 
@@ -606,9 +785,8 @@ int main(void)
         sprintf(filename, "clean%02X.txt", modeTests[i].mode);
         dumpplanes("C", modeTests[i].mode);
         regdump(filename);
-        */
-        /*
 
+////////
         Hag::S3::Trio64::SetLegacyVideoModeInternal(modeTests[i].mode);
 
         uint8_t* linearFrameBuffer = Hag::S3::Trio64::GetLinearFrameBufferAs<uint8_t>();
@@ -622,20 +800,12 @@ int main(void)
 
         modeTests[i].DrawTestPattern(modeTests[i].width, modeTests[i].height, address);
         getchar();
-        */
+////////
     }
 
     // r.w.ax = 0x4f02;
     // r.w.bx = Hag::Vesa::VideoMode::G800x600x16M;
     // intr(0x10, &r);
 
-    Hag::S3::Trio64::SetLegacyVideoModeInternal(Hag::S3::VideoMode::G640x480x256C);
-    drawTestPattern8bpp(640, 480, Hag::S3::Trio64::GetLinearFrameBufferAs<uint8_t>());
-    getchar();
 
-    Hag::S3::Trio64::SetLegacyVideoModeInternal(Hag::S3::VideoMode::G800x600x16M);
-    drawTestPattern32bpp(800, 600, Hag::S3::Trio64::GetLinearFrameBufferAs<uint8_t>());
-    getchar();
-
-    Hag::S3::Trio64::SetLegacyVideoModeInternal(Hag::S3::VideoMode::T80x25x16C);
-}
+*/

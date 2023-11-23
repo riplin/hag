@@ -248,6 +248,15 @@ public:
     static void ClearScreen(VideoMode_t mode);
     static void SetPaletteProfile(Hag::VGA::Register_t crtcPort);
 
+    static void WaitForVSync();
+    static void SetDisplayStart(uint16_t x, uint16_t y);
+
+    static void WaitGraphicsEngineReadyFast();
+    static void SetScissors(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom);
+    static void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color);
+    static void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color);
+    static void DrawTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint32_t color);
+
     static VideoMode_t ConvertVesaModeToLegacy(Vesa::VideoMode_t mode);
     static VideoModeError_t CheckValidVideoMode(VideoMode_t mode);
 
@@ -260,10 +269,10 @@ public:
         VideoMode_t LegacyMode;
     };
 
-    static Register_t CRTControllerIndex() { return Hag::System::BDA::VideoBaseIOPort::Get(); }
-    static Register_t CRTControllerData() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x01; }
-    static Register_t FeatureControlW() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x06; }
-    static Register_t InputStatus1() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x06; }
+    static inline Register_t CRTControllerIndex() { return Hag::System::BDA::VideoBaseIOPort::Get(); }
+    static inline Register_t CRTControllerData() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x01; }
+    static inline Register_t FeatureControlW() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x06; }
+    static inline Register_t InputStatus1() { return Hag::System::BDA::VideoBaseIOPort::Get() + 0x06; }
 
     static VideoModeTranslation m_VideoModeTranslation[];
     static VESAVideoModeData m_VesaVideoModes[];
