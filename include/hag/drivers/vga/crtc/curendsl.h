@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    CursorEndScanLine = 0x0B,                               //CESL CRB
+};
+
+}
 
 typedef uint8_t CursorEndScanLine_t;
 
@@ -33,15 +44,15 @@ namespace CursorEndScanLine
         };
     }
 
-    inline CursorEndScanLine_t Read(Register_t controllerIndexRegister)
+    inline CursorEndScanLine_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::CursorEndScanLine);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::CursorEndScanLine);
         return CursorEndScanLine_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
     
-    inline void Write(Register_t controllerIndexRegister, CursorEndScanLine_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, CursorEndScanLine_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CursorEndScanLine, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::CursorEndScanLine, CRTControllerData_t(value));
     }
 
 }

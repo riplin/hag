@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/sqrc/regtype.h>
 #include <hag/drivers/vga/sqrc/data.h>
 
 namespace Hag { namespace VGA { namespace Sequencer
 {
+
+namespace Register
+{
+    
+enum
+{
+    Reset = 0x00,                           //RST_SYNC SR0
+};
+
+}
 
 typedef uint8_t Reset_t;
 
@@ -28,12 +39,12 @@ namespace Reset
 
     inline Reset_t Read()
     {
-        SequencerIndex::Write(SequencerRegister::Reset); return Reset_t(SequencerData::Read());
+        SequencerIndex::Write(Register::Reset); return Reset_t(SequencerData::Read());
     }
 
     inline void Write(Reset_t value)
     {
-        SequencerData::Write(SequencerRegister::Reset, SequencerData_t(value));
+        SequencerData::Write(Register::Reset, SequencerData_t(value));
     }
 }
 

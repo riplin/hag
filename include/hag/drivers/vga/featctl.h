@@ -3,12 +3,23 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
-
+#include <hag/drivers/vga/regtype.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    FeatureControlWB = 0x3BA,                               //FCR_WT //Mono
+    FeatureControlR = 0x3CA,                                //FCR_AD
+    FeatureControlWD = 0x3DA,                               //FCR_WT //Color
+};
+
+}
 
 typedef uint8_t FeatureControl_t;
 

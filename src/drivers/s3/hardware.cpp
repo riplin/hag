@@ -3,11 +3,11 @@
 #include <stdio.h>
 
 #include <hag/drivers/s3/hardware.h>
-#include <hag/drivers/s3/crtc/chipidrv.h>
-#include <hag/drivers/s3/crtc/devidlo.h>
-#include <hag/drivers/s3/crtc/devidhi.h>
-#include <hag/drivers/s3/crtc/reglock1.h>
-#include <hag/drivers/s3/crtc/revision.h>
+#include <hag/drivers/s3/shared/crtc/chipidrv.h>
+#include <hag/drivers/s3/shared/crtc/devidlo.h>
+#include <hag/drivers/s3/shared/crtc/devidhi.h>
+#include <hag/drivers/s3/shared/crtc/reglock1.h>
+#include <hag/drivers/s3/shared/crtc/revision.h>
 
 namespace Hag { namespace S3 { namespace Hardware
 {
@@ -195,32 +195,32 @@ void Trio::LockRegisters()
 }
 */
 
-    ChipId_t IdentifyChip()
+    Shared::ChipId_t IdentifyChip()
     {
-        static ChipId_t chipId = ChipId::UNSET;
+        static Shared::ChipId_t chipId = Shared::ChipId::UNSET;
 
         //Early out. we don't early out in the mock test since we'll be running multiple times.
 #ifndef MOCK
-        if (chipId != ChipId::UNSET)
+        if (chipId != Shared::ChipId::UNSET)
             return chipId;
 #endif
 
-        chipId = ChipId::Unknown;
+        chipId = Shared::ChipId::Unknown;
 
         //Figure out what the crtc index register is.
         VGA::Register_t crtcIndex = InColorMode() ? VGA::Register::CRTControllerIndexD : VGA::Register::CRTControllerIndexB;
         
         //Save the current lock state, we don't want to end up accidentally locking it if it was unlocked.
-        CRTController::RegisterLock1_t reglock = CRTController::RegisterLock1::Read(crtcIndex);
+        Shared::CRTController::RegisterLock1_t reglock = Shared::CRTController::RegisterLock1::Read(crtcIndex);
 
         //Unlock needed registers.
-        CRTController::RegisterLock1::Unlock(crtcIndex);
+        Shared::CRTController::RegisterLock1::Unlock(crtcIndex);
 
         //Old ChipID / revision is stored in CR30.
-        CRTController::ChipIDRevision_t chipIDRevision = CRTController::ChipIDRevision::Read(crtcIndex);
+        Shared::CRTController::ChipIDRevision_t chipIDRevision = Shared::CRTController::ChipIDRevision::Read(crtcIndex);
         
         //Isolate the Chip ID.
-        uint4_t oldChipID = (chipIDRevision & CRTController::ChipIDRevision::ChipID) >> CRTController::ChipIDRevision::Shift::ChipID;
+        uint4_t oldChipID = (chipIDRevision & Shared::CRTController::ChipIDRevision::ChipID) >> Shared::CRTController::ChipIDRevision::Shift::ChipID;
 
         if (oldChipID != 0x0E) //Old chip ID method or unknown.
         {
@@ -239,97 +239,97 @@ void Trio::LockRegisters()
             //case 0xA8://  86c801/805 I-step
             //case 0xB0://  86c928PCI
             case 0xC0:
-                chipId = ChipId::Vision864;
+                chipId = Shared::ChipId::Vision864;
                 break;
             case 0xC1:
-                chipId = ChipId::Vision864P;
+                chipId = Shared::ChipId::Vision864P;
                 break;
             case 0xD0:
-                chipId = ChipId::Vision964;
+                chipId = Shared::ChipId::Vision964;
                 break;
             case 0xD1:
-                chipId = ChipId::Vision964P;
+                chipId = Shared::ChipId::Vision964P;
             }
         }
         else //New chip ID method.
         {
-            CRTController::DeviceIDLow_t deviceIdLow = CRTController::DeviceIDLow::Read(crtcIndex);
-            CRTController::DeviceIDHigh_t deviceIdHigh = CRTController::DeviceIDHigh::Read(crtcIndex);
-            CRTController::Revision_t revision = CRTController::Revision::Read(crtcIndex);
+            Shared::CRTController::DeviceIDLow_t deviceIdLow = Shared::CRTController::DeviceIDLow::Read(crtcIndex);
+            Shared::CRTController::DeviceIDHigh_t deviceIdHigh = Shared::CRTController::DeviceIDHigh::Read(crtcIndex);
+            Shared::CRTController::Revision_t revision = Shared::CRTController::Revision::Read(crtcIndex);
 
             switch (deviceIdLow)
             {
             case 0x01:
                 if (deviceIdHigh == 89)
                 {
-                    chipId = ChipId::TrioV2DX;
+                    chipId = Shared::ChipId::TrioV2DX;
                 }
                 else
                 {
                     //Have to check memory type?
-                    chipId = ChipId::ViRGEDXGX;
+                    chipId = Shared::ChipId::ViRGEDXGX;
                 }
                 break;
             case 0x04:
-                chipId = ChipId::Trio3D;
+                chipId = Shared::ChipId::Trio3D;
                 break;
             case 0x10:
                 if (deviceIdHigh == 0x88)
                 {
-                    chipId = ChipId::Trio32;
+                    chipId = Shared::ChipId::Trio32;
                 }
                 else
                 {
-                    chipId = ChipId::ViRGEGX2;
+                    chipId = Shared::ChipId::ViRGEGX2;
                 }
                 break;
             case 0x11:
                 if ((revision & 0x40) == 0x40)
                 {
-                    chipId = ChipId::Trio64Vp;
+                    chipId = Shared::ChipId::Trio64Vp;
                 }
                 else if (revision == 10)
                 {
-                    chipId = ChipId::Trio64;
+                    chipId = Shared::ChipId::Trio64;
                 }
                 else
                 {
-                    chipId = ChipId::Trio64x;
+                    chipId = Shared::ChipId::Trio64x;
                 }
                 break;
             case 0x12:
-                chipId = ChipId::Aurora64Vp;
+                chipId = Shared::ChipId::Aurora64Vp;
                 break;
             case 0x13:
                 if (revision == 1)
                 {
-                    chipId = ChipId::Trio3D2X;
+                    chipId = Shared::ChipId::Trio3D2X;
                 }
                 else
                 {
-                    chipId = ChipId::Trio3D2Xx;
+                    chipId = Shared::ChipId::Trio3D2Xx;
                 }
                 break;
             case 0x14:
-                chipId = ChipId::Trio64UVp;
+                chipId = Shared::ChipId::Trio64UVp;
                 break;
             case 0x31:
-                chipId = ChipId::ViRGE;
+                chipId = Shared::ChipId::ViRGE;
                 break;
             case 0x3D:
-                chipId = ChipId::ViRGEVX;
+                chipId = Shared::ChipId::ViRGEVX;
                 break;
             case 0x80:
-                chipId = ChipId::Vision866;
+                chipId = Shared::ChipId::Vision866;
                 break;
             case 0x90:
-                chipId = ChipId::Vision868;
+                chipId = Shared::ChipId::Vision868;
                 break;
             case 0xB0:
-                chipId = ChipId::Vision968;
+                chipId = Shared::ChipId::Vision968;
                 break;
             case 0xF0:
-                chipId = ChipId::Vision968P;
+                chipId = Shared::ChipId::Vision968P;
                 break;
             //case 0x??:
                 //chipId = ChipId::Savage3D;
@@ -371,14 +371,14 @@ void Trio::LockRegisters()
         }
 
         //Restore the previous lock state.
-        CRTController::RegisterLock1::Write(crtcIndex, reglock);
+        Shared::CRTController::RegisterLock1::Write(crtcIndex, reglock);
 
         return chipId;
     }
 
 }
 
-namespace ChipId
+namespace Shared { namespace ChipId
 {
     const char* ToString(ChipId_t value)
     {
@@ -534,4 +534,4 @@ namespace ChipId
         }
     }
 
-}}}
+}}}}

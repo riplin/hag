@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    PresetRowScan = 0x08,                                   //P_R_SCAN CR8
+};
+
+}
 
 typedef uint8_t PresetRowScan_t;
 
@@ -28,15 +39,15 @@ namespace PresetRowScan
         };
     }
 
-    inline PresetRowScan_t Read(Register_t controllerIndexRegister)
+    inline PresetRowScan_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::PresetRowScan);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::PresetRowScan);
         return PresetRowScan_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, PresetRowScan_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, PresetRowScan_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::PresetRowScan, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::PresetRowScan, CRTControllerData_t(value));
     }
 
 }

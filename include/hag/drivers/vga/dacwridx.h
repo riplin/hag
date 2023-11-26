@@ -3,12 +3,21 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
-
+#include <hag/drivers/vga/regtype.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    DACWriteIndex = 0x3C8,                                  //DAC_WR_AD
+};
+
+}
 
 //This register contains the pointer to one of 256 palette
 //data registers and is used dur- ing a palette load. Each

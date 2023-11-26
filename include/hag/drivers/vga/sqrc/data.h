@@ -2,11 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/regtype.h>
 #include <hag/drivers/vga/sqrc/index.h>
-#include <hag/drivers/vga/sqrc/regs.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    SequencerData = 0x3C5,                                  //SEQ_DATA
+};
+
+}
 
 typedef uint8_t SequencerData_t;
 
@@ -23,7 +33,7 @@ namespace SequencerData
         SYS_WritePortByte(Register::SequencerData, value);
     }
     
-    inline void Write(SequencerIndex_t sequenceIndex, SequencerData_t value)
+    inline void Write(Sequencer::Register_t sequenceIndex, SequencerData_t value)
     {
         SYS_WritePortBytes(Register::SequencerIndex, sequenceIndex, value);
     }

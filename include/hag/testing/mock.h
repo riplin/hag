@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/drivers/vga/regs.h>
+#include <hag/drivers/vga/regtype.h>
 #include <hag/ialloc.h>
 
 namespace Hag { namespace Testing { namespace Mock {

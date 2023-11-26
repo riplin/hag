@@ -3,14 +3,21 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
-
+#include <hag/drivers/vga/regtype.h>
 
 namespace Hag { namespace VGA
 {
 
-//
+namespace Register
+{
+    
+enum
+{
+    DACStatus = 0x3C7,                                      //DAC_STS
+};
+
+}
 
 typedef uint8_t DACStatus_t;
 

@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/sqrc/regtype.h>
 #include <hag/drivers/vga/sqrc/data.h>
 
 namespace Hag { namespace VGA { namespace Sequencer
 {
+
+namespace Register
+{
+    
+enum
+{
+    CharacterFontSelect = 0x03,             //CH_FONT_SL SR3
+};
+
+}
 
 typedef uint8_t CharacterFontSelect_t;
 
@@ -37,12 +48,12 @@ namespace CharacterFontSelect
 
     inline CharacterFontSelect_t Read()
     {
-        SequencerIndex::Write(SequencerRegister::CharacterFontSelect); return CharacterFontSelect_t(SequencerData::Read());
+        SequencerIndex::Write(Register::CharacterFontSelect); return CharacterFontSelect_t(SequencerData::Read());
     }
 
     inline void Write(CharacterFontSelect_t value)
     {
-        SequencerData::Write(SequencerRegister::CharacterFontSelect, SequencerData_t(value));
+        SequencerData::Write(Register::CharacterFontSelect, SequencerData_t(value));
     }
 
 }

@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    GraphicsControllerMode = 0x05,          //GRP_MODE GR5
+};
+
+}
 
 typedef uint8_t GraphicsControllerMode_t;
 
@@ -86,13 +97,13 @@ namespace GraphicsControllerMode
 
     inline GraphicsControllerMode_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::GraphicsControllerMode);
+        GraphicsControllerIndex::Write(Register::GraphicsControllerMode);
         return GraphicsControllerMode_t(GraphicsControllerData::Read());
     }
     
     inline void Write(GraphicsControllerMode_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::GraphicsControllerMode, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::GraphicsControllerMode, GraphicsControllerData_t(value));
     }
 
 }

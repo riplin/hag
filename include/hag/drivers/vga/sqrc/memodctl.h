@@ -2,11 +2,22 @@
 
 #pragma once
 
+#include <hag/drivers/vga/sqrc/regtype.h>
 #include <hag/drivers/vga/sqrc/data.h>
 
 
 namespace Hag { namespace VGA { namespace Sequencer
 {
+
+namespace Register
+{
+    
+enum
+{
+    MemoryModeControl = 0x04,               //MEM_MODE SR4
+};
+
+}
 
 typedef uint8_t MemoryModeControl_t;
 
@@ -34,13 +45,13 @@ namespace MemoryModeControl
 
     inline MemoryModeControl_t Read()
     {
-        SequencerIndex::Write(SequencerRegister::MemoryModeControl);
+        SequencerIndex::Write(Register::MemoryModeControl);
         return MemoryModeControl_t(SequencerData::Read());
     }
 
     inline void Write(MemoryModeControl_t value)
     {
-        SequencerData::Write(SequencerRegister::MemoryModeControl, SequencerData_t(value));
+        SequencerData::Write(Register::MemoryModeControl, SequencerData_t(value));
     }
 }
 

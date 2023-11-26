@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    RasterOperationRotateCount = 0x03,      //WT_ROP/RTC GR3
+};
+
+}
 
 typedef uint8_t RasterOperationRotateCount_t;
 
@@ -42,13 +53,13 @@ namespace RasterOperationRotateCount
 
     inline RasterOperationRotateCount_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::RasterOperationRotateCount);
+        GraphicsControllerIndex::Write(Register::RasterOperationRotateCount);
         return RasterOperationRotateCount_t(GraphicsControllerData::Read());
     }
     
     inline void Write(RasterOperationRotateCount_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::RasterOperationRotateCount, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::RasterOperationRotateCount, GraphicsControllerData_t(value));
     }
 
 }

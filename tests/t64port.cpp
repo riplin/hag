@@ -5,7 +5,8 @@
 #include <i86.h>
 #include <stdio.h>
 #include <string.h>
-#include <hag/drivers/s3/crtc/revision.h>
+#include <hag/drivers/vga/dacwridx.h>
+#include <hag/drivers/s3/shared/crtc/revision.h>
 
 #if 0
 #define LABEL(F, L)         \
@@ -3050,7 +3051,7 @@ void SetupClocks(uint8_t clockConfig)
 
 //     cmp  al, 03h                        ;
 //     jne  NotRev3                        ;Offset 0x331
-    if (Hag::S3::CRTController::Revision::Read(GetCRTControllerIndexRegister()) != 0x03)
+    if (Hag::S3::Shared::CRTController::Revision::Read(GetCRTControllerIndexRegister()) != 0x03)
         goto NotRev3;
 
 //     mov  si, offset ClockDataRev3       ;Revision 3 uses offset 0x3b7 data instead.

@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    ColorDontCare = 0x07,                   //CMP_DNTC GR7
+};
+
+}
 
 typedef uint8_t ColorDontCare_t;
 
@@ -33,13 +44,13 @@ namespace ColorDontCare
 
     inline ColorDontCare_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::ColorDontCare);
+        GraphicsControllerIndex::Write(Register::ColorDontCare);
         return ColorDontCare_t(GraphicsControllerData::Read());
     }
     
     inline void Write(ColorDontCare_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::ColorDontCare, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::ColorDontCare, GraphicsControllerData_t(value));
     }
 
 }

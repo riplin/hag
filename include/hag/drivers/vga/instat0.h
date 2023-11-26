@@ -3,11 +3,21 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
+#include <hag/drivers/vga/regtype.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    InputStatus0 = 0x3C2,                                   //STATUS_0
+};
+
+}
 
 typedef uint8_t InputStatus0_t;
 

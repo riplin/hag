@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    CRTCOverflow = 0x07,                                    //OVFL_REG CR7
+};
+
+}
 
 typedef uint8_t CRTCOverflow_t;
 
@@ -38,15 +49,15 @@ namespace CRTCOverflow
         };
     }
 
-    inline CRTCOverflow_t Read(Register_t controllerIndexRegister)
+    inline CRTCOverflow_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::CRTCOverflow);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::CRTCOverflow);
         return CRTCOverflow_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, CRTCOverflow_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, CRTCOverflow_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CRTCOverflow, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::CRTCOverflow, CRTControllerData_t(value));
     }
 
 }

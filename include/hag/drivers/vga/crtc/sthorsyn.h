@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    StartHorizontalSyncPosition = 0x04,                     //S_H_SY_P CR4
+};
+
+}
 
 typedef uint8_t StartHorizontalSyncPosition_t;
 
@@ -25,15 +36,15 @@ namespace StartHorizontalSyncPosition
         };
     }
 
-    inline StartHorizontalSyncPosition_t Read(Register_t controllerIndexRegister)
+    inline StartHorizontalSyncPosition_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::StartHorizontalSyncPosition);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::StartHorizontalSyncPosition);
         return StartHorizontalSyncPosition_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, StartHorizontalSyncPosition_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, StartHorizontalSyncPosition_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartHorizontalSyncPosition, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::StartHorizontalSyncPosition, CRTControllerData_t(value));
     }
 
 }

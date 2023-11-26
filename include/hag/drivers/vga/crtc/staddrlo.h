@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    StartAddressLow = 0x0D,                                 //STA(L) CRD
+};
+
+}
 
 typedef uint8_t StartAddressLow_t;
 
@@ -24,15 +35,15 @@ namespace StartAddressLow
         };
     }
 
-    inline StartAddressLow_t Read(Register_t controllerIndexRegister)
+    inline StartAddressLow_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::StartAddressLow);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::StartAddressLow);
         return StartAddressLow_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, StartAddressLow_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, StartAddressLow_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartAddressLow, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::StartAddressLow, CRTControllerData_t(value));
     }
 
 }

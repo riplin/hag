@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    BitMask = 0x08                          //BIT_MASK GR8
+};
+
+}
 
 typedef uint8_t BitMask_t;
 
@@ -34,13 +45,13 @@ namespace BitMask
 
     inline BitMask_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::BitMask);
+        GraphicsControllerIndex::Write(Register::BitMask);
         return BitMask_t(GraphicsControllerData::Read());
     }
     
     inline void Write(BitMask_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::BitMask, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::BitMask, GraphicsControllerData_t(value));
     }
 
 }

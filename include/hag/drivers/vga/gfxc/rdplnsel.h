@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    ReadPlaneSelect = 0x04,                 //RD_PL_SL GR4
+};
+
+}
 
 typedef uint8_t ReadPlaneSelect_t;
 
@@ -33,13 +44,13 @@ namespace ReadPlaneSelect
 
     inline ReadPlaneSelect_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::ReadPlaneSelect);
+        GraphicsControllerIndex::Write(Register::ReadPlaneSelect);
         return ReadPlaneSelect_t(GraphicsControllerData::Read());
     }
     
     inline void Write(ReadPlaneSelect_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::ReadPlaneSelect, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::ReadPlaneSelect, GraphicsControllerData_t(value));
     }
 
 }

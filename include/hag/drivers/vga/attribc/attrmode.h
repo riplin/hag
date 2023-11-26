@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/attribc/regtype.h>
 #include <hag/drivers/vga/attribc/data.h>
 
 namespace Hag { namespace VGA { namespace AttributeController
 {
+
+namespace Register
+{
+
+enum
+{
+    AttributeMode = 0x10,                   //ATR_MODE AR10
+};
+
+}
 
 typedef uint8_t AttributeMode_t;
 
@@ -69,13 +80,13 @@ namespace AttributeMode
 
     inline AttributeMode_t Read()
     {
-        AttributeControllerIndex::Write(AttributeControllerRegister::AttributeMode);
+        AttributeControllerIndex::Write(Register::AttributeMode);
         return AttributeMode_t(AttributeControllerData::Read());
     }
     
     inline void Write(AttributeMode_t value)
     {
-        AttributeControllerData::Write(AttributeControllerRegister::AttributeMode, AttributeControllerData_t(value));
+        AttributeControllerData::Write(Register::AttributeMode, AttributeControllerData_t(value));
     }
 
 }

@@ -44,7 +44,7 @@ GX  1A      FB          0 00 1 10 10    1 11 1 1 0 1 1
 
 #pragma once
 
-#include <hag/drivers/s3/chipid.h>
+#include <hag/drivers/s3/shared/chipid.h>
 #include <hag/drivers/vga/miscout.h>
 
 namespace Hag { namespace S3
@@ -61,58 +61,16 @@ namespace Hardware
         Trio3D = 0x03,
     };
 
-    ChipId_t IdentifyChip();
-    Driver_t DriverToUse(ChipId_t chipId);
+    Shared::ChipId_t IdentifyChip();
+    Driver_t DriverToUse(Shared::ChipId_t chipId);
     inline bool InColorMode() { return (VGA::MiscellaneousOutput::Read() & VGA::MiscellaneousOutput::IOAddressSelect) != 0; }
 }
 
 /*
 TODO:
 
-        CPULatchData = 0x22,                                    //GCCL CR22
-        AttributeIndexF = 0x24,                                 //ATC_F CR24 //Same as AttributeIndexI
-        AttributeIndexI = 0x26,                                 //ATC_I CR26 //Same as AttributeIndexF
-        MemoryConfiguration = 0x31,                             //MEM_CNFG CR31
-        BackwardCompatibility1 = 0x32,                          //BKWD_1 CR32
-        BackwardCompatibility3 = 0x34,                          //BKWD_3 CR34
-        Configuration2 = 0x37,                                  //CONFG_REG2 CR37
-        Miscellaneous1 = 0x3A,                                  //MISC_1 CR3A
-        StartDisplayFIFO = 0x3B,                                //DT_EX_POS
-        InterlaceRetraceStart = 0x3C,                           //IL_RTSTART CR3C
-
-        BIOSFlag = 0x41,                                        //BIOS_FLAG CR41
-        ModeControl = 0x42,                                     //MODE_CTL CR42
-        HardwareGraphicsCursorMode = 0x45,                      //HGC_MODE CR45
-        HardwareGraphicsCursorOriginXH = 0x46,                  //HWGC_ORGXH CR46
-        HardwareGraphicsCursorOriginXL = 0x47,                  //HWGC_ORGXL CR47
-        HardwareGraphicsCursorOriginYH = 0x48,                  //HWGC_ORGYH CR48
-        HardwareGraphicsCursorOriginYL = 0x49,                  //HWGC_ORGYL CR49
-        HardwareGraphicsCursorForegroundColorStack = 0x4A,      //HWGC_FGSTK CR4A
-        HardwareGraphicsCursorBackgroundColorStack = 0x4B,      //HWGC_BGSTK CR4B
-        HardwareGraphicsCursorStorageStartAddressH = 0x4C,      //HWGC_STAH CR4C
-        HardwareGraphicsCursorStorageStartAddressL = 0x4D,      //HWGC_STAL CR4D
-        HardwareGraphicsCursorPatternDisplayStartX = 0x4E,      //HWGC_DX CR4E
-        HardwareGraphicsCursorPatternDisplayStartY = 0x4F,      //HWGC_DY CR4F
-
-        ExtendedSystemControl1 = 0x50,                          //EX_SCTL_1 CR50
-        ExtendedBIOSFlag1 = 0x52,                               //EXT_BBFLG1 CR52
-        ExtendedMemoryControl1 = 0x53,                          //EXT_MCTL_1 CR53
-        ExtendedMemoryControl2 = 0x54,                          //EXT_MCTL_2 CR54
-        ExternalSyncControl1 = 0x56,                            //EX_SYNC_1 CR56
-        ExternalSyncControl2 = 0x57,                            //EX_SYNC_2 CR57
-        LinearAddressWindowControl = 0x58,                      //LAW_CTL CR58
-        LinearAddressWindowPositionH = 0x59,                    //LAW_POS_H CR59
-        LinearAddressWindowPositionL = 0x5A,                    //LAW_POS_L CR5A
-        GeneralOutputPort = 0x5C,                               //GOUT_PORT CR5C
-        ExtendedMemoryControl3 = 0x60,                          //EXT-MCTL-3 CR60
-        ExternalSyncControl3 = 0x63,                            //EX-SYNC-3 CR63
-        ExtendedMiscellaneousControl = 0x65,                    //EXT-MISC-CTL CR65
-        ExtendedMiscellaneousControl1 = 0x66,                   //EXT-MISC-1 CR66
-        ExtendedMiscellaneousControl2 = 0x67,                   //EXT-MISC-2 CR67
         Configuration3 = 0x68,                                  //CNFG-REG-3 CR68
         ExtendedSystemControl4 = 0x6A,                          //EXT-SCTL-4 CR6A
-        ExtendedBIOSFlag3 = 0x6B,                               //EBIOS-FLG3 CR6B
-        ExtendedBIOSFlag4 = 0x6C,                               //EBIOS-FLG4 CR6C
 
 */    
 /*

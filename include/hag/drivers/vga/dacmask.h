@@ -3,12 +3,21 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
-
+#include <hag/drivers/vga/regtype.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    DACMask = 0x3C6,                                        //DAC_AD_MK
+};
+
+}
 
 //This register is the pixel read mask register to select pixel video output. The CPU can access this register at any time.
 //The contents of this register are bit-wise logically ANDed

@@ -3,12 +3,20 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
-
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    DACReadIndex = 0x3C7,                                   //DAC_RD_AD
+};
+
+}
 
 //This register contains the pointer to one of 256 palette data registers and is used when reading the color palette.
 //Each time the color code is written to this register, it identifies

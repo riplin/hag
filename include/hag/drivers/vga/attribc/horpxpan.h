@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/attribc/regtype.h>
 #include <hag/drivers/vga/attribc/data.h>
 
 namespace Hag { namespace VGA { namespace AttributeController
 {
+
+namespace Register
+{
+
+enum
+{
+    HorizontalPixelPanning = 0x13,          //H_PX_PAN AR13
+};
+
+}
 
 typedef uint8_t HorizontalPixelPanning_t;
 
@@ -49,13 +60,13 @@ namespace HorizontalPixelPanning
 
     inline HorizontalPixelPanning_t Read()
     {
-        AttributeControllerIndex::Write(AttributeControllerRegister::HorizontalPixelPanning);
+        AttributeControllerIndex::Write(Register::HorizontalPixelPanning);
         return HorizontalPixelPanning_t(AttributeControllerData::Read());
     }
     
     inline void Write(HorizontalPixelPanning_t value)
     {
-        AttributeControllerData::Write(AttributeControllerRegister::HorizontalPixelPanning, AttributeControllerData_t(value));
+        AttributeControllerData::Write(Register::HorizontalPixelPanning, AttributeControllerData_t(value));
     }
 
 }

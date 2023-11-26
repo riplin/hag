@@ -3,9 +3,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <hag/testing/mock.h>
-#include <hag/drivers/vga/regs.h>
+#include <hag/drivers/vga/dacdata.h>
+#include <hag/drivers/vga/dacrdidx.h>
+#include <hag/drivers/vga/dacwridx.h>
+#include <hag/drivers/vga/regtype.h>
 #include <hag/drivers/vga/miscout.h>
+#include <hag/drivers/vga/attribc/data.h>
 #include <hag/drivers/vga/attribc/index.h>
+#include <hag/drivers/vga/crtc/data.h>
+#include <hag/drivers/vga/crtc/index.h>
+#include <hag/drivers/vga/gfxc/data.h>
+#include <hag/drivers/vga/gfxc/index.h>
 
 #if 0
 #define VERBOSE(s)s;

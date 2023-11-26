@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    MaximumScanLine = 0x09,                                 //MAX_S_LN CR9
+};
+
+}
 
 typedef uint8_t MaximumScanLine_t;
 
@@ -32,15 +43,15 @@ namespace MaximumScanLine
         };
     }
 
-    inline MaximumScanLine_t Read(Register_t controllerIndexRegister)
+    inline MaximumScanLine_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::MaximumScanLine);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::MaximumScanLine);
         return MaximumScanLine_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, MaximumScanLine_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, MaximumScanLine_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::MaximumScanLine, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::MaximumScanLine, CRTControllerData_t(value));
     }
 
 }

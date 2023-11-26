@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    CursorLocationAddressHigh = 0x0E,                       //CLA(H) CRE
+};
+
+}
 
 typedef uint8_t CursorLocationAddressHigh_t;
 
@@ -25,15 +36,15 @@ namespace CursorLocationAddressHigh
         };
     }
 
-    inline CursorLocationAddressHigh_t Read(Register_t controllerIndexRegister)
+    inline CursorLocationAddressHigh_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::CursorLocationAddressHigh);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::CursorLocationAddressHigh);
         return CursorLocationAddressHigh_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, CursorLocationAddressHigh_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, CursorLocationAddressHigh_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CursorLocationAddressHigh, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::CursorLocationAddressHigh, CRTControllerData_t(value));
     }
 
 }

@@ -3,14 +3,22 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
-#include <hag/drivers/vga/sqrc/regs.h>
+#include <hag/drivers/vga/regtype.h>
+#include <hag/drivers/vga/sqrc/regtype.h>
 
 namespace Hag { namespace VGA
 {
 
-typedef uint8_t SequencerIndex_t;
+namespace Register
+{
+    
+enum
+{
+    SequencerIndex = 0x3C4,                                 //SEQX
+};
+
+}
 
 namespace SequencerIndex
 {
@@ -28,12 +36,12 @@ namespace SequencerIndex
         };
     }
 
-    inline SequencerIndex_t Read()
+    inline Sequencer::Register_t Read()
     {
-        return SequencerIndex_t(SYS_ReadPortByte(Register::SequencerIndex));
+        return Sequencer::Register_t(SYS_ReadPortByte(Register::SequencerIndex));
     }
 
-    inline void Write(SequencerIndex_t value)
+    inline void Write(Sequencer::Register_t value)
     {
         SYS_WritePortByte(Register::SequencerIndex, value);
     }

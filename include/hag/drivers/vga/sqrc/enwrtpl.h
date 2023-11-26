@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/sqrc/regtype.h>
 #include <hag/drivers/vga/sqrc/data.h>
 
 namespace Hag { namespace VGA { namespace Sequencer
 {
+
+namespace Register
+{
+    
+enum
+{
+    EnableWritePlane = 0x02,                //EN_WT_PL SR2
+};
+
+}
 
 typedef uint8_t EnableWritePlane_t;
 
@@ -30,12 +41,12 @@ namespace EnableWritePlane
 
     inline EnableWritePlane_t Read()
     {
-        SequencerIndex::Write(SequencerRegister::EnableWritePlane); return EnableWritePlane_t(SequencerData::Read());
+        SequencerIndex::Write(Register::EnableWritePlane); return EnableWritePlane_t(SequencerData::Read());
     }
 
     inline void Write(EnableWritePlane_t value)
     {
-        SequencerData::Write(SequencerRegister::EnableWritePlane, SequencerData_t(value));
+        SequencerData::Write(Register::EnableWritePlane, SequencerData_t(value));
     }
 
 }

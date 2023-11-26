@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/sqrc/regtype.h>
 #include <hag/drivers/vga/sqrc/data.h>
 
 namespace Hag { namespace VGA { namespace Sequencer
 {
+
+namespace Register
+{
+    
+enum
+{
+    ClockingMode = 0x01,                    //CLK_MODE SR1
+};
+
+}
 
 typedef uint8_t ClockingMode_t;
 
@@ -34,12 +45,12 @@ namespace ClockingMode
 
     inline ClockingMode_t Read()
     {
-        SequencerIndex::Write(SequencerRegister::ClockingMode); return ClockingMode_t(SequencerData::Read());
+        SequencerIndex::Write(Register::ClockingMode); return ClockingMode_t(SequencerData::Read());
     }
 
     inline void Write(ClockingMode_t value)
     {
-        SequencerData::Write(SequencerRegister::ClockingMode, SequencerData_t(value));
+        SequencerData::Write(Register::ClockingMode, SequencerData_t(value));
     }
 
     inline void TurnScreenOff()

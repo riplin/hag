@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    MemoryMapModeControl = 0x06,            //MISC_GM GR6
+};
+
+}
 
 typedef uint8_t MemoryMapModeControl_t;
 
@@ -46,13 +57,13 @@ namespace MemoryMapModeControl
 
     inline MemoryMapModeControl_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::MemoryMapModeControl);
+        GraphicsControllerIndex::Write(Register::MemoryMapModeControl);
         return MemoryMapModeControl_t(GraphicsControllerData::Read());
     }
     
     inline void Write(MemoryMapModeControl_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::MemoryMapModeControl, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::MemoryMapModeControl, GraphicsControllerData_t(value));
     }
 
 }

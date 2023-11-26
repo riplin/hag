@@ -3,16 +3,25 @@
 #pragma once
 
 #include <hag/system/sysasm.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/drivers/vga/instat1.h>
+#include <hag/drivers/vga/regtype.h>
+#include <hag/drivers/vga/attribc/regtype.h>
 
 namespace Hag { namespace VGA
 {
 
+namespace Register
+{
+    
+enum
+{
+    AttributeControllerIndex = 0x3C0,                       //ATR_AD
+};
+
+}
+
 //How to use:
 //http://www.osdever.net/FreeVGA/vga/vgareg.htm#attribute
-
-typedef uint8_t AttributeControllerIndex_t;
 
 //This register is loaded with a binary index value that determines which attribute controller 
 //register will be accessed. This value is referred to as the "Index Number" of the AR register (ARO-14).
@@ -40,17 +49,17 @@ namespace AttributeControllerIndex
         };
     }
 
-    inline AttributeControllerIndex_t Read()
+    inline AttributeController::Register_t Read()
     {
-        return AttributeControllerIndex_t(SYS_ReadPortByte(Register::AttributeControllerIndex));
+        return AttributeController::Register_t(SYS_ReadPortByte(Register::AttributeControllerIndex));
     }
     
-    inline void Write(AttributeControllerIndex_t value)
+    inline void Write(AttributeController::Register_t value)
     {
         SYS_WritePortByte(Register::AttributeControllerIndex, value);
     }
 
-    inline void ResetIndex(Register_t inputStatus1)
+    inline void ResetIndex(VGA::Register_t inputStatus1)
     {
         //Pulling Input Status 1 resets the Attribute Index.
         InputStatus1::Read(inputStatus1);

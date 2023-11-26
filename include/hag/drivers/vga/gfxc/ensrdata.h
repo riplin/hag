@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    EnableSetResetData = 0x01,              //EN_S/R_DT GR1
+};
+
+}
 
 typedef uint8_t EnableSetResetData_t;
 
@@ -31,13 +42,13 @@ namespace EnableSetResetData
 
     inline EnableSetResetData_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::EnableSetResetData);
+        GraphicsControllerIndex::Write(Register::EnableSetResetData);
         return EnableSetResetData_t(GraphicsControllerData::Read());
     }
     
     inline void Write(EnableSetResetData_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::EnableSetResetData, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::EnableSetResetData, GraphicsControllerData_t(value));
     }
 
 }

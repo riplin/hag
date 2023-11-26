@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    VerticalRetraceStart = 0x10,                            //VRS CR10
+};
+
+}
 
 typedef uint8_t VerticalRetraceStart_t;
 
@@ -25,15 +36,15 @@ namespace VerticalRetraceStart
         };
     }
 
-    inline VerticalRetraceStart_t Read(Register_t controllerIndexRegister)
+    inline VerticalRetraceStart_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::VerticalRetraceStart);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::VerticalRetraceStart);
         return VerticalRetraceStart_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, VerticalRetraceStart_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, VerticalRetraceStart_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::VerticalRetraceStart, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::VerticalRetraceStart, CRTControllerData_t(value));
     }
 
 }

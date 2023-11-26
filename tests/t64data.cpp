@@ -3,6 +3,18 @@
 #include <hag/types.h>
 #include <hag/testing/mock.h>
 #include <hag/system/bda.h>
+#include <hag/drivers/vga/dacdata.h>
+#include <hag/drivers/vga/dacrdidx.h>
+#include <hag/drivers/vga/dacwridx.h>
+#include <hag/drivers/vga/miscout.h>
+#include <hag/drivers/vga/attribc/data.h>
+#include <hag/drivers/vga/attribc/index.h>
+#include <hag/drivers/vga/crtc/data.h>
+#include <hag/drivers/vga/crtc/index.h>
+#include <hag/drivers/vga/gfxc/data.h>
+#include <hag/drivers/vga/gfxc/index.h>
+#include <hag/drivers/vga/sqrc/data.h>
+#include <hag/drivers/vga/sqrc/index.h>
 
 uint8_t modes[] = 
 {

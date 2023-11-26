@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    EndVerticalBlank = 0x16,                                //EVB CR16
+};
+
+}
 
 //This register specifies the scan line count value when the vertical blank period ends.
 
@@ -33,15 +44,15 @@ namespace EndVerticalBlank
         };
     }
 
-    inline EndVerticalBlank_t Read(Register_t controllerIndexRegister)
+    inline EndVerticalBlank_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::EndVerticalBlank);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::EndVerticalBlank);
         return EndVerticalBlank_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
     
-    inline void Write(Register_t controllerIndexRegister, EndVerticalBlank_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, EndVerticalBlank_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::EndVerticalBlank, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::EndVerticalBlank, CRTControllerData_t(value));
     }
 
 }

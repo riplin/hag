@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/attribc/regtype.h>
 #include <hag/drivers/vga/attribc/data.h>
 
 namespace Hag { namespace VGA { namespace AttributeController
 {
+
+namespace Register
+{
+
+enum
+{
+    BorderColor = 0x11,                     //BDR_CLR AR11
+};
+
+}
 
 typedef uint8_t BorderColor_t;
 
@@ -30,13 +41,13 @@ namespace BorderColor
 
     inline BorderColor_t Read()
     {
-        AttributeControllerIndex::Write(AttributeControllerRegister::BorderColor);
+        AttributeControllerIndex::Write(Register::BorderColor);
         return BorderColor_t(AttributeControllerData::Read());
     }
     
     inline void Write(BorderColor_t value)
     {
-        AttributeControllerData::Write(AttributeControllerRegister::BorderColor, AttributeControllerData_t(value));
+        AttributeControllerData::Write(Register::BorderColor, AttributeControllerData_t(value));
     }
 
 }

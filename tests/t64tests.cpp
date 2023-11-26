@@ -2,15 +2,10 @@
 
 #include <stdio.h>
 #include <hag/testing/mock.h>
+#include <hag/drivers/vga/funcs.h>
 #include <hag/drivers/vga/sqrc/clkmod.h>
-#include <hag/drivers/s3/trio.h>
-#include <hag/drivers/s3/regs.h>
-#include <hag/drivers/s3/sqrc/regs.h>
-#include <hag/drivers/s3/sqrc/unlexseq.h>
-#include <hag/drivers/s3/crtc/reglock1.h>
-#include <hag/drivers/s3/crtc/reglock2.h>
-#include <hag/drivers/s3/crtc/regs.h>
-#include <hag/support/allocatr.h>
+#include <hag/drivers/s3/trio64/trio.h>
+#include <support/allocatr.h>
 #include <hag/system/bda.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,8 +70,8 @@ void S3Trio64MockConfigSetup(Hag::IAllocator& allocator, uint8_t* ramdacRegister
     Hag::Testing::Mock::AddIndexedPort("Sequence Controller", Hag::VGA::Register::SequencerIndex, 0x1f, Hag::VGA::Register::SequencerData, 0x19, S3_86C764x20_SequencerControllerRegisters);
     Hag::Testing::Mock::SetDefaultMemory(S3_86C764x20_BDA, 0x0400, 0x100);
     Hag::Testing::Mock::SetDefaultMemory(S3_86C764x20_BIOS, 0xC0000, 0x8000);
-    Hag::Testing::Mock::AddReadOnlyIndexedRegister(Hag::VGA::Register::CRTControllerIndexB, Hag::S3::CRTControllerRegister::ChipIDRevision);
-    Hag::Testing::Mock::AddReadOnlyIndexedRegister(Hag::VGA::Register::CRTControllerIndexD, Hag::S3::CRTControllerRegister::ChipIDRevision);
+    Hag::Testing::Mock::AddReadOnlyIndexedRegister(Hag::VGA::Register::CRTControllerIndexB, Hag::S3::Trio64::CRTController::Register::ChipIDRevision);
+    Hag::Testing::Mock::AddReadOnlyIndexedRegister(Hag::VGA::Register::CRTControllerIndexD, Hag::S3::Trio64::CRTController::Register::ChipIDRevision);
 }
 
 int MockSetupTeardownTest()
@@ -106,17 +101,17 @@ int SquenceRegisterLockingTest()
         UnlockExtendedSequencerRegisters();
 
         Hag::Testing::Mock::SelectInstance(1);
-        Hag::S3::Sequencer::UnlockExtendedSequencer::Unlock();
+        Hag::S3::Trio64::Sequencer::UnlockExtendedSequencer::Unlock();
 
         Hag::Testing::Mock::PortAndValue modifiedPorts[] =
         {
             {
                 Hag::VGA::Register::SequencerIndex,
-                Hag::S3::SequencerRegister::UnlockExtendedSequencer
+                Hag::S3::Trio64::Sequencer::Register::UnlockExtendedSequencer
             },
             {
                 Hag::VGA::Register::SequencerData,
-                Hag::S3::Sequencer::UnlockExtendedSequencer::UnlockCode
+                Hag::S3::Trio64::Sequencer::UnlockExtendedSequencer::UnlockCode
             }
         };
 
@@ -126,8 +121,8 @@ int SquenceRegisterLockingTest()
         {
             {
                 Hag::VGA::Register::SequencerData,
-                Hag::S3::SequencerRegister::UnlockExtendedSequencer,
-                Hag::S3::Sequencer::UnlockExtendedSequencer::UnlockCode
+                Hag::S3::Trio64::Sequencer::Register::UnlockExtendedSequencer,
+                Hag::S3::Trio64::Sequencer::UnlockExtendedSequencer::UnlockCode
             }
         };
 
@@ -142,17 +137,17 @@ int SquenceRegisterLockingTest()
         LockExtendedSequencerRegisters();
 
         Hag::Testing::Mock::SelectInstance(1);
-        Hag::S3::Sequencer::UnlockExtendedSequencer::Lock();
+        Hag::S3::Trio64::Sequencer::UnlockExtendedSequencer::Lock();
 
         Hag::Testing::Mock::PortAndValue modifiedPorts[] =
         {
             {
                 Hag::VGA::Register::SequencerIndex,
-                Hag::S3::SequencerRegister::UnlockExtendedSequencer
+                Hag::S3::Trio64::Sequencer::Register::UnlockExtendedSequencer
             },
             {
                 Hag::VGA::Register::SequencerData,
-                Hag::S3::Sequencer::UnlockExtendedSequencer::LockCode
+                Hag::S3::Trio64::Sequencer::UnlockExtendedSequencer::LockCode
             }
         };
 
@@ -162,8 +157,8 @@ int SquenceRegisterLockingTest()
         {
             {
                 Hag::VGA::Register::SequencerData,
-                Hag::S3::SequencerRegister::UnlockExtendedSequencer,
-                Hag::S3::Sequencer::UnlockExtendedSequencer::LockCode
+                Hag::S3::Trio64::Sequencer::Register::UnlockExtendedSequencer,
+                Hag::S3::Trio64::Sequencer::UnlockExtendedSequencer::LockCode
             }
         };
 
@@ -259,7 +254,7 @@ int FindVideoModeDataTest()
             }
         }
 
-        Hag::S3::VESAVideoModeData* videoModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
+        Hag::S3::Trio64::VESAVideoModeData* videoModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
         if (isVesaMode && (videoModeData != NULL))
         {
             if (videoModeData->Mode == modes[i])
@@ -306,7 +301,7 @@ int GetVideoModeFlagsTest()
             }
         }
 
-        Hag::S3::VESAVideoModeData* videoModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
+        Hag::S3::Trio64::VESAVideoModeData* videoModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
 
         uint8_t flags2 = 0;
         bool returnValue3 = Hag::S3::Trio64::GetVideoModeFlags(modes[i], flags2);
@@ -355,7 +350,7 @@ int GetVESAVideoModeOverrideTableTest()
             }
         }
 
-        Hag::S3::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
+        Hag::S3::Trio64::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
         if ((vesaModeData != NULL) && isVesaMode)
         {
             if ((overrideTable1[0] == vesaModeData->OverrideTable->DisplayedCharacterColumns) &&
@@ -562,7 +557,7 @@ int SetTextModeBiosDataTest()
 
         Hag::System::BDA::DisplayMode::Get() = mode;
 
-        Hag::S3::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
+        Hag::S3::Trio64::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
 
         if (SetTextModeBiosDataTest_Verify[i].font == selectedFont &&
             SetTextModeBiosDataTest_Verify[i].overrideTable == overrideTable &&
@@ -675,8 +670,8 @@ int ApplyVideoParametersTest()
             //printf("\n%i: 0x%02X instance 1\n", i, mode);
             Hag::Testing::Mock::SelectInstance(1);
             Hag::VGA::Register_t crtcPort = Hag::S3::Trio64::GetCRTControllerIndexRegister();
-            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
-            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
             
             if (mode > 0x13 && Hag::S3::Trio64::FindVideoModeData(mode) == NULL)
                 continue; //Failure.
@@ -691,7 +686,7 @@ int ApplyVideoParametersTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            Hag::S3::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
+            Hag::S3::Trio64::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
 
             Hag::System::BDA::VideoModeOptions::Get() &= 
                         ~(Hag::System::BDA::VideoModeOptions::Unknown |
@@ -875,7 +870,7 @@ int SetupClocksTest()
 
         {
             Hag::Testing::Mock::SelectInstance(1);
-            Hag::S3::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(mode);
+            Hag::S3::Trio64::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(mode);
             Hag::S3::Trio64::SetupClocks(Hag::S3::Trio64::GetCRTControllerIndexRegister(), vesaModeData->VariantData->ClockConfigIndex);
         }
 
@@ -943,11 +938,11 @@ int ConfigureExtraVESAModeSettingsTest()
         uint8_t* modeData1 = NULL;
         uint8_t baseIdx = modeDataIndex;
 
-        Hag::S3::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(mode);
+        Hag::S3::Trio64::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(mode);
         if (vesaModeData == NULL)
             continue;
 
-        Hag::S3::VESAResolutionVariant* modeData2 = vesaModeData->VariantData;
+        Hag::S3::Trio64::VESAResolutionVariant* modeData2 = vesaModeData->VariantData;
 
         do
         {
@@ -1086,8 +1081,8 @@ int SetColorModeTest()
 
         Hag::Testing::Mock::SelectInstance(1);
 
-        Hag::S3::ColorMode_t colorMode = 0;
-        Hag::S3::VESAVideoModeData* vesaModeData = NULL;
+        Hag::S3::Trio64::ColorMode_t colorMode = 0;
+        Hag::S3::Trio64::VESAVideoModeData* vesaModeData = NULL;
         if (vesaModeData = Hag::S3::Trio64::FindVideoModeData(mode))
             colorMode = vesaModeData->ColorMode;
         Hag::S3::Trio64::SetColorMode(mode, colorMode, Hag::S3::Trio64::GetCRTControllerIndexRegister());
@@ -1264,11 +1259,11 @@ int ApplyVESAOverrideDataTest()
         {
             Hag::Testing::Mock::SelectInstance(1);
             Hag::VGA::Register_t crtcPort = Hag::S3::Trio64::GetCRTControllerIndexRegister();
-            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
-            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
-            Hag::S3::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
+            Hag::S3::Trio64::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
             if (mode > 0x13 && (vesaData == NULL))
                 continue; //Failure.
 
@@ -1282,7 +1277,7 @@ int ApplyVESAOverrideDataTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            Hag::S3::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
+            Hag::S3::Trio64::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
 
             Hag::System::BDA::VideoModeOptions::Get() &= 
                         ~(Hag::System::BDA::VideoModeOptions::Unknown |
@@ -1397,11 +1392,11 @@ int SetPaletteTest()
         {
             Hag::Testing::Mock::SelectInstance(1);
             Hag::VGA::Register_t crtcPort = Hag::S3::Trio64::GetCRTControllerIndexRegister();
-            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
-            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
-            Hag::S3::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
+            Hag::S3::Trio64::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
             if (mode > 0x13 && (vesaData == NULL))
                 continue; //Failure.
 
@@ -1415,7 +1410,7 @@ int SetPaletteTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            Hag::S3::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
+            Hag::S3::Trio64::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
 
             Hag::System::BDA::VideoModeOptions::Get() &= 
                         ~(Hag::System::BDA::VideoModeOptions::Unknown |
@@ -1429,7 +1424,11 @@ int SetPaletteTest()
 
             Hag::Testing::Mock::Snapshot();
 
-            Hag::S3::Trio64::SetPalette(mode);
+            Hag::S3::Trio64::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
+            bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Color) != 0x00);
+            bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Palette256) != 0x00);
+
+            Hag::VGA::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
         }
 
         ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL,
@@ -1579,11 +1578,11 @@ int SetFontTest()
         {
             Hag::Testing::Mock::SelectInstance(1);
             Hag::VGA::Register_t crtcPort = Hag::S3::Trio64::GetCRTControllerIndexRegister();
-            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
-            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
-            Hag::S3::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
+            Hag::S3::Trio64::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
             if (mode > 0x13 && (vesaData == NULL))
                 continue; //Failure.
 
@@ -1597,7 +1596,7 @@ int SetFontTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            Hag::S3::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
+            Hag::S3::Trio64::VideoParameters* parameters = Hag::S3::Trio64::SetTextModeBiosData(mode);
 
             Hag::System::BDA::VideoModeOptions::Get() &= 
                         ~(Hag::System::BDA::VideoModeOptions::Unknown |
@@ -1611,12 +1610,16 @@ int SetFontTest()
 
             Hag::Testing::Mock::Snapshot();
 
-            Hag::S3::Trio64::SetPalette(mode);
+            Hag::S3::Trio64::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
+            bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Color) != 0x00);
+            bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Palette256) != 0x00);
 
-            uint8_t flags = 0;
+            Hag::VGA::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
+
+            uint8_t oldflags = 0;
             if ((mode < 0x04) ||
                 (mode == 0x07) ||
-                (mode > 0x13 && GetVideoModeFlags(mode, flags) && ((flags & 0x01) == 0x01)))
+                (mode > 0x13 && GetVideoModeFlags(mode, oldflags) && ((oldflags & 0x01) == 0x01)))
             {
                 Hag::Testing::Mock::Snapshot();
 
@@ -1771,11 +1774,11 @@ int SetVideoModeInternalsTest()
             Hag::Testing::Mock::SetMemoryAccessCallback(Memory_VerifyCallback, &context);
 
             Hag::VGA::Register_t crtcPort = Hag::S3::Trio64::GetCRTControllerIndexRegister();
-            Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
-            Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock1::Unlock(crtcPort);
+            Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
             
             uint32_t offset = 0x00;
-            Hag::S3::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
+            Hag::S3::Trio64::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
             if (mode > 0x13 && (vesaData == NULL))
                 continue; //Failure.
 
@@ -1789,7 +1792,7 @@ int SetVideoModeInternalsTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            Hag::S3::VideoParameters* overrideTable = Hag::S3::Trio64::SetTextModeBiosData(mode);
+            Hag::S3::Trio64::VideoParameters* overrideTable = Hag::S3::Trio64::SetTextModeBiosData(mode);
 
             Hag::System::BDA::VideoModeOptions::Get() &= 
                         ~(Hag::System::BDA::VideoModeOptions::Unknown |
@@ -1798,12 +1801,17 @@ int SetVideoModeInternalsTest()
             Hag::S3::Trio64::SaveDynamicParameterData(overrideTable);
             Hag::S3::Trio64::ApplyVideoParameters(overrideTable);
             Hag::S3::Trio64::ApplyVESAOverrideData(mode, crtcPort, vesaData);
-            Hag::S3::Trio64::SetPalette(mode);
+            
+            Hag::S3::Trio64::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
+            bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Color) != 0x00);
+            bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Palette256) != 0x00);
+            
+            Hag::VGA::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
 
-            uint8_t flags = 0;
+            uint8_t oldflags = 0;
             if ((mode < 0x04) ||
                 (mode == 0x07) ||
-                (mode > 0x13 && Hag::S3::Trio64::GetVideoModeFlags(mode, flags) && ((flags & 0x01) == 0x01)))
+                (mode > 0x13 && Hag::S3::Trio64::GetVideoModeFlags(mode, oldflags) && ((oldflags & 0x01) == 0x01)))
             {
                 Hag::S3::Trio64::SetFont();
 
@@ -1839,7 +1847,7 @@ int SetVideoModeInternalsTest()
                 Hag::S3::Trio64::ClearScreen(mode);
 
             Hag::S3::Trio64::SetPaletteProfile(crtcPort);
-            Hag::S3::Trio64::EnablePaletteBasedVideo();
+            Hag::VGA::EnableVideoDisplay();
             Hag::VGA::Sequencer::ClockingMode::TurnScreenOn();
 
             int matches = 0;
@@ -1911,8 +1919,8 @@ int SetVideoModeInternalsCompareTest()
 
         Hag::Testing::Mock::SelectInstance(1);
         Hag::VGA::Register_t crtcPort = Hag::S3::Trio64::GetCRTControllerIndexRegister();
-        Hag::S3::CRTController::RegisterLock1::Unlock(crtcPort);
-        Hag::S3::CRTController::RegisterLock2::Unlock(crtcPort);
+        Hag::S3::Trio64::CRTController::RegisterLock1::Unlock(crtcPort);
+        Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
 
         Diff("UnlockExtendedCRTRegistersSafe");
 
@@ -1922,7 +1930,7 @@ int SetVideoModeInternalsCompareTest()
             continue; //Failure.
 
         Hag::Testing::Mock::SelectInstance(1);
-        Hag::S3::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
+        Hag::S3::Trio64::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
         if (mode > 0x13 && (vesaData == NULL))
             continue; //Failure.
 
@@ -1961,7 +1969,7 @@ int SetVideoModeInternalsCompareTest()
                     Hag::System::BDA::VideoModeOptions::Inactive);
 
         Hag::Testing::Mock::SelectInstance(1);
-        Hag::S3::VideoParameters* clean_overrideTable = Hag::S3::Trio64::SetTextModeBiosData(mode);
+        Hag::S3::Trio64::VideoParameters* clean_overrideTable = Hag::S3::Trio64::SetTextModeBiosData(mode);
 
         Hag::System::BDA::VideoModeOptions::Get() &= 
                     ~(Hag::System::BDA::VideoModeOptions::Unknown |
@@ -2001,7 +2009,12 @@ int SetVideoModeInternalsCompareTest()
 
         Hag::Testing::Mock::SelectInstance(1);
         Hag::System::BDA::DisplayMode::Get();//Pulling this so the diff is the same.
-        Hag::S3::Trio64::SetPalette(mode);
+        
+        Hag::S3::Trio64::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
+        bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Color) != 0x00);
+        bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Trio64::VESAVideoModeFlags::Palette256) != 0x00);
+        
+        Hag::VGA::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
 
         Diff("SetPalette");
 
@@ -2120,7 +2133,7 @@ int SetVideoModeInternalsCompareTest()
         EnablePaletteBasedVideo();
 
         Hag::Testing::Mock::SelectInstance(1);
-        Hag::S3::Trio64::EnablePaletteBasedVideo();
+        Hag::VGA::EnableVideoDisplay();
 
         Diff("EnablePaletteBasedVideo");
 

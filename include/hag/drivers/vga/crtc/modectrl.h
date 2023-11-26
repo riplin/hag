@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    CRTCModeControl = 0x17,                                 //CRT_MD CR17
+};
+
+}
 
 typedef uint8_t CRTCModeControl_t;
 
@@ -64,15 +75,15 @@ namespace CRTCModeControl
         };
     }
 
-    inline CRTCModeControl_t Read(Register_t controllerIndexRegister)
+    inline CRTCModeControl_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::CRTCModeControl);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::CRTCModeControl);
         return CRTCModeControl_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
     
-    inline void Write(Register_t controllerIndexRegister, CRTCModeControl_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, CRTCModeControl_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CRTCModeControl, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::CRTCModeControl, CRTControllerData_t(value));
     }
 
 }

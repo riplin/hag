@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    StartVerticalBlank = 0x15,                              //SVB CR15
+};
+
+}
 
 //This register specifies the scan line at which the vertical blanking period begins.
 //Bit 8 is bit 3 of CR7. Bit 9 is bit 5 of CR9. Bit 10 is bit 2 of CR5E.
@@ -28,15 +39,15 @@ namespace StartVerticalBlank
         };
     }
 
-    inline StartVerticalBlank_t Read(Register_t controllerIndexRegister)
+    inline StartVerticalBlank_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::StartVerticalBlank);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::StartVerticalBlank);
         return StartVerticalBlank_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
     
-    inline void Write(Register_t controllerIndexRegister, StartVerticalBlank_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, StartVerticalBlank_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::StartVerticalBlank, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::StartVerticalBlank, CRTControllerData_t(value));
     }
 
 }

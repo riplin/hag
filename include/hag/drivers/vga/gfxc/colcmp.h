@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
 namespace Hag { namespace VGA { namespace GraphicsController
 {
+
+namespace Register
+{
+
+enum
+{
+    ColorCompare = 0x02,                    //COLOR-CMP GR2
+};
+
+}
 
 typedef uint8_t ColorCompare_t;
 
@@ -35,13 +46,13 @@ namespace ColorCompare
 
     inline ColorCompare_t Read()
     {
-        GraphicsControllerIndex::Write(GraphicsControllerRegister::ColorCompare);
+        GraphicsControllerIndex::Write(Register::ColorCompare);
         return ColorCompare_t(GraphicsControllerData::Read());
     }
     
     inline void Write(ColorCompare_t value)
     {
-        GraphicsControllerData::Write(GraphicsControllerRegister::ColorCompare, GraphicsControllerData_t(value));
+        GraphicsControllerData::Write(Register::ColorCompare, GraphicsControllerData_t(value));
     }
 
 }

@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    VerticalRetraceEnd = 0x11,                              //VRE CR11
+};
+
+}
 
 typedef uint8_t VerticalRetraceEnd_t;
 
@@ -47,25 +58,25 @@ namespace VerticalRetraceEnd
         };
     }
 
-    inline VerticalRetraceEnd_t Read(Register_t controllerIndexRegister)
+    inline VerticalRetraceEnd_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::VerticalRetraceEnd);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::VerticalRetraceEnd);
         return VerticalRetraceEnd_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, VerticalRetraceEnd_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, VerticalRetraceEnd_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::VerticalRetraceEnd, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::VerticalRetraceEnd, CRTControllerData_t(value));
     }
 
-    inline VerticalRetraceEnd_t Unlock(Register_t controllerIndexRegister)
+    inline VerticalRetraceEnd_t Unlock(VGA::Register_t controllerIndexRegister)
     {
         VerticalRetraceEnd_t value = Read(controllerIndexRegister);
         Write(controllerIndexRegister, value & VerticalRetraceEnd_t(~LockWritesToCRTController));
         return value & VerticalRetraceEnd_t(LockWritesToCRTController);
     }
 
-    inline void Lock(Register_t controllerIndexRegister, VerticalRetraceEnd_t previousValue = LockWritesToCRTController)
+    inline void Lock(VGA::Register_t controllerIndexRegister, VerticalRetraceEnd_t previousValue = LockWritesToCRTController)
     {
         VerticalRetraceEnd_t value = Read(controllerIndexRegister);
         value &= VerticalRetraceEnd_t(~LockWritesToCRTController);
@@ -75,7 +86,7 @@ namespace VerticalRetraceEnd
     class SoftUnlock
     {
     public:
-        inline SoftUnlock(Register_t crtcPort)
+        inline SoftUnlock(VGA::Register_t crtcPort)
             : m_previousValue(Unlock(crtcPort))
             , m_crtcPort(crtcPort)
         {
@@ -88,7 +99,7 @@ namespace VerticalRetraceEnd
 
     private:
         VerticalRetraceEnd_t m_previousValue;
-        Register_t m_crtcPort;
+        VGA::Register_t m_crtcPort;
     };
 
 }

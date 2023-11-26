@@ -2,13 +2,22 @@
 
 #pragma once
 
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
+#include <hag/drivers/vga/regtype.h>
+#include <hag/drivers/vga/gfxc/regtype.h>
 
 namespace Hag { namespace VGA
 {
 
-typedef uint8_t GraphicsControllerIndex_t;
+namespace Register
+{
+    
+enum
+{
+    GraphicsControllerIndex = 0x3CE,                        //GRC_ADR
+};
+
+}
 
 namespace GraphicsControllerIndex
 {
@@ -25,12 +34,12 @@ namespace GraphicsControllerIndex
         };
     }
 
-    inline GraphicsControllerIndex_t Read()
+    inline GraphicsController::Register_t Read()
     {
-        return GraphicsControllerIndex_t(SYS_ReadPortByte(Register::GraphicsControllerIndex));
+        return GraphicsController::Register_t(SYS_ReadPortByte(Register::GraphicsControllerIndex));
     }
     
-    inline void Write(GraphicsControllerIndex_t value)
+    inline void Write(GraphicsController::Register_t value)
     {
         SYS_WritePortByte(Register::GraphicsControllerIndex, value);
     }

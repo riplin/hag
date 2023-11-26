@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    UnderlineLocation = 0x14,                               //ULL CR14
+};
+
+}
 
 //This register specifies the horizontal row scan position of underline and display buffer addressing modes.
 
@@ -33,15 +44,15 @@ namespace UnderlineLocation
         };
     }
 
-    inline UnderlineLocation_t Read(Register_t controllerIndexRegister)
+    inline UnderlineLocation_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::UnderlineLocation);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::UnderlineLocation);
         return UnderlineLocation_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, UnderlineLocation_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, UnderlineLocation_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::UnderlineLocation, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::UnderlineLocation, CRTControllerData_t(value));
     }
 
 }

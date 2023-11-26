@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    ScreenOffset = 0x13,                                    //SCREEN-OFFSET CR13
+};
+
+}
 
 typedef uint8_t ScreenOffset_t;
 
@@ -27,15 +38,15 @@ namespace ScreenOffset
         };
     }
 
-    inline ScreenOffset_t Read(Register_t controllerIndexRegister)
+    inline ScreenOffset_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::ScreenOffset);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::ScreenOffset);
         return ScreenOffset_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, ScreenOffset_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, ScreenOffset_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::ScreenOffset, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::ScreenOffset, CRTControllerData_t(value));
     }
 
 }

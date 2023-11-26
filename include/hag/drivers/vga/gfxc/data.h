@@ -3,10 +3,19 @@
 #pragma once
 
 #include <hag/drivers/vga/gfxc/index.h>
-#include <hag/drivers/vga/gfxc/regs.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    GraphicsControllerData = 0x3CF,                         //GRC_DATA
+};
+
+}
 
 typedef uint8_t GraphicsControllerData_t;
 
@@ -22,7 +31,7 @@ namespace GraphicsControllerData
         SYS_WritePortByte(Register::GraphicsControllerData, value);
     }
 
-    inline void Write(GraphicsControllerIndex_t gfxIndex, GraphicsControllerData_t value)
+    inline void Write(GraphicsController::Register_t gfxIndex, GraphicsControllerData_t value)
     {
         SYS_WritePortBytes(Register::GraphicsControllerIndex, gfxIndex, value);
     }

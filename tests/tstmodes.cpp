@@ -3,154 +3,116 @@
 #include <stdio.h>
 #include <hag/types.h>
 #include <hag/farptr.h>
-#include <i86.h>
+//#include <i86.h>
 #include <string.h>
 #include <hag/math/fp/fpmath.h>
 #include <hag/system/bda.h>
 #include <hag/system/pci.h>
 #include <hag/system/sysasm.h>
-#include <hag/support/allocatr.h>
-#include <hag/drivers/s3/trio.h>
-#include <hag/drivers/vga/vidmodes.h>
-#include <hag/drivers/vga/crtc/verrtcen.h>
-#include <hag/drivers/vga/gfxc/rdplnsel.h>
-#include <hag/drivers/vga/sqrc/enwrtpl.h>
-#include <hag/drivers/s3/regs.h>
-#include <hag/drivers/s3/vidmodes.h>
-#include <hag/drivers/s3/crtc/reglock1.h>
-#include <hag/drivers/s3/crtc/reglock2.h>
-#include <hag/drivers/s3/crtc/sysconf.h>
-#include <hag/drivers/s3/crtc/bkwcomp2.h>
-#include <hag/drivers/s3/crtc/crtreglk.h>
-#include <hag/drivers/s3/sqrc/unlexseq.h>
+#include <support/allocatr.h>
+#include <hag/drivers/s3/trio64/trio.h>
 
-Hag::VGA::Register_t Registers[] =
+Hag::S3::Trio64::Register_t Registers[] =
 {
-    Hag::VGA::Register::InputStatus0,
-    Hag::VGA::Register::FeatureControlR,
-    Hag::VGA::Register::MiscellaneousR,
-    Hag::VGA::Register::InputStatus1B,
-    Hag::VGA::Register::InputStatus1D,
-    Hag::VGA::Register::VideoSubsystemEnable,
-    Hag::VGA::Register::DACMask,
-    Hag::VGA::Register::DACStatus,
-    Hag::S3::Register::SetupOptionSelect,
-    Hag::S3::Register::VideoSubsystemEnableS3,
-    Hag::S3::Register::SubsystemStatus,
-    Hag::S3::Register::AdvancedFunctionControl,
-    //Hag::S3::Register::CurrentYPosition,
-    //Hag::S3::Register::CurrentYPosition2,
-    //Hag::S3::Register::CurrentXPosition,
-    //Hag::S3::Register::CurrentXPosition2,
-    //Hag::S3::Register::DestinationYPositionAxialStepConstant,
-    //Hag::S3::Register::YCoordinate2AxialStepConstant2,
-    //Hag::S3::Register::DestinationXPositionDiagonalStepConstant,
-    //Hag::S3::Register::XCoordinate2,
-    //Hag::S3::Register::LineErrorTerm,
-    //Hag::S3::Register::LineErrorTerm2,
-    //Hag::S3::Register::MajorAxisPixelCount,
-    //Hag::S3::Register::MajorAxisPixelCount2,
-    Hag::S3::Register::GraphicsProcessorStatus,
-    //Hag::S3::Register::DrawingCommand,
-    //Hag::S3::Register::DrawingCommand2,
-    //Hag::S3::Register::ShortStrokeVectorTransfer,
-    //Hag::S3::Register::BackgroundColor,
-    //Hag::S3::Register::ForegroundColor,
-    //Hag::S3::Register::BitplaneWriteMask,
-    //Hag::S3::Register::BitplaneReadMask,
-    //Hag::S3::Register::ColorCompareRegister,
-    //Hag::S3::Register::BackgroundMix,
-    //Hag::S3::Register::ForegroundMix,
-    //Hag::S3::Register::ReadRegisterData,
-    //Hag::S3::Register::WriteRegisterData,
-    //Hag::S3::Register::PixelDataTransfer,
-    //Hag::S3::Register::PixelDataTransferExtension,
-    //Hag::S3::Register::PatternY,
-    //Hag::S3::Register::PatternX
+    Hag::S3::Trio64::Register::InputStatus0,
+    Hag::S3::Trio64::Register::FeatureControlR,
+    Hag::S3::Trio64::Register::MiscellaneousR,
+    Hag::S3::Trio64::Register::InputStatus1B,
+    Hag::S3::Trio64::Register::InputStatus1D,
+    Hag::S3::Trio64::Register::VideoSubsystemEnable,
+    Hag::S3::Trio64::Register::DACMask,
+    Hag::S3::Trio64::Register::DACStatus,
+    Hag::S3::Trio64::Register::SetupOptionSelect,
+    Hag::S3::Trio64::Register::VideoSubsystemEnable,
+    Hag::S3::Trio64::Register::SubsystemStatus,
+    Hag::S3::Trio64::Register::AdvancedFunctionControl,
+    Hag::S3::Trio64::Register::GraphicsProcessorStatus,
 };
 
 bool SetVideoMode(uint8_t mode);
 
 void regdump(const char* filename)
 {
+    using namespace Hag::System::BDA;
+    using namespace Hag::S3::Trio64;
     //Write code to CR38 to provide access to the S3 VGA registers (CR30-CR3F)
-    Hag::S3::CRTController::RegisterLock1::SoftUnlock rl1(Hag::System::BDA::VideoBaseIOPort::Get());
+    CRTController::RegisterLock1::SoftUnlock rl1(VideoBaseIOPort::Get());
     
     //Write code to CR39 to provide access to the System Control and System Extension registers (CR40-CRFF)
-    Hag::S3::CRTController::RegisterLock2::SoftUnlock rl2(Hag::System::BDA::VideoBaseIOPort::Get());
+    CRTController::RegisterLock2::SoftUnlock rl2(VideoBaseIOPort::Get());
 
     //Set bit 0 in CR40 to enable access to the Enhanced Commands registers.
-    Hag::S3::CRTController::SystemConfiguration::SoftUnlock sc(Hag::System::BDA::VideoBaseIOPort::Get());
+    CRTController::SystemConfiguration::SoftUnlock sc(VideoBaseIOPort::Get());
 
     //Enable write access to bits 1 and 6 of CR7
     //Enable access to RAMDAC register
     //Enable access to Palette/Overscan registers
-    Hag::S3::CRTController::BackwardCompatibility2::SoftUnlock bc2(Hag::System::BDA::VideoBaseIOPort::Get());
+    CRTController::BackwardCompatibility2::SoftUnlock bc2(VideoBaseIOPort::Get());
 
     //Enable write access to CR0-CR6, CR7 (bits 7,5,3,2,0), CR9 (bit5), CR10, CR11 (bits 3-0), CR15-CR16, CR17 (bit 2)
-    Hag::S3::CRTController::CRTRegisterLock::SoftUnlock crl(Hag::System::BDA::VideoBaseIOPort::Get());
+    CRTController::CRTRegisterLock::SoftUnlock crl(VideoBaseIOPort::Get());
 
     //Enable write access to CR0-CR7
-    Hag::VGA::CRTController::VerticalRetraceEnd::SoftUnlock vre(Hag::System::BDA::VideoBaseIOPort::Get());
+    CRTController::VerticalRetraceEnd::SoftUnlock vre(VideoBaseIOPort::Get());
 
     //write code to SR8 to provide access to SR9-SR18.
-    Hag::S3::Sequencer::UnlockExtendedSequencer::SoftUnlock ues;
+    Sequencer::UnlockExtendedSequencer::SoftUnlock ues;
 
     FILE* fp = fopen(filename, "w");
 
     fprintf(fp, "VGA and S3 registers:\n");
-    for (uint32_t i = 0; i < sizeof(Registers) / sizeof(Hag::VGA::Register_t); ++i)
+    for (uint32_t i = 0; i < sizeof(Registers) / sizeof(Register_t); ++i)
     {
-        Hag::VGA::Register_t reg = Registers[i];
+        Register_t reg = Registers[i];
         uint8_t value = SYS_ReadPortByte(reg);
         fprintf(fp, "{ 0x%04X, 0x%02X },\n", reg, value);
     }
 
     fprintf(fp, "\nAttribute Controller registers:\n");
-    SYS_ReadPortByte(Hag::VGA::Register::InputStatus1D);//Reset attribute controller to index register.
-    uint8_t orgAttribIdx = SYS_ReadPortByte(Hag::VGA::Register::AttributeControllerIndex);
+    SYS_ReadPortByte(Register::InputStatus1D);//Reset attribute controller to index register.
+    uint8_t orgAttribIdx = SYS_ReadPortByte(Register::AttributeControllerIndex);
     for (uint8_t i = 0; i < 32; ++i)
     {
         uint8_t idx = (orgAttribIdx & 0xE0) | i;
-        SYS_ReadPortByte(Hag::VGA::Register::InputStatus1D);//Reset attribute controller to index register.
-        SYS_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, idx);
-        uint8_t value = SYS_ReadPortByte(Hag::VGA::Register::AttributeControllerDataR);
+        SYS_ReadPortByte(Register::InputStatus1D);//Reset attribute controller to index register.
+        SYS_WritePortByte(Register::AttributeControllerIndex, idx);
+        uint8_t value = SYS_ReadPortByte(Register::AttributeControllerDataR);
         fprintf(fp, "{ 0x%02X, 0x%02X },\n", i, value);
     }
-    SYS_ReadPortByte(Hag::VGA::Register::InputStatus1D);//Reset attribute controller to index register.
-    SYS_WritePortByte(Hag::VGA::Register::AttributeControllerIndex, orgAttribIdx);
+    SYS_ReadPortByte(Register::InputStatus1D);//Reset attribute controller to index register.
+    SYS_WritePortByte(Register::AttributeControllerIndex, orgAttribIdx);
 
     fprintf(fp, "\nRAMDAC registers:\n");
-    SYS_WritePortByte(Hag::VGA::Register::DACReadIndex, 0x00);
+    SYS_WritePortByte(Register::DACReadIndex, 0x00);
     for (uint16_t i = 0; i < 256; ++i)
     {
-        uint8_t red = SYS_ReadPortByte(Hag::VGA::Register::RAMDACData);
-        uint8_t green = SYS_ReadPortByte(Hag::VGA::Register::RAMDACData);
-        uint8_t blue = SYS_ReadPortByte(Hag::VGA::Register::RAMDACData);
+        uint8_t red = SYS_ReadPortByte(Register::RAMDACData);
+        uint8_t green = SYS_ReadPortByte(Register::RAMDACData);
+        uint8_t blue = SYS_ReadPortByte(Register::RAMDACData);
         fprintf(fp, "{ 0x%02X, 0x%02X, 0x%02X }, //%i\n", red, green, blue, i);
     }
 
     fprintf(fp, "\nSequencer Controller registers:\n");
     for (uint8_t i = 0; i < 32; ++i)
     {
-        SYS_WritePortByte(Hag::VGA::Register::SequencerIndex, i);
-        uint8_t value = SYS_ReadPortByte(Hag::VGA::Register::SequencerData);
+        SYS_WritePortByte(Register::SequencerIndex, i);
+        uint8_t value = SYS_ReadPortByte(Register::SequencerData);
         fprintf(fp, "{ 0x%02X, 0x%02X },\n", i, value);
     }
 
     fprintf(fp, "\nGraphics Controller registers:\n");
     for (uint8_t i = 0; i < 16; ++i)
     {
-        SYS_WritePortByte(Hag::VGA::Register::GraphicsControllerIndex, i);
-        uint8_t value = SYS_ReadPortByte(Hag::VGA::Register::GraphicsControllerData);
+        SYS_WritePortByte(Register::GraphicsControllerIndex, i);
+        uint8_t value = SYS_ReadPortByte(Register::GraphicsControllerData);
         fprintf(fp, "{ 0x%02X, 0x%02X },\n", i, value);
     }
 
     fprintf(fp, "\nCRT Controller registers:\n");
     for (uint16_t i = 0; i < 256; ++i)
     {
-        SYS_WritePortByte(Hag::VGA::Register::CRTControllerIndexD, uint8_t(i));
-        uint8_t value = SYS_ReadPortByte(Hag::VGA::Register::CRTControllerDataD);
+        SYS_WritePortByte(Register::CRTControllerIndexD, uint8_t(i));
+        uint8_t value = SYS_ReadPortByte(Register::CRTControllerDataD);
         fprintf(fp, "{ 0x%02X, 0x%02X },\n", uint8_t(i), value);
     }
 
@@ -235,6 +197,8 @@ void drawTestPattern2bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void drawTestPattern4bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
+    using namespace Hag::S3::Trio64;
+
     if (videoMemory == NULL)
         return;
 
@@ -256,16 +220,16 @@ void drawTestPattern4bpp(uint16_t width, uint16_t height, uint8_t* videoMemory)
             uint8_t plane2 = ((color & 4) == 0 ? 0x00 : 0xFF) | borderColor;
             uint8_t plane3 = ((color & 8) == 0 ? 0x00 : 0xFF) | borderColor;
             
-            Hag::VGA::Sequencer::EnableWritePlane::Write(0x01);
+            Sequencer::EnableWritePlane::Write(0x01);
             videoMemory[y * pixelWidth + x] = plane0;
 
-            Hag::VGA::Sequencer::EnableWritePlane::Write(0x02);
+            Sequencer::EnableWritePlane::Write(0x02);
             videoMemory[y * pixelWidth + x] = plane1;
 
-            Hag::VGA::Sequencer::EnableWritePlane::Write(0x04);
+            Sequencer::EnableWritePlane::Write(0x04);
             videoMemory[y * pixelWidth + x] = plane2;
 
-            Hag::VGA::Sequencer::EnableWritePlane::Write(0x08);
+            Sequencer::EnableWritePlane::Write(0x08);
             videoMemory[y * pixelWidth + x] = plane3;
         }
     }
@@ -551,53 +515,53 @@ struct ModeTest
 ModeTest modeTests[] =
 {
     //Legacy modes:
-    {Hag::VGA::VideoMode::T40x25x16C, 0x00, 40, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::VGA::VideoMode::T80x25x16G, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::VGA::VideoMode::T80x25x16C, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::VGA::VideoMode::G320x200x4C, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
-    {Hag::VGA::VideoMode::G320x200x4G, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
-    {Hag::VGA::VideoMode::G640x200x2M, 0x00, 640, 200, (uint8_t*)0xB8000, drawTestPattern1bpp},
-    {Hag::VGA::VideoMode::G320x200x16C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::VGA::VideoMode::G640x200x16C, 0x00, 640, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::VGA::VideoMode::G640x350x2M, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
-    {Hag::VGA::VideoMode::G640x350x4C, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::VGA::VideoMode::G640x480x2M, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
-    {Hag::VGA::VideoMode::G640x480x16C, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::VGA::VideoMode::G320x200x256C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern8bpp},
+    {Hag::S3::Trio64::VideoMode::T40x25x16C, 0x00, 40, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::S3::Trio64::VideoMode::T80x25x16G, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::S3::Trio64::VideoMode::T80x25x16C, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::S3::Trio64::VideoMode::G320x200x4C, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
+    {Hag::S3::Trio64::VideoMode::G320x200x4G, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
+    {Hag::S3::Trio64::VideoMode::G640x200x2M, 0x00, 640, 200, (uint8_t*)0xB8000, drawTestPattern1bpp},
+    {Hag::S3::Trio64::VideoMode::G320x200x16C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G640x200x16C, 0x00, 640, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G640x350x2M, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::S3::Trio64::VideoMode::G640x350x4C, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G640x480x2M, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::S3::Trio64::VideoMode::G640x480x16C, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G320x200x256C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern8bpp},
 
     //VESA modes:
-    {Hag::S3::VideoMode::G640x400x256C, 0x100, 640, 400, NULL, drawTestPattern8bpp}, //VESA Mode 0x100
-    {Hag::S3::VideoMode::G640x480x256C, 0x101, 640, 480, NULL, drawTestPattern8bpp}, //VESA Mode 0x101
-    {Hag::S3::VideoMode::G800x600x16C, 0x102, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
-    {Hag::S3::VideoMode::G800x600x256C, 0x103, 800, 600, NULL, drawTestPattern8bpp}, //VESA Mode 0x103
-    {Hag::S3::VideoMode::G1024x768x16C, 0x104, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
-    {Hag::S3::VideoMode::G1024x768x256C, 0x105, 1024, 768, NULL, drawTestPattern8bpp}, //VESA Mode 0x105
-    //{Hag::S3::VideoMode::G1280x1024x16C, 0x106, 1280, 1024, NULL, drawTestPattern4bpp}, //VESA Mode 0x106
-    //{Hag::S3::VideoMode::G1280x1024x256C, 0x107, 1280, 1024, NULL, drawTestPattern8bpp}, //VESA Mode 0x107
-    {Hag::S3::VideoMode::T132x43x16C, 0x10A, 132, 43, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x10A
-    {Hag::S3::VideoMode::T132x25x16C, 0x109, 132, 25, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x109
-    {Hag::S3::VideoMode::G640x480x32K, 0x110, 640, 480, NULL, drawTestPattern15bpp}, //VESA Mode 0x110
-    {Hag::S3::VideoMode::G640x480x64K, 0x111, 640, 480, NULL, drawTestPattern16bpp}, //VESA Mode 0x111
-    {Hag::S3::VideoMode::G640x480x16M, 0x112, 640, 480, NULL, drawTestPattern32bpp}, //VESA Mode 0x112
-    {Hag::S3::VideoMode::G800x600x32K, 0x113, 800, 600, NULL, drawTestPattern15bpp}, //VESA Mode 0x113
-    {Hag::S3::VideoMode::G800x600x64K, 0x114, 800, 600, NULL, drawTestPattern16bpp}, //VESA Mode 0x114
-    {Hag::S3::VideoMode::G800x600x16M, 0x115, 800, 600, NULL, drawTestPattern32bpp}, //VESA Mode 0x115
-    {Hag::S3::VideoMode::G1024x768x32K, 0x116, 1024, 768, NULL, drawTestPattern15bpp}, //VESA Mode 0x116
-    {Hag::S3::VideoMode::G1024x768x64K, 0x117, 1024, 768, NULL, drawTestPattern16bpp}, //VESA Mode 0x117
-    // Not enough memory {Hag::S3::VideoMode::G1024x768x16M, 0x118, 1024, 768, NULL, drawTestPattern32bpp}, //VESA Mode 0x118
-    // Not enough memory {Hag::S3::VideoMode::G1280x1024x32K, 0x119, 1280, 1024, NULL, drawTestPattern15bpp}, //VESA Mode 0x119
-    // Not enough memory {Hag::S3::VideoMode::G1280x1024x64K, 0x11A, 1280, 1024, NULL, drawTestPattern16bpp}, //VESA Mode 0x11A
+    {Hag::S3::Trio64::VideoMode::G640x400x256C, 0x100, 640, 400, NULL, drawTestPattern8bpp}, //VESA Mode 0x100
+    {Hag::S3::Trio64::VideoMode::G640x480x256C, 0x101, 640, 480, NULL, drawTestPattern8bpp}, //VESA Mode 0x101
+    {Hag::S3::Trio64::VideoMode::G800x600x16C, 0x102, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
+    {Hag::S3::Trio64::VideoMode::G800x600x256C, 0x103, 800, 600, NULL, drawTestPattern8bpp}, //VESA Mode 0x103
+    {Hag::S3::Trio64::VideoMode::G1024x768x16C, 0x104, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
+    {Hag::S3::Trio64::VideoMode::G1024x768x256C, 0x105, 1024, 768, NULL, drawTestPattern8bpp}, //VESA Mode 0x105
+    //{Hag::S3::Trio64::VideoMode::G1280x1024x16C, 0x106, 1280, 1024, NULL, drawTestPattern4bpp}, //VESA Mode 0x106
+    //{Hag::S3::Trio64::VideoMode::G1280x1024x256C, 0x107, 1280, 1024, NULL, drawTestPattern8bpp}, //VESA Mode 0x107
+    {Hag::S3::Trio64::VideoMode::T132x43x16C, 0x10A, 132, 43, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x10A
+    {Hag::S3::Trio64::VideoMode::T132x25x16C, 0x109, 132, 25, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x109
+    {Hag::S3::Trio64::VideoMode::G640x480x32K, 0x110, 640, 480, NULL, drawTestPattern15bpp}, //VESA Mode 0x110
+    {Hag::S3::Trio64::VideoMode::G640x480x64K, 0x111, 640, 480, NULL, drawTestPattern16bpp}, //VESA Mode 0x111
+    {Hag::S3::Trio64::VideoMode::G640x480x16M, 0x112, 640, 480, NULL, drawTestPattern32bpp}, //VESA Mode 0x112
+    {Hag::S3::Trio64::VideoMode::G800x600x32K, 0x113, 800, 600, NULL, drawTestPattern15bpp}, //VESA Mode 0x113
+    {Hag::S3::Trio64::VideoMode::G800x600x64K, 0x114, 800, 600, NULL, drawTestPattern16bpp}, //VESA Mode 0x114
+    {Hag::S3::Trio64::VideoMode::G800x600x16M, 0x115, 800, 600, NULL, drawTestPattern32bpp}, //VESA Mode 0x115
+    {Hag::S3::Trio64::VideoMode::G1024x768x32K, 0x116, 1024, 768, NULL, drawTestPattern15bpp}, //VESA Mode 0x116
+    {Hag::S3::Trio64::VideoMode::G1024x768x64K, 0x117, 1024, 768, NULL, drawTestPattern16bpp}, //VESA Mode 0x117
+    // Not enough memory {Hag::S3::Trio64::VideoMode::G1024x768x16M, 0x118, 1024, 768, NULL, drawTestPattern32bpp}, //VESA Mode 0x118
+    // Not enough memory {Hag::S3::Trio64::VideoMode::G1280x1024x32K, 0x119, 1280, 1024, NULL, drawTestPattern15bpp}, //VESA Mode 0x119
+    // Not enough memory {Hag::S3::Trio64::VideoMode::G1280x1024x64K, 0x11A, 1280, 1024, NULL, drawTestPattern16bpp}, //VESA Mode 0x11A
 
     //Proprietary modes:
-    //Out of range {Hag::S3::VideoMode::P1600x1200x256C, 0x120, 1600, 1200, NULL, drawTestPattern8bpp}, //VESA Mode 0x120
-    {Hag::S3::VideoMode::P640x480x256C, 0x201, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
-    {Hag::S3::VideoMode::P800x600x16C, 0x202, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
-    {Hag::S3::VideoMode::P800x600x256C, 0x203, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
-    {Hag::S3::VideoMode::P1024x768x16C, 0x204, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
-    {Hag::S3::VideoMode::P1024x768x256C, 0x205, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
-    //{Hag::S3::VideoMode::P1152x864x256C, 0x207, 1152, 864, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x207
-    //{Hag::S3::VideoMode::P1280x1024x16C, 0x208, 1280, 1024, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x208
-    {Hag::S3::VideoMode::P640x400x16M, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
+    //Out of range {VideoMode::P1600x1200x256C, 0x120, 1600, 1200, NULL, drawTestPattern8bpp}, //VESA Mode 0x120
+    {Hag::S3::Trio64::VideoMode::P640x480x256C, 0x201, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
+    {Hag::S3::Trio64::VideoMode::P800x600x16C, 0x202, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
+    {Hag::S3::Trio64::VideoMode::P800x600x256C, 0x203, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
+    {Hag::S3::Trio64::VideoMode::P1024x768x16C, 0x204, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
+    {Hag::S3::Trio64::VideoMode::P1024x768x256C, 0x205, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
+    //{VideoMode::P1152x864x256C, 0x207, 1152, 864, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x207
+    //{VideoMode::P1280x1024x16C, 0x208, 1280, 1024, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x208
+    {Hag::S3::Trio64::VideoMode::P640x400x16M, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
 };
 
 uint8_t readKey();
@@ -607,17 +571,19 @@ uint8_t readKey();
 
 void dumpplanes(const char* start, uint8_t mode)
 {
+    using namespace Hag::S3::Trio64;
+
     char filename[50];
-    uint8_t orig = Hag::VGA::GraphicsController::ReadPlaneSelect::Read();
+    uint8_t orig = GraphicsController::ReadPlaneSelect::Read();
     for (int i = 0; i < 4; ++i)
     {
-        Hag::VGA::GraphicsController::ReadPlaneSelect::Write(i);
+        GraphicsController::ReadPlaneSelect::Write(i);
         sprintf(filename, "%sA_%02X_%02X.bin", start, mode, i);
         memdump(filename, 0xA0000);
         sprintf(filename, "%sB_%02X_%02X.bin", start, mode, i);
         memdump(filename, 0xB0000);
     }
-    Hag::VGA::GraphicsController::ReadPlaneSelect::Write(orig);
+    GraphicsController::ReadPlaneSelect::Write(orig);
 }
 
 Hag::Math::fp pX = Hag::Math::fp::Divide(5257311, 200000);
@@ -653,6 +619,7 @@ int main(void)
 {
     using namespace Hag;
     using namespace Hag::Math;
+    using namespace Hag::S3::Trio64;
 
     uint16_t screenWidth = 200;
     uint16_t screenHeight = 200;
@@ -662,7 +629,7 @@ int main(void)
 
     v4 icor[12];
 
-    S3::Trio64::SetLegacyVideoModeInternal(S3::VideoMode::G640x480x64K);
+    S3::Trio64::SetLegacyVideoModeInternal(S3::Trio64::VideoMode::G640x480x64K);
     uint8_t* linearFrameBuffer = S3::Trio64::GetLinearFrameBufferAs<uint8_t>();
     
     drawTestPattern16bpp(640, 480, linearFrameBuffer);
@@ -739,7 +706,7 @@ int main(void)
         //S3::Trio64::SetDisplayStart(0, startY);
     } while (readKey() != 1);
 
-    S3::Trio64::SetLegacyVideoModeInternal(S3::VideoMode::T80x25x16C);
+    S3::Trio64::SetLegacyVideoModeInternal(S3::Trio64::VideoMode::T80x25x16C);
 }
 
 
@@ -781,15 +748,15 @@ int main(void)
         r.w.ax = modeTests[i].mode != 3 ? 0x0003 : 0x0002;
         intr(0x10, &r);
 
-        Hag::S3::Trio64::SetLegacyVideoModeInternal(modeTests[i].mode);
+        Trio64::SetLegacyVideoModeInternal(modeTests[i].mode);
         sprintf(filename, "clean%02X.txt", modeTests[i].mode);
         dumpplanes("C", modeTests[i].mode);
         regdump(filename);
 
 ////////
-        Hag::S3::Trio64::SetLegacyVideoModeInternal(modeTests[i].mode);
+        Trio64::SetLegacyVideoModeInternal(modeTests[i].mode);
 
-        uint8_t* linearFrameBuffer = Hag::S3::Trio64::GetLinearFrameBufferAs<uint8_t>();
+        uint8_t* linearFrameBuffer = Trio64::GetLinearFrameBufferAs<uint8_t>();
 
         uint8_t* address = modeTests[i].address;
         if (modeTests[i].address == NULL)

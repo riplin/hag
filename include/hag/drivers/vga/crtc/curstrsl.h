@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    CursorStartScanLine = 0x0A,                             //CSSL CRA
+};
+
+}
 
 typedef uint8_t CursorStartScanLine_t;
 
@@ -27,15 +38,15 @@ namespace CursorStartScanLine
         };
     }
 
-    inline CursorStartScanLine_t Read(Register_t controllerIndexRegister)
+    inline CursorStartScanLine_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::CursorStartScanLine);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::CursorStartScanLine);
         return CursorStartScanLine_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, CursorStartScanLine_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, CursorStartScanLine_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::CursorStartScanLine, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::CursorStartScanLine, CRTControllerData_t(value));
     }
 
 }

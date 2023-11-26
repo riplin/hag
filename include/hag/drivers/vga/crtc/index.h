@@ -2,13 +2,23 @@
 
 #pragma once
 
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
+#include <hag/drivers/vga/regtype.h>
+#include <hag/drivers/vga/crtc/regtype.h>
 
 namespace Hag { namespace VGA
 {
 
-typedef uint8_t CRTControllerIndex_t;
+namespace Register
+{
+    
+enum
+{
+    CRTControllerIndexB = 0x3B4,                            //CRX //Mono
+    CRTControllerIndexD = 0x3D4,                            //CRX //Color
+};
+
+}
 
 namespace CRTControllerIndex
 {
@@ -25,12 +35,12 @@ namespace CRTControllerIndex
         };
     }
 
-    inline CRTControllerIndex_t Read(Register_t controllerIndexRegister)
+    inline CRTController::Register_t Read(VGA::Register_t controllerIndexRegister)
     {
-        return CRTControllerIndex_t(SYS_ReadPortByte(controllerIndexRegister));
+        return CRTController::Register_t(SYS_ReadPortByte(controllerIndexRegister));
     }
 
-    inline void Write(Register_t controllerIndexRegister, CRTControllerIndex_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, CRTController::Register_t value)
     {
         SYS_WritePortByte(controllerIndexRegister, value);
     }

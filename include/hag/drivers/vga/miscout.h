@@ -3,11 +3,22 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
+#include <hag/drivers/vga/regtype.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    MiscellaneousW = 0x3C2,                                 //MISC
+    MiscellaneousR = 0x3CC,                                 //MISC
+};
+
+}
 
 typedef uint8_t MiscellaneousOutput_t;
 

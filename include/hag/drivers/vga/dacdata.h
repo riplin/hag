@@ -3,12 +3,21 @@
 #pragma once
 
 #include <hag/types.h>
-#include <hag/drivers/vga/regs.h>
 #include <hag/system/sysasm.h>
-
+#include <hag/drivers/vga/regtype.h>
 
 namespace Hag { namespace VGA
 {
+
+namespace Register
+{
+    
+enum
+{
+    RAMDACData = 0x3C9,                                     //DAC_DATA
+};
+
+}
 
 //This register is a data port to read or write the contents of the location in
 //the color look-up table pointed to by the DAC Read Index or the

@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    HorizontalDisplayEnd = 0x01,                            //H_D_END CR1
+};
+
+}
 
 typedef uint8_t HorizontalDisplayEnd_t;
 
@@ -25,15 +36,15 @@ namespace HorizontalDisplayEnd
         };
     }
 
-    inline HorizontalDisplayEnd_t Read(Register_t controllerIndexRegister)
+    inline HorizontalDisplayEnd_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::HorizontalDisplayEnd);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::HorizontalDisplayEnd);
         return HorizontalDisplayEnd_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
 
-    inline void Write(Register_t controllerIndexRegister, HorizontalDisplayEnd_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, HorizontalDisplayEnd_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::HorizontalDisplayEnd, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::HorizontalDisplayEnd, CRTControllerData_t(value));
     }
 
 }

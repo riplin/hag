@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/attribc/regtype.h>
 #include <hag/drivers/vga/attribc/data.h>
 
 namespace Hag { namespace VGA { namespace AttributeController
 {
+
+namespace Register
+{
+
+enum
+{
+    PixelPadding = 0x14,                    //PX_PADD AR14
+};
+
+}
 
 typedef uint8_t PixelPadding_t;
 
@@ -35,13 +46,13 @@ namespace PixelPadding
 
     inline PixelPadding_t Read()
     {
-        AttributeControllerIndex::Write(AttributeControllerRegister::PixelPadding);
+        AttributeControllerIndex::Write(Register::PixelPadding);
         return PixelPadding_t(AttributeControllerData::Read());
     }
     
     inline void Write(PixelPadding_t value)
     {
-        AttributeControllerData::Write(AttributeControllerRegister::PixelPadding, AttributeControllerData_t(value));
+        AttributeControllerData::Write(Register::PixelPadding, AttributeControllerData_t(value));
     }
 
 }

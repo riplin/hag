@@ -2,10 +2,21 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
 namespace Hag { namespace VGA { namespace CRTController
 {
+
+namespace Register
+{
+
+enum
+{
+    VerticalTotal = 0x06,                                   //V_TOTAL CR6
+};
+
+}
 
 typedef uint8_t VerticalTotal_t;
 
@@ -25,15 +36,15 @@ namespace VerticalTotal
         };
     }
 
-    inline VerticalTotal_t Read(Register_t controllerIndexRegister)
+    inline VerticalTotal_t Read(VGA::Register_t controllerIndexRegister)
     {
-        CRTControllerIndex::Write(controllerIndexRegister, CRTControllerRegister::VerticalTotal);
+        CRTControllerIndex::Write(controllerIndexRegister, Register::VerticalTotal);
         return VerticalTotal_t(CRTControllerData::Read(controllerIndexRegister + 1));
     }
     
-    inline void Write(Register_t controllerIndexRegister, VerticalTotal_t value)
+    inline void Write(VGA::Register_t controllerIndexRegister, VerticalTotal_t value)
     {
-        CRTControllerData::Write(controllerIndexRegister, CRTControllerRegister::VerticalTotal, CRTControllerData_t(value));
+        CRTControllerData::Write(controllerIndexRegister, Register::VerticalTotal, CRTControllerData_t(value));
     }
 
 }
