@@ -3,7 +3,6 @@
 #include <memory>
 #include <hag/drivers/s3/factory.h>
 #include <hag/drivers/s3/hardware.h>
-#include <hag/drivers/s3/trio64/trio.h>
 
 #include <stdio.h>
 
@@ -20,7 +19,7 @@ Hag::Driver* Factory::InstantiateDriver(Hag::IAllocator& allocator) const
     if (chipId == Shared::ChipId::Trio64 ||
         chipId == Shared::ChipId::Trio64x)
     {
-        driver = allocator.ConstructWithIAllocator<Trio64::Class>();
+        //driver = allocator.ConstructWithIAllocator<Trio64::Class>();
     }
     
     return driver;

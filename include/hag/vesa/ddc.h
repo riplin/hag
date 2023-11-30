@@ -8,7 +8,8 @@
 
 #pragma pack(push, 1);
 
-namespace Hag { namespace Vesa { namespace DDC {
+namespace Hag { namespace Vesa { namespace DDC
+{
     
     typedef uint8_t VideoInputParameters_t;
     namespace VideoInputParameters

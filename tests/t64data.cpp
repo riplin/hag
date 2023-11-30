@@ -3327,6 +3327,15 @@ uint16_t ConfigureExtraVESAModeSettingsTest_ignorePorts[] =
 
 uint16_t ConfigureExtraVESAModeSettingsTest_ignorePortsCount = sizeof(ConfigureExtraVESAModeSettingsTest_ignorePorts) / sizeof(uint16_t);
 
+Hag::Testing::Mock::PortAndIndex ConfigureExtraVESAModeSettingsTest_ignoreIndexedPorts[] =
+{
+    { 0x03D5, 0x2D },
+    { 0x03D5, 0x2E }
+};
+
+uint16_t ConfigureExtraVESAModeSettingsTest_ignoreIndexedPortsCount = sizeof(ConfigureExtraVESAModeSettingsTest_ignoreIndexedPorts) / sizeof (Hag::Testing::Mock::PortAndIndex);
+
+
 Hag::Testing::Mock::PortAndIndexAndValue ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts0[] =
 {
     { 0x03D5, 0x04, 0x57 },
@@ -5307,7 +5316,9 @@ uint16_t ApplyVESAOverrideDataTest_ignorePortsCount = sizeof(ApplyVideoParameter
 Hag::Testing::Mock::PortAndIndex ApplyVESAOverrideDataTest_ignoreIndexedPorts[] =
 {
     { 0x03D5, 0x0E },
-    { 0x03D5, 0x0F }
+    { 0x03D5, 0x0F },
+    { 0x03D5, 0x2D },
+    { 0x03D5, 0x2E }
 };
 
 uint16_t ApplyVESAOverrideDataTest_ignoreIndexedPortsCount = sizeof(ApplyVESAOverrideDataTest_ignoreIndexedPorts) / sizeof(Hag::Testing::Mock::PortAndIndex);

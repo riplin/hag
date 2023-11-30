@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <hag/drivers/vga/dacwridx.h>
+#include <hag/drivers/s3/shared/crtc/devidhi.h>
+#include <hag/drivers/s3/shared/crtc/devidlo.h>
 #include <hag/drivers/s3/shared/crtc/revision.h>
 
 #if 0
@@ -3522,6 +3524,10 @@ LABEL(ConfigureExtraVESAModeSettings, DontModifySyncPolarity);
 
 //     mov  ch, (VESAResolutionVariant ptr es:[di]).ExtendedMemoryControl3_1MiB
     r.h.ch = modeData[0x07];
+
+    //Pulling these registers to stay in sync with the rest of the codebase.
+    Hag::S3::Shared::CRTController::DeviceIDLow::Read(GetCRTControllerIndexRegister());
+    Hag::S3::Shared::CRTController::DeviceIDHigh::Read(GetCRTControllerIndexRegister());
 
 //     push dx                             ;store crtc port
 //     call GetInstalledMemorySizeIn4KBlocks;Offset 0x1457 dh holds value, dl = 0

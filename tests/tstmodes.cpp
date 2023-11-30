@@ -3,14 +3,14 @@
 #include <stdio.h>
 #include <hag/types.h>
 #include <hag/farptr.h>
-//#include <i86.h>
+#include <i86.h>
 #include <string.h>
 #include <hag/math/fp/fpmath.h>
 #include <hag/system/bda.h>
 #include <hag/system/pci.h>
 #include <hag/system/sysasm.h>
 #include <support/allocatr.h>
-#include <hag/drivers/s3/trio64/trio.h>
+#include <hag/drivers/s3/trio64/funcs.h>
 
 Hag::S3::Trio64::Register_t Registers[] =
 {
@@ -515,53 +515,53 @@ struct ModeTest
 ModeTest modeTests[] =
 {
     //Legacy modes:
-    {Hag::S3::Trio64::VideoMode::T40x25x16C, 0x00, 40, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::S3::Trio64::VideoMode::T80x25x16G, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::S3::Trio64::VideoMode::T80x25x16C, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
-    {Hag::S3::Trio64::VideoMode::G320x200x4C, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
-    {Hag::S3::Trio64::VideoMode::G320x200x4G, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
-    {Hag::S3::Trio64::VideoMode::G640x200x2M, 0x00, 640, 200, (uint8_t*)0xB8000, drawTestPattern1bpp},
-    {Hag::S3::Trio64::VideoMode::G320x200x16C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::S3::Trio64::VideoMode::G640x200x16C, 0x00, 640, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::S3::Trio64::VideoMode::G640x350x2M, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
-    {Hag::S3::Trio64::VideoMode::G640x350x4C, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::S3::Trio64::VideoMode::G640x480x2M, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
-    {Hag::S3::Trio64::VideoMode::G640x480x16C, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern4bpp},
-    {Hag::S3::Trio64::VideoMode::G320x200x256C, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern8bpp},
+    {Hag::S3::Trio64::VideoMode::T40x25x4bppC, 0x00, 40, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::S3::Trio64::VideoMode::T80x25x4bppG, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::S3::Trio64::VideoMode::T80x25x4bppC, 0x00, 80, 25, (uint8_t*)0xB8000, drawTestPatternText},
+    {Hag::S3::Trio64::VideoMode::G320x200x2bppC, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
+    {Hag::S3::Trio64::VideoMode::G320x200x2bppG, 0x00, 320, 200, (uint8_t*)0xB8000, drawTestPattern2bpp},
+    {Hag::S3::Trio64::VideoMode::G640x200x1bppM, 0x00, 640, 200, (uint8_t*)0xB8000, drawTestPattern1bpp},
+    {Hag::S3::Trio64::VideoMode::G320x200x4bppC, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G640x200x4bppC, 0x00, 640, 200, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G640x350x1bppM, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::S3::Trio64::VideoMode::G640x350x2bppC, 0x00, 640, 350, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G640x480x1bppM, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern1bpp},
+    {Hag::S3::Trio64::VideoMode::G640x480x4bppC, 0x00, 640, 480, (uint8_t*)0xA0000, drawTestPattern4bpp},
+    {Hag::S3::Trio64::VideoMode::G320x200x8bppC, 0x00, 320, 200, (uint8_t*)0xA0000, drawTestPattern8bpp},
 
     //VESA modes:
-    {Hag::S3::Trio64::VideoMode::G640x400x256C, 0x100, 640, 400, NULL, drawTestPattern8bpp}, //VESA Mode 0x100
-    {Hag::S3::Trio64::VideoMode::G640x480x256C, 0x101, 640, 480, NULL, drawTestPattern8bpp}, //VESA Mode 0x101
-    {Hag::S3::Trio64::VideoMode::G800x600x16C, 0x102, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
-    {Hag::S3::Trio64::VideoMode::G800x600x256C, 0x103, 800, 600, NULL, drawTestPattern8bpp}, //VESA Mode 0x103
-    {Hag::S3::Trio64::VideoMode::G1024x768x16C, 0x104, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
-    {Hag::S3::Trio64::VideoMode::G1024x768x256C, 0x105, 1024, 768, NULL, drawTestPattern8bpp}, //VESA Mode 0x105
-    //{Hag::S3::Trio64::VideoMode::G1280x1024x16C, 0x106, 1280, 1024, NULL, drawTestPattern4bpp}, //VESA Mode 0x106
-    //{Hag::S3::Trio64::VideoMode::G1280x1024x256C, 0x107, 1280, 1024, NULL, drawTestPattern8bpp}, //VESA Mode 0x107
-    {Hag::S3::Trio64::VideoMode::T132x43x16C, 0x10A, 132, 43, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x10A
-    {Hag::S3::Trio64::VideoMode::T132x25x16C, 0x109, 132, 25, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x109
-    {Hag::S3::Trio64::VideoMode::G640x480x32K, 0x110, 640, 480, NULL, drawTestPattern15bpp}, //VESA Mode 0x110
-    {Hag::S3::Trio64::VideoMode::G640x480x64K, 0x111, 640, 480, NULL, drawTestPattern16bpp}, //VESA Mode 0x111
-    {Hag::S3::Trio64::VideoMode::G640x480x16M, 0x112, 640, 480, NULL, drawTestPattern32bpp}, //VESA Mode 0x112
-    {Hag::S3::Trio64::VideoMode::G800x600x32K, 0x113, 800, 600, NULL, drawTestPattern15bpp}, //VESA Mode 0x113
-    {Hag::S3::Trio64::VideoMode::G800x600x64K, 0x114, 800, 600, NULL, drawTestPattern16bpp}, //VESA Mode 0x114
-    {Hag::S3::Trio64::VideoMode::G800x600x16M, 0x115, 800, 600, NULL, drawTestPattern32bpp}, //VESA Mode 0x115
-    {Hag::S3::Trio64::VideoMode::G1024x768x32K, 0x116, 1024, 768, NULL, drawTestPattern15bpp}, //VESA Mode 0x116
-    {Hag::S3::Trio64::VideoMode::G1024x768x64K, 0x117, 1024, 768, NULL, drawTestPattern16bpp}, //VESA Mode 0x117
-    // Not enough memory {Hag::S3::Trio64::VideoMode::G1024x768x16M, 0x118, 1024, 768, NULL, drawTestPattern32bpp}, //VESA Mode 0x118
-    // Not enough memory {Hag::S3::Trio64::VideoMode::G1280x1024x32K, 0x119, 1280, 1024, NULL, drawTestPattern15bpp}, //VESA Mode 0x119
-    // Not enough memory {Hag::S3::Trio64::VideoMode::G1280x1024x64K, 0x11A, 1280, 1024, NULL, drawTestPattern16bpp}, //VESA Mode 0x11A
+    {Hag::S3::Trio64::VideoMode::G640x400x8bpp, 0x100, 640, 400, NULL, drawTestPattern8bpp}, //VESA Mode 0x100
+    {Hag::S3::Trio64::VideoMode::G640x480x8bpp, 0x101, 640, 480, NULL, drawTestPattern8bpp}, //VESA Mode 0x101
+    {Hag::S3::Trio64::VideoMode::G800x600x4bpp, 0x102, 800, 600, NULL, drawTestPattern4bpp}, //VESA Mode 0x102
+    {Hag::S3::Trio64::VideoMode::G800x600x8bpp, 0x103, 800, 600, NULL, drawTestPattern8bpp}, //VESA Mode 0x103
+    {Hag::S3::Trio64::VideoMode::G1024x768x4bpp, 0x104, 1024, 768, NULL, drawTestPattern4bpp}, //VESA Mode 0x104
+    {Hag::S3::Trio64::VideoMode::G1024x768x8bpp, 0x105, 1024, 768, NULL, drawTestPattern8bpp}, //VESA Mode 0x105
+    //{Hag::S3::Trio64::VideoMode::G1280x1024x4bpp, 0x106, 1280, 1024, NULL, drawTestPattern4bpp}, //VESA Mode 0x106
+    //{Hag::S3::Trio64::VideoMode::G1280x1024x8bpp, 0x107, 1280, 1024, NULL, drawTestPattern8bpp}, //VESA Mode 0x107
+    {Hag::S3::Trio64::VideoMode::T132x43x4bpp, 0x10A, 132, 43, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x10A
+    {Hag::S3::Trio64::VideoMode::T132x25x4bpp, 0x109, 132, 25, (uint8_t*)0xB8000, drawTestPatternText}, //VESA Mode 0x109
+    {Hag::S3::Trio64::VideoMode::G640x480x15bpp, 0x110, 640, 480, NULL, drawTestPattern15bpp}, //VESA Mode 0x110
+    {Hag::S3::Trio64::VideoMode::G640x480x16bpp, 0x111, 640, 480, NULL, drawTestPattern16bpp}, //VESA Mode 0x111
+    {Hag::S3::Trio64::VideoMode::G640x480x32bpp, 0x112, 640, 480, NULL, drawTestPattern32bpp}, //VESA Mode 0x112
+    {Hag::S3::Trio64::VideoMode::G800x600x15bpp, 0x113, 800, 600, NULL, drawTestPattern15bpp}, //VESA Mode 0x113
+    {Hag::S3::Trio64::VideoMode::G800x600x16bpp, 0x114, 800, 600, NULL, drawTestPattern16bpp}, //VESA Mode 0x114
+    {Hag::S3::Trio64::VideoMode::G800x600x32bpp, 0x115, 800, 600, NULL, drawTestPattern32bpp}, //VESA Mode 0x115
+    {Hag::S3::Trio64::VideoMode::G1024x768x15bpp, 0x116, 1024, 768, NULL, drawTestPattern15bpp}, //VESA Mode 0x116
+    {Hag::S3::Trio64::VideoMode::G1024x768x16bpp, 0x117, 1024, 768, NULL, drawTestPattern16bpp}, //VESA Mode 0x117
+    // Not enough memory {Hag::S3::Trio64::VideoMode::G1024x768x32bpp, 0x118, 1024, 768, NULL, drawTestPattern32bpp}, //VESA Mode 0x118
+    // Not enough memory {Hag::S3::Trio64::VideoMode::G1280x1024x15bpp, 0x119, 1280, 1024, NULL, drawTestPattern15bpp}, //VESA Mode 0x119
+    // Not enough memory {Hag::S3::Trio64::VideoMode::G1280x1024x16bpp, 0x11A, 1280, 1024, NULL, drawTestPattern16bpp}, //VESA Mode 0x11A
 
     //Proprietary modes:
-    //Out of range {VideoMode::P1600x1200x256C, 0x120, 1600, 1200, NULL, drawTestPattern8bpp}, //VESA Mode 0x120
-    {Hag::S3::Trio64::VideoMode::P640x480x256C, 0x201, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
-    {Hag::S3::Trio64::VideoMode::P800x600x16C, 0x202, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
-    {Hag::S3::Trio64::VideoMode::P800x600x256C, 0x203, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
-    {Hag::S3::Trio64::VideoMode::P1024x768x16C, 0x204, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
-    {Hag::S3::Trio64::VideoMode::P1024x768x256C, 0x205, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
-    //{VideoMode::P1152x864x256C, 0x207, 1152, 864, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x207
-    //{VideoMode::P1280x1024x16C, 0x208, 1280, 1024, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x208
-    {Hag::S3::Trio64::VideoMode::P640x400x16M, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
+    //Out of range {VideoMode::P1600x1200x8bpp, 0x120, 1600, 1200, NULL, drawTestPattern8bpp}, //VESA Mode 0x120
+    {Hag::S3::Trio64::VideoMode::P640x480x8bpp, 0x201, 640, 480, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x201
+    {Hag::S3::Trio64::VideoMode::P800x600x4bpp, 0x202, 800, 600, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x202
+    {Hag::S3::Trio64::VideoMode::P800x600x8bpp, 0x203, 800, 600, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x203
+    {Hag::S3::Trio64::VideoMode::P1024x768x4bpp, 0x204, 1024, 768, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x204
+    {Hag::S3::Trio64::VideoMode::P1024x768x8bpp, 0x205, 1024, 768, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x205
+    //{Hag::S3::Trio64::VideoMode::P1152x864x8bpp, 0x207, 1152, 864, NULL, drawTestPattern8bpp}, //Proprietary VESA Mode 0x207
+    //{Hag::S3::Trio64::VideoMode::P1280x1024x4bpp, 0x208, 1280, 1024, NULL, drawTestPattern4bpp}, //Proprietary VESA Mode 0x208
+    {Hag::S3::Trio64::VideoMode::P640x400x32bpp, 0x213, 640, 400, NULL, drawTestPattern32bpp}, //Proprietary VESA Mode 0x213
 };
 
 uint8_t readKey();
@@ -619,8 +619,8 @@ int main(void)
 {
     using namespace Hag;
     using namespace Hag::Math;
-    using namespace Hag::S3::Trio64;
-
+    using namespace Hag::S3;
+    /*
     uint16_t screenWidth = 200;
     uint16_t screenHeight = 200;
 
@@ -629,7 +629,7 @@ int main(void)
 
     v4 icor[12];
 
-    S3::Trio64::SetLegacyVideoModeInternal(S3::Trio64::VideoMode::G640x480x64K);
+    S3::Trio64::SetLegacyVideoMode(S3::Trio64::VideoMode::G640x480x16bpp);
     uint8_t* linearFrameBuffer = S3::Trio64::GetLinearFrameBufferAs<uint8_t>();
     
     drawTestPattern16bpp(640, 480, linearFrameBuffer);
@@ -706,18 +706,14 @@ int main(void)
         //S3::Trio64::SetDisplayStart(0, startY);
     } while (readKey() != 1);
 
-    S3::Trio64::SetLegacyVideoModeInternal(S3::Trio64::VideoMode::T80x25x16C);
-}
+    S3::Trio64::SetLegacyVideoMode(S3::Trio64::VideoMode::T80x25x4bpp);
+    */
 
-
-
-/*
     REGPACK r;
     memset(&r, 0, sizeof(r));
     char filename[50];
     for (uint16_t i = 0; i < sizeof(modeTests) / sizeof(ModeTest); ++i)
     {
-/////////
         r.w.ax = modeTests[i].mode != 3 ? 0x0003 : 0x0002;
         intr(0x10, &r);
 
@@ -734,27 +730,27 @@ int main(void)
             intr(0x10, &r);
         }
         sprintf(filename, "BIOS%02X.txt", modeTests[i].mode);
-        dumpplanes("B", modeTests[i].mode);
+        //dumpplanes("B", modeTests[i].mode);
         regdump(filename);
 
         r.w.ax = modeTests[i].mode != 3 ? 0x0003 : 0x0002;
         intr(0x10, &r);
 
-        SetVideoMode(modeTests[i].mode);
-        sprintf(filename, "port%02X.txt", modeTests[i].mode);
-        dumpplanes("P", modeTests[i].mode);
-        regdump(filename);
+        //SetVideoMode(modeTests[i].mode);
+        //sprintf(filename, "port%02X.txt", modeTests[i].mode);
+        //dumpplanes("P", modeTests[i].mode);
+        //regdump(filename);
 
-        r.w.ax = modeTests[i].mode != 3 ? 0x0003 : 0x0002;
-        intr(0x10, &r);
+        //r.w.ax = modeTests[i].mode != 3 ? 0x0003 : 0x0002;
+        //intr(0x10, &r);
 
-        Trio64::SetLegacyVideoModeInternal(modeTests[i].mode);
+        Trio64::SetLegacyVideoMode(modeTests[i].mode);
         sprintf(filename, "clean%02X.txt", modeTests[i].mode);
-        dumpplanes("C", modeTests[i].mode);
+        //dumpplanes("C", modeTests[i].mode);
         regdump(filename);
 
-////////
-        Trio64::SetLegacyVideoModeInternal(modeTests[i].mode);
+/*
+        Trio64::SetLegacyVideoMode(modeTests[i].mode);
 
         uint8_t* linearFrameBuffer = Trio64::GetLinearFrameBufferAs<uint8_t>();
 
@@ -767,12 +763,13 @@ int main(void)
 
         modeTests[i].DrawTestPattern(modeTests[i].width, modeTests[i].height, address);
         getchar();
-////////
+*/
     }
 
+    r.w.ax = 0x0003;
+    intr(0x10, &r);
+
     // r.w.ax = 0x4f02;
-    // r.w.bx = Hag::Vesa::VideoMode::G800x600x16M;
+    // r.w.bx = Hag::Vesa::VideoMode::G800x600x32bpp;
     // intr(0x10, &r);
-
-
-*/
+}

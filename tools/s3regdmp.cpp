@@ -1,59 +1,25 @@
 //Copyright 2023-Present riplin
 
 #include <stdio.h>
-#include <hag/drivers/s3/regs.h>
+#include <hag/drivers/s3/trio64/trio64.h>
+#include <hag/drivers/vga/funcs.h>
 #include <hag/system/sysasm.h>
-#include <hag/drivers/s3/crtc/reglock1.h>
-#include <hag/drivers/s3/crtc/reglock2.h>
-#include <hag/drivers/s3/crtc/sysconf.h>
-#include <hag/drivers/s3/crtc/bkwcomp2.h>
-#include <hag/drivers/s3/crtc/crtreglk.h>
-#include <hag/drivers/vga/crtc/verrtcen.h>
-#include <hag/drivers/s3/sqrc/unlexseq.h>
 
 Hag::VGA::Register_t Registers[] =
 {
-    Hag::VGA::Register::InputStatus0,
-    Hag::VGA::Register::FeatureControlR,
-    Hag::VGA::Register::MiscellaneousR,
-    Hag::VGA::Register::InputStatus1B,
-    Hag::VGA::Register::InputStatus1D,
-    Hag::VGA::Register::VideoSubsystemEnable,
-    Hag::VGA::Register::DACMask,
-    Hag::VGA::Register::DACStatus,
-    Hag::S3::Register::SetupOptionSelect,
-    Hag::S3::Register::VideoSubsystemEnableS3,
-    Hag::S3::Register::SubsystemStatus,
-    Hag::S3::Register::AdvancedFunctionControl,
-    Hag::S3::Register::CurrentYPosition,
-    Hag::S3::Register::CurrentYPosition2,
-    Hag::S3::Register::CurrentXPosition,
-    Hag::S3::Register::CurrentXPosition2,
-    Hag::S3::Register::DestinationYPositionAxialStepConstant,
-    Hag::S3::Register::YCoordinate2AxialStepConstant2,
-    Hag::S3::Register::DestinationXPositionDiagonalStepConstant,
-    Hag::S3::Register::XCoordinate2,
-    Hag::S3::Register::LineErrorTerm,
-    Hag::S3::Register::LineErrorTerm2,
-    Hag::S3::Register::MajorAxisPixelCount,
-    Hag::S3::Register::MajorAxisPixelCount2,
-    Hag::S3::Register::GraphicsProcessorStatus,
-    Hag::S3::Register::DrawingCommand,
-    Hag::S3::Register::DrawingCommand2,
-    Hag::S3::Register::ShortStrokeVectorTransfer,
-    Hag::S3::Register::BackgroundColor,
-    Hag::S3::Register::ForegroundColor,
-    Hag::S3::Register::BitplaneWriteMask,
-    Hag::S3::Register::BitplaneReadMask,
-    Hag::S3::Register::ColorCompareRegister,
-    Hag::S3::Register::BackgroundMix,
-    Hag::S3::Register::ForegroundMix,
-    Hag::S3::Register::ReadRegisterData,
-    Hag::S3::Register::WriteRegisterData,
-    Hag::S3::Register::PixelDataTransfer,
-    Hag::S3::Register::PixelDataTransferExtension,
-    Hag::S3::Register::PatternY,
-    Hag::S3::Register::PatternX
+    Hag::S3::Trio64::Register::InputStatus0,
+    Hag::S3::Trio64::Register::FeatureControlR,
+    Hag::S3::Trio64::Register::MiscellaneousR,
+    Hag::S3::Trio64::Register::InputStatus1B,
+    Hag::S3::Trio64::Register::InputStatus1D,
+    0x3C3,//Hag::VGA::Register::VideoSubsystemEnable
+    Hag::S3::Trio64::Register::DACMask,
+    Hag::S3::Trio64::Register::DACStatus,
+    Hag::S3::Trio64::Register::SetupOptionSelect,
+    Hag::S3::Trio64::Register::VideoSubsystemEnable,
+    Hag::S3::Trio64::Register::SubsystemStatus,
+    Hag::S3::Trio64::Register::AdvancedFunctionControl,
+    Hag::S3::Trio64::Register::GraphicsProcessorStatus,
 };
 
 //CRTControllerIndexD           //256 regs
@@ -61,30 +27,31 @@ Hag::VGA::Register_t Registers[] =
 
 int main(void)
 {
+    using namespace Hag::S3::Trio64;
     FILE* fp = fopen("s3regs.txt", "w");
 
     //Write code to CR38 to provide access to the S3 VGA registers (CR30-CR3F)
-    Hag::S3::CRTController::RegisterLock1::SoftUnlock<Hag::VGA::Register::CRTControllerIndexD> rl1;
+    CRTController::RegisterLock1::SoftUnlock rl1(Hag::VGA::GetCRTControllerIndexRegister());
     
     //Write code to CR39 to provide access to the System Control and System Extension registers (CR40-CRFF)
-    Hag::S3::CRTController::RegisterLock2::SoftUnlock<Hag::VGA::Register::CRTControllerIndexD> rl2;
+    CRTController::RegisterLock2::SoftUnlock rl2(Hag::VGA::GetCRTControllerIndexRegister());
 
     //Set bit 0 in CR40 to enable access to the Enhanced Commands registers.
-    Hag::S3::CRTController::SystemConfiguration::SoftUnlock<Hag::VGA::Register::CRTControllerIndexD> sc;
+    CRTController::SystemConfiguration::SoftUnlock sc(Hag::VGA::GetCRTControllerIndexRegister());
 
     //Enable write access to bits 1 and 6 of CR7
     //Enable access to RAMDAC register
     //Enable access to Palette/Overscan registers
-    Hag::S3::CRTController::BackwardCompatibility2::SoftUnlock<Hag::VGA::Register::CRTControllerIndexD> bc2;
+    CRTController::BackwardCompatibility2::SoftUnlock bc2(Hag::VGA::GetCRTControllerIndexRegister());
 
     //Enable write access to CR0-CR6, CR7 (bits 7,5,3,2,0), CR9 (bit5), CR10, CR11 (bits 3-0), CR15-CR16, CR17 (bit 2)
-    Hag::S3::CRTController::CRTRegisterLock::SoftUnlock<Hag::VGA::Register::CRTControllerIndexD> crl;
+    CRTController::CRTRegisterLock::SoftUnlock crl(Hag::VGA::GetCRTControllerIndexRegister());
 
     //Enable write access to CR0-CR7
-    Hag::VGA::CRTController::VerticalRetraceEnd::SoftUnlock<Hag::VGA::Register::CRTControllerIndexD> vre;
+    CRTController::VerticalRetraceEnd::SoftUnlock vre(Hag::VGA::GetCRTControllerIndexRegister());
 
     //write code to SR8 to provide access to SR9-SR18.
-    Hag::S3::Sequencer::UnlockExtendedSequencer::SoftUnlock ues;
+    Sequencer::UnlockExtendedSequencer::SoftUnlock ues;
 
     fprintf(fp, "VGA and S3 registers:\n");
     for (uint32_t i = 0; i < sizeof(Registers) / sizeof(Hag::VGA::Register_t); ++i)

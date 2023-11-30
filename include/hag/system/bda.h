@@ -414,6 +414,8 @@ namespace Hag { namespace System { namespace BDA
     bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer));
     bool CheckValidInCurrentMode(uint8_t* ptr);
     void SetGraphicsCharacterFont(GraphicsCharacterSetOverride* graphicsCharacterFontDefinition);
+    void ModeSetBDA(VGA::VideoMode_t& mode, bool colorHardware, bool vesaModeNotColor);
+    bool VerifyBDAOrDeactivate(VGA::VideoMode_t& mode, bool isVesa, bool isVesaColor);
 
     template<typename T>
     bool GetVideoParameterBlockElementAs(uint16_t index, T*& returnPointer, uint16_t size = sizeof(FARPointer))

@@ -41,6 +41,8 @@ namespace ColorPlane
 
     namespace Shift
     {
+        using namespace Hag::VGA::AttributeController::ColorPlane::Shift;
+        
         enum
         {
             VideoTestSelect = 0x04

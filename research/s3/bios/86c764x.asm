@@ -331,7 +331,7 @@ ROMSize                 DB (ROMEnd - ROMStart)/512
 
     jmp short entry
 
-ROMSignature            DB 37h, 34h, 30h, 30h  ;This has to be recalculated if this file is modified.
+                        DB 37h, 34h, 30h, 30h  ;Unknown
 
 entry:
     jmp VideoBootstrap
