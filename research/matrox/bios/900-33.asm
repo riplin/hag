@@ -141,6 +141,109 @@ MGA_CRTCExtensionIndex_lowbyte          EQU 0deh;0xde
 MGA_CRTCExtensionData                   EQU 03dfh;0x3df
 MGA_CRTCExtensionData_lowbyte           EQU 0dfh;0xdf
 
+MGA_INDD_CursorBaseAddressLow           EQU 004h;0x04
+MGA_INDD_CursorBaseAddressHigh          EQU 005h;0x05
+MGA_INDD_CursorControl                  EQU 006h;0x06
+MGA_INDD_CursorColor0Red                EQU 008h;0x08
+MGA_INDD_CursorColor0Green              EQU 009h;0x09
+MGA_INDD_CursorColor0Blue               EQU 00ah;0x0a
+MGA_INDD_CursorColor1Red                EQU 00ch;0x0c
+MGA_INDD_CursorColor1Green              EQU 00dh;0x0d
+MGA_INDD_CursorColor1Blue               EQU 00eh;0x0e
+MGA_INDD_CursorColor2Red                EQU 010h;0x10
+MGA_INDD_CursorColor2Green              EQU 011h;0x11
+MGA_INDD_CursorColor2Blue               EQU 012h;0x12
+MGA_INDD_VoltageReferenceControl        EQU 018h;0x18
+MGA_INDD_MultiplexControl               EQU 019h;0x19
+MGA_INDD_PixelClockControl              EQU 01ah;0x1a
+MGA_INDD_GeneralControl                 EQU 01dh;0x1d
+MGA_INDD_MiscellaneousControl           EQU 01eh;0x1e
+MGA_INDD_GeneralPurposeIOControl        EQU 02ah;0x2a
+    MGA_GENIOCTRL_DDC0Enable            EQU 001h;0x01
+    MGA_GENIOCTRL_DDC1Enable            EQU 002h;0x02
+    MGA_GENIOCTRL_DDC2Enable            EQU 004h;0x04
+    MGA_GENIOCTRL_DDC3Enable            EQU 008h;0x08
+    MGA_GENIOCTRL_Misc0Enable           EQU 010h;0x10
+    MGA_GENIOCTRL_Misc1Enable           EQU 020h;0x20
+    MGA_GENIOCTRL_Misc2Enable           EQU 040h;0x40
+MGA_INDD_GeneralPurposeIOData           EQU 02bh;0x2b
+    MGA_GENIOCTRL_DDC0Data              EQU 001h;0x01
+    MGA_GENIOCTRL_DDC1Data              EQU 002h;0x02
+    MGA_GENIOCTRL_DDC2Data              EQU 004h;0x04
+    MGA_GENIOCTRL_DDC3Data              EQU 008h;0x08
+    MGA_GENIOCTRL_Misc0Data             EQU 010h;0x10
+    MGA_GENIOCTRL_Misc1Data             EQU 020h;0x20
+    MGA_GENIOCTRL_Misc2Data             EQU 040h;0x40
+MGA_INDD_SYSPLL_M_Value                 EQU 02ch;0x2c
+MGA_INDD_SYSPLL_N_Value                 EQU 02dh;0x2d
+MGA_INDD_SYSPLL_P_Value                 EQU 02eh;0x2e
+MGA_INDD_SYSPLL_Status                  EQU 02fh;0x2f
+MGA_INDD_ZoomControl                    EQU 038h;0x38
+MGA_INDD_SenseTest                      EQU 03ah;0x3a
+MGA_INDD_CRC_RemainderLow               EQU 03ch;0x3c
+MGA_INDD_CRC_RemainderHigh              EQU 03dh;0x3d
+MGA_INDD_CRC_BitSelect                  EQU 03eh;0x3e
+MGA_INDD_ColorKeyMask                   EQU 040h;0x40
+MGA_INDD_Reserved41                     EQU 041h;0x41
+MGA_INDD_ColorKey                       EQU 042h;0x42
+MGA_INDD_Reserved43                     EQU 043h;0x43
+MGA_INDD_PIXPLL_M_ValueSetA             EQU 044h;0x44
+MGA_INDD_PIXPLL_N_ValueSetA             EQU 045h;0x45
+MGA_INDD_PIXPLL_P_ValueSetA             EQU 046h;0x46
+MGA_INDD_PIXPLL_M_ValueSetB             EQU 048h;0x48
+MGA_INDD_PIXPLL_N_ValueSetB             EQU 049h;0x49
+MGA_INDD_PIXPLL_P_ValueSetB             EQU 04ah;0x4a
+MGA_INDD_PIXPLL_M_ValueSetC             EQU 04ch;0x4c
+MGA_INDD_PIXPLL_N_ValueSetC             EQU 04dh;0x4d
+MGA_INDD_PIXPLL_P_ValueSetC             EQU 04eh;0x4e
+MGA_INDD_PIXPLL_Status                  EQU 04fh;0x4f
+MGA_INDD_KEYING_OperatingMode           EQU 051h;0x51
+MGA_INDD_ColorMask0Red                  EQU 052h;0x52
+MGA_INDD_ColorMask0Green                EQU 053h;0x53
+MGA_INDD_ColorMask0Blue                 EQU 054h;0x54
+MGA_INDD_ColorKey0Red                   EQU 055h;0x55
+MGA_INDD_ColorKey0Green                 EQU 056h;0x56
+MGA_INDD_ColorKey0Blue                  EQU 057h;0x57
+MGA_INDD_CursorColor3Red                EQU 060h;0x60
+MGA_INDD_CursorColor3Green              EQU 061h;0x61
+MGA_INDD_CursorColor3Blue               EQU 062h;0x62
+MGA_INDD_CursorColor4Red                EQU 063h;0x63
+MGA_INDD_CursorColor4Green              EQU 064h;0x64
+MGA_INDD_CursorColor4Blue               EQU 065h;0x65
+MGA_INDD_CursorColor5Red                EQU 066h;0x66
+MGA_INDD_CursorColor5Green              EQU 067h;0x67
+MGA_INDD_CursorColor5Blue               EQU 068h;0x68
+MGA_INDD_CursorColor6Red                EQU 069h;0x69
+MGA_INDD_CursorColor6Green              EQU 06ah;0x6a
+MGA_INDD_CursorColor6Blue               EQU 06bh;0x6b
+MGA_INDD_CursorColor7Red                EQU 06ch;0x6c
+MGA_INDD_CursorColor7Green              EQU 06dh;0x6d
+MGA_INDD_CursorColor7Blue               EQU 06eh;0x6e
+MGA_INDD_CursorColor8Red                EQU 06fh;0x6f
+MGA_INDD_CursorColor8Green              EQU 070h;0x70
+MGA_INDD_CursorColor8Blue               EQU 071h;0x71
+MGA_INDD_CursorColor9Red                EQU 072h;0x72
+MGA_INDD_CursorColor9Green              EQU 073h;0x73
+MGA_INDD_CursorColor9Blue               EQU 074h;0x74
+MGA_INDD_CursorColor10Red               EQU 075h;0x75
+MGA_INDD_CursorColor10Green             EQU 076h;0x76
+MGA_INDD_CursorColor10Blue              EQU 077h;0x77
+MGA_INDD_CursorColor11Red               EQU 078h;0x78
+MGA_INDD_CursorColor11Green             EQU 079h;0x79
+MGA_INDD_CursorColor11Blue              EQU 07ah;0x7a
+MGA_INDD_CursorColor12Red               EQU 07bh;0x7b
+MGA_INDD_CursorColor12Green             EQU 07ch;0x7c
+MGA_INDD_CursorColor12Blue              EQU 07dh;0x7d
+MGA_INDD_CursorColor13Red               EQU 07eh;0x7e
+MGA_INDD_CursorColor13Green             EQU 07fh;0x7f
+MGA_INDD_CursorColor13Blue              EQU 080h;0x80
+MGA_INDD_CursorColor14Red               EQU 081h;0x81
+MGA_INDD_CursorColor14Green             EQU 082h;0x82
+MGA_INDD_CursorColor14Blue              EQU 083h;0x83
+MGA_INDD_CursorColor15Red               EQU 084h;0x84
+MGA_INDD_CursorColor15Green             EQU 085h;0x85
+MGA_INDD_CursorColor15Blue              EQU 086h;0x86
+
 PIC_Channel0Data                        EQU 040h;0x40
 PIC_Channel1Data                        EQU 041h;0x41
 PIC_Channel2Data                        EQU 042h;0x42
@@ -1635,10 +1738,10 @@ Label0xe29:                             ;Offset 0xe29
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     test      byte ptr cs:[Data0x7ff1], 80h;Offset 0x7ff1
     je        Label0xe66                ;Offset 0xe66
-    mov       cl, 1eh
+    mov       cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call      Func0x6a80                ;Offset 0x6a80
+    call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, 0f9h
     test      byte ptr cs:[Data0x7ff1], 20h;Offset 0x7ff1
     jne       Label0xe55                ;Offset 0xe55
@@ -1646,10 +1749,10 @@ Label0xe29:                             ;Offset 0xe29
 Label0xe55:                             ;Offset 0xe55
     or        cl, 04h
     mov       ch, cl
-    mov       cl, 1eh
+    mov       cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call      Func0x6a6b                ;Offset 0x6a6b
+    call      WriteIndexedRegister      ;Offset 0x6a6b
     mov       al, 01h
     call      Func0x5382                ;Offset 0x5382
 Label0xe66:                             ;Offset 0xe66
@@ -6973,29 +7076,37 @@ Func0x4bb8 PROC NEAR                    ;Offset 0x4bb8
     ret
 Func0x4bb8 ENDP
 
-                        DB 000h, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 000h, 000h, 000h
+;Offset 0x4bcb
+                        DB 000h, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 000h
+                        DB 000h, 000h
 
-Data0x4bd5Rev3Up        DW offset Func0x4d37        ;Offset 0x4d37
-                        DW offset Func0x4d1b        ;Offset 0x4d1b
-                        DW offset Func0x4d82        ;Offset 0x4d82
-                        DW offset Func0x4d53        ;Offset 0x4d53
-                        DW offset Func0x4dfd        ;Offset 0x4dfd
-                        DW offset Func0x4e23        ;Offset 0x4e23
+;These four tables are order dependent (There's a pointer compare in one of the functions)
 
-Data0x4be1              DW offset Func0x4d37        ;Offset 0x4d37
-                        DW offset Func0x4d1b        ;Offset 0x4d1b
-                        DW offset Func0x4d82        ;Offset 0x4d82
-                        DW offset Func0x4d53        ;Offset 0x4d53
-                        DW offset Func0x4db1        ;Offset 0x4db1
-                        DW offset Func0x4dd7        ;Offset 0x4dd7
+;Offset 0x4bd5
+DDCFuncsRev3Up          DW offset DDCDisablePin1    ;Offset 0x4d37
+                        DW offset DDCDisablePin3    ;Offset 0x4d1b
+                        DW offset DDCPin1SetOutput0 ;Offset 0x4d82
+                        DW offset DDCPin3SetOutput0 ;Offset 0x4d53
+                        DW offset DDCPins01Read     ;Offset 0x4dfd
+                        DW offset DDCPins23Read     ;Offset 0x4e23
 
-Data0x4bed              DW offset Func0x4e65        ;Offset 0x4e65
-                        DW offset Func0x4e49        ;Offset 0x4e49
-                        DW offset Func0x4eb0        ;Offset 0x4eb0
-                        DW offset Func0x4e81        ;Offset 0x4e81
-                        DW offset Func0x4edf        ;Offset 0x4edf
-                        DW offset Func0x4f05        ;Offset 0x4f05
+;Offset 0x4be1
+DDCFuncs                DW offset DDCDisablePin1    ;Offset 0x4d37
+                        DW offset DDCDisablePin3    ;Offset 0x4d1b
+                        DW offset DDCPin1SetOutput0 ;Offset 0x4d82
+                        DW offset DDCPin3SetOutput0 ;Offset 0x4d53
+                        DW offset DDCPin1Read       ;Offset 0x4db1
+                        DW offset DDCPin3Read       ;Offset 0x4dd7
 
+;Offset 0x4bed
+MISCFuncs               DW offset MISCDisablePin0   ;Offset 0x4e65
+                        DW offset MISCDisablePin1   ;Offset 0x4e49
+                        DW offset MISCPin0SetOutput0;Offset 0x4eb0
+                        DW offset MISCPin1SetOutput0;Offset 0x4e81
+                        DW offset MISCPin0Read      ;Offset 0x4edf
+                        DW offset MISCPin1Read      ;Offset 0x4f05
+
+;Offset 0x4bf9
 Data0x4bf9              DW offset Func0x4f6b        ;Offset 0x4f6b
                         DW offset Func0x4f2b        ;Offset 0x4f2b
                         DW offset Func0x4ff0        ;Offset 0x4ff0
@@ -7006,12 +7117,12 @@ Data0x4bf9              DW offset Func0x4f6b        ;Offset 0x4f6b
 
 VESADDC:                                ;Offset 0x4c05
     cmp  bl, 00h
-    je   Label0x4c2c                    ;Offset 0x4c2c
+    je   DDCInstallationCheck           ;Offset 0x4c2c
     cmp  bl, 01h
-    jne  Label0x4c13                    ;Offset 0x4c13
-    call Func0x4c59                     ;Offset 0x4c59
+    jne  DDCUnknownFunction             ;Offset 0x4c13
+    call DDCReadEDID                    ;Offset 0x4c59
     iret
-Label0x4c13:                            ;Offset 0x4c13
+DDCUnknownFunction:                     ;Offset 0x4c13
     mov  ax, 0100h
     iret
 
@@ -7027,7 +7138,7 @@ Func0x4c17 PROC NEAR                    ;Offset 0x4c17
     ret
 Func0x4c17 ENDP
 
-Label0x4c2c:                            ;Offset 0x4c2c
+DDCInstallationCheck:                   ;Offset 0x4c2c
     push es
     push di
     cli
@@ -7038,7 +7149,7 @@ Label0x4c2c:                            ;Offset 0x4c2c
     sub  sp, 0080h
     mov  di, sp
     xor  bx, bx
-    call Func0x4c59                     ;Offset 0x4c59
+    call DDCReadEDID                    ;Offset 0x4c59
     or   ah, ah
     jne  Label0x4c46                    ;Offset 0x4c46
     or   bl, 02h
@@ -7057,7 +7168,7 @@ Label0x4c4e:                            ;Offset 0x4c4e
     pop  es
     iret
 
-Func0x4c59 PROC NEAR                    ;Offset 0x4c59
+DDCReadEDID PROC NEAR                   ;Offset 0x4c59
     push ds
     push es
     push bx
@@ -7070,7 +7181,7 @@ Func0x4c59 PROC NEAR                    ;Offset 0x4c59
     jne  Label0x4cd0                    ;Offset 0x4cd0
     call Func0x4cdb                     ;Offset 0x4cdb
     cli
-    push 00h
+    push 0000h
     pop  ds
     push word ptr ds:[BDA_SoftResetFlag];Offset 0x472
     push ds
@@ -7120,7 +7231,7 @@ Label0x4cd0:                            ;Offset 0x4cd0
     pop  es
     pop  ds
     ret
-Func0x4c59 ENDP
+DDCReadEDID ENDP
 
 Func0x4cdb PROC NEAR                    ;Offset 0x4cdb
     mov  al, 00h
@@ -7134,7 +7245,7 @@ Label0x4cf1:                            ;Offset 0x4cf1
     lea  si, [Data0x4bf9]               ;Offset 0x4bf9
     xor  al, cl
     jne  Label0x4d1a                    ;Offset 0x4d1a
-    lea  si, [Data0x4be1]               ;Offset 0x4be1
+    lea  si, [DDCFuncs]                 ;Offset 0x4be1
     push bx
     push cx
     push di
@@ -7145,7 +7256,7 @@ Label0x4cf1:                            ;Offset 0x4cf1
     call AccessPCIRegister              ;Offset 0x68f8
     cmp  cl, MGA_G200_Rev3              ;0x3
     jb   Label0x4d17                    ;Offset 0x4d17
-    lea  si, [Data0x4bd5Rev3Up]         ;Offset 0x4bd5
+    lea  si, [DDCFuncsRev3Up]           ;Offset 0x4bd5
 Label0x4d17:                            ;Offset 0x4d17
     pop  di
     pop  cx
@@ -7154,327 +7265,327 @@ Label0x4d1a:                            ;Offset 0x4d1a
     ret
 Func0x4cdb ENDP
 
-Func0x4d1b PROC NEAR                    ;Offset 0x4d1b
+DDCDisablePin3 PROC NEAR                ;Offset 0x4d1b
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0f7h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_DDC3Enable;0xf7
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4d1b ENDP
+DDCDisablePin3 ENDP
 
-Func0x4d37 PROC NEAR                    ;Offset 0x4d37
+DDCDisablePin1 PROC NEAR                ;Offset 0x4d37
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0fdh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_DDC1Enable;0xfd
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4d37 ENDP
+DDCDisablePin1 ENDP
 
-Func0x4d53 PROC NEAR                    ;Offset 0x4d53
+DDCPin3SetOutput0 PROC NEAR             ;Offset 0x4d53
     push ecx
     push edx
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0f7h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_DDC3Data ;0xf7
     mov  ch, cl
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2ah
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    or   cl, 08h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    or   cl, MGA_GENIOCTRL_DDC3Enable   ;0x8
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4d53 ENDP
+DDCPin3SetOutput0 ENDP
 
-Func0x4d82 PROC NEAR                    ;Offset 0x4d82
+DDCPin1SetOutput0 PROC NEAR             ;Offset 0x4d82
     push ecx
     push edx
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0fdh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_DDC1Data ;0xfd
     mov  ch, cl
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2ah
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    or   cl, 02h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    or   cl, MGA_GENIOCTRL_DDC1Enable   ;0x2
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4d82 ENDP
+DDCPin1SetOutput0 ENDP
 
-Func0x4db1 PROC NEAR                    ;Offset 0x4db1
+DDCPin1Read PROC NEAR                   ;Offset 0x4db1
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0fdh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_DDC1Enable;0xfd
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2bh
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     shl  cl, 07h
     pop  edx
     pop  ecx
     ret
-Func0x4db1 ENDP
+DDCPin1Read ENDP
 
-Func0x4dd7 PROC NEAR                    ;Offset 0x4dd7
+DDCPin3Read PROC NEAR                   ;Offset 0x4dd7
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0f7h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_DDC3Enable;0xf7
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2bh
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     shl  cl, 05h
     pop  edx
     pop  ecx
     ret
-Func0x4dd7 ENDP
+DDCPin3Read ENDP
 
-Func0x4dfd PROC NEAR                    ;Offset 0x4dfd
+DDCPins01Read PROC NEAR                 ;Offset 0x4dfd
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0fch
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT (MGA_GENIOCTRL_DDC0Enable OR MGA_GENIOCTRL_DDC1Enable);0xfc
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2bh
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     shl  cl, 08h
     pop  edx
     pop  ecx
     ret
-Func0x4dfd ENDP
+DDCPins01Read ENDP
 
-Func0x4e23 PROC NEAR                    ;Offset 0x4e23
+DDCPins23Read PROC NEAR                    ;Offset 0x4e23
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0f3h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT (MGA_GENIOCTRL_DDC2Enable OR MGA_GENIOCTRL_DDC3Enable);0xf3
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2bh
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     shl  cl, 06h
     pop  edx
     pop  ecx
     ret
-Func0x4e23 ENDP
+DDCPins23Read ENDP
 
-Func0x4e49 PROC NEAR                    ;Offset 0x4e49
+MISCDisablePin1 PROC NEAR               ;Offset 0x4e49
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0dfh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_Misc1Enable;0xdf
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4e49 ENDP
+MISCDisablePin1 ENDP
 
-Func0x4e65 PROC NEAR                    ;Offset 0x4e65
+MISCDisablePin0 PROC NEAR               ;Offset 0x4e65
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0efh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_Misc0Enable;0xef
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4e65 ENDP
+MISCDisablePin0 ENDP
 
-Func0x4e81 PROC NEAR                    ;Offset 0x4e81
+MISCPin1SetOutput0 PROC NEAR            ;Offset 0x4e81
     push ecx
     push edx
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0dfh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_Misc1Data;0xdf
     mov  ch, cl
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2ah
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    or   cl, 20h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    or   cl, MGA_GENIOCTRL_Misc1Enable  ;20h
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4e81 ENDP
+MISCPin1SetOutput0 ENDP
 
-Func0x4eb0 PROC NEAR                    ;Offset 0x4eb0
+MISCPin0SetOutput0 PROC NEAR            ;Offset 0x4eb0
     push ecx
     push edx
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0efh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_Misc0Data;0xef
     mov  ch, cl
-    mov  cl, 2bh
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2ah
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    or   cl, 10h
+    call ReadIndexedRegister            ;Offset 0x6a80
+    or   cl, MGA_GENIOCTRL_Misc0Enable  ;0x10
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     pop  edx
     pop  ecx
     ret
-Func0x4eb0 ENDP
+MISCPin0SetOutput0 ENDP
 
-Func0x4edf PROC NEAR                    ;Offset 0x4edf
+MISCPin0Read PROC NEAR                  ;Offset 0x4edf
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0efh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_Misc0Enable;0xef
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2bh
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     shl  cl, 04h
     pop  edx
     pop  ecx
     ret
-Func0x4edf ENDP
+MISCPin0Read ENDP
 
-Func0x4f05 PROC NEAR                    ;Offset 0x4f05
+MISCPin1Read PROC NEAR                    ;Offset 0x4f05
     push ecx
     push edx
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
-    and  cl, 0dfh
+    call ReadIndexedRegister            ;Offset 0x6a80
+    and  cl, NOT MGA_GENIOCTRL_Misc1Enable;0xdf
     mov  ch, cl
-    mov  cl, 2ah
+    mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 2bh
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     shl  cl, 03h
     pop  edx
     pop  ecx
     ret
-Func0x4f05 ENDP
+MISCPin1Read ENDP
 
 Func0x4f2b PROC NEAR                    ;Offset 0x4f2b
     push ds
@@ -7485,7 +7596,7 @@ Func0x4f2b PROC NEAR                    ;Offset 0x4f2b
     push 0000h
     pop  ds
     mov  ch, byte ptr cs:[Data0x7ff5]   ;Offset 0x7ff5
-    mov  si, offset Data0x4bed          ;Offset 0x4bed
+    mov  si, offset MISCFuncs           ;Offset 0x4bed
     mov  di, BDA_SoftResetFlag          ;Offset 0x472
     or   byte ptr ds:[BDA_SoftResetFlag], 41h;Offset 0x472 0x41
     mov  edx, 00000001h
@@ -7516,7 +7627,7 @@ Func0x4f6b PROC NEAR                    ;Offset 0x4f6b
     push 0000h
     pop  ds
     mov  ch, byte ptr cs:[Data0x7ff5]   ;Offset 0x7ff5
-    mov  si, offset Data0x4bed          ;Offset 0x4bed
+    mov  si, offset MISCFuncs           ;Offset 0x4bed
     mov  di, BDA_SoftResetFlag          ;Offset 0x472
     or   byte ptr ds:[BDA_SoftResetFlag], 42h;Offset 0x472 0x42
     mov  edx, 00000001h
@@ -7547,7 +7658,7 @@ Func0x4fab PROC NEAR                    ;Offset 0x4fab
     push 0000h
     pop  ds
     mov  ch, byte ptr cs:[Data0x7ff5]   ;Offset 0x7ff5
-    mov  si, offset Data0x4bed          ;Offset 0x4bed
+    mov  si, offset MISCFuncs          ;Offset 0x4bed
     mov  di, BDA_SoftResetFlag          ;Offset 0x472
     and  byte ptr ds:[BDA_SoftResetFlag], 0feh ;Offset 0x472 0xfe
     or   byte ptr ds:[BDA_SoftResetFlag], 40h ;Offset 0x472 0x40
@@ -7579,7 +7690,7 @@ Func0x4ff0 PROC NEAR                    ;Offset 0x4ff0
     push 0000h
     pop  ds
     mov  ch, byte ptr cs:[Data0x7ff5]   ;Offset 0x7ff5
-    mov  si, offset Data0x4bed          ;Offset 0x4bed
+    mov  si, offset MISCFuncs           ;Offset 0x4bed
     mov  di, BDA_SoftResetFlag          ;Offset 0x472
     and  byte ptr ds:[BDA_SoftResetFlag], 0fdh;Offset 0x472
     or   byte ptr ds:[BDA_SoftResetFlag], 40h;Offset 0x472
@@ -7617,7 +7728,7 @@ Func0x5037 PROC NEAR                    ;Offset 0x5037
     push 0000h
     pop  es
     mov  ch, byte ptr cs:[Data0x7ff5]   ;Offset 0x7ff5
-    mov  si, offset Data0x4bed          ;Offset 0x4bed
+    mov  si, offset MISCFuncs           ;Offset 0x4bed
     mov  di, BDA_SoftResetFlagHighByte  ;Offset 0x473
     shl  edi, 10h
     mov  edx, 00010000h
@@ -7652,8 +7763,8 @@ Func0x5037 ENDP
 ;destroys:
 ;   -
 ;
-Func0x507f PROC NEAR                    ;Offset 0x507f
-    cmp  si, offset Data0x4be1          ;Offset 0x4be1
+SleepIfNeeded PROC NEAR                 ;Offset 0x507f
+    cmp  si, offset DDCFuncs            ;Offset 0x4be1
     ja   DontSleep                      ;Offset 0x508d
     push dx
     mov  dx, 0d2h
@@ -7661,7 +7772,7 @@ Func0x507f PROC NEAR                    ;Offset 0x507f
     pop  dx
 DontSleep:                              ;Offset 0x508d
     ret
-Func0x507f ENDP
+SleepIfNeeded ENDP
 
 ;
 ;input:
@@ -7728,13 +7839,13 @@ Func0x50d9 PROC NEAR                    ;Offset 0x50d9
     push word ptr ds:[BDA_SoftResetFlag];Offset 0x472
     push ds
     call word ptr cs:[si]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     mov  cx, 0009h
 Label0x50ec:                            ;Offset 0x50ec
     call word ptr cs:[si + 06h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 02h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     loop Label0x50ec                    ;Offset 0x50ec
     pop  ds
     pop  word ptr ds:[BDA_SoftResetFlag];Offset 0x472
@@ -7746,7 +7857,7 @@ Func0x50d9 ENDP
 Func0x5104 PROC NEAR                    ;Offset 0x5104
     push ecx
     call word ptr cs:[si + 06h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     pop  ecx
     ret
 Func0x5104 ENDP
@@ -7754,11 +7865,11 @@ Func0x5104 ENDP
 Func0x5110 PROC NEAR                    ;Offset 0x5110
     push ecx
     call word ptr cs:[si]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 02h]
     mov  cl, 0ah
 Label0x511e:                            ;Offset 0x511e
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     dec  cl
     je   Label0x513c                    ;Offset 0x513c
     call word ptr cs:[si + 0ah]
@@ -7766,7 +7877,7 @@ Label0x511e:                            ;Offset 0x511e
     call word ptr cs:[si + 08h]
     jae  Label0x511e                    ;Offset 0x511e
     call word ptr cs:[si + 04h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 06h]
 Label0x513c:                            ;Offset 0x513c
     mov  al, cl
@@ -7777,13 +7888,13 @@ Func0x5110 ENDP
 Func0x5141 PROC NEAR                    ;Offset 0x5141
     push ecx
     call word ptr cs:[si + 04h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 06h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 02h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     pop  ecx
     ret
 Func0x5141 ENDP
@@ -7795,7 +7906,7 @@ Func0x5161 PROC NEAR                    ;Offset 0x5161
 Label0x5168:                            ;Offset 0x5168
     dec  cl
     je   Label0x518f                    ;Offset 0x518f
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 08h]
     jb   Label0x5168                    ;Offset 0x5168
     mov  cl, 0ah
@@ -7803,11 +7914,11 @@ Label0x5168:                            ;Offset 0x5168
 Label0x517b:                            ;Offset 0x517b
     dec  cl
     je   Label0x518f                    ;Offset 0x518f
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 0ah]
     jae  Label0x517b                    ;Offset 0x517b
     call word ptr cs:[si + 06h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
 Label0x518f:                            ;Offset 0x518f
     mov  al, cl
     pop  ecx
@@ -7817,18 +7928,18 @@ Func0x5161 ENDP
 Func0x5194 PROC NEAR                    ;Offset 0x5194
     push ecx
     call word ptr cs:[si + 04h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 02h]
     mov  cl, 0ah
 Label0x51a3:                            ;Offset 0x51a3
     dec  cl
     je   Label0x51ba                    ;Offset 0x51ba
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 0ah]
     jae  Label0x51a3                    ;Offset 0x51a3
     call word ptr cs:[si + 06h]
     call word ptr cs:[si]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
 Label0x51ba:                            ;Offset 0x51ba
     mov  al, cl
     pop  ecx
@@ -7838,18 +7949,18 @@ Func0x5194 ENDP
 Func0x51bf PROC NEAR                    ;Offset 0x51bf
     push ecx
     call word ptr cs:[si]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     mov  cl, 0ah
     call word ptr cs:[si + 02h]
 Label0x51cd:                            ;Offset 0x51cd
     dec  cl
     je   Label0x51e4                    ;Offset 0x51e4
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 0ah]
     jae  Label0x51cd                    ;Offset 0x51cd
     call word ptr cs:[si + 06h]
     call word ptr cs:[si]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
 Label0x51e4:                            ;Offset 0x51e4
     mov  al, cl
     pop  ecx
@@ -7870,12 +7981,12 @@ Label0x51fb:                            ;Offset 0x51fb
     call word ptr cs:[si]
 Label0x51fe:                            ;Offset 0x51fe
     mov  dl, 0ah
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 02h]
 Label0x5207:                            ;Offset 0x5207
     dec  dl
     je   Label0x521c                    ;Offset 0x521c
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 0ah]
     jae  Label0x5207                    ;Offset 0x5207
     call word ptr cs:[si + 06h]
@@ -7899,13 +8010,13 @@ Label0x522b:                            ;Offset 0x522b
 Label0x5231:                            ;Offset 0x5231
     dec  dl
     je   Label0x5251                    ;Offset 0x5251
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + 0ah]
     jae  Label0x5231                    ;Offset 0x5231
     call word ptr cs:[si + 08h]
     rcl  ch, 01h
     call word ptr cs:[si + 06h]
-    call Func0x507f                     ;Offset 0x507f
+    call SleepIfNeeded                  ;Offset 0x507f
     dec  cl
     jne  Label0x522b                    ;Offset 0x522b
     mov  al, ch
@@ -7979,7 +8090,7 @@ Label0x52c4:                            ;Offset 0x52c4
     and      ecx, 0000ffffh
     mov      al, 05h
 Label0x52e8:                            ;Offset 0x52e8
-    call     Func0x507f                 ;Offset 0x507f
+    call     SleepIfNeeded              ;Offset 0x507f
     dec      al
     jne      Label0x52e8                ;Offset 0x52e8
     call     Func0x5110                 ;Offset 0x5110
@@ -8020,11 +8131,11 @@ Label0x5337:                            ;Offset 0x5337
     mov      cl, 01h
     or       ecx, 00010000h
 Label0x5340:                            ;Offset 0x5340
-    call     Func0x507f                 ;Offset 0x507f
+    call     SleepIfNeeded              ;Offset 0x507f
     call     Func0x5141                 ;Offset 0x5141
     mov      al, 05h
 Label0x5348:                            ;Offset 0x5348
-    call     Func0x507f                 ;Offset 0x507f
+    call     SleepIfNeeded              ;Offset 0x507f
     dec      al
     jne      Label0x5348                ;Offset 0x5348
 Label0x534f:                            ;Offset 0x534f
@@ -8079,7 +8190,7 @@ Label0x53a4:                            ;Offset 0x53a4
     mov      bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     and      ecx, 0000ffffh
     mov      ch, byte ptr cs:[Data0x7ff5];Offset 0x7ff5
-    mov      si, offset Data0x4bed      ;Offset 0x4bed
+    mov      si, offset MISCFuncs       ;Offset 0x4bed
     mov      di, BDA_SoftResetFlag      ;Offset 0x472
     mov      edx, 00000001
     call     Func0x5258                 ;Offset 0x5258
@@ -8099,12 +8210,18 @@ Data0x53d2              DW 0101h
                         DW 0110h
                         DW 0111h
                         DW 0112h
+
+;Offset 0x53da
 Data0x53da              DW 0100h
+
+;Offset 0x53dc
 Data0x53dc              DW 0102h
                         DW 0103h
                         DW 0113h
                         DW 0114h
                         DW 0115h
+
+;Offset 0x53e6
 Data0x53e6              DW 0105h
                         DW 0116h
                         DW 0117h
@@ -8118,38 +8235,39 @@ Data0x53ee              DW 0107h
 ;Offset 0x53f6
 Data0x53f6              DW 010ah
 
+;Offset 0x53f8
                         DW 0FFFFh
 
 ;Offset 0x53fa
-Data0x53fa              DW 564ch, 0010h
-                        DW 565ah, 0010h
-                        DW 5692h, 0000h
-                        DW 5668h, 0010h
+Data0x53fa              DW offset Data0x564c, 0010h     ;Offset 0x564c
+                        DW offset Data0x565a, 0010h     ;Offset 0x565a
+                        DW offset Data0x5692, 0000h     ;Offset 0x5692
+                        DW offset Data0x5668, 0010h     ;Offset 0x5668
                         DW 0000h, 0000h
-                        DW 5676h, 0010h
+                        DW offset Data0x5676, 0010h     ;Offset 0x5676
                         DW 0000h, 0000h
-                        DW 5684h, 0010h
+                        DW offset Data0x5684, 0010h     ;Offset 0x5684
                         DW 0000h, 00c0h
                         DW 0000h, 0040h
-                        DW 56a0h, 00c0h
+                        DW offset Data0x56a0, 00c0h     ;Offset 0x56a0
                         DW 0000h, 00c0h
                         DW 0000h, 00c0h
                         DW 0000h, 0000h
                         DW 0000h, 0000h
                         DW 0000h, 0000h
-                        DW 565ah, 0020h
-                        DW 565ah, 0060h
-                        DW 565ah, 0030h
-                        DW 5668h, 0020h
-                        DW 5668h, 0060h
-                        DW 5668h, 0030h
-                        DW 5676h, 0020h
-                        DW 5676h, 0060h
-                        DW 5676h, 0030h
-                        DW 5684h, 0020h
-                        DW 5684h, 0060h
-                        DW 5684h, 0030h
-                        DW 564ch, 0010h
+                        DW offset Data0x565a, 0020h     ;Offset 0x565a
+                        DW offset Data0x565a, 0060h     ;Offset 0x565a
+                        DW offset Data0x565a, 0030h     ;Offset 0x565a
+                        DW offset Data0x5668, 0020h     ;Offset 0x5668
+                        DW offset Data0x5668, 0060h     ;Offset 0x5668
+                        DW offset Data0x5668, 0030h     ;Offset 0x5668
+                        DW offset Data0x5676, 0020h     ;Offset 0x5676
+                        DW offset Data0x5676, 0060h     ;Offset 0x5676
+                        DW offset Data0x5676, 0030h     ;Offset 0x5676
+                        DW offset Data0x5684, 0020h     ;Offset 0x5684
+                        DW offset Data0x5684, 0060h     ;Offset 0x5684
+                        DW offset Data0x5684, 0030h     ;Offset 0x5684
+                        DW offset Data0x564c, 0010h     ;Offset 0x564c
 
 ;Offset 0x546e
 Data0x546e              DB 008h, 010h, 001h, 008h, 001h, 004h, 000h
@@ -8196,33 +8314,59 @@ Data0x558d              DB 050h, 00Bh, 008h
                         DB 000h, 020h, 001h, 00Fh, 000h, 00Eh, 02Fh, 0CEh, 09Fh, 09Fh, 012h, 0A5h, 013h, 028h, 05Ah, 000h
                         DB 060h, 020h, 000h, 000h, 000h, 000h, 000h, 000h, 0A3h, 0FFh, 0A0h, 000h, 0FFh, 029h, 0C3h, 0FFh
                         DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch, 00Dh, 00Eh, 00Fh
-                        DB 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 064h
+                        DB 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh
 
-;Offset 0x55cd
-Data0x55cd              DB 024h, 010h, 000h
+;Offset 0x55cc
+Data0x55cc              DB 064h, 024h, 010h, 000h
                         DB 0F0h, 001h, 00Fh, 000h, 006h, 02Fh
 
 ;Offset 0x55d6
 Data0x55d6              DB 07Ah, 063h, 063h, 080h, 06Bh, 01Bh, 072h, 0F0h, 000h, 060h
                         DB 000h, 000h, 000h, 000h, 000h, 000h, 058h, 0ACh, 057h, 032h, 000h, 057h, 000h, 0E3h, 0FFh, 000h
                         DB 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 001h
-                        DB 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh, 084h, 02Ah, 008h, 058h
+                        DB 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
+
+;Offset 0x560c
+Data0x560c              DB 084h, 02Ah, 008h, 058h
                         DB 02Ch, 001h, 003h, 000h, 002h, 06Fh, 09Eh, 083h, 084h, 001h, 087h, 08Dh, 0CBh, 01Fh, 000h, 047h
                         DB 006h, 007h, 000h, 000h, 000h, 000h, 09Bh, 0ADh, 057h, 042h, 01Fh, 05Bh, 0C8h, 0A3h, 0FFh, 000h
                         DB 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 00Ch
                         DB 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 010h, 00Eh, 000h, 0FFh
 
 ;Offset 0x564c
-Data0x564c              DB 057h, 062h, 000h, 000h
-                        DB 080h, 002h, 090h, 001h, 01Ch, 013h, 08Dh, 054h, 040h, 000h, 057h, 062h, 000h, 000h, 080h, 002h
-                        DB 0E0h, 001h, 01Ch, 013h, 0CDh, 054h, 040h, 000h, 040h, 09Ch, 000h, 000h, 020h, 003h, 058h, 002h
-                        DB 01Ch, 013h, 00Dh, 055h, 000h, 000h, 0E8h, 0FDh, 000h, 000h, 000h, 004h, 000h, 003h, 01Ch, 013h
-                        DB 04Dh, 055h, 000h, 000h, 0E0h, 0A5h, 001h, 000h, 000h, 005h, 000h, 004h, 01Ch, 013h, 08Dh, 055h
+Data0x564c              DB 057h, 062h, 000h, 000h, 080h, 002h, 090h, 001h, 01Ch, 013h
+                        DW offset Data0x548d;Offset 0548dh
+                        DB 040h, 000h
+
+;Offset 0x565a
+Data0x565a              DB 057h, 062h, 000h, 000h, 080h, 002h, 0E0h, 001h, 01Ch, 013h
+                        DW offset Data0x54cd;Offset 0x54cd
+                        DB 040h, 000h
+
+;Offset 0x5668
+Data0x5668              DB 040h, 09Ch, 000h, 000h, 020h, 003h, 058h, 002h, 01Ch, 013h
+                        DW offset Data0x550d;Offset 0x550d
+                        DB 000h, 000h
+
+;Offset 0x5676
+Data0x5676              DB 0E8h, 0FDh, 000h, 000h, 000h, 004h, 000h, 003h, 01Ch, 013h
+                        DW offset Data0x554d;Offset 0x554d
+                        DB 000h, 000h
+
+;Offset 0x5684
+Data0x5684              DB 0E0h, 0A5h, 001h, 000h, 000h, 005h, 000h, 004h, 01Ch, 013h
+                        DW offset Data0x558d;Offset 0x558d
                         DB 040h, 021h
 
 ;Offset 0x5692
-Data0x5692              DB 058h, 098h, 000h, 000h, 020h, 003h, 058h, 002h, 01Bh, 012h, 0CCh, 055h, 000h, 000h
-                        DB 078h, 0A0h, 000h, 000h, 020h, 004h, 058h, 001h, 018h, 003h, 00Ch, 056h, 000h, 000h
+Data0x5692              DB 058h, 098h, 000h, 000h, 020h, 003h, 058h, 002h, 01Bh, 012h
+                        DW offset Data0x55cc;Offset 0x55cc
+                        DB 000h, 000h
+
+;Offset 0x56a0
+Data0x56a0              DB 078h, 0A0h, 000h, 000h, 020h, 004h, 058h, 001h, 018h, 003h
+                        DW offset Data0x560c;Offset 0x560c
+                        DB 000h, 000h
 
 ;Offset 0x56ae
 VESACallTable           DW offset GetSuperVGAInformation;Offset 0x57a7          ;0
@@ -9073,10 +9217,10 @@ GetSetDACPaletteControl:                ;Offset 0x5db8
     push      dx
     mov       dx, ax
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
-    mov       cl, 1eh
+    mov       cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call      Func0x6a80                ;Offset 0x6a80
+    call      ReadIndexedRegister       ;Offset 0x6a80
     mov       ah, 01h
     or        dl, dl
     je        Label0x5de0               ;Offset 0x5de0
@@ -9097,10 +9241,10 @@ Label0x5de0:                            ;Offset 0x5de0
     or        cl, 08h
 Label0x5def:                            ;Offset 0x5def
     xchg      cl, ch
-    mov       cl, 1eh
+    mov       cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call      Func0x6a6b                ;Offset 0x6a6b
+    call      WriteIndexedRegister      ;Offset 0x6a6b
     xor       ah, ah
 Label0x5dfa:                            ;Offset 0x5dfa
     mov       bx, dx
@@ -9247,10 +9391,45 @@ Label0x5edf:
     iret
 
 ;Offset 0x5ee8
-Data0x5ee8              DB 004h, 005h, 006h, 008h, 009h, 00Ah, 00Ch, 00Dh
-                        DB 00Eh, 010h, 011h, 012h, 019h, 01Ah, 01Dh, 01Eh, 02Ah, 02Bh, 02Ch, 02Dh, 02Eh, 02Fh, 038h, 040h
-                        DB 041h, 042h, 043h, 044h, 045h, 046h, 048h, 049h, 04Ah, 04Ch, 04Dh, 04Eh, 04Fh, 0FFh, 000h, 000h
-                        DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
+Data0x5ee8              DB MGA_INDD_CursorBaseAddressLow            ;0x04
+                        DB MGA_INDD_CursorBaseAddressHigh           ;0x05
+                        DB MGA_INDD_CursorControl                   ;0x06
+                        DB MGA_INDD_CursorColor0Red                 ;0x08
+                        DB MGA_INDD_CursorColor0Green               ;0x09
+                        DB MGA_INDD_CursorColor0Blue                ;0x0A
+                        DB MGA_INDD_CursorColor1Red                 ;0x0C
+                        DB MGA_INDD_CursorColor1Green               ;0x0D
+                        DB MGA_INDD_CursorColor1Blue                ;0x0E
+                        DB MGA_INDD_CursorColor2Red                 ;0x10
+                        DB MGA_INDD_CursorColor2Green               ;0x11
+                        DB MGA_INDD_CursorColor2Blue                ;0x12
+                        DB MGA_INDD_MultiplexControl                ;0x19
+                        DB MGA_INDD_PixelClockControl               ;0x1A
+                        DB MGA_INDD_GeneralControl                  ;0x1D
+                        DB MGA_INDD_MiscellaneousControl            ;0x1E
+                        DB MGA_INDD_GeneralPurposeIOControl         ;0x2A
+                        DB MGA_INDD_GeneralPurposeIOData            ;0x2B
+                        DB MGA_INDD_SYSPLL_M_Value                  ;0x2C
+                        DB MGA_INDD_SYSPLL_N_Value                  ;0x2D
+                        DB MGA_INDD_SYSPLL_P_Value                  ;0x2E
+                        DB MGA_INDD_SYSPLL_Status                   ;0x2F
+                        DB MGA_INDD_ZoomControl                     ;0x38
+                        DB MGA_INDD_ColorKeyMask                    ;0x40
+                        DB MGA_INDD_Reserved41                      ;0x41
+                        DB MGA_INDD_ColorKey                        ;0x42
+                        DB MGA_INDD_Reserved43                      ;0x43
+                        DB MGA_INDD_PIXPLL_M_ValueSetA              ;0x44
+                        DB MGA_INDD_PIXPLL_N_ValueSetA              ;0x45
+                        DB MGA_INDD_PIXPLL_P_ValueSetA              ;0x46
+                        DB MGA_INDD_PIXPLL_M_ValueSetB              ;0x48
+                        DB MGA_INDD_PIXPLL_N_ValueSetB              ;0x49
+                        DB MGA_INDD_PIXPLL_P_ValueSetB              ;0x4A
+                        DB MGA_INDD_PIXPLL_M_ValueSetC              ;0x4C
+                        DB MGA_INDD_PIXPLL_N_ValueSetC              ;0x4D
+                        DB MGA_INDD_PIXPLL_P_ValueSetC              ;0x4E
+                        DB MGA_INDD_PIXPLL_Status                   ;0x4F
+                        DB 0FFh
+                        DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
 
 Func0x5f1e PROC NEAR                    ;Offset 0x5f1e
     push ds
@@ -9264,16 +9443,16 @@ Func0x5f1e PROC NEAR                    ;Offset 0x5f1e
     mov  di, bx
     mov  bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     xor  si, si
-Label0x5f2f:                            ;Offset 0x5f2f
+LoopIndexedRegisters:                   ;Offset 0x5f2f
     mov  cl, byte ptr cs:[si + Data0x5ee8];Offset 0x5ee8
     cmp  cl, 0ffh
-    je   Label0x5f43                    ;Offset 0x5f43
-    call Func0x6a80                     ;Offset 0x6a80
+    je   EndOfIndexedRegisterData       ;Offset 0x5f43
+    call ReadIndexedRegister            ;Offset 0x6a80
     mov  byte ptr es:[di], cl
     inc  di
     inc  si
-    jmp  Label0x5f2f                    ;Offset 0x5f2f
-Label0x5f43:                            ;Offset 0x5f43
+    jmp  LoopIndexedRegisters           ;Offset 0x5f2f
+EndOfIndexedRegisterData:               ;Offset 0x5f43
     mov  byte ptr es:[di], 0ffh
     inc  di
     mov  si, di
@@ -9332,7 +9511,7 @@ Label0x5f9c:                            ;Offset 0x5f9c
     cmp  cl, 0ffh
     je   Label0x5fb0                    ;Offset 0x5fb0
     mov  ch, byte ptr es:[di]
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     inc  di
     inc  si
     jmp  Label0x5f9c                    ;Offset 0x5f9c
@@ -9398,10 +9577,10 @@ Func0x5ff3 ENDP
 Func0x600c PROC NEAR                    ;Offset 0x600c
     push dx
     push cx
-    mov  cl, 19h
+    mov  cl, MGA_INDD_MultiplexControl  ;0x19
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     and  cl, 07h
     mov  dx, VGA_DACWriteIndex          ;Port 0x3c8
     xor  al, al
@@ -9507,21 +9686,21 @@ Label0x609c:                            ;Offset 0x609c
     js   Label0x6133                    ;Offset 0x6133
     je   Label0x60f8                    ;Offset 0x60f8
     mov  byte ptr es:[BDA_VideoBufferSize], 03h;Offset 0x44c
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     or   cl, 08h
     mov  ch, cl
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 19h
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_MultiplexControl  ;0x19
     nop
     nop
     mov  ch, 07h
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     mov  ax, 8303h
     out  dx, ax
@@ -9530,17 +9709,17 @@ Label0x609c:                            ;Offset 0x609c
     jmp  Label0x615f                    ;Offset 0x615f
 Label0x60f8:                            ;Offset 0x60f8
     mov  byte ptr es:[BDA_VideoBufferSize], 02h;Offset 0x44c
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     or   cl, 08h
     mov  ch, cl
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 19h
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_MultiplexControl  ;0x19
     nop
     nop
     mov  ch, 02h
@@ -9548,7 +9727,7 @@ Label0x60f8:                            ;Offset 0x60f8
     jne  Label0x6121                    ;Offset 0x6121
     mov  ch, 01h
 Label0x6121:                            ;Offset 0x6121
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     mov  ax, 8103h
     out  dx, ax
@@ -9557,31 +9736,31 @@ Label0x6121:                            ;Offset 0x6121
     jmp  Label0x615f                    ;Offset 0x615f
 Label0x6133:                            ;Offset 0x6133
     mov  byte ptr es:[BDA_VideoBufferSize], 01h;Offset 0x44c
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     and  cl, 0f7h
     mov  ch, cl
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
-    mov  cl, 19h
+    call WriteIndexedRegister           ;Offset 0x6a6b
+    mov  cl, MGA_INDD_MultiplexControl  ;0x19
     nop
     nop
     xor  ch, ch
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     mov  ax, 8003h
     out  dx, ax
     mov  cx, 01h
 Label0x615f:                            ;Offset 0x615f
     push cx
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a80                     ;Offset 0x6a80
+    call ReadIndexedRegister            ;Offset 0x6a80
     and  cl, 0f8h
     test byte ptr cs:[Data0x7ff1], 20h  ;Offset 0x7ff1
     je   Label0x6175                    ;Offset 0x6175
@@ -9593,10 +9772,10 @@ Label0x6175:                            ;Offset 0x6175
     or   cl, 07h
 Label0x6183:                            ;Offset 0x6183
     mov  ch, cl
-    mov  cl, 1eh
+    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     mov  ah, byte ptr cs:[Data0x7d37]   ;Offset 0x7d37
     shr  ah, 03h
@@ -9618,86 +9797,89 @@ Label0x61a7:                            ;Offset 0x61a7
     ret
 Func0x6087 ENDP
 
+;
+;
+;
 Func0x61ae PROC NEAR                    ;Offset 0x61ae
     push      bx
     push      cx
     push      dx
     call      CheckMemoryMappedRegsAndExtendedRegister;Offset 0x6614
-    je        Label0x624f               ;Offset 0x624f
+    je        Return                    ;Offset 0x624f
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
-    mov       cl, 1eh
+    mov       cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call      Func0x6a80                ;Offset 0x6a80
+    call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, 0f5h
     test      byte ptr cs:[Data0x7ff1], 80h;Offset 0x7ff1
     jne       Label0x61d2               ;Offset 0x61d2
     and       cl, 0f1h
 Label0x61d2:                            ;Offset 0x61d2
     mov       ch, cl
-    mov       cl, 1eh
+    mov       cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
-    call      Func0x6a6b                ;Offset 0x6a6b
-    mov       cl, 1dh
+    call      WriteIndexedRegister      ;Offset 0x6a6b
+    mov       cl, MGA_INDD_GeneralControl;0x1d
     nop
     nop
-    call      Func0x6a80                ;Offset 0x6a80
+    call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, 0efh
     mov       al, byte ptr cs:[Data0x7d35];Offset 0x7d35
     and       al, 01h
     shl       al, 04h
     or        cl, al
-    mov       ch, 1dh
+    mov       ch, MGA_INDD_GeneralControl;0x1d
     nop
     nop
     xchg      cl, ch
-    call      Func0x6a6b                ;Offset 0x6a6b
-    mov       cl, 1dh
+    call      WriteIndexedRegister      ;Offset 0x6a6b
+    mov       cl, MGA_INDD_GeneralControl;0x1d
     nop
     nop
-    call      Func0x6a80                ;Offset 0x6a80
+    call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, 0dfh
     mov       al, byte ptr cs:[Data0x7d35];Offset 0x7d35
     and       al, 20h
     or        cl, al
-    mov       ch, 1dh
+    mov       ch, MGA_INDD_GeneralControl;0x1d
     nop
     nop
     xchg      cl, ch
-    call      Func0x6a6b                ;Offset 0x6a6b
-    mov       cl, 19h
+    call      WriteIndexedRegister      ;Offset 0x6a6b
+    mov       cl, MGA_INDD_MultiplexControl;0x19
     nop
     nop
     xor       ch, ch
-    call      Func0x6a6b                ;Offset 0x6a6b
-    mov       cl, 1dh
+    call      WriteIndexedRegister      ;Offset 0x6a6b
+    mov       cl, MGA_INDD_GeneralControl;0x1d
     nop
     nop
-    call      Func0x6a80                ;Offset 0x6a80
+    call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, 30h
-    mov       ch, 1dh
+    mov       ch, MGA_INDD_GeneralControl;0x1d
     nop
     nop
     xchg      cl, ch
-    call      Func0x6a6b                ;Offset 0x6a6b
+    call      WriteIndexedRegister      ;Offset 0x6a6b
     mov       cl, 06h
     nop
     nop
     mov       ch, 00h
-    call      Func0x6a6b                ;Offset 0x6a6b
-    mov       cl, 1ah
+    call      WriteIndexedRegister      ;Offset 0x6a6b
+    mov       cl, MGA_INDD_PixelClockControl;0x1a
     nop
     nop
-    call      Func0x6a80                ;Offset 0x6a80
+    call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, 0fch
     or        cl, 01h
     mov       ch, cl
-    mov       cl, 1ah
+    mov       cl, MGA_INDD_PixelClockControl;0x1a
     nop
     nop
-    call      Func0x6a6b                ;Offset 0x6a6b
-Label0x624f:                            ;Offset 0x624f
+    call      WriteIndexedRegister      ;Offset 0x6a6b
+Return:                                 ;Offset 0x624f
     mov       ax, (MGA_CRTCExt_AddrGeneratorExt SHL 8) OR 00h;0x0
     call      MGAWriteCRTCExtensionRegister;Offset 0x2d6
     mov       ax, (MGA_CRTCExt_VertCounterExt SHL 8) OR 00h;0x200
@@ -10518,7 +10700,7 @@ Label0x6861:                            ;Offset 0x6861
     mov   cl, 8ah
     nop
     nop
-    call  Func0x6a6b                    ;Offset 0x6a6b
+    call  WriteIndexedRegister          ;Offset 0x6a6b
     pop   cx
     ret
 Func0x6837 ENDP
@@ -10915,12 +11097,12 @@ IndirectRegisterReadDWord ENDP
 ;
 ;inputs:
 ;   cl = RAMDAC write index
-;   ch = Indirect indexed register
+;   ch = Value
 ;
 ;destroys:
 ;   ax
 ;
-Func0x6a6b PROC NEAR                    ;Offset 0x6a6b
+WriteIndexedRegister PROC NEAR          ;Offset 0x6a6b
     push  si
     push  dx
     mov   dx, VGA_DACWriteIndex         ;Port 0x3c8
@@ -10933,19 +11115,19 @@ Func0x6a6b PROC NEAR                    ;Offset 0x6a6b
     pop   dx
     pop   si
     ret
-Func0x6a6b ENDP
+WriteIndexedRegister ENDP
 
 ;
 ;inputs:
-;   cl = RAMDAC write index
+;   cl = RAMDAC read index
 ;
 ;outputs:
-;   cl = value
+;   cl = Value
 ;
 ;destroys:
 ;   ax
 ;
-Func0x6a80 PROC NEAR                    ;Offset 0x6a80
+ReadIndexedRegister PROC NEAR           ;Offset 0x6a80
     push  si
     push  dx
     mov   dx, VGA_DACWriteIndex         ;Port 0x3c8
@@ -10957,7 +11139,7 @@ Func0x6a80 PROC NEAR                    ;Offset 0x6a80
     pop   dx
     pop   si
     ret
-Func0x6a80 ENDP
+ReadIndexedRegister ENDP
 
 ;Offset 0x6a93
 Data0x6a93              DB 002h, 004h, 008h, 010h
@@ -11251,22 +11433,22 @@ Label0x6d32:                            ;Offset 0x6d32
     mov  cl, 2ch
     mov  ch, dh
     and  ch, 1fh
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     mov  ch, dl
     inc  cl
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     shr  edx, 0dh
     mov  ch, dl
     inc  cl
-    call Func0x6a6b                     ;Offset 0x6a6b
+    call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, 2ee0h
     call Sleep                          ;Offset 0x508e
     xor  dx, dx
 Label0x6d92:                            ;Offset 0x6d92
     dec  dx
     je   Label0x6da1                    ;Offset 0x6da1
-    mov  cl, 2fh
-    call Func0x6a80                     ;Offset 0x6a80
+    mov  cl, MGA_INDD_SYSPLL_Status     ;0x2f
+    call ReadIndexedRegister            ;Offset 0x6a80
     and  cl, 40h
     je   Label0x6d92                    ;Offset 0x6d92
     jmp  Label0x6dc7                    ;Offset 0x6dc7
@@ -11363,12 +11545,12 @@ Func0x6e51 PROC NEAR                    ;Offset 0x6e51
     in     al, dx
     or     al, 20h
     out    dx, al
-    mov    cl, 1ah
-    call   Func0x6a80                   ;Offset 0x6a80
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x6a80
     or     cl, 04h
     xchg   ch, cl
-    mov    cl, 1ah
-    call   Func0x6a6b                   ;Offset 0x6a6b
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x6a6b
     pop    cx
     mov    al, cl
     and    al, 03h
@@ -11403,14 +11585,14 @@ Label0x6eae:                            ;Offset 0x6eae
     mov    ch, dh
     and    ch, 1fh
     mov    cl, al
-    call   Func0x6a6b                   ;Offset 0x6a6b
+    call   WriteIndexedRegister         ;Offset 0x6a6b
     mov    ch, dl
     inc    cl
-    call   Func0x6a6b                   ;Offset 0x6a6b
+    call   WriteIndexedRegister         ;Offset 0x6a6b
     shr    edx, 0dh
     mov    ch, dl
     inc    cl
-    call   Func0x6a6b                   ;Offset 0x6a6b
+    call   WriteIndexedRegister         ;Offset 0x6a6b
     pop    dx
     push   dx
     cmp    dl, 44h
@@ -11438,43 +11620,43 @@ Label0x6ee3:                            ;Offset 0x6ee3
 Label0x6efa:                            ;Offset 0x6efa
     dec    dx
     je     Label0x6f09                  ;Offset 0x6f09
-    mov    cl, 4fh
-    call   Func0x6a80                   ;Offset 0x6a80
+    mov    cl, MGA_INDD_PIXPLL_Status   ;0x4f
+    call   ReadIndexedRegister          ;Offset 0x6a80
     and    cl, 40h
     je     Label0x6efa                  ;Offset 0x6efa
     jmp    Label0x6f33                  ;Offset 0x6f33
 Label0x6f09:                            ;Offset 0x6f09
-    mov    cl, 1ah
-    call   Func0x6a80                   ;Offset 0x6a80
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x6a80
     and    cl, 0f7h
     xchg   cl, ch
-    mov    cl, 1ah
-    call   Func0x6a6b                   ;Offset 0x6a6b
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x6a6b
     mov    dx, 2ee0h
     call   Sleep                        ;Offset 0x508e
-    mov    cl, 1ah
-    call   Func0x6a80                   ;Offset 0x6a80
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x6a80
     or     cl, 08h
     xchg   cl, ch
-    mov    cl, 1ah
-    call   Func0x6a6b                   ;Offset 0x6a6b
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x6a6b
     mov    dx, 2ee0h
     call   Sleep                        ;Offset 0x508e
 Label0x6f33:                            ;Offset 0x6f33
     pop    dx
-    mov    cl, 1ah
-    call   Func0x6a80                   ;Offset 0x6a80
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x6a80
     and    cl, 0fch
     or     cl, dh
     xchg   cl, ch
-    mov    cl, 1ah
-    call   Func0x6a6b                   ;Offset 0x6a6b
-    mov    cl, 1ah
-    call   Func0x6a80                   ;Offset 0x6a80
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x6a6b
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x6a80
     and    cl, 0fbh
     xchg   ch, cl
-    mov    cl, 1ah
-    call   Func0x6a6b                   ;Offset 0x6a6b
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x6a6b
     mov    dx, VGA_SequenceIndex        ;Port 0x3c4
     mov    al, 01h
     out    dx, al
@@ -11843,7 +12025,7 @@ Func0x7325 PROC NEAR                    ;Offset 0x7325
     mov       cl, 04h
     and       ecx, 0000ffffh
 Label0x734f:                            ;Offset 0x734f
-    mov       si, offset Data0x4bed
+    mov       si, offset MISCFuncs      ;Offset 0x4bed
     mov       edx, 00010000h
     mov       ch, 44h
     call      Func0x5258                ;Offset 0x5258
@@ -12517,7 +12699,7 @@ Func0x78a4 PROC NEAR                    ;Offset 0x78a4
     lea    di, [Data0x789f]             ;Offset 0x789f
     push   cs
     pop    ds
-    lea    si, [Data0x4bed]             ;Offset 0x4bed
+    lea    si, [MISCFuncs]              ;Offset 0x4bed
     mov    edx, 00000005h
 Label0x78c2:                            ;Offset 0x78c2
     call   Func0x5258                   ;Offset 0x5258
@@ -12836,7 +13018,7 @@ Func0x7b21 PROC NEAR                    ;Offset 0x7b21
 Label0x7b45:                            ;Offset 0x7b45
     mov   cl, 18h
     mov   ch, 03h
-    call  Func0x6a6b                    ;Offset 0x6a6b
+    call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   al, 0fh
     call  Func0x2bfc                    ;Offset 0x2bfc
     mov   di, PCI_MGA_Option            ;0x40
@@ -12851,40 +13033,40 @@ Label0x7b45:                            ;Offset 0x7b45
 Label0x7b68:                            ;Offset 0x7b68
     dec   dx
     je    Label0x7b75                   ;Offset 0x7b75
-    mov   cl, 2fh
-    call  Func0x6a80                    ;Offset 0x6a80
+    mov   cl, MGA_INDD_SYSPLL_Status    ;0x2f
+    call  ReadIndexedRegister           ;Offset 0x6a80
     and   cl, 40h
     je    Label0x7b68                   ;Offset 0x7b68
 Label0x7b75:                            ;Offset 0x7b75
-    mov   cl, 1ah
-    call  Func0x6a80                    ;Offset 0x6a80
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x6a80
     or    cl, 08h
-    mov   ch, 1ah
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
-    call  Func0x6a6b                    ;Offset 0x6a6b
+    call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   al, 01h
     call  Func0x2bfc                    ;Offset 0x2bfc
     xor   dx, dx
 Label0x7b8b:                            ;Offset 0x7b8b
     dec   dx
     je    Label0x7b98                   ;Offset 0x7b98
-    mov   cl, 4fh
-    call  Func0x6a80                    ;Offset 0x6a80
+    mov   cl, MGA_INDD_PIXPLL_Status    ;0x4f
+    call  ReadIndexedRegister           ;Offset 0x6a80
     and   cl, 40h
     je    Label0x7b8b                   ;Offset 0x7b8b
 Label0x7b98:                            ;Offset 0x7b98
-    mov   cl, 1eh
-    call  Func0x6a80                    ;Offset 0x6a80
+    mov   cl, MGA_INDD_MiscellaneousControl;0x1e
+    call  ReadIndexedRegister           ;Offset 0x6a80
     or    cl, 10h
-    mov   ch, 1eh
+    mov   ch, MGA_INDD_MiscellaneousControl;0x1e
     xchg  cl, ch
-    call  Func0x6a6b                    ;Offset 0x6a6b
-    mov   cl, 1eh
-    call  Func0x6a80                    ;Offset 0x6a80
+    call  WriteIndexedRegister          ;Offset 0x6a6b
+    mov   cl, MGA_INDD_MiscellaneousControl;0x1e
+    call  ReadIndexedRegister           ;Offset 0x6a80
     or    cl, 01h
-    mov   ch, 1eh
+    mov   ch, MGA_INDD_MiscellaneousControl;0x1e
     xchg  cl, ch
-    call  Func0x6a6b                    ;Offset 0x6a6b
+    call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   di, PCI_MGA_Option            ;0x40
     mov   al, PCI_ACCESS_ReadByte       ;0x8
     call  AccessPCIRegister             ;Offset 0x68f8
@@ -12904,25 +13086,25 @@ Label0x7b98:                            ;Offset 0x7b98
     and   cl, 0fbh
     mov   al, PCI_ACCESS_WriteByte      ;0xb
     call  AccessPCIRegister             ;Offset 0x68f8
-    mov   cl, 1ah
-    call  Func0x6a80                    ;Offset 0x6a80
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x6a80
     or    cl, 04h
-    mov   ch, 1ah
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
-    call  Func0x6a6b                    ;Offset 0x6a6b
-    mov   cl, 1ah
-    call  Func0x6a80                    ;Offset 0x6a80
+    call  WriteIndexedRegister          ;Offset 0x6a6b
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x6a80
     and   cl, 0fch
     or    cl, 01h
-    mov   ch, 1ah
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
-    call  Func0x6a6b                    ;Offset 0x6a6b
-    mov   cl, 1ah
-    call  Func0x6a80                    ;Offset 0x6a80
+    call  WriteIndexedRegister          ;Offset 0x6a6b
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x6a80
     and   cl, 0fbh
-    mov   ch, 1ah
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
-    call  Func0x6a6b                    ;Offset 0x6a6b
+    call  WriteIndexedRegister          ;Offset 0x6a6b
     pop   dx
     or    dx, dx
     je    Label0x7c24                   ;Offset 0x7c24
