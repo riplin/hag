@@ -69,6 +69,49 @@ VGA_VideoSubsystemEnable                EQU 03c3h;0x3c3
 VGA_VideoSubsystemEnable_lowbyte        EQU 0c3h;0xc3
 VGA_SequenceIndex                       EQU 03c4h;0x3c4
 VGA_SequenceIndex_lowbyte               EQU 0c4h;0xc4
+    VGA_SEQIdx_Reset                    EQU 000h;0x00
+        VGA_SEQ0_AsyncReset             EQU 001h;0x01
+        VGA_SEQ0_SyncReset              EQU 002h;0x02
+    VGA_SEQIdx_ClockingMode             EQU 001h;0x01
+        VGA_SEQ1_9DotChar               EQU 000h;0x00
+        VGA_SEQ1_8DotChar               EQU 001h;0x01
+        VGA_SEQ1_ShiftLoadNormal        EQU 000h;0x00
+        VGA_SEQ1_ShiftLoadHalf          EQU 004h;0x04
+        VGA_SEQ1_DotClockVCLK           EQU 000h;0x00
+        VGA_SEQ1_DotClockHalfVCLK       EQU 008h;0x08
+        VGA_SEQ1_LoadCharClock          EQU 000h;0x00
+        VGA_SEQ1_LoadFourthCharClock    EQU 010h;0x10
+        VGA_SEQ1_ScreenOn               EQU 000h;0x00
+        VGA_SEQ1_ScreenOff              EQU 020h;0x20
+    VGA_SEQIdx_MapMask                  EQU 002h;0x02
+        VGA_SEQ2_Mask0                  EQU 001h;0x01
+        VGA_SEQ2_Mask1                  EQU 002h;0x02
+        VGA_SEQ2_Mask2                  EQU 004h;0x04
+        VGA_SEQ2_Mask3                  EQU 008h;0x08
+    VGA_SEQIdx_CharacterMapSelect       EQU 003h;0x03
+        VGA_SEQ3_MapBSel0               EQU 000h;0x00
+        VGA_SEQ3_MapBSel1               EQU 001h;0x01
+        VGA_SEQ3_MapBSel2               EQU 002h;0x02
+        VGA_SEQ3_MapBSel3               EQU 003h;0x03
+        VGA_SEQ3_MapBSel4               EQU 004h;0x04
+        VGA_SEQ3_MapBSel5               EQU 005h;0x05
+        VGA_SEQ3_MapBSel6               EQU 006h;0x06
+        VGA_SEQ3_MapBSel7               EQU 007h;0x07
+        VGA_SEQ3_MapASel0               EQU 000h;0x00
+        VGA_SEQ3_MapASel1               EQU 008h;0x08
+        VGA_SEQ3_MapASel2               EQU 010h;0x10
+        VGA_SEQ3_MapASel3               EQU 018h;0x18
+        VGA_SEQ3_MapASel4               EQU 020h;0x20
+        VGA_SEQ3_MapASel5               EQU 028h;0x28
+        VGA_SEQ3_MapASel6               EQU 030h;0x30
+        VGA_SEQ3_MapASel7               EQU 038h;0x38
+    VGA_SEQIdx_MemoryMode               EQU 004h;0x04
+        VGA_SEQ4_MemSizeNot256k         EQU 000h;0x00
+        VGA_SEQ4_MemSize256k            EQU 002h;0x02
+        VGA_SEQ4_MapOddEven             EQU 000h;0x00
+        VGA_SEQ4_CPUAnyMap              EQU 004h;0x04
+        VGA_SEQ4_SequentialMemory       EQU 000h;0x00
+        VGA_SEQ4_Chain4                 EQU 008h;0x08
 VGA_SequenceData                        EQU 03c5h;0x3c5
 VGA_SequenceData_lowbyte                EQU 0c5h;0xc5
 VGA_DACMask                             EQU 03c6h;0x3c6
@@ -134,9 +177,37 @@ MGA_CRTCExtensionIndex_lowbyte          EQU 0deh;0xde
     MGA_CRTCExt_HorCounterExt           EQU 001h;0x01
     MGA_CRTCExt_VertCounterExt          EQU 002h;0x02
     MGA_CRTCExt_Misc                    EQU 003h;0x03
+        MGA_CRTCEXT3_ScaleDiv1          EQU 000h;0x00
+        MGA_CRTCEXT3_ScaleDiv2          EQU 001h;0x01
+        MGA_CRTCEXT3_ScaleDiv3          EQU 002h;0x02
+        MGA_CRTCEXT3_ScaleDiv4          EQU 003h;0x03
+        MGA_CRTCEXT3_ScaleDiv6          EQU 005h;0x05
+        MGA_CRTCEXT3_ScaleDiv8          EQU 007h;0x07
+        MGA_CRTCEXT3_ScaleMask          EQU 007h;0x07
+        MGA_CRTCEXT3_Accel256Disable    EQU 020h;0x20
+        MGA_CRTCEXT3_CompSyncEnable     EQU 040h;0x40
+        MGA_CRTCEXT3_MGAModeEnable      EQU 080h;0x80
     MGA_CRTCExt_MemoryPage              EQU 004h;0x04
     MGA_CRTCExt_HorVidHalfCount         EQU 005h;0x05
     MGA_CRTCExt_PrioRequestControl      EQU 006h;0x06
+        MGA_CRTCEXT6_HiPrioLevel1       EQU 000h;0x00
+        MGA_CRTCEXT6_HiPrioLevel2       EQU 001h;0x01
+        MGA_CRTCEXT6_HiPrioLevel3       EQU 002h;0x02
+        MGA_CRTCEXT6_HiPrioLevel4       EQU 003h;0x03
+        MGA_CRTCEXT6_HiPrioLevel5       EQU 004h;0x04
+        MGA_CRTCEXT6_HiPrioLevel6       EQU 005h;0x05
+        MGA_CRTCEXT6_HiPrioLevel7       EQU 006h;0x06
+        MGA_CRTCEXT6_HiPrioLevel8       EQU 007h;0x07
+        MGA_CRTCEXT6_HiPrioLevelMASK    EQU 007h;0x07
+        MGA_CRTCEXT6_MaxPrioLevel1      EQU 000h;0x00
+        MGA_CRTCEXT6_MaxPrioLevel2      EQU 010h;0x10
+        MGA_CRTCEXT6_MaxPrioLevel3      EQU 020h;0x20
+        MGA_CRTCEXT6_MaxPrioLevel4      EQU 030h;0x30
+        MGA_CRTCEXT6_MaxPrioLevel5      EQU 040h;0x40
+        MGA_CRTCEXT6_MaxPrioLevel6      EQU 050h;0x50
+        MGA_CRTCEXT6_MaxPrioLevel7      EQU 060h;0x60
+        MGA_CRTCEXT6_MaxPrioLevel8      EQU 070h;0x70
+        MGA_CRTCEXT6_MaxPrioLevelMASK   EQU 070h;0x70
     MGA_CRTCExt_RequesterControl        EQU 007h;0x07
 MGA_CRTCExtensionData                   EQU 03dfh;0x3df
 MGA_CRTCExtensionData_lowbyte           EQU 0dfh;0xdf
@@ -144,6 +215,11 @@ MGA_CRTCExtensionData_lowbyte           EQU 0dfh;0xdf
 MGA_INDD_CursorBaseAddressLow           EQU 004h;0x04
 MGA_INDD_CursorBaseAddressHigh          EQU 005h;0x05
 MGA_INDD_CursorControl                  EQU 006h;0x06
+    MGA_CURCTRL_CursorDisabled          EQU 000h;0x00
+    MGA_CURCTRL_ThreeColorCursot        EQU 001h;0x01
+    MGA_CURCTRL_XGACursor               EQU 002h;0x02
+    MGA_CURCTRL_XWindowsCursor          EQU 003h;0x03
+    MGA_CURCTRL_16ColorPalettizedCursor EQU 004h;0x04
 MGA_INDD_CursorColor0Red                EQU 008h;0x08
 MGA_INDD_CursorColor0Green              EQU 009h;0x09
 MGA_INDD_CursorColor0Blue               EQU 00ah;0x0a
@@ -159,9 +235,42 @@ MGA_INDD_VoltageReferenceControl        EQU 018h;0x18
     MGA_VREFCTRL_SysPLLVoltRefExtern    EQu 000h;0x00
     MGA_VREFCTRL_SysPLLVoltRefPLLRefBlk EQU 002h;0x02
 MGA_INDD_MultiplexControl               EQU 019h;0x19
+    MGA_MULCTRL_Depth8                  EQU 000h;0x00
+    MGA_MULCTRL_Depth15                 EQU 001h;0x01
+    MGA_MULCTRL_Depth16                 EQU 002h;0x02
+    MGA_MULCTRL_Depth24                 EQU 003h;0x03
+    MGA_MULCTRL_Depth32Direct           EQU 004h;0x04
+    MGA_MULCTRL_Depth32Pal              EQU 007h;0x07
+    MGA_MULCTRL_DepthMask               EQU 007h;0x07
 MGA_INDD_PixelClockControl              EQU 01ah;0x1a
+    MGA_PIXCLKCTRL_SelPCI               EQU 000h;0x00
+    MGA_PIXCLKCTRL_SelPLL               EQU 001h;0x01
+    MGA_PIXCLKCTRL_SelVDOCLK            EQU 002h;0x02
+    MGA_PIXCLKCTRL_SelMASK              EQU 003h;0x03
+    MGA_PIXCLKCTRL_ClockEnable          EQU 000h;0x00
+    MGA_PIXCLKCTRL_ClockDisable         EQU 004h;0x04
+    MGA_PIXCLKCTRL_PixelPLLPowerDown    EQU 000h;0x00
+    MGA_PIXCLKCTRL_PixelPLLPowerUp      EQU 008h;0x08
 MGA_INDD_GeneralControl                 EQU 01dh;0x1d
+    MGA_GENCTRL_AlphaDisable            EQU 000h;0x00
+    MGA_GENCTRL_AlphaEnable             EQU 002h;0x02
+    MGA_GENCTRL_PedestalContr0IRE       EQU 000h;0x00
+    MGA_GENCTRL_PedestalContr7p5IRE     EQU 010h;0x10
+    MGA_GENCTRL_GreenSyncOutEnable      EQU 000h;0x00
+    MGA_GENCTRL_GreenSyncOutDisable     EQU 020h;0x20
 MGA_INDD_MiscellaneousControl           EQU 01eh;0x1e
+    MGA_MISCCTRL_DAC_Disable            EQU 000h;0x00
+    MGA_MISCCTRL_DAC_Enable             EQU 001h;0x01
+    MGA_MISCCTRL_MAFC_MAFC              EQU 002h;0x02
+    MGA_MISCCTRL_MAFC_PanelLinkMode     EQU 004h;0x04
+    MGA_MISCCTRL_MAFC_Disable           EQU 006h;0x06
+    MGA_MISCCTRL_MAFC_MASK              EQU 006h;0x06
+    MGA_MISCCTRL_DAC_6Bit               EQU 000h;0x00
+    MGA_MISCCTRL_DAC_8Bit               EQU 008h;0x08
+    MGA_MISCCTRL_LUT_Disable            EQU 000h;0x00
+    MGA_MISCCTRL_LUT_Enable             EQU 010h;0x00
+    MGA_MISCCTRL_VDOutSel_MAFC12        EQU 000h;0x00
+    MGA_MISCCTRL_VDOutSel_BYPASS656     EQU 040h;0x40
 MGA_INDD_GeneralPurposeIOControl        EQU 02ah;0x2a
     MGA_GENIOCTRL_DDC0Enable            EQU 001h;0x01
     MGA_GENIOCTRL_DDC1Enable            EQU 002h;0x02
@@ -179,9 +288,11 @@ MGA_INDD_GeneralPurposeIOData           EQU 02bh;0x2b
     MGA_GENIOCTRL_Misc1Data             EQU 020h;0x20
     MGA_GENIOCTRL_Misc2Data             EQU 040h;0x40
 MGA_INDD_SYSPLL_M_Value                 EQU 02ch;0x2c
+    MGA_SYSPLLM_Mask                    EQU 01fh;0x1f
 MGA_INDD_SYSPLL_N_Value                 EQU 02dh;0x2d
 MGA_INDD_SYSPLL_P_Value                 EQU 02eh;0x2e
 MGA_INDD_SYSPLL_Status                  EQU 02fh;0x2f
+    MGA_SYSPLLSTAT_FrequencyLock        EQU 040h;0x40
 MGA_INDD_ZoomControl                    EQU 038h;0x38
 MGA_INDD_SenseTest                      EQU 03ah;0x3a
 MGA_INDD_CRC_RemainderLow               EQU 03ch;0x3c
@@ -201,6 +312,7 @@ MGA_INDD_PIXPLL_M_ValueSetC             EQU 04ch;0x4c
 MGA_INDD_PIXPLL_N_ValueSetC             EQU 04dh;0x4d
 MGA_INDD_PIXPLL_P_ValueSetC             EQU 04eh;0x4e
 MGA_INDD_PIXPLL_Status                  EQU 04fh;0x4f
+    MGA_PIXPLLSTAT_FrequencyLock        EQU 040h;0x40
 MGA_INDD_KEYING_OperatingMode           EQU 051h;0x51
 MGA_INDD_ColorMask0Red                  EQU 052h;0x52
 MGA_INDD_ColorMask0Green                EQU 053h;0x53
@@ -367,9 +479,13 @@ PCI_MGA_Option                          EQU 040h;0x40
     PCI_MGA_Opt_SysClockSelectPLL       EQU 001h;0x01
     PCI_MGA_Opt_SysClockSelectMCLK      EQU 002h;0x02
     PCI_MGA_Opt_SysClockSelectMask      EQU 003h;0x03
-    PCI_MGA_Opt_SysClockDis             EQU 004h;0x04
+    PCI_MGA_Opt_SysClockDisable         EQU 004h;0x04
+    PCI_MGA_Opt_SysPLLPowerUp           EQU 020h;0x20
     PCI_MGA_Opt_PLLSel                  EQU 040h;0x40
     PCI_MGA_Opt_VGAIOMapEnable          EQU 100h;0x100
+    PCI_MGA_Opt_MemConfig0              EQU 400h;0x400
+    PCI_MGA_Opt_MemConfig1              EQU 800h;0x800
+    PCI_MGA_Opt_MemConfig2              EQU 1000h;0x1000
     PCI_MGA_Opt_NoRetry                 EQU 20000000h;0x20000000
 PCI_MGA_IndirectAccessIndex             EQU 044h;0x44
 PCI_MGA_IndirectAccessData              EQU 048h;0x48
@@ -639,10 +755,10 @@ entry:                                  ;Offset 0x80
     mov       es, ax
     call      FindMGAG200               ;Offset 0x79f8
     mov       word ptr cs:[PCIBusDeviceIDFunctionID], bx;Offset 0x7ff2 Store Bus, Device ID and Function ID
-    call      RebootG200                ;Offset 0x77b5
+    call      RebootMGAG200             ;Offset 0x77b5
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
-    call      Func0x782e                ;Offset 0x782e
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TalkToMonitorAndSetupAGPBus;Offset 0x782e
+    call      TurnScreenOff             ;Offset 0x2b15
     call      Func0x7325                ;Offset 0x7325
     cmp       byte ptr cs:[Data0x7ff5], 00h;Offset 0x7ff5
     je        Label0xc1                 ;Offset 0xc1
@@ -672,7 +788,7 @@ Label0xd0:                              ;Offset 0xd0
     nop
     call      AccessPCIRegister         ;Offset 0x68f8
 Label0xeb:                              ;Offset 0xeb
-    mov       ax, 5006h
+    mov       ax, MGA_CRTCExt_PrioRequestControl OR ((MGA_CRTCEXT6_MaxPrioLevel6 OR MGA_CRTCEXT6_HiPrioLevel1) SHL 8);0x5006
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
     out       dx, ax
     mov       cx, 78h
@@ -702,23 +818,23 @@ Label0x122:                             ;Offset 0x122
     mov       di, 2000h
     mov       cx, 0c000h
     xor       ax, ax
-    rep stosb
+    rep stosb                           ;clear off-screen video memory
     mov       es, ax
     call      Func0x26eb                ;Offset 0x26eb
-    mov       ax, 0003h
+    mov       ax, BDA_DM_80x25_16_Color_Text;Set Text Mode
     int       10h
     xor       ax, ax
     xor       si, si
-    mov       cx, 7fffh
-Label0x149:                             ;Offset 0x149
-    add       al, byte ptr cs:[si]
+    mov       cx, 7fffh                 ;Rom size - 1
+ReadROMByteLoop:                        ;Offset 0x149
+    add       al, byte ptr cs:[si]      ;Recalculate the check byte at end of ROM
     inc       si
-    loop      Label0x149                ;Offset 0x149
+    loop      ReadROMByteLoop           ;Offset 0x149
     neg       al
-    mov       byte ptr cs:[si], al
+    mov       byte ptr cs:[si], al      ;Store new check byte
     pop       bp
     xor       ax, ax
-    retf
+    retf                                ;All set up. Return control to system.
 
 SetupInterruptsTextModeAndBDA PROC NEAR ;Offset 0x158
     cli       
@@ -1353,7 +1469,7 @@ Int10CallTable          DW SetVideoMode;Offset 0x0c30                           
                         DW NotImplemented ;Offset 0x22d6                                    ; 19
                         DW DisplayCombinationCodeFunctions;Offset 0x22d7                    ; 1a
                         DW FunctionalityAndStateInfo;Offset 0x231e                          ; 1b
-                        DW SaveRestoreVideoState;Offset 0x242a
+                        DW SaveRestoreVideoState;Offset 0x242a                              ; 1c
 
 ;Offset 0xb3a
 DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
@@ -1634,7 +1750,7 @@ Func0xd08 PROC NEAR                     ;Offset 0xd08
     pop       di
     pop       bx
     je        Label0xd5c                ;Offset 0xd5c
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TurnScreenOff             ;Offset 0x2b15
     push      bx
     push      si
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
@@ -1646,7 +1762,7 @@ Func0xd08 PROC NEAR                     ;Offset 0xd08
     je        Label0xd5c                ;Offset 0xd5c
     xor       cx, cx
     call      Func0x7b21                ;Offset 0x7b21
-    call      Func0x2b11                ;Offset 0x2b11
+    call      TurnScreenOn              ;Offset 0x2b11
 Label0xd5c:                             ;Offset 0xd5c
     pop       cx
     mov       ax, 0000h
@@ -1654,7 +1770,7 @@ Label0xd5c:                             ;Offset 0xd5c
 Label0xd63:                             ;Offset 0xd63
     pop       ax
     push      ax
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TurnScreenOff             ;Offset 0x2b15
     mov       dx, ax
     pop       ax
     push      dx
@@ -1725,7 +1841,7 @@ Label0xdf3:                             ;Offset 0xdf3
     call      Func0xf70                 ;Offset 0xf70
     call      Func0x2ad5                ;Offset 0x2ad5
     pop       ax
-    call      Func0x2b11                ;Offset 0x2b11
+    call      TurnScreenOn              ;Offset 0x2b11
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     cmp       al, BDA_DM_80x25_Monochrome_Text;0x7
     ja        Label0xe1d                ;Offset 0xe1d
@@ -1759,12 +1875,12 @@ Label0xe29:                             ;Offset 0xe29
     nop
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
-    and       cl, 0f9h
+    and       cl, NOT MGA_MISCCTRL_MAFC_MASK;0xf9
     test      byte ptr cs:[Data0x7ff1], 20h;Offset 0x7ff1
     jne       Label0xe55                ;Offset 0xe55
-    and       cl, 0f8h
+    and       cl, NOT (MGA_MISCCTRL_MAFC_MASK OR MGA_MISCCTRL_DAC_Enable);0xf8
 Label0xe55:                             ;Offset 0xe55
-    or        cl, 04h
+    or        cl, MGA_MISCCTRL_MAFC_PanelLinkMode;0x4
     mov       ch, cl
     mov       cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
@@ -2060,11 +2176,11 @@ SetTextModeCursorShape PROC NEAR        ;Offset 0x105d
     test      byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_CursorEmulationEnabled;Offset 0x487 0x8
     jne       Label0x1086               ;Offset 0x1086
     call      Func0x108b                ;Offset 0x108b
-    call      Func0x2698                ;Offset 0x2698
+    call      SetCursorEndStart         ;Offset 0x2698
     pop       dx
     ret
 Label0x1086:                            ;Offset 0x1086
-    call      Func0x2698                ;Offset 0x2698
+    call      SetCursorEndStart         ;Offset 0x2698
     pop       dx
     ret       
 SetTextModeCursorShape ENDP
@@ -4176,7 +4292,7 @@ SetBlockOfDACRegisters PROC NEAR        ;Offset 0x1ed8
     push      cx
     push      dx
     mov       si, dx
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TurnScreenOff             ;Offset 0x2b15
     push      ax
     mov       dx, VGA_DACWriteIndex     ;Port 0x3c8
     mov       al, bl
@@ -4184,7 +4300,7 @@ SetBlockOfDACRegisters PROC NEAR        ;Offset 0x1ed8
     inc       dx
     call      Func0x299f                ;Offset 0x299f
     pop       ax
-    call      Func0x2b17                ;Offset 0x2b17
+    call      ToggleScreenOnOff         ;Offset 0x2b17
     pop       dx
     pop       cx
     ret
@@ -4241,7 +4357,7 @@ GetBlockOfDACRegisters PROC NEAR        ;Offset 0x1f36
     push      cx
     push      dx
     mov       di, dx
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TurnScreenOff             ;Offset 0x2b15
     push      ax
     mov       dx, VGA_DACReadIndex      ;Port 0x3c7
     mov       al, bl
@@ -4249,7 +4365,7 @@ GetBlockOfDACRegisters PROC NEAR        ;Offset 0x1f36
     mov       dl, VGA_RAMDACData_lowbyte;Port 0x3c9
     call      Func0x29cf                ;Offset 0x29cf
     pop       ax
-    call      Func0x2b17                ;Offset 0x2b17
+    call      ToggleScreenOnOff         ;Offset 0x2b17
     pop       dx
     pop       cx
     ret
@@ -4295,7 +4411,7 @@ GetVideoDACColorPageState ENDP
 PerformGrayScaleSumming PROC NEAR       ;Offset 0x1f82
     push      cx
     push      dx
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TurnScreenOff             ;Offset 0x2b15
     push      ax
 Label0x1f88:                            ;Offset 0x1f88
     push      cx
@@ -4334,7 +4450,7 @@ Label0x1fb3:                            ;Offset 0x1fb3
     pop       cx
     loop      Label0x1f88               ;Offset 0x1f88
     pop       ax
-    call      Func0x2b17                ;Offset 0x2b17
+    call      ToggleScreenOnOff         ;Offset 0x2b17
     pop       dx
     pop       cx
     ret
@@ -4633,9 +4749,9 @@ Label0x219e:                            ;Offset 0x219e
 Func0x2196 ENDP
 
 Func0x21a4 PROC NEAR                    ;Offset 0x21a4
-    lea  dx, [Func0x2b15]               ;Offset 0x2b15
+    lea  dx, [TurnScreenOff]            ;Offset 0x2b15
     je   Label0x21ae                    ;Offset 0x21ae
-    lea  dx, [Func0x2b11]               ;Offset 0x2b11
+    lea  dx, [TurnScreenOn]             ;Offset 0x2b11
 Label0x21ae:                            ;Offset 0x21ae
     call dx
     clc
@@ -5392,17 +5508,28 @@ Func0x2680 PROC NEAR                    ;Offset 0x2680
     ret
 Func0x2680 ENDP
 
-Func0x2698 PROC NEAR                    ;Offset 0x2698
+;
+;inputs:
+;   al = Cursor End
+;   ah = Cursor Start
+;
+;outputs:
+;   -
+;
+;destroys:
+;   ax, dx
+;
+SetCursorEndStart PROC NEAR             ;Offset 0x2698
     push      ax
     mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    mov       al, 0ah
+    mov       al, VGA_CRTCIdx_CursorStart;0xa
     out       dx, ax
     pop       ax
     mov       ah, al
-    mov       al, 0bh
+    mov       al, VGA_CRTCIdx_CursorEnd;0xb
     out       dx, ax
     ret
-Func0x2698 ENDP
+SetCursorEndStart ENDP
 
 ClearScreen PROC NEAR                   ;Offset 0x26a7
     test      byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_DontClearDisplay;Offset 0x487 0x80
@@ -5611,7 +5738,7 @@ Label0x27df:                            ;Offset 0x27df
     sub       ax, 0101h
 Label0x27f4:
     mov       word ptr ds:[BDA_CursorEndStartScanLine], ax;Offset 0x460
-    call      Func0x2698                ;Offset 0x2698
+    call      SetCursorEndStart         ;Offset 0x2698
     call      Func0x2a60                ;Offset 0x2a60
     dec       al
     mov       ax, 00c8h
@@ -5681,7 +5808,7 @@ Label0x286b:                            ;Offset 0x286b
     mov       ax, 0300h
     out       dx, ax
     sti
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TurnScreenOff             ;Offset 0x2b15
     push      ax
     mov       dx, di
     mov       ax, 0011h
@@ -5708,7 +5835,7 @@ Label0x286b:                            ;Offset 0x286b
     call      Func0x28af                ;Offset 0x28af
     pop       si
     pop       ax
-    call      Func0x2b17                ;Offset 0x2b17
+    call      ToggleScreenOnOff         ;Offset 0x2b17
     pop       dx
     pop       cx
     ret       
@@ -6117,29 +6244,39 @@ Func0x2af9 PROC NEAR                    ;Offset 0x2af9
     ret
 Func0x2af9 ENDP
 
-Func0x2b11 PROC NEAR                    ;Offset 0x2b11
+TurnScreenOn PROC NEAR                  ;Offset 0x2b11
     mov   ah, 00h
-    jmp   Func0x2b17                    ;Offset 0x2b17
-Func0x2b11 ENDP
+    jmp   ToggleScreenOnOff             ;Offset 0x2b17
+TurnScreenOn ENDP
 
-Func0x2b15 PROC NEAR                    ;Offset 0x2b15
+TurnScreenOff PROC NEAR                 ;Offset 0x2b15
     mov   ah, 20h
-Func0x2b15 ENDP
+TurnScreenOff ENDP
 ;continue!
-Func0x2b17 PROC NEAR                    ;Offset 0x2b17
+;
+;inputs:
+;   ah = 0x00 = screen on, ah = 0x20 = screen off
+;
+;outputs:
+;   ah = original clocking mode register value
+;
+;destroys:
+;   dx, al
+;
+ToggleScreenOnOff PROC NEAR             ;Offset 0x2b17
     mov   dx, VGA_SequenceIndex         ;Port 0x3c4
-    mov   al, 01h
-    out   dx, al
-    inc   dx
-    in    al, dx
-    mov   dh, al
-    and   ax, 20dfh
-    or    al, ah
-    mov   ah, dh
-    mov   dh, 03h
-    out   dx, al
+    mov   al, VGA_SEQIdx_ClockingMode   ;0x1
+    out   dx, al                        ;Write Index
+    inc   dx                            ;Move to sequence data port
+    in    al, dx                        ;read data port
+    mov   dh, al                        ;store original value
+    and   ax, 20dfh                     ;Filter ah to only VGA_SEQ1_ScreenOff, and filter out screen off in original value
+    or    al, ah                        ;set screen off bit in original value
+    mov   ah, dh                        ;ah = original register value
+    mov   dh, 03h                       ;
+    out   dx, al                        ;write updated register value
     ret
-Func0x2b17 ENDP
+ToggleScreenOnOff ENDP
 
 ;
 ;inputs:
@@ -7905,30 +8042,41 @@ Func0x5104 PROC NEAR                    ;Offset 0x5104
     ret
 Func0x5104 ENDP
 
-Func0x5110 PROC NEAR                    ;Offset 0x5110
+;
+;inputs:
+;   si = Pointer to DDC/MISC functions
+;
+;outputs:
+;   al = 0ah - number of tries it took
+;
+;destroys:
+;   -
+;note: Not sure if that's what it does, but the documentation is rather sparse.
+;      No functions set the output to 1, only to 0. 
+DetectInput PROC NEAR                   ;Offset 0x5110
     push ecx
     call word ptr cs:[si + MGA_DDCDisable0];0x00
     call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + MGA_DDCDisable1];0x02
     mov  cl, 0ah
-Label0x511e:                            ;Offset 0x511e
+KeepListening:                          ;Offset 0x511e
     call SleepIfNeeded                  ;Offset 0x507f
     dec  cl
-    je   Label0x513c                    ;Offset 0x513c
+    je   TimeOut                        ;Offset 0x513c
     call word ptr cs:[si + MGA_DDCRead1];0x0a
-    jae  Label0x511e                    ;Offset 0x511e
+    jae  KeepListening                  ;Offset 0x511e
     call word ptr cs:[si + MGA_DDCRead0];0x08
-    jae  Label0x511e                    ;Offset 0x511e
+    jae  KeepListening                  ;Offset 0x511e
     call word ptr cs:[si + MGA_DDCSet0] ;0x04
     call SleepIfNeeded                  ;Offset 0x507f
     call word ptr cs:[si + MGA_DDCSet1] ;0x06
-Label0x513c:                            ;Offset 0x513c
+TimeOut:                                ;Offset 0x513c
     mov  al, cl
     pop  ecx
     ret
-Func0x5110 ENDP
+DetectInput ENDP
 
-Func0x5141 PROC NEAR                    ;Offset 0x5141
+TurnOffOutput PROC NEAR                 ;Offset 0x5141
     push ecx
     call word ptr cs:[si + MGA_DDCSet0] ;0x04
     call SleepIfNeeded                  ;Offset 0x507f
@@ -7940,7 +8088,7 @@ Func0x5141 PROC NEAR                    ;Offset 0x5141
     call SleepIfNeeded                  ;Offset 0x507f
     pop  ecx
     ret
-Func0x5141 ENDP
+TurnOffOutput ENDP
 
 Func0x5161 PROC NEAR                    ;Offset 0x5161
     push ecx
@@ -8070,6 +8218,16 @@ Label0x5251:                            ;Offset 0x5251
     ret
 Func0x5223 ENDP
 
+;inputs:
+;   cl = 
+;   ch = 
+;  edx = 
+;   si = 
+;
+;outputs:
+;
+;
+;destroys:
 ;
 Func0x5258 PROC NEAR                    ;Offset 0x5258
     push     ecx
@@ -8082,9 +8240,9 @@ Func0x5258 PROC NEAR                    ;Offset 0x5258
 Label0x526f:                            ;Offset 0x526f
     cmp      cl, 00h
     je       Label0x5299                ;Offset 0x5299
-    call     Func0x5110                 ;Offset 0x5110
+    call     DetectInput                ;Offset 0x5110
     or       al, al
-    je       Label0x534f                ;Offset 0x534f
+    je       NotDetected                ;Offset 0x534f
     mov      al, 60h
     call     Func0x51e9                 ;Offset 0x51e9
     or       al, al
@@ -8100,9 +8258,9 @@ Label0x5299:                            ;Offset 0x5299
 Label0x529b:                            ;Offset 0x529b
     push     edx
     push     edi
-    call     Func0x5110                 ;Offset 0x5110
+    call     DetectInput                ;Offset 0x5110
     or       al, al
-    je       Label0x534f                ;Offset 0x534f
+    je       NotDetected                ;Offset 0x534f
     or       dx, dx
     ;je       Label0x52f6                ;Offset 0x52f6
     DB 00Fh, 084h, 048h, 000h           ;Weird misassemble
@@ -8136,7 +8294,7 @@ Label0x52e8:                            ;Offset 0x52e8
     call     SleepIfNeeded              ;Offset 0x507f
     dec      al
     jne      Label0x52e8                ;Offset 0x52e8
-    call     Func0x5110                 ;Offset 0x5110
+    call     DetectInput                ;Offset 0x5110
     or       al, al
     je       Label0x5340                ;Offset 0x5340
 Label0x52f6:                            ;Offset 0x52f6
@@ -8175,13 +8333,13 @@ Label0x5337:                            ;Offset 0x5337
     or       ecx, 00010000h
 Label0x5340:                            ;Offset 0x5340
     call     SleepIfNeeded              ;Offset 0x507f
-    call     Func0x5141                 ;Offset 0x5141
+    call     TurnOffOutput              ;Offset 0x5141
     mov      al, 05h
-Label0x5348:                            ;Offset 0x5348
+Delay:                                  ;Offset 0x5348
     call     SleepIfNeeded              ;Offset 0x507f
     dec      al
-    jne      Label0x5348                ;Offset 0x5348
-Label0x534f:                            ;Offset 0x534f
+    jne      Delay                      ;Offset 0x5348
+NotDetected:                            ;Offset 0x534f
     pop      edi
     pop      edx
     dec      cl
@@ -9271,17 +9429,17 @@ GetSetDACPaletteControl:                ;Offset 0x5db8
     jne       Label0x5dfa               ;Offset 0x5dfa
     xor       ah, ah
     mov       dh, 06h
-    and       cl, 08h
+    and       cl, MGA_MISCCTRL_DAC_8Bit ;08h
     je        Label0x5dfa               ;Offset 0x5dfa
     mov       dh, 08h
     jmp       Label0x5dfa               ;Offset 0x5dfa
 Label0x5de0:                            ;Offset 0x5de0
-    and       cl, 0f7h
+    and       cl, NOT MGA_MISCCTRL_DAC_8Bit;0xf7
     cmp       dh, 08h
     mov       dh, 06h
     jb        Label0x5def               ;Offset 0x5def
     mov       dh, 08h
-    or        cl, 08h
+    or        cl, MGA_MISCCTRL_DAC_8Bit ;0x8
 Label0x5def:                            ;Offset 0x5def
     xchg      cl, ch
     mov       cl, MGA_INDD_MiscellaneousControl;0x1e
@@ -9624,14 +9782,14 @@ Func0x600c PROC NEAR                    ;Offset 0x600c
     nop
     nop
     call ReadIndexedRegister            ;Offset 0x6a80
-    and  cl, 07h
+    and  cl, MGA_MULCTRL_DepthMask      ;0x7
     mov  dx, VGA_DACWriteIndex          ;Port 0x3c8
     xor  al, al
     out  dx, al
     inc  dx
-    cmp  cl, 07h
+    cmp  cl, MGA_MULCTRL_Depth32Pal     ;0x7
     je   Label0x602b                    ;Offset 0x602b
-    cmp  cl, 02h
+    cmp  cl, MGA_MULCTRL_Depth16        ;0x2
     je   Label0x6034                    ;Offset 0x6034
     jmp  Label0x604e                    ;Offset 0x604e
 Label0x602b:                            ;Offset 0x602b
@@ -9733,7 +9891,7 @@ Label0x609c:                            ;Offset 0x609c
     nop
     nop
     call ReadIndexedRegister            ;Offset 0x6a80
-    or   cl, 08h
+    or   cl, MGA_MISCCTRL_DAC_8Bit      ;0x8
     mov  ch, cl
     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
@@ -9742,10 +9900,10 @@ Label0x609c:                            ;Offset 0x609c
     mov  cl, MGA_INDD_MultiplexControl  ;0x19
     nop
     nop
-    mov  ch, 07h
+    mov  ch, MGA_MULCTRL_Depth32Pal     ;0x7
     call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
-    mov  ax, 8303h
+    mov  ax, MGA_CRTCExt_Misc OR ((MGA_CRTCEXT3_ScaleDiv4 OR MGA_CRTCEXT3_MGAModeEnable) SHL 8);0x8303
     out  dx, ax
     call Func0x600c                     ;Offset 0x600c
     mov  cx, 0002h
@@ -9756,7 +9914,7 @@ Label0x60f8:                            ;Offset 0x60f8
     nop
     nop
     call ReadIndexedRegister            ;Offset 0x6a80
-    or   cl, 08h
+    or   cl, MGA_MISCCTRL_DAC_8Bit      ;0x8
     mov  ch, cl
     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
@@ -9765,14 +9923,14 @@ Label0x60f8:                            ;Offset 0x60f8
     mov  cl, MGA_INDD_MultiplexControl  ;0x19
     nop
     nop
-    mov  ch, 02h
+    mov  ch, MGA_MULCTRL_Depth16        ;0x2
     test byte ptr es:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnector1_0;Offset 0x488 0x40
     jne  Label0x6121                    ;Offset 0x6121
-    mov  ch, 01h
+    mov  ch, MGA_MULCTRL_Depth15        ;0x1
 Label0x6121:                            ;Offset 0x6121
     call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
-    mov  ax, 8103h
+    mov  ax, MGA_CRTCExt_Misc OR ((MGA_CRTCEXT3_MGAModeEnable OR MGA_CRTCEXT3_ScaleDiv2) SHL 8);0x8103
     out  dx, ax
     call Func0x600c                     ;Offset 0x600c
     mov  cx, 0000h
@@ -9783,7 +9941,7 @@ Label0x6133:                            ;Offset 0x6133
     nop
     nop
     call ReadIndexedRegister            ;Offset 0x6a80
-    and  cl, 0f7h
+    and  cl, NOT MGA_MISCCTRL_DAC_8Bit  ;0xf7
     mov  ch, cl
     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
@@ -9795,24 +9953,24 @@ Label0x6133:                            ;Offset 0x6133
     xor  ch, ch
     call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
-    mov  ax, 8003h
+    mov  ax, MGA_CRTCExt_Misc OR ((MGA_CRTCEXT3_MGAModeEnable OR MGA_CRTCEXT3_ScaleDiv1) SHL 8);8003h
     out  dx, ax
-    mov  cx, 01h
+    mov  cx, 0001h
 Label0x615f:                            ;Offset 0x615f
     push cx
     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     nop
     nop
     call ReadIndexedRegister            ;Offset 0x6a80
-    and  cl, 0f8h
+    and  cl, NOT (MGA_MISCCTRL_DAC_Enable OR MGA_MISCCTRL_MAFC_MASK);0xf8
     test byte ptr cs:[Data0x7ff1], 20h  ;Offset 0x7ff1
     je   Label0x6175                    ;Offset 0x6175
-    or   cl, 01h
+    or   cl, MGA_MISCCTRL_DAC_Enable    ;0x1
 Label0x6175:                            ;Offset 0x6175
-    or   cl, 04h
+    or   cl, MGA_MISCCTRL_MAFC_PanelLinkMode;0x4
     test byte ptr cs:[Data0x7ff1], 80h  ;Offset 0x7ff1
     jne  Label0x6183                    ;Offset 0x6183
-    or   cl, 07h
+    or   cl, MGA_MISCCTRL_DAC_Enable OR MGA_MISCCTRL_MAFC_Disable;0x7
 Label0x6183:                            ;Offset 0x6183
     mov  ch, cl
     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
@@ -9854,10 +10012,10 @@ Func0x61ae PROC NEAR                    ;Offset 0x61ae
     nop
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
-    and       cl, 0f5h
+    and       cl, NOT (MGA_MISCCTRL_MAFC_MAFC OR MGA_MISCCTRL_DAC_8Bit);0xf5
     test      byte ptr cs:[Data0x7ff1], 80h;Offset 0x7ff1
     jne       Label0x61d2               ;Offset 0x61d2
-    and       cl, 0f1h
+    and       cl, NOT (MGA_MISCCTRL_MAFC_MASK OR MGA_MISCCTRL_DAC_8Bit);0xf1h
 Label0x61d2:                            ;Offset 0x61d2
     mov       ch, cl
     mov       cl, MGA_INDD_MiscellaneousControl;0x1e
@@ -9868,10 +10026,10 @@ Label0x61d2:                            ;Offset 0x61d2
     nop
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
-    and       cl, 0efh
+    and       cl, NOT MGA_GENCTRL_PedestalContr7p5IRE;0xef
     mov       al, byte ptr cs:[Data0x7d35];Offset 0x7d35
-    and       al, 01h
-    shl       al, 04h
+    and       al, 01h                   ;
+    shl       al, 04h                   ;Pedestal control?
     or        cl, al
     mov       ch, MGA_INDD_GeneralControl;0x1d
     nop
@@ -9882,9 +10040,9 @@ Label0x61d2:                            ;Offset 0x61d2
     nop
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
-    and       cl, 0dfh
+    and       cl, NOT MGA_GENCTRL_GreenSyncOutDisable;0xdf
     mov       al, byte ptr cs:[Data0x7d35];Offset 0x7d35
-    and       al, 20h
+    and       al, 20h                   ;green sync out config
     or        cl, al
     mov       ch, MGA_INDD_GeneralControl;0x1d
     nop
@@ -9900,23 +10058,23 @@ Label0x61d2:                            ;Offset 0x61d2
     nop
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
-    and       cl, 30h
+    and       cl, MGA_GENCTRL_PedestalContr7p5IRE OR MGA_GENCTRL_GreenSyncOutDisable;x30
     mov       ch, MGA_INDD_GeneralControl;0x1d
     nop
     nop
     xchg      cl, ch
     call      WriteIndexedRegister      ;Offset 0x6a6b
-    mov       cl, 06h
+    mov       cl, MGA_INDD_CursorControl;0x6
     nop
     nop
-    mov       ch, 00h
+    mov       ch, MGA_CURCTRL_CursorDisabled;0x0
     call      WriteIndexedRegister      ;Offset 0x6a6b
     mov       cl, MGA_INDD_PixelClockControl;0x1a
     nop
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
-    and       cl, 0fch
-    or        cl, 01h
+    and       cl, NOT MGA_PIXCLKCTRL_SelMASK;0fch
+    or        cl, MGA_PIXCLKCTRL_SelPLL ;0x1
     mov       ch, cl
     mov       cl, MGA_INDD_PixelClockControl;0x1a
     nop
@@ -9929,9 +10087,9 @@ Return:                                 ;Offset 0x624f
     call      MGAWriteCRTCExtensionRegister;Offset 0x2d6
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
     mov       ah, byte ptr cs:[Data0x7d35];Offset 0x7d35
-    and       ah, 10h
-    shl       ah, 02h
-    mov       al, 03h
+    and       ah, 10h                   ;bit 4
+    shl       ah, 02h                   ;moves to bit 6, MGA_CRTCEXT3_CompSyncEnable
+    mov       al, MGA_CRTCExt_Misc      ;0x3
     out       dx, ax
     mov       ax, (MGA_CRTCExt_MemoryPage SHL 8) OR 00h;0x400
     call      MGAWriteCRTCExtensionRegister;Offset 0x2d6
@@ -9939,8 +10097,8 @@ Return:                                 ;Offset 0x624f
     call      MGAWriteCRTCExtensionRegister;Offset 0x2d6
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
     mov       ah, byte ptr cs:[Data0x7d37];Offset 0x7d37
-    and       ah, 07h
-    mov       al, 06h
+    and       ah, MGA_CRTCEXT6_HiPrioLevelMASK;0x7 bits 0,1,2
+    mov       al, MGA_CRTCExt_PrioRequestControl;0x6
     out       dx, ax
     pop       dx
     pop       cx
@@ -10058,7 +10216,7 @@ Label0x6334:                            ;Offset 0x6334
     mov       word ptr ds:[BDA_VideoParameterControlBlockPtrSeg], es;Offset 0x4aa
     mov       ax, dx
     int       6dh
-    call      Func0x2b15                ;Offset 0x2b15
+    call      TurnScreenOff             ;Offset 0x2b15
     pop       word ptr ds:[BDA_VideoParameterControlBlockPtrOfs];Offset 0x4a8
     pop       word ptr ds:[BDA_VideoParameterControlBlockPtrSeg];Offset 0x4aa
     lds       si, [bp + 04h]
@@ -10116,7 +10274,7 @@ Label0x63d7:                            ;Offset 0x63d7
     mov       ah, MGA_CRTCExt_MemoryPage;0x4
     mov       al, bl
     call      MGAWriteCRTCExtensionRegister;Offset 0x2d6
-    call      Func0x2b11                ;Offset 0x2b11
+    call      TurnScreenOn              ;Offset 0x2b11
     add       sp, 001ch
     xor       ax, ax
     pop       edx
@@ -10740,7 +10898,7 @@ Label0x6857:                            ;Offset 0x6857
     or    ch, 1
     nop
 Label0x6861:                            ;Offset 0x6861
-    mov   cl, 8ah
+    mov   cl, 8ah                       ;undocumented register?
     nop
     nop
     call  WriteIndexedRegister          ;Offset 0x6a6b
@@ -11187,6 +11345,13 @@ ReadIndexedRegister ENDP
 ;Offset 0x6a93
 Data0x6a93              DB 002h, 004h, 008h, 010h
 
+;inputs:
+;   cx = 
+;
+;outputs:
+;
+;destroys:
+;   dx
 Func0x6a97 PROC NEAR                    ;Offset 0x6a97
     push  ax
     push  bx
@@ -11205,7 +11370,7 @@ Func0x6a97 PROC NEAR                    ;Offset 0x6a97
     mov   di, PCI_MGA_Option + 01h      ;0x41
     mov   al, PCI_ACCESS_ReadByte       ;0x8
     call  AccessPCIRegister             ;Offset 0x68f8
-    test  cl, 10h
+    test  cl, (PCI_MGA_Opt_MemConfig2 SHR 8);10h
     pop   ax
     pop   cx
     pop   di
@@ -11416,6 +11581,11 @@ Label0x6cce:                            ;Offset 0x6cce
     ret
 Func0x6b47 ENDP
 
+;
+;inputs:
+;   cx = bit 2 = gclkdiv
+;            3 = mclkdiv
+;
 Func0x6ce3 PROC NEAR                    ;Offset 0x6ce3
     push eax
     push ebx
@@ -11429,14 +11599,14 @@ Func0x6ce3 PROC NEAR                    ;Offset 0x6ce3
     mov  di, PCI_MGA_Option             ;0x40
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    or   cl, PCI_MGA_Opt_SysClockDis    ;0x4
+    or   cl, PCI_MGA_Opt_SysClockDisable;0x4
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
     pop  dx
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
     mov  al, dl
-    and  al, 03h
+    and  al, 03h                        ;bits 1,0
     jne  Label0x6d1f                    ;Offset 0x6d1f
     and  cl, NOT PCI_MGA_Opt_SysClockSelectMask;0xfc
     mov  al, PCI_ACCESS_WriteByte       ;0xb
@@ -11459,7 +11629,7 @@ Label0x6d32:                            ;Offset 0x6d32
     mov  di, PCI_MGA_Option             ;0x40
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    or   cl, PCI_MGA_Opt_SysClockDis    ;0x4
+    or   cl, PCI_MGA_Opt_SysClockDisable;0x4
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
     mov  al, PCI_ACCESS_ReadByte        ;0x8
@@ -11469,22 +11639,22 @@ Label0x6d32:                            ;Offset 0x6d32
     call AccessPCIRegister              ;Offset 0x68f8
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    and  cl, NOT PCI_MGA_Opt_SysClockDis;0xfb
+    and  cl, NOT PCI_MGA_Opt_SysClockDisable;0xfb
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
     pop  edx
-    mov  cl, 2ch
+    mov  cl, MGA_INDD_SYSPLL_M_Value    ;0x2c
     mov  ch, dh
-    and  ch, 1fh
+    and  ch, MGA_SYSPLLM_Mask           ;0x1f
     call WriteIndexedRegister           ;Offset 0x6a6b
     mov  ch, dl
-    inc  cl
+    inc  cl                             ;MGA_INDD_SYSPLL_N_Value
     call WriteIndexedRegister           ;Offset 0x6a6b
     shr  edx, 0dh
     mov  ch, dl
-    inc  cl
+    inc  cl                             ;MGA_INDD_SYSPLL_P_Value
     call WriteIndexedRegister           ;Offset 0x6a6b
-    mov  dx, 2ee0h
+    mov  dx, 2ee0h                      ;12,000
     call Sleep                          ;Offset 0x508e
     xor  dx, dx
 Label0x6d92:                            ;Offset 0x6d92
@@ -11492,20 +11662,20 @@ Label0x6d92:                            ;Offset 0x6d92
     je   Label0x6da1                    ;Offset 0x6da1
     mov  cl, MGA_INDD_SYSPLL_Status     ;0x2f
     call ReadIndexedRegister            ;Offset 0x6a80
-    and  cl, 40h
+    and  cl, MGA_SYSPLLSTAT_FrequencyLock;0x40
     je   Label0x6d92                    ;Offset 0x6d92
     jmp  Label0x6dc7                    ;Offset 0x6dc7
 Label0x6da1:                            ;Offset 0x6da1
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    and  cl, 0dfh
+    and  cl, NOT PCI_MGA_Opt_SysPLLPowerUp;0xdf
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
     mov  dx, 2ee0h
     call Sleep                          ;Offset 0x508e
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    or   cl, 20h
+    or   cl, PCI_MGA_Opt_SysPLLPowerUp  ;0x20
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
     mov  dx, 2ee0h
@@ -11513,22 +11683,22 @@ Label0x6da1:                            ;Offset 0x6da1
 Label0x6dc7:                            ;Offset 0x6dc7
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    or   cl, 04h
+    or   cl, PCI_MGA_Opt_SysClockDisable;0x4
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
     pop  dx
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    and  cl, 0fch
-    or   cl, 01h
-    mov  al, 0bh
+    and  cl, NOT PCI_MGA_Opt_SysClockSelectMask;0xfc
+    or   cl, PCI_MGA_Opt_SysClockSelectPLL;0x1
+    mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
 Label0x6de5:                            ;Offset 0x6de5
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
     mov  al, dl
-    and  al, 0ch
-    shl  al, 01h
+    and  al, 0ch                        ;bits 3,2
+    shl  al, 01h                        ;bits 4,3
     or   cl, al
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
@@ -11561,7 +11731,7 @@ Label0x6e36:                            ;Offset 0x6e36
     mov  di, PCI_MGA_Option             ;0x40
     mov  al, PCI_ACCESS_ReadByte        ;0x8
     call AccessPCIRegister              ;Offset 0x68f8
-    and  cl, NOT PCI_MGA_Opt_SysClockDis;0xfb
+    and  cl, NOT PCI_MGA_Opt_SysClockDisable;0xfb
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     call AccessPCIRegister              ;Offset 0x68f8
     pop  esi
@@ -12047,6 +12217,10 @@ Label0x7320:                            ;Offset 0x7320
     ret
 Func0x72e9 ENDP
 
+;
+;
+;
+;
 Func0x7325 PROC NEAR                    ;Offset 0x7325
     push      es
     push      bx
@@ -12611,7 +12785,7 @@ Label0x77ab:                            ;Offset 0x77ab
     ret
 Func0x7721 ENDP
 
-RebootG200 PROC NEAR                    ;Offset 0x77b5
+RebootMGAG200 PROC NEAR                 ;Offset 0x77b5
     push   di
     push   ecx
     push   edx
@@ -12669,9 +12843,13 @@ SkipStore:                              ;Offset 0x781e
     pop    ecx
     pop    di
     ret
-RebootG200 ENDP
+RebootMGAG200 ENDP
 
-Func0x782e PROC NEAR                    ;Offset 0x782e
+;
+;
+;
+;
+TalkToMonitorAndSetupAGPBus PROC NEAR   ;Offset 0x782e
     push   ax
     push   si
     push   di
@@ -12685,7 +12863,7 @@ Func0x782e PROC NEAR                    ;Offset 0x782e
     pop    si
     pop    ax
     ret
-Func0x782e ENDP
+TalkToMonitorAndSetupAGPBus ENDP
 
 ConfigureAladdinChipset PROC NEAR       ;Offset 0x7849
     push   bx
@@ -12733,6 +12911,9 @@ Data0x789f              DB 012h
                         DB 060h
 
 ;
+;
+;
+;
 Func0x78a4 PROC NEAR                    ;Offset 0x78a4
     push   ds
     push   ecx
@@ -12771,7 +12952,7 @@ FindMGAG200Mechanism2 PROC NEAR         ;Offset 0x78d9
     mov    al, 80h
     mov    dx, PCI_M2_ConfigSpaceEnable ;Port 0xcf8
     out    dx, al
-    mov    dx, PCI_M2_DataBase          ;Port 0xc00
+    mov    dx, PCI_M2_DataBase          ;Port 0xc000
 Label0x78ed:                            ;Offset 0x78ed
     xor    dl, dl
     in     ax, dx
@@ -12894,17 +13075,17 @@ FindMGAG200Mechanism1 ENDP
 ;   -
 ;
 ;outputs:
-;   eax = 0 = not found, eax - device ID, Vendor ID = found
+;   eax = 0 = not found, eax = device ID, Vendor ID = found
 ;
 ;destroys:
 ;   cx, dx
 ;
-FindIntelTriton430FXChipset PROC NEAR   ;Offet 0x79b9
+FindIntelTriton430FXChipset PROC NEAR   ;Offset 0x79b9
     push  ebx
     pushf
     cli
     xor   ch, ch
-    mov   ebx, 80000000h
+    mov   ebx, PCI_M1_ConfigAddres_Enable;0x80000000
     mov   dh, 0ch
     mov   cl, 10h
 CheckNextDevice:                        ;Offset 0x79c9
@@ -12924,7 +13105,7 @@ SearchDone:                             ;Offset 0x79e9
 FoundDevice:                            ;Offset 0x79ec
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
     xchg  eax, ebx
-    out   dx, eax
+    out   dx, eax                       ;Select device for changes.
     xchg  eax, ebx
     popf
     pop   ebx
@@ -13077,84 +13258,84 @@ NoIntelTriton430FX:                     ;Offset 0x7b45
     mov   di, PCI_MGA_Option            ;0x40
     mov   al, PCI_ACCESS_ReadByte       ;0x8
     call  AccessPCIRegister             ;Offset 0x68f8
-    or    cl, 20h
+    or    cl, PCI_MGA_Opt_SysPLLPowerUp ;0x20
     mov   al, PCI_ACCESS_WriteByte      ;0xb
     call  AccessPCIRegister             ;Offset 0x68f8
     mov   al, 01h
     call  Sleep2                        ;Offset 0x2bfc
     xor   dx, dx
-Label0x7b68:                            ;Offset 0x7b68
+PLLNotFrequencyLocked:                  ;Offset 0x7b68
     dec   dx
-    je    Label0x7b75                   ;Offset 0x7b75
+    je    PLLFreqLockTimeout            ;Offset 0x7b75
     mov   cl, MGA_INDD_SYSPLL_Status    ;0x2f
     call  ReadIndexedRegister           ;Offset 0x6a80
-    and   cl, 40h
-    je    Label0x7b68                   ;Offset 0x7b68
-Label0x7b75:                            ;Offset 0x7b75
+    and   cl, MGA_SYSPLLSTAT_FrequencyLock;0x40
+    je    PLLNotFrequencyLocked         ;Offset 0x7b68
+PLLFreqLockTimeout:                     ;Offset 0x7b75
     mov   cl, MGA_INDD_PixelClockControl;0x1a
     call  ReadIndexedRegister           ;Offset 0x6a80
-    or    cl, 08h
+    or    cl, MGA_PIXCLKCTRL_PixelPLLPowerUp;0x8
     mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
     call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   al, 01h
     call  Sleep2                        ;Offset 0x2bfc
     xor   dx, dx
-Label0x7b8b:                            ;Offset 0x7b8b
+PIXNotFrequencyLocked:                  ;Offset 0x7b8b
     dec   dx
-    je    Label0x7b98                   ;Offset 0x7b98
+    je    PIXFreqLockTimeout            ;Offset 0x7b98
     mov   cl, MGA_INDD_PIXPLL_Status    ;0x4f
     call  ReadIndexedRegister           ;Offset 0x6a80
-    and   cl, 40h
-    je    Label0x7b8b                   ;Offset 0x7b8b
-Label0x7b98:                            ;Offset 0x7b98
+    and   cl, MGA_PIXPLLSTAT_FrequencyLock;0x40
+    je    PIXNotFrequencyLocked         ;Offset 0x7b8b
+PIXFreqLockTimeout:                     ;Offset 0x7b98
     mov   cl, MGA_INDD_MiscellaneousControl;0x1e
     call  ReadIndexedRegister           ;Offset 0x6a80
-    or    cl, 10h
+    or    cl, MGA_MISCCTRL_LUT_Enable   ;0x10
     mov   ch, MGA_INDD_MiscellaneousControl;0x1e
     xchg  cl, ch
     call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   cl, MGA_INDD_MiscellaneousControl;0x1e
     call  ReadIndexedRegister           ;Offset 0x6a80
-    or    cl, 01h
+    or    cl, MGA_MISCCTRL_DAC_Enable   ;0x1
     mov   ch, MGA_INDD_MiscellaneousControl;0x1e
     xchg  cl, ch
     call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   di, PCI_MGA_Option            ;0x40
     mov   al, PCI_ACCESS_ReadByte       ;0x8
     call  AccessPCIRegister             ;Offset 0x68f8
-    or    cl, 04h
+    or    cl, PCI_MGA_Opt_SysClockDisable;0x4
     mov   al, PCI_ACCESS_WriteByte      ;0xb
     call  AccessPCIRegister             ;Offset 0x68f8
     mov   di, PCI_MGA_Option            ;0x40
     mov   al, PCI_ACCESS_ReadByte       ;0x8
     call  AccessPCIRegister             ;Offset 0x68f8
-    and   cl, 0fch
-    or    cl, 01h
+    and   cl, NOT PCI_MGA_Opt_SysClockSelectMask;0xfc
+    or    cl, PCI_MGA_Opt_SysClockSelectPLL;0x1
     mov   al, PCI_ACCESS_WriteByte      ;0xb
     call  AccessPCIRegister             ;Offset 0x68f8
     mov   di, PCI_MGA_Option            ;0x40
     mov   al, PCI_ACCESS_ReadByte       ;0x8
     call  AccessPCIRegister             ;Offset 0x68f8
-    and   cl, 0fbh
+    and   cl, NOT PCI_MGA_Opt_SysClockDisable;0xfb
     mov   al, PCI_ACCESS_WriteByte      ;0xb
     call  AccessPCIRegister             ;Offset 0x68f8
     mov   cl, MGA_INDD_PixelClockControl;0x1a
     call  ReadIndexedRegister           ;Offset 0x6a80
-    or    cl, 04h
+    or    cl, MGA_PIXCLKCTRL_ClockDisable;0x4
     mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
     call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   cl, MGA_INDD_PixelClockControl;0x1a
     call  ReadIndexedRegister           ;Offset 0x6a80
-    and   cl, 0fch
-    or    cl, 01h
+    and   cl, NOT MGA_PIXCLKCTRL_SelMASK;0xfc
+    or    cl, MGA_PIXCLKCTRL_SelPLL     ;0x1
     mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
     call  WriteIndexedRegister          ;Offset 0x6a6b
     mov   cl, MGA_INDD_PixelClockControl;0x1a
     call  ReadIndexedRegister           ;Offset 0x6a80
-    and   cl, 0fbh
+    and   cl, NOT MGA_PIXCLKCTRL_ClockDisable;0fbh
     mov   ch, MGA_INDD_PixelClockControl;0x1a
     xchg  cl, ch
     call  WriteIndexedRegister          ;Offset 0x6a6b
@@ -13326,13 +13507,15 @@ Data0x7d30              DD 003258A31h
 Data0x7d34              DB 000h
 
 ;Offset 0x7d35
-Data0x7d35              DB 0EEh
+Data0x7d35              DB 0EEh     ;bit 0 = Pedestal control (pedcon), General control register XGENCTRL
+                                    ;bit 4 = Composite Sync Enable (csyncen) in CRTCEXT3
+                                    ;bit 5 = Green sync output control (iogsyncdis) 
 
 ;Offset 0x7d36
 Data0x7d36              DB 0FFh
 
 ;Offset 0x7d37
-Data0x7d37              DB 0FFh
+Data0x7d37              DB 0FFh     ;bit 0-2 = hiprilvl in CRTCEXT3
 
 ;Offset 0x7d38
 Data0x7d38              DB 088h
