@@ -25,6 +25,10 @@
 ;There are a number of commented out lines of code.
 ;These aren't wrong instructions, they are just encoded differently by whatever compiler / assembler Matrox used.
 ;I commented them out because I wanted the output to be 100% binary compatible.
+;
+;Having said that, there are two instances of jump instructions seemingly jumping to invalid addresses.
+;Not sure what's going on there.
+;
 
 include ..\..\include\bda.inc
 include ..\..\include\keyboard.inc
@@ -78,9 +82,12 @@ ROMSize                 DB (ROMEnd - ROMStart)/512
 
 jmp entry                               ;Offset 0x80
 
-                        DB 021h, 034h, 003h, 010h, 004h, 050h, 00Bh, 0EEh, 030h, 08Ah, 00Bh ;Offset 0x05
+;Offset 0x5
+                        DB 021h         ;BIOS Version (2.1)
+                        DB 034h, 003h, 010h, 004h, 050h, 00Bh, 0EEh, 030h, 08Ah, 00Bh
                         DB 094h, 00Bh, 0FFh, 0FFh, 000h, 000h, 000h, 000h
 
+;Offset 0x18
                         DW offset PCIHeader
                         DW 0000h        ;PnP header pointer
                         DW 2000h        ;Unknown
@@ -92,6 +99,7 @@ jmp entry                               ;Offset 0x80
     xchg bx, bx
     nop
 
+;Offset 0x60
 PCIHeader               DB 'PCIR'       ;PCI header magic
                         DW PCI_VENDOR_Matrox;Vendor ID
                         DW PCI_DEVICE_G400AGP;Device ID
@@ -114,37 +122,37 @@ entry:                                  ;Offset 0x80
     mov       es, ax
     call      FindMGAG400               ;Offset 0x7a63
     mov       word ptr cs:[PCIBusDeviceIDFunctionID], bx;Offset 0x7ff2
-    mov       di, 0008h
-    mov       al, 08h
+    mov       di, PCI_Header_Byte_RevisionID;0x8
+    mov       al, PCI_ACCESS_ReadByte   ;0x8
     nop
     call      AccessPCIRegister         ;Offset 0x69da
-    mov       byte ptr cs:[Data0x7ff4], cl;Offset 0x7ff4
+    mov       byte ptr cs:[DeviceRevision], cl;Offset 0x7ff4
     call      RebootMGAG400             ;Offset 0x77c5
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     call      Func0x783e                ;Offset 0x783e
     call      TurnScreenOff             ;Offset 0x2b1f
-    mov       di, 0043h
+    mov       di, PCI_MGA_Option + 03h  ;0x43
     nop
-    mov       al, 08h
-    nop
-    call      AccessPCIRegister         ;Offset 0x69da
-    or        cl, 10h
-    mov       al, 0bh
+    mov       al, PCI_ACCESS_ReadByte   ;0x8
     nop
     call      AccessPCIRegister         ;Offset 0x69da
-    mov       di, 0008h
-    mov       al, 08h
+    or        cl, PCI_MGA_OPTION_MFIFONoHiPrioReqDsbl SHR 24;0x10
+    mov       al, PCI_ACCESS_WriteByte  ;0xb
     nop
     call      AccessPCIRegister         ;Offset 0x69da
-    cmp       cl, 02h
+    mov       di, PCI_Header_Byte_RevisionID;0x8
+    mov       al, PCI_ACCESS_ReadByte   ;0x8
+    nop
+    call      AccessPCIRegister         ;Offset 0x69da
+    cmp       cl, MGA_G400_Rev2         ;0x2
     jne       Label0xdf                 ;Offset 0xdf
-    mov       cl, 1ah
+    mov       cl, MGA_INDD_PixelClockControl;0x1a
     nop
     nop
     call      ReadIndexedRegister       ;Offset 0x6b83
-    or        cl, 40h
+    or        cl, 40h                   ;Undocumented flag
     mov       ch, cl
-    mov       cl, 1ah
+    mov       cl, MGA_INDD_PixelClockControl;0x1a
     nop
     nop
     call      WriteIndexedRegister      ;Offset 0x6b6e
@@ -161,10 +169,10 @@ Label0xdf:                              ;Offset 0xdf
     je        Label0x10c                ;Offset 0x10c
 Label0x100:                             ;Offset 0x100
     call      Func0x7186                ;Offset 0x7186
-    mov       cl, 1fh
+    mov       cl, MGA_INDD_PanelMode    ;0x1f
     nop
     nop
-    mov       ch, 0c1h
+    mov       ch, MGA_PANELMODE_ClientPanelLinkMode OR MGA_PANELMODE_HorPolarityActiveLow OR MGA_PANELMODE_VerPolarityActiveLow;0xc1
     call      WriteIndexedRegister      ;Offset 0x6b6e
 Label0x10c:                             ;Offset 0x10c
     test      byte ptr cs:[Data0x7ff1], 81h;Offset 0x7ff1
@@ -173,13 +181,13 @@ Label0x10c:                             ;Offset 0x10c
 Label0x11b:                             ;Offset 0x11b
     test      byte ptr cs:[Data0x7d15], 04h;Offset 0x7d15
     je        Label0x136                ;Offset 0x136
-    mov       di, 0040h
+    mov       di, PCI_MGA_Option        ;0x40
     nop
-    mov       al, 08h
+    mov       al, PCI_ACCESS_ReadByte   ;0x8
     nop
     call      AccessPCIRegister         ;Offset 0x69da
-    or        cl, 40h
-    mov       al, 0bh
+    or        cl, PCI_MGA_Opt_PLLSelP1SysP2Pix;0x40
+    mov       al, PCI_ACCESS_WriteByte  ;0xb
     nop
     call      AccessPCIRegister         ;Offset 0x69da
 Label0x136:                             ;Offset 0x136
@@ -199,13 +207,13 @@ Label0x136:                             ;Offset 0x136
 Label0x15b:                             ;Offset 0x15b
     call      Func0x6f9d                ;Offset 0x6f9d
 Label0x15e:                             ;Offset 0x15e
-    mov       di, 0053h
+    mov       di, PCI_MGA_Option2 + 03h ;0x53
     nop
-    mov       al, 08h
+    mov       al, PCI_ACCESS_ReadByte   ;0x8
     nop
     call      AccessPCIRegister         ;Offset 0x69da
-    or        cl, 01h
-    mov       al, 0bh
+    or        cl, PCI_MGA_OPTION2_CPDECClockSelPLL SHR 24;0x1
+    mov       al, PCI_ACCESS_WriteByte  ;0xb
     nop
     call      AccessPCIRegister         ;Offset 0x69da
     cld
@@ -277,6 +285,7 @@ SetupVideoParameterControlBlock ENDP
 
 ;Offset 0x218
 InitMDA                 DB VGA_Misc_IOAddressSel_MDA, VGA_CRTControllerIndexD_lowbyte, BDA_DH_80x25Color, BDA_DM_80x25_16_Color_Text;0x0, 0xD4, 0x20, 0x03
+
 ;Offset 0x21c
 InitCGA                 DB VGA_Misc_IOAddressSel_CGA, VGA_CRTControllerIndexB_lowbyte, BDA_DH_80x25Monochrome, BDA_DM_80x25_Monochrome_Text;0x1, 0xB4, 0x30, 0x07
 
@@ -507,13 +516,79 @@ DisplayCominationCodes DisplayCombinationCodeTable < 010h, 001h, 008h, 000h >
                         DB BDA_DCC_PGC, BDA_DCC_MVGA            ; 15) MVGA + PGC
 
 ;Offset 0x3c4
-Data0x3c4               DB 0FFh, 0E0h, 00Fh, 000h, 000h, 000h, 000h, 007h, 002h, 008h, 0FFh, 00Eh, 000h, 000h, 03Fh, 000h
+StaticFunctionalityTable DB 0FFh        ;Modes supported 1: bit 0 to bit 7 = 1 modes 0,1,2,3,4,5,6,7 supported
+                        DB 0E0h         ;Modes supported 2: bit 0 to bit 7 = 1 modes 0Dh,0Eh,0Fh supported - 8,9,0Ah,0Bh,0Ch not supported
+                        DB 00Fh         ;Modes supported 3: bit 0 to bit 3 = 1 modes 10h,11h,12h,13h supported - bit 4 to bit 7 unused (0)
+                        DB 000h         ;(IBM) Reserved
+                        DB 000h         ;(IBM) Reserved
+                        DB 000h         ;(IBM) Reserved
+                        DB 000h         ;(IBM) Reserved
+                        DB 007h         ;Scan lines supported: bit 0 to bit 2 = 1 if scan lines 200,350,400 supported - bits 3-7 = unused (0)
+                        DB 002h         ;Total number of character blocks available in text modes
+                        DB 008h         ;Maximum number of active character blocks in text modes
+                        DW 00EFFh       ;Miscellaneous function support flags:
+                                        ;bit 0      All modes on all displays function supported
+                                        ;bit 1      Gray summing function supported
+                                        ;bit 2      Character font loading function supported
+                                        ;bit 3      Default palette loading enable/disable supported
+                                        ;bit 4      Cursor emulation function supported
+                                        ;bit 5      EGA palette present
+                                        ;bit 6      Color palette present
+                                        ;bit 7      Color-register paging function supported
+                                        ;bit 8      - Light pen not supported
+                                        ;bit 9      Save/restore state function 1Ch supported
+                                        ;bit 10     Intensity/blinking function supported (see AX=1003h)
+                                        ;bit 11     Display Combination Code supported (see #00039)
+                                        ;bits 12-15 Unused (0)
+                        DW 00000h       ;Reserved
+                        DB 03Fh         ;Save pointer function flags:
+                                        ;bit 0      512 character set supported
+                                        ;bit 1      Dynamic save area supported
+                                        ;bit 2      Alpha font override supported
+                                        ;bit 3      Graphics font override supported
+                                        ;bit 4      Palette override supported
+                                        ;bit 5      DCC extension supported
+                                        ;bits 6-7   Unused (0)
+                        DB 000h         ;Reserved
 
 ;Offset 0x3d4
-Data0x3d4               DB 02Ch, 028h, 02Dh, 029h, 02Ah, 02Eh, 01Eh, 029h, 006h, 000h, 006h, 000h
-                        DB 007h, 000h, 007h, 000h, 005h, 000h, 005h, 000h, 004h, 000h, 005h, 000h, 000h, 000h, 000h, 000h
-                        DB 000h, 000h, 000h, 000h, 000h, 000h, 005h, 000h, 006h, 000h, 004h, 000h, 004h, 000h, 000h, 000h
-                        DB 000h, 000h, 000h, 000h, 087h, 0DBh, 087h, 0DBh, 087h, 0DBh, 087h, 0DBh, 087h, 0DBh, 087h, 0DBh
+Data0x3d4               DB BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x2c
+                        DB BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x28
+                        DB BDA_CMCRV_Mode23Text OR BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x2d
+                        DB BDA_CMCRV_Mode23Text OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x29
+                        DB BDA_CMCRV_Mode45Graphics OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x2a
+                        DB BDA_CMCRV_Mode45Graphics OR BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x2e
+                        DB BDA_CMCRV_Mode45Graphics OR BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_GraphicsOperation;0x1e
+                        DB BDA_CMCRV_Mode23Text OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x29
+
+;Offset 0x3dc
+                        DB 006h, 000h
+                        DB 006h, 000h
+                        DB 007h, 000h
+                        DB 007h, 000h
+                        DB 005h, 000h
+                        DB 005h, 000h
+                        DB 004h, 000h
+                        DB 005h, 000h
+                        DB 000h, 000h
+                        DB 000h, 000h
+                        DB 000h, 000h
+                        DB 000h, 000h
+                        DB 000h, 000h
+                        DB 005h, 000h
+                        DB 006h, 000h
+                        DB 004h, 000h
+                        DB 004h, 000h
+                        DB 000h, 000h
+                        DB 000h, 000h
+                        DB 000h, 000h
+                        
+    xchg bx, bx                         ;hello
+    xchg bx, bx
+    xchg bx, bx
+    xchg bx, bx
+    xchg bx, bx
+    xchg bx, bx
 
 ;The assembler doesn't like all that data on one line, so I am just overlapping these to make struct accesses work.
 ;If anyone knows a cleaner way, please let me know
@@ -872,9 +947,15 @@ Int10CallTable          DW SetVideoMode;Offset 0x0c80                           
                         DW SaveRestoreVideoState;Offset 0x2434                              ; 1c
 
 ;Offset 0xb8a
-DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-DB 0C0h, 00Bh, 000h, 000h, 0FFh, 0FFh, 0A0h, 003h, 0C4h, 003h, 00Ch, 024h, 020h, 024h, 01Ah, 02Ah
-DB 096h, 02Ah, 0CEh, 02Ch, 000h, 000h, 087h, 0DBh, 087h, 0DBh, 087h, 0DBh, 087h, 0DBh, 087h, 0DBh
+                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
+                        DB 0C0h, 00Bh, 000h, 000h, 0FFh, 0FFh, 0A0h, 003h, 0C4h, 003h, 00Ch, 024h, 020h, 024h, 01Ah, 02Ah
+                        DB 096h, 02Ah, 0CEh, 02Ch, 000h, 000h
+
+    xchg bx, bx                         ;hello
+    xchg bx, bx
+    xchg bx, bx
+    xchg bx, bx
+    xchg bx, bx
 
 Int10Handler:                           ;Offset 0xbb0
     cmp  ax, 4f10h
@@ -940,7 +1021,7 @@ Label0xc1c:                             ;Offset 0xc1c
     push ax
     push dx
     mov  dx, VGA_SequenceIndex          ;Port 0x3c4
-    mov  al, 04h
+    mov  al, VGA_SEQIdx_MemoryMode      ;0x4
     out  dx, al
     xchg al, ah
     inc  dx
@@ -1011,18 +1092,18 @@ SetVideoMode PROC NEAR                  ;Offset 0x0c80
     mov  al, byte ptr ds:[BDA_VideoDisplayDataArea];Offset 0x489
     and  al, BDA_VDDA_Reserved          ;0x20
     je   Label0xc8d                     ;Offset 0xc8d
-    or   ah, 80h
+    or   ah, BDA_DM_DONT_CLEAR_SCREEN   ;0x80
 Label0xc8d:                             ;Offset 0xc8d
     mov  al, byte ptr ds:[BDA_VideoModeOptions];Offset 0x487
     shl  ax, 01h
     xchg al, ah
     rcr  ax, 01h
-    cmp  al, 13h
+    cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
     ja   Label0xcfa                     ;Offset 0xcfa
     push ax
-    cmp  al, 07h
+    cmp  al, BDA_DM_80x25_Monochrome_Text;0x7
     je   Label0xcac                     ;Offset 0xcac
-    cmp  al, 0fh
+    cmp  al, BDA_DM_640x350_Monochrome_Graphics;0xf
     je   Label0xcac                     ;Offset 0xcac
     mov  al, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
     and  al, NOT BDA_DH_InitialVideoModeMask;0xcf
@@ -1108,29 +1189,29 @@ Func0xd33 PROC NEAR                     ;Offset 0xd33
 Func0xd33 ENDP
 
 Func0xd43 PROC NEAR                     ;Offset 0xd43
-    test ah, 02h
-    je   Func0xd22                      ;Offset 0xd22
-    mov  si, 03b4h                      ;Port/Offset 0x3b4
-    cmp  al, 07h
-    je   Func0xd58                      ;Offset 0xd58
-    cmp  al, 0fh
-    je   Func0xd58                      ;Offset 0xd58
-    mov  al, 07h
+    test      ah, 02h
+    je        Func0xd22                 ;Offset 0xd22
+    mov       si, 03b4h                 ;Port/Offset 0x3b4
+    cmp       al, 07h
+    je        Func0xd58                 ;Offset 0xd58
+    cmp       al, 0fh
+    je        Func0xd58                 ;Offset 0xd58
+    mov       al, 07h
 Func0xd43 ENDP
 ;continue!
 Func0xd55 PROC NEAR                     ;Offset 0xd55
-    and  ah, 7fh
+    and       ah, 7fh
 Func0xd55 ENDP
 ;continue!
 Func0xd58 PROC NEAR                     ;Offset 0xd58
-    push bx
-    push cx
-    push dx
-    push bp
-    push es
-    push ax
-    call CheckMemoryMappedRegsAndExtendedRegister;Offset 0x66f6
-    je   Label0xd69                     ;Offset 0xd69
+    push      bx
+    push      cx
+    push      dx
+    push      bp
+    push      es
+    push      ax
+    call      CheckMemoryMappedRegsAndExtendedRegister;Offset 0x66f6
+    je        Label0xd69                ;Offset 0xd69
     mov       ax, 0000h
     call      Func0x5427                ;Offset 0x5427
 Label0xd69:                             ;Offset 0xd69
@@ -1216,7 +1297,7 @@ Label0xdf9:                             ;Offset 0xdf9
     xlatb     cs:[bx]
     mov       byte ptr ds:[BDA_CRTModeControlRegValue], al;Offset 0x465
     mov       al, 30h
-    cmp       ah, 06h
+    cmp       ah, BDA_DM_640x200_BW_Graphics;0x6
     jne       Label0xe20                ;Offset 0xe20
     mov       al, 3fh
 Label0xe20:                             ;Offset 0xe20
@@ -1271,7 +1352,7 @@ Func0xd58 ENDP
 Func0xe7b PROC NEAR                     ;Offset 0xe7b
     call      Func0x6256                ;Offset 0x6256
 Func0xe7b ENDP
-
+;continue!
 Func0xe7e PROC NEAR                     ;Offset 0xe7e
     test      byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489 0x1
     je        Label0xf01                ;Offset 0xf01
@@ -1294,10 +1375,10 @@ Label0xe9d:                             ;Offset 0xe9d
     mov       ah, bl
     mov       al, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
     and       al, BDA_DH_InitialVideoModeMask;0x30
-    mov       bl, 07h
+    mov       bl, BDA_DM_80x25_Monochrome_Text;0x7
     cmp       al, byte ptr cs:[si + 02h]
     je        Label0xefe                ;Offset 0xefe
-    mov       bl, 03h
+    mov       bl, BDA_DM_80x25_16_Color_Text;0x3
     cmp       al, byte ptr cs:[si + 03h]
     js        Label0xefe                ;Offset 0xefe
     mov       bl, ah
@@ -1334,10 +1415,10 @@ Label0xf01:                             ;Offset 0xf01
 Func0xe7e ENDP
 
 ;Offset 0xf02
-Data0xf02               DB 080h, 0B4h, 0FFh, 030h, 002h
+Data0xf02               DB 080h, VGA_CRTControllerIndexB_lowbyte, 0FFh, BDA_DH_80x25Monochrome, 002h;0x80 0xB4 0xFF 0x30 0x02
 
 ;Offset 0xf07
-Data0xf07               DB 001h, 0D4h, 030h, 000h, 000h
+Data0xf07               DB 001h, VGA_CRTControllerIndexD_lowbyte, BDA_DH_80x25Monochrome, 000h, 000h;0x01 0xD4 0x30 0x00 0x00
 
 Func0xf0c PROC NEAR                     ;Offset 0xf0c
     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0x489 0x8
@@ -1359,7 +1440,7 @@ Func0xf0c ENDP
 
 Func0xf2b PROC NEAR                     ;Offset 0xf2b
     call  Func0x26ef                    ;Offset 0x26ef
-    call  Func0x2a6a                    ;Offset 0x2a6a
+    call  GetNumberOfActiveScanlines    ;Offset 0x2a6a
     dec   al
     mov   ax, 0002h
     js    Label0xf47                    ;Offset 0xf47
@@ -1380,7 +1461,7 @@ Label0xf47:                             ;Offset 0xf47
 Func0xf2b ENDP
 
 Func0xf56 PROC NEAR                     ;Offset 0xf56
-    call  Func0x2a6a                    ;Offset 0x2a6a
+    call  GetNumberOfActiveScanlines    ;Offset 0x2a6a
     dec   al
     js    Label0xf70                    ;Offset 0xf70
     lea   ax, [Font8x16]                ;Offset 0x3900
@@ -1398,7 +1479,7 @@ Label0xf70:                             ;Offset 0xf70
 Func0xf56 ENDP
 
 Func0xf79 PROC NEAR                     ;Offset 0xf79
-    mov   al, 0ah
+    mov   al, BDA_VPCB_PaletterProfileTable;0xa
     call  LookupVideoParameterControlBlockPointer;Offset 0x2b93
     je    Label0xfcf                    ;Offset 0xfcf
     mov   al, 14h
@@ -1420,7 +1501,7 @@ Label0xf9d:                             ;Offset 0xf9d
     jne   Label0xfcf                    ;Offset 0xfcf
     push  es
     push  si
-    add   si, 03h
+    add   si, 0003h
     lodsw word ptr es:[si]
     xchg  ax, cx
     lodsw word ptr es:[si]
@@ -1630,11 +1711,11 @@ Func0x10fc PROC NEAR                    ;Offset 0x10fc
     shr       ax, 01h
     push      ax
     mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    mov       al, 0eh
+    mov       al, VGA_CRTCIdx_CursorLocHigh;0xe
     out       dx, ax
     pop       ax
     mov       ah, al
-    mov       al, 0fh
+    mov       al, VGA_CRTCIdx_CursorLocLow;0xf
     out       dx, ax
     pop       dx
 Func0x10fc ENDP
@@ -1681,23 +1762,23 @@ SelectActiveDisplayPage PROC NEAR       ;Offset 0x1135
     ja        Label0x1151               ;Offset 0x1151
     shr       ax, 01h
 Label0x1151:                            ;Offset 0x1151
-    call      Func0x115c                ;Offset 0x115c
+    call      SetStartAddress           ;Offset 0x115c
     shl       si, 01h
     mov       ax, word ptr [si + DBA_CursorPositionPage0];Offset 0x450
     jmp       Func0x10f9                ;Offset 0x10f9
 SelectActiveDisplayPage ENDP
 
-Func0x115c PROC NEAR                    ;Offset 0x115c
+SetStartAddress PROC NEAR               ;Offset 0x115c
     push      ax
     mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    mov       al, 0ch
+    mov       al, VGA_CRTCIdx_StartAddrHigh;0xc
     out       dx, ax
     pop       ax
     mov       ah, al
-    mov       al, 0dh
+    mov       al, VGA_CRTCIdx_StartAddrLow;0xd
     out       dx, ax
     ret
-Func0x115c ENDP
+SetStartAddress ENDP
 
 ScrollUpWindow PROC NEAR                ;Offset 0x116b
     push      bx
@@ -2105,206 +2186,206 @@ Label0x143f:                            ;Offset 0x143f
     mov       dl, VGA_CGAModeControl_lowbyte;Port 0x3d8
     mov       al, VGA_CGAMC_HiResText OR VGA_CGAMC_320x200Monochrome OR VGA_CGAMC_Blinking;0x25
     out       dx, al
-    pop        dx
-    pop        ax
-    jmp        Label0x1400              ;Offset 0x1400
+    pop       dx
+    pop       ax
+    jmp       Label0x1400               ;Offset 0x1400
 Label0x144d:                            ;Offset 0x144d
-    mov        ax, dx
-    sub        dx, cx
-    add        dx, 0101h
-    shl        dh, 01h
-    shl        dh, 01h
-    mov        cx, dx
-    call       Func0x2668               ;Offset 0x2668
-    cmp        byte ptr ds:[BDA_DisplayMode], BDA_DM_640x200_BW_Graphics;Offset 0x449 0x6
-    je         Label0x146a              ;Offset 0x146a
-    shl        ax, 01h
-    inc        ax
-    shl        cl, 01h
+    mov       ax, dx
+    sub       dx, cx
+    add       dx, 0101h
+    shl       dh, 01h
+    shl       dh, 01h
+    mov       cx, dx
+    call      Func0x2668                ;Offset 0x2668
+    cmp       byte ptr ds:[BDA_DisplayMode], BDA_DM_640x200_BW_Graphics;Offset 0x449 0x6
+    je        Label0x146a               ;Offset 0x146a
+    shl       ax, 01h
+    inc       ax
+    shl       cl, 01h
 Label0x146a:                            ;Offset 0x146a
-    add        ax, 0f0h
-    mov        di, ax
-    mov        si, ax
-    shl        bl, 01h
-    shl        bl, 01h
-    mov        al, 50h
-    mul        bl
-    sub        si, ax
-    mov        al, ch
-    sub        al, bl
-    xor        ah, ah
-    mov        dl, cl
-    mov        bp, dx
-    mov        cx, es
-    mov        ds, cx
-    or         bl, bl
-    je         Label0x14c0              ;Offset 0x14c0
+    add       ax, 0f0h
+    mov       di, ax
+    mov       si, ax
+    shl       bl, 01h
+    shl       bl, 01h
+    mov       al, 50h
+    mul       bl
+    sub       si, ax
+    mov       al, ch
+    sub       al, bl
+    xor       ah, ah
+    mov       dl, cl
+    mov       bp, dx
+    mov       cx, es
+    mov       ds, cx
+    or        bl, bl
+    je        Label0x14c0               ;Offset 0x14c0
 Label0x148d:                            ;Offset 0x148d
-    mov        cx, dx
+    mov       cx, dx
     rep movsb
-    lea        si, [bp + si + 2000h]    ;Offset 0x2000
-    lea        di, [bp + di + 2000h]    ;Offset 0x2000
-    mov        cx, dx
+    lea       si, [bp + si + 2000h]     ;Offset 0x2000
+    lea       di, [bp + di + 2000h]     ;Offset 0x2000
+    mov       cx, dx
     rep movsb
-    lea        si, [bp + si - 2050h]    ;Offset 0x2050
-    lea        di, [bp + di - 2050h]    ;Offset 0x2050
-    dec        ax
-    jne        Label0x148d              ;Offset 0x148d
+    lea       si, [bp + si - 2050h]     ;Offset 0x2050
+    lea       di, [bp + di - 2050h]     ;Offset 0x2050
+    dec       ax
+    jne       Label0x148d               ;Offset 0x148d
 Label0x14a8:                            ;Offset 0x14a8
-    xchg       al, bh
+    xchg      al, bh
 Label0x14aa:                            ;Offset 0x14aa
-    mov        cx, dx
+    mov       cx, dx
     rep stosb
-    lea        di, [bp + di + 2000h]    ;Offset 0x2000
-    mov        cx, dx
+    lea       di, [bp + di + 2000h]     ;Offset 0x2000
+    mov       cx, dx
     rep stosb
-    lea        di, [bp + di - 2050h]    ;Offset 0x2050
-    dec        bx
-    jne        Label0x14aa              ;Offset 0x14aa
-    jmp        Label0x1430              ;Offset 0x1430
+    lea       di, [bp + di - 2050h]     ;Offset 0x2050
+    dec       bx
+    jne       Label0x14aa               ;Offset 0x14aa
+    jmp       Label0x1430               ;Offset 0x1430
 Label0x14c0:                            ;Offset 0x14c0
-    xchg       bl, al
-    jmp        Label0x14a8              ;Offset 0x14a8
+    xchg      bl, al
+    jmp       Label0x14a8               ;Offset 0x14a8
 Label0x14c4:                            ;Offset 0x14c4
-    mov        ax, dx
-    sub        dx, cx
-    add        dx, 0101h
-    mov        cx, dx
-    inc        ah
-    call       Func0x2678               ;Offset 0x2678
-    sub        ax, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
-    add        ax, word ptr ds:[BDA_VideoBufferOffset];Offset 0x44e
-    mov        di, ax
-    mov        si, ax
-    mov        dx, VGA_GraphicsControllerIndex;Port 0x3ce
-    mov        ax, (VGA_GCTL5_CPUDirect SHL 8) OR VGA_GCTLIdx_GraphicMode;0x105
-    out        dx, ax
-    mov        dl, VGA_SequenceIndex_lowbyte;Port 0x3c4
-    mov        ax, (VGA_SEQ2_MaskAll SHL 8) OR VGA_SEQIdx_MapMask;0xf02
-    out        dx, ax
-    mov        ax, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
-    mov        bp, ax
-    mul        bl
-    mul        word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    sub        si, ax
-    mov        ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    push       ax
-    sub        ch, bl
-    mul        ch
-    mov        dl, cl
-    sub        bp, dx
-    or         bl, bl
-    push       bx
-    mov        bx, ax
-    mov        ax, 0a000h               ;Segment 0xa000
-    mov        es, ax
-    mov        ds, ax
-    je         Label0x1542              ;Offset 0x1542
+    mov       ax, dx
+    sub       dx, cx
+    add       dx, 0101h
+    mov       cx, dx
+    inc       ah
+    call      Func0x2678                ;Offset 0x2678
+    sub       ax, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
+    add       ax, word ptr ds:[BDA_VideoBufferOffset];Offset 0x44e
+    mov       di, ax
+    mov       si, ax
+    mov       dx, VGA_GraphicsControllerIndex;Port 0x3ce
+    mov       ax, (VGA_GCTL5_CPUDirect SHL 8) OR VGA_GCTLIdx_GraphicMode;0x105
+    out       dx, ax
+    mov       dl, VGA_SequenceIndex_lowbyte;Port 0x3c4
+    mov       ax, (VGA_SEQ2_MaskAll SHL 8) OR VGA_SEQIdx_MapMask;0xf02
+    out       dx, ax
+    mov       ax, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
+    mov       bp, ax
+    mul       bl
+    mul       word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+    sub       si, ax
+    mov       ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+    push      ax
+    sub       ch, bl
+    mul       ch
+    mov       dl, cl
+    sub       bp, dx
+    or        bl, bl
+    push      bx
+    mov       bx, ax
+    mov       ax, 0a000h                ;Segment 0xa000
+    mov       es, ax
+    mov       ds, ax
+    je        Label0x1542               ;Offset 0x1542
 Label0x1513:                            ;Offset 0x1513
-    mov        cx, dx
+    mov       cx, dx
     rep movsb
-    sub        si, bp
-    sub        di, bp
-    dec        bx
-    jne        Label0x1513              ;Offset 0x1513
-    pop        bx
+    sub       si, bp
+    sub       di, bp
+    dec       bx
+    jne       Label0x1513               ;Offset 0x1513
+    pop       bx
 Label0x151f:                            ;Offset 0x151f
-    mov        si, dx
-    mov        dx, VGA_GraphicsControllerIndex;Port 0x3ce
-    mov        ax, (VGA_GCTL5_SplatBLU SHL 8) OR VGA_GCTLIdx_GraphicMode;0x205
-    out        dx, ax
-    pop        ax
-    mul        bl
-    mov        dx, ax
-    mov        al, bh
+    mov       si, dx
+    mov       dx, VGA_GraphicsControllerIndex;Port 0x3ce
+    mov       ax, (VGA_GCTL5_SplatBLU SHL 8) OR VGA_GCTLIdx_GraphicMode;0x205
+    out       dx, ax
+    pop       ax
+    mul       bl
+    mov       dx, ax
+    mov       al, bh
 Label0x152f:                            ;Offset 0x152f
-    mov        cx, si
+    mov       cx, si
     rep stosb
-    sub        di, bp
-    dec        dx
-    jne        Label0x152f              ;Offset 0x152f
-    mov        dx, VGA_GraphicsControllerIndex;Port 0x3ce
-    mov        ax, (VGA_GCTL5_BLU SHL 8) OR VGA_GCTLIdx_GraphicMode;0x5
-    out        dx, ax
-    jmp        Label0x1430              ;Offset 0x1430
+    sub       di, bp
+    dec       dx
+    jne       Label0x152f               ;Offset 0x152f
+    mov       dx, VGA_GraphicsControllerIndex;Port 0x3ce
+    mov       ax, (VGA_GCTL5_BLU SHL 8) OR VGA_GCTLIdx_GraphicMode;0x5
+    out       dx, ax
+    jmp       Label0x1430               ;Offset 0x1430
 Label0x1542:                            ;Offset 0x1542
-    pop        bx
-    mov        bl, ch
-    jmp        Label0x151f              ;Offset 0x151f
+    pop       bx
+    mov       bl, ch
+    jmp       Label0x151f               ;Offset 0x151f
 Label0x1547:                            ;Offset 0x1547
-    mov        ax, dx
-    sub        dx, cx
-    add        dx, 0101h
-    mov        cx, dx
-    inc        ah
-    call       Func0x268a               ;Offset 0x268a
-    ;add        ax, 7
+    mov       ax, dx
+    sub       dx, cx
+    add       dx, 0101h
+    mov       cx, dx
+    inc       ah
+    call      Func0x268a                ;Offset 0x268a
+    ;add       ax, 7
     DB 05h, 07h, 00h                    ;!!!!!!!!! misassembly
-    xchg       ax, di
-    mov        dx, VGA_SequenceIndex    ;Port 0x3c4
-    mov        ax, ((VGA_SEQ4_MemSize256k OR VGA_SEQ4_CPUAnyMap OR VGA_SEQ4_Chain4) SHL 8) OR VGA_SEQIdx_MemoryMode;0xe04
-    out        dx, ax
-    mov        dl, VGA_GraphicsControllerIndex_lowbyte;Port 0x3ce
-    mov        ax, (VGA_GCTL5_256ColorMode SHL 8) OR VGA_GCTLIdx_GraphicMode;0x4005
-    out        dx, ax
-    mov        ax, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
-    shl        ax, 01h
-    shl        ax, 01h
-    shl        ax, 01h
-    sub        di, ax
-    xchg       ax, bp
-    mov        al, byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    mul        bl
-    mul        bp
-    mov        si, di
-    sub        si, ax
-    mov        dl, cl
-    shl        dx, 01h
-    mov        ax, dx
-    shl        ax, 01h
-    shl        ax, 01h
-    sub        bp, ax
-    mov        ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
-    push       ax
-    sub        ch, bl
-    mul        ch
-    or         bl, bl
-    push       bx
-    xchg       ax, bx
-    mov        ax, 0a000h               ;Segment 0xa000
-    mov        es, ax
-    mov        ds, ax
-    je         Label0x15c7              ;Offset 0x15c7
+    xchg      ax, di
+    mov       dx, VGA_SequenceIndex     ;Port 0x3c4
+    mov       ax, ((VGA_SEQ4_MemSize256k OR VGA_SEQ4_CPUAnyMap OR VGA_SEQ4_Chain4) SHL 8) OR VGA_SEQIdx_MemoryMode;0xe04
+    out       dx, ax
+    mov       dl, VGA_GraphicsControllerIndex_lowbyte;Port 0x3ce
+    mov       ax, (VGA_GCTL5_256ColorMode SHL 8) OR VGA_GCTLIdx_GraphicMode;0x4005
+    out       dx, ax
+    mov       ax, word ptr ds:[BDA_NumberOfScreenColumns];Offset 0x44a
+    shl       ax, 01h
+    shl       ax, 01h
+    shl       ax, 01h
+    sub       di, ax
+    xchg      ax, bp
+    mov       al, byte ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+    mul       bl
+    mul       bp
+    mov       si, di
+    sub       si, ax
+    mov       dl, cl
+    shl       dx, 01h
+    mov       ax, dx
+    shl       ax, 01h
+    shl       ax, 01h
+    sub       bp, ax
+    mov       ax, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
+    push      ax
+    sub       ch, bl
+    mul       ch
+    or        bl, bl
+    push      bx
+    xchg      ax, bx
+    mov       ax, 0a000h                ;Segment 0xa000
+    mov       es, ax
+    mov       ds, ax
+    je        Label0x15c7               ;Offset 0x15c7
 Label0x159f:                            ;Offset 0x159f
-    mov        cx, dx
-    shl        cx, 01h
-    shl        cx, 01h
+    mov       cx, dx
+    shl       cx, 01h
+    shl       cx, 01h
     rep movsb
-    sub        si, bp
-    sub        di, bp
-    dec        bx
-    jne        Label0x159f              ;Offset 0x159f
-    pop        bx
+    sub       si, bp
+    sub       di, bp
+    dec       bx
+    jne       Label0x159f               ;Offset 0x159f
+    pop       bx
 Label0x15af:                            ;Offset 0x15af
-    mov        si, dx
-    pop        ax
-    mul        bl
-    xchg       ax, dx
-    mov        al, bh
+    mov       si, dx
+    pop       ax
+    mul       bl
+    xchg      ax, dx
+    mov       al, bh
 Label0x15b7:                            ;Offset 0x15b7
-    mov        cx, si
-    shl        cx, 01h
-    shl        cx, 01h
+    mov       cx, si
+    shl       cx, 01h
+    shl       cx, 01h
     rep stosb
-    sub        di, bp
-    dec        dx
-    jne        Label0x15b7              ;Offset 0x15b7
-    jmp        Label0x1430              ;Offset 0x1430
+    sub       di, bp
+    dec       dx
+    jne       Label0x15b7               ;Offset 0x15b7
+    jmp       Label0x1430               ;Offset 0x1430
 Label0x15c7:                            ;Offset 0x15c7
-    pop        bx
-    mov        bl, ch
-    xchg       ax, cx
-    jmp        Label0x15af              ;Offset 0x15af
+    pop       bx
+    mov       bl, ch
+    xchg      ax, cx
+    jmp       Label0x15af               ;Offset 0x15af
 ScrollDownWindow ENDP
 
 ReadCharacterAndAttributeAtCursorPosition PROC NEAR;Offset 0x15cd
@@ -2312,11 +2393,11 @@ ReadCharacterAndAttributeAtCursorPosition PROC NEAR;Offset 0x15cd
     mov        al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call       Func0x60a3               ;Offset 0x60a3
     mov        dx, 0b800h               ;Segment 0xb800
-    cmp        al, 03h
+    cmp        al, BDA_DM_80x25_16_Color_Text;0x3
     jbe        Label0x15e1              ;Offset 0x15e1
     cmp        al, BDA_DM_80x25_Monochrome_Text;0x7
     jne        Label0x161a              ;Offset 0x161a
-    mov        dh, 0b0h
+    mov        dh, 0b0h                 ;Segment 0xb0
 Label0x15e1:                            ;Offset 0x15e1
     push       dx
     mov        al, bh
@@ -2410,7 +2491,7 @@ Label0x1682:                            ;Offset 0x1682
     ret
 Label0x1689:                            ;Offset 0x1689
     push       bx
-    mov        dh, 0a0h
+    mov        dh, 0a0h                 ;Segment 0xa000
     push       dx
     cmp        al, 13h
     jne        Label0x1694              ;Offset 0x1694
@@ -2724,7 +2805,7 @@ Label0x189b:                            ;Offset 0x189b
     add        di, bp
     loop       Label0x189b              ;Offset 0x189b
     pop        di
-    mov        al, 02h
+    mov        al, VGA_SEQIdx_MapMask    ;0x2
     mov        ah, bl
     out        dx, ax
     mov        dx, di
@@ -2962,7 +3043,7 @@ Label0x1a36:                            ;Offset 0x1a36
     add       di, 0050h
     dec       bh
     jne       Label0x1a36               ;Offset 0x1a36
-    sub       si, 08h
+    sub       si, 0008h
     sub       di, 013eh
     loop      Label0x1a34               ;Offset 0x1a34
     ret
@@ -3033,7 +3114,7 @@ Label0x1aba:                            ;Offset 0x1aba
     call      Func0x265a                ;Offset 0x265a
     add       di, ax
     pop       ax
-    test      byte ptr ds:[BDA_VideoModeOptions], 4;Offset 0x487 0x4
+    test      byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Unknown;Offset 0x487 0x4
     jne       Label0x1ae2               ;Offset 0x1ae2
 Label0x1ada:                            ;Offset 0x1ada
     stosb
@@ -3045,7 +3126,7 @@ Label0x1ada:                            ;Offset 0x1ada
     ret
 Label0x1ae2:                            ;Offset 0x1ae2
     mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    add       dl, 06h
+    add       dl, 06h                   ;Port 0x3?a VGA_InputStatus1
     mov       ah, al
 Label0x1aeb:                            ;Offset 0x1aeb
     in        al, dx
@@ -3080,7 +3161,7 @@ Label0x1b14:                            ;Offset 0x1b14
 Label0x1b15:                            ;Offset 0x1b15
     push      bx
     push      es
-    mov       al, 04h
+    mov       al, BDA_VPCB_DynamicParamSaveArea;0x4
     call      LookupVideoParameterControlBlockPointer;Offset 0x2b93
     xchg      ax, si
     or        bh, bh
@@ -3097,7 +3178,7 @@ Label0x1b15:                            ;Offset 0x1b15
     or        bl, ah
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call      Func0x60a3                ;Offset 0x60a3
-    cmp       al, 03h
+    cmp       al, BDA_DM_80x25_16_Color_Text;0x3
     jbe       Label0x1b54               ;Offset 0x1b54
     mov       al, bl
     xor       ah, ah
@@ -3122,7 +3203,7 @@ Label0x1b63:                            ;Offset 0x1b63
 Label0x1b6e:                            ;Offset 0x1b6e
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call      Func0x60a3                ;Offset 0x60a3
-    cmp       al, 03h
+    cmp       al, BDA_DM_80x25_16_Color_Text;0x3
     jbe       Label0x1b98               ;Offset 0x1b98
     mov       al, byte ptr ds:[BDA_CGAColorPaletteMaskSetting];Offset 0x466
     and       al, 0dfh
@@ -3241,35 +3322,35 @@ Label0x1c2c:                            ;Offset 0x1c2c
     and       cl, 07h
     shr       ah, cl
     mov       dx, VGA_GraphicsControllerIndex;Port 0x3ce
-    mov       al, 08h
+    mov       al, VGA_GCTLIdx_BitMask   ;0x8
     out       dx, ax
     mov       ax, 0a000h                ;Segment 0xa000
     mov       ds, ax
     pop       cx
     or        cl, cl
     jns       Label0x1c65               ;Offset 0x1c65
-    mov       ax, 1803h
+    mov       ax, (VGA_GCTL3_FuncSourceXORLatched SHL 8) OR VGA_GCTLIdx_DataRotate;0x1803
     out       dx, ax
     mov       dl, VGA_SequenceIndex_lowbyte;Port 0x3c4
     jmp       Label0x1c6f               ;Offset 0x1c6f
 Label0x1c65:                            ;Offset 0x1c65
     mov       dl, VGA_SequenceIndex_lowbyte;Port 0x3c4
-    mov       ax, 0f02h
+    mov       ax, (VGA_SEQ2_MaskAll SHL 8) OR VGA_SEQIdx_MapMask;0xf02
     out       dx, ax
     xor       al, al
     xchg      byte ptr [di], al
 Label0x1c6f:                            ;Offset 0x1c6f
-    mov       al, 02h
+    mov       al, VGA_SEQIdx_MapMask    ;0x2
     mov       ah, cl
     out       dx, ax
     mov       al, 0ffh
     xchg      byte ptr [di], al
-    mov       ax, 0f02h
+    mov       ax, (VGA_SEQ2_MaskAll SHL 8) OR VGA_SEQIdx_MapMask;0xf02
     out       dx, ax
     mov       dl, VGA_GraphicsControllerIndex_lowbyte;Port 0x3ce
-    mov       ax, 03h
+    mov       ax, (VGA_GCTL3_Rotate0 SHL 8) OR VGA_GCTLIdx_DataRotate;0x3
     out       dx, ax
-    mov       ax, 0ff08h
+    mov       ax, (0ffh SHL 8) OR VGA_GCTLIdx_BitMask;0xff08
     out       dx, ax
     pop       ax
     pop       dx
@@ -3355,7 +3436,7 @@ Label0x1cf9:                            ;Offset 0x1cf9
     xor       bl, bl
     mov       ah, 03h
 Label0x1d27:                            ;Offset 0x1d27
-    mov       al, 04h
+    mov       al, VGA_GCTLIdx_ReadMapSelect;0x4
     out       dx, ax
     mov       al, byte ptr [di]
     and       al, ch
@@ -3875,7 +3956,7 @@ Func0x1ff6 PROC NEAR                    ;Offset 0x1ff6
     ret
 Label0x200e:                            ;Offset 0x200e
     mov       dx, VGA_SequenceIndex     ;Port 0x3c4
-    mov       al, 03h
+    mov       al, VGA_SEQIdx_CharacterMapSelect;0x3
     mov       ah, bl
     out       dx, ax
 Label0x2016:                            ;Offset 0x2016
@@ -3913,7 +3994,7 @@ Label0x2047:                            ;Offset 0x2047
     push      cs
     pop       es
     lea       bp, [Font8x16]            ;Offset 0x3900
-    mov       cx, 0eh
+    mov       cx, 000eh
     dec       ax
     je        Label0x2062               ;Offset 0x2062
     lea       bp, [Font8x8]             ;Offset 0x3100
@@ -3940,7 +4021,7 @@ Label0x2079:                            ;Offset 0x2079
     mov       al, 19h
     cmp       bl, 03h
     ja        Label0x2091               ;Offset 0x2091
-    mov       al, byte ptr cs:[bx + Data0x30ea];Offset 0x30ea
+    mov       al, byte ptr cs:[bx + RowsOnScreen];Offset 0x30ea
 Label0x2091:                            ;Offset 0x2091
     dec       ax
     mov       byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
@@ -4004,7 +4085,7 @@ Label0x20d9:                            ;Offset 0x20d9
     ret
 Label0x20f9:                            ;Offset 0x20f9
     cli
-    mov       word ptr ds:[INT_5_HandlerOfs], offset Int5Handler;Offset 0x14 Offset 0x2c60
+    mov       word ptr ds:[INT_5_HandlerOfs], offset PrintScreenHandler;Offset 0x14 Offset 0x2c60
     mov       word ptr ds:[INT_5_HandlerSeg], cs;Offset 0x16
     sti
     ret
@@ -4044,22 +4125,22 @@ AlternateFunctions ENDP
     nop                                 ;hello
 
 ;Offset 0x2136
-AlternateFunctionsTable DW Func0x21bc   ;Offset 0x21bc
-                        DW Func0x2144   ;Offset 0x2144
+AlternateFunctionsTable DW SelectVerticalResolution;Offset 0x21bc
+                        DW SetPaletteLoading;Offset 0x2144
                         DW SetVGAMemoryIOMapping;Offset 0x2152
-                        DW Func0x2192   ;Offset 0x2192
-                        DW Func0x21a0   ;Offset 0x21a0
-                        DW Func0x2200   ;Offset 0x2200
+                        DW SetGrayscaleSumming;Offset 0x2192
+                        DW SetCursorEmulation;Offset 0x21a0
+                        DW DisplaySwitchInterface;Offset 0x2200
                         DW TurnScreenOnOff;Offset 0x21ae
 
-Func0x2144 PROC NEAR                    ;Offset 0x2144
-    je   Label0x214c                    ;Offset 0x214c
+SetPaletteLoading PROC NEAR             ;Offset 0x2144
+    je   Enabled                        ;Offset 0x214c
     and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_PaletteLoadingEnabled;Offset 0x489 0xf7
     ret
-Label0x214c:                            ;Offset 0x214c
+Enabled:                                ;Offset 0x214c
     or   byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0x489 0x8
     ret
-Func0x2144 ENDP
+SetPaletteLoading ENDP
 
 ;
 ;inputs:
@@ -4106,23 +4187,23 @@ DoWrite:                                ;Offset 0x218a
     ret
 SetVGAMemoryIOMapping ENDP
 
-Func0x2192 PROC NEAR                    ;Offset 0x2192
-    je   Label0x219a                    ;Offset 0x219a
+SetGrayscaleSumming PROC NEAR           ;Offset 0x2192
+    je   Disable                        ;Offset 0x219a
     or   byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_GrayScale;Offset 0x489 0x2
     ret
-Label0x219a:                            ;Offset 0x219a
+Disable:                                ;Offset 0x219a
     and  byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_GrayScale;Offset 0x489 0xfd
     ret       
-Func0x2192 ENDP
+SetGrayscaleSumming ENDP
 
-Func0x21a0 PROC NEAR                    ;Offset 0x21a0
-    je   Label0x21a8                    ;Offset 0x21a8
+SetCursorEmulation PROC NEAR            ;Offset 0x21a0
+    je   Enable                         ;Offset 0x21a8
     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_CursorEmulationEnabled;Offset 0x487 0xfe
     ret
-Label0x21a8:                            ;Offset 0x21a8
+Enable:                                 ;Offset 0x21a8
     or   byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_CursorEmulationEnabled;Offset 0x487 0x1
     ret       
-Func0x21a0 ENDP
+SetCursorEmulation ENDP
 
 ;
 ;inputs:
@@ -4141,7 +4222,7 @@ TurnOff:                                ;Offset 0x21b8
     ret       
 TurnScreenOnOff ENDP
 
-Func0x21bc PROC NEAR                    ;Offset 0x21bc
+SelectVerticalResolution PROC NEAR      ;Offset 0x21bc
     test      byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487 0x8
     jne       Label0x21e1               ;Offset 0x21e1
     cbw
@@ -4178,9 +4259,9 @@ Label0x21f3:                            ;Offset 0x21f3
     and       byte ptr ds:[BDA_EGAFeatureBitSwitches], BDA_EFBS_FeatureConnectorMask;Offset 0x488 0xf0
     or        byte ptr ds:[BDA_EGAFeatureBitSwitches], bl;Offset 0x488
     ret
-Func0x21bc ENDP
+SelectVerticalResolution ENDP
 
-Func0x2200 PROC NEAR                    ;Offset 0x2200
+DisplaySwitchInterface PROC NEAR        ;Offset 0x2200
     cbw
     xchg      ax, si
     dec       si
@@ -4220,7 +4301,7 @@ Label0x2231:                            ;Offset 0x2231
 Label0x2252:                            ;Offset 0x2252
     stc       
     ret       
-Func0x2200 ENDP
+DisplaySwitchInterface ENDP
 
 WriteString PROC NEAR                   ;Offset 0x2254
     push      bx
@@ -4366,16 +4447,14 @@ DisplayCombinationCodeFunctions ENDP
 
 FunctionalityAndStateInfo PROC NEAR     ;Offset 0x2328
     or        bx, bx
-    je        Func0x232f                ;Offset 0x232f
+    je        Label0x232f               ;Offset 0x232f
     xor       al, al
-    ret       
-FunctionalityAndStateInfo ENDP
-
-Func0x232f PROC NEAR                    ;Offset 0x232f
+    ret
+Label0x232f:                            ;Offset 0x232f
     push      bx
     push      cx
     push      dx
-    lea       ax, [Data0x3c4]           ;Offset 0x3c4
+    lea       ax, [StaticFunctionalityTable];Offset 0x3c4
     stosw
     mov       ax, cs
     stosw
@@ -4393,18 +4472,18 @@ Func0x232f PROC NEAR                    ;Offset 0x232f
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     cbw
     push      ax
-    lea       bx, [Data0x240c]          ;Offset 0x240c
+    lea       bx, [ColorsPerModePlusOne];Offset 0x240c
     xlatb     cs:[bx]
     dec       ax
-    jns       Label0x2361               ;Offset 0x2361
-    mov       ax, 0100h
-Label0x2361:                            ;Offset 0x2361
+    jns       ColorsUnder256            ;Offset 0x2361
+    mov       ax, 0100h                 ;Set colors to 256 (mode 0x13)
+ColorsUnder256:                         ;Offset 0x2361
     stosw
     pop       ax
-    lea       bx, [Data0x2420]          ;Offset 0x2420
+    lea       bx, [NumberOfPagesPerMode];Offset 0x2420
     xlatb     cs:[bx]
     stosb
-    call      Func0x2a6a                ;Offset 0x2a6a
+    call      GetNumberOfActiveScanlines;Offset 0x2a6a
     stosb
     mov       cl, 02h
     mov       dx, VGA_SequenceIndex     ;Port 0x3c4
@@ -4477,7 +4556,7 @@ Label0x2361:                            ;Offset 0x2361
     pop       cx
     pop       bx
     ret
-Func0x232f ENDP
+FunctionalityAndStateInfo ENDP
 
 Func0x23f2 PROC NEAR                    ;Offset 0x23f2
     shl       dl, 01h
@@ -4502,11 +4581,11 @@ Label0x240b:                            ;Offset 0x240b
 Func0x23fb ENDP
 
 ;Offset 0x240c
-Data0x240c              DB 011h, 011h, 011h, 011h, 005h, 005h, 003h, 001h, 001h, 001h
+ColorsPerModePlusOne    DB 011h, 011h, 011h, 011h, 005h, 005h, 003h, 001h, 001h, 001h
                         DB 001h, 001h, 001h, 011h, 011h, 001h, 011h, 003h, 011h, 000h
 
 ;Offset 0x2420
-Data0x2420              DB 008h, 008h, 008h, 008h, 001h, 001h, 001h, 008h, 000h, 000h
+NumberOfPagesPerMode    DB 008h, 008h, 008h, 008h, 001h, 001h, 001h, 008h, 000h, 000h
                         DB 000h, 000h, 000h, 008h, 004h, 002h, 002h, 001h, 001h, 001h
 
 SaveRestoreVideoState PROC NEAR         ;Offset 0x2434
@@ -4933,7 +5012,7 @@ ClearScreen PROC NEAR                   ;Offset 0x26b1
     ja        Label0x26e1               ;Offset 0x26e1
     mov       bh, 0b0h                  ;Segment 0xb000
     mov       ch, 40h
-    mov       dx, 0720h
+    mov       dx, 0720h                 ;Attribute + space
     je        Label0x26e3               ;Offset 0x26e3
     mov       bh, 0b8h                  ;Segment 0xb800
     cmp       al, BDA_DM_80x25_16_Color_Text;0x3
@@ -4986,19 +5065,19 @@ Label0x270c:                            ;Offset 0x270c
 Func0x26f9 ENDP
 
 ;Offset 0x271a
-Data0x271a              DW 0402h
-                        DW 0704h
-                        DW 0204h
-                        DW 0005h
-                        DW 0406h
+Data0x271a              DW (VGA_SEQ2_Mask2 SHL 8) OR VGA_SEQIdx_MapMask;0x0402
+                        DW ((VGA_SEQ4_Unknown1 OR VGA_SEQ4_MemSize256k OR VGA_SEQ4_CPUAnyMap) SHL 8) OR VGA_SEQIdx_MemoryMode;0x0704
+                        DW (VGA_GCTL4_Map2 SHL 8) OR VGA_GCTLIdx_ReadMapSelect;0x0204
+                        DW (VGA_GCTL5_BLU SHL 8) OR VGA_GCTLIdx_GraphicMode;0x0005
+                        DW (VGA_GCTL6_Mem_A0000_AFFFF SHL 8) OR VGA_GCTLIdx_Miscellaneous;0x0406
 
 ;Offset 0x2724
-Data0x2724              DW 0302h
-                        DW 0304h
-                        DW 0004h
-                        DW 1005h
-                        DW 0e06h
-                        DW 0a06h
+Data0x2724              DW ((VGA_SEQ2_Mask0 OR VGA_SEQ2_Mask1) SHL 8)OR VGA_SEQIdx_MapMask;0x0302
+                        DW ((VGA_SEQ4_Unknown1 OR VGA_SEQ4_MemSize256k) SHL 8) OR VGA_SEQIdx_MemoryMode;0x0304
+                        DW (VGA_GCTL4_Map0 SHL 8) OR VGA_GCTLIdx_ReadMapSelect;0x0004
+                        DW (VGA_GCTL5_OddEven SHL 8) OR VGA_GCTLIdx_GraphicMode;0x1005
+                        DW ((VGA_GCTL6_AlphaMode OR VGA_GCTL6_ChainEven OR VGA_GCTL6_Mem_B8000_BFFFF) SHL 8) OR VGA_GCTLIdx_Miscellaneous;0x0e06
+                        DW ((VGA_GCTL6_AlphaMode OR VGA_GCTL6_ChainEven OR VGA_GCTL6_Mem_B0000_B7FFF) SHL 8) OR VGA_GCTLIdx_Miscellaneous;0x0a06
 
 Func0x2730 PROC NEAR                    ;Offset 0x2730
     cbw
@@ -5032,7 +5111,7 @@ Label0x275e:                            ;Offset 0x275e
     mov       cl, 05h
     shl       dx, cl
     push      bx
-    and       bx, 07h
+    and       bx, 0007h
     add       dh, byte ptr cs:[bx + Data0x27ca];Offset 0x27ca
     pop       bx
     mov       di, dx
@@ -5125,7 +5204,7 @@ Label0x27e9:                            ;Offset 0x27e9
 Label0x27fe:                            ;Offset 0x27fe
     mov       word ptr ds:[BDA_CursorEndStartScanLine], ax;Offset 0x460
     call      SetCursorEndStart         ;Offset 0x26a2
-    call      Func0x2a6a                ;Offset 0x2a6a
+    call      GetNumberOfActiveScanlines;Offset 0x2a6a
     dec       al
     mov       ax, 00c8h
     js        Label0x2816               ;Offset 0x2816
@@ -5148,7 +5227,7 @@ Label0x282a:                            ;Offset 0x282a
 Label0x2834:                            ;Offset 0x2834
     dec       ax
     mov       ah, al
-    mov       al, 12h
+    mov       al, VGA_CRTCIdx_VertDispEnableEnd;0x12
     out       dx, ax
     mov       al, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
     inc       ax
@@ -5191,19 +5270,19 @@ Label0x2875:                            ;Offset 0x2875
     loop      Label0x2875               ;Offset 0x2875  Speed sensitive!
     pop       cx
     mov       dl, VGA_SequenceIndex_lowbyte;Port 0x3c4
-    mov       ax, 0300h
+    mov       ax, ((VGA_SEQ0_AsyncReset OR VGA_SEQ0_SyncReset) SHL 8) OR VGA_SEQIdx_Reset;0x300
     out       dx, ax
     sti
     call      TurnScreenOff             ;Offset 0x2b1f
     push      ax
     mov       dx, di
-    mov       ax, 0011h
+    mov       ax, VGA_CRTCIdx_VertRetraceEnd;0x11
     out       dx, ax
     mov       cl, 19h
     xor       ax, ax
     call      Func0x28b9                ;Offset 0x28b9
     push      si
-    add       dl, 06h
+    add       dl, 06h                   ;Port 0x3?a
     in        al, dx
     xor       ax, ax
     out       dx, al
@@ -5340,10 +5419,10 @@ Func0x292a PROC NEAR                    ;Offset 0x292a
     out       dx, al
     push      cs
     pop       es
-    call      Func0x2a6a                ;Offset 0x2a6a
+    call      GetNumberOfActiveScanlines;Offset 0x2a6a
     mov       ah, al
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
-    ;cmp       ax, 0013h
+    ;cmp       ax, BDA_DM_320x200_256_Color_Graphics;0x13
     DB 3Dh, 13h, 00h                    ;Misassemble!
     je        Label0x2959               ;Offset 0x2959
     lea       si, [Data0x2d5a]          ;Offset 0x2d5a
@@ -5463,7 +5542,7 @@ Func0x29e2 PROC NEAR                    ;Offset 0x29e2
     mov       al, 1ch
     mul       cl
     add       ax, dx
-    add       ax, 80h
+    add       ax, 0080h
     mov       al, ah
     ret
 Func0x29e2 ENDP
@@ -5476,7 +5555,7 @@ Func0x29fa PROC NEAR                    ;Offset 0x29fa
     shl       ax, 01h
     shl       ax, 01h
     mov       di, ax
-    call      Func0x2a6a                ;Offset 0x2a6a
+    call      GetNumberOfActiveScanlines;Offset 0x2a6a
     add       di, ax
     mov       al, byte ptr cs:[di + Data0x2a1a];Offset 0x2a1a
     mov       ah, 40h
@@ -5485,59 +5564,98 @@ Func0x29fa PROC NEAR                    ;Offset 0x29fa
     ret
 Func0x29fa ENDP
 
-;Offset 0x2a1a
-Data0x2a1a              DB 000h, 013h, 017h, 000h
-                        DB 001h, 014h, 017h, 000h
-                        DB 002h, 015h, 018h, 000h
-                        DB 003h, 016h, 018h, 000h
-                        DB 004h, 000h, 000h, 000h
-                        DB 005h, 000h, 000h, 000h
-                        DB 006h, 000h, 000h, 000h
-                        DB 000h, 007h, 019h, 000h
-                        DB 000h, 000h, 008h, 000h
-                        DB 009h, 000h, 000h, 000h
-                        DB 00Ah, 000h, 000h, 000h
-                        DB 00Bh, 000h, 000h, 000h
-                        DB 00Ch, 000h, 000h, 000h
-                        DB 00Dh, 000h, 000h, 000h
-                        DB 00Eh, 000h, 000h, 000h
-                        DB 000h, 011h, 000h, 000h
-                        DB 000h, 012h, 000h, 000h
-                        DB 000h, 000h, 000h, 01Ah
-                        DB 000h, 000h, 000h, 01Bh
-                        DB 01Ch, 000h, 000h, 000h
+;
+;                           +------------------------ 200 Scan lines
+;                           |
+;                           |     +------------------ 350 Scan lines
+;                           |     |
+;                           |     |     +------------ 400 Scan lines
+;                           |     |     |
+;                           |     |     |     +------ 480 Scan lines
+;                           |     |     |     |
+;Offset 0x2a1a              |     |     |     |       Display mode:
+Data0x2a1a              DB 000h, 013h, 017h, 000h   ; 0x00
+                        DB 001h, 014h, 017h, 000h   ; 0x01
+                        DB 002h, 015h, 018h, 000h   ; 0x02
+                        DB 003h, 016h, 018h, 000h   ; 0x03
+                        DB 004h, 000h, 000h, 000h   ; 0x04
+                        DB 005h, 000h, 000h, 000h   ; 0x05
+                        DB 006h, 000h, 000h, 000h   ; 0x06
+                        DB 000h, 007h, 019h, 000h   ; 0x07
+                        DB 000h, 000h, 008h, 000h   ; 0x08
+                        DB 009h, 000h, 000h, 000h   ; 0x09
+                        DB 00Ah, 000h, 000h, 000h   ; 0x0a
+                        DB 00Bh, 000h, 000h, 000h   ; 0x0b
+                        DB 00Ch, 000h, 000h, 000h   ; 0x0c
+                        DB 00Dh, 000h, 000h, 000h   ; 0x0d
+                        DB 00Eh, 000h, 000h, 000h   ; 0x0e
+                        DB 000h, 011h, 000h, 000h   ; 0x0f
+                        DB 000h, 012h, 000h, 000h   ; 0x10
+                        DB 000h, 000h, 000h, 01Ah   ; 0x11
+                        DB 000h, 000h, 000h, 01Bh   ; 0x12
+                        DB 01Ch, 000h, 000h, 000h   ; 0x13
 
-Func0x2a6a PROC NEAR                    ;Offset 0x2a6a
+;
+;outputs:
+;   al = number of active scanlines
+;        0 = 200
+;        1 = 350
+;        2 = 400
+;        3 = 480
+;
+GetNumberOfActiveScanlines PROC NEAR       ;Offset 0x2a6a
     mov   al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     push  bx
-    lea   bx, [Data0x2a96]              ;Offset 0x2a96
-    cmp   al, 13h
+    lea   bx, [NumberOfActiveScanlinesPerModePlusOne];Offset 0x2a96
+    cmp   al, BDA_DM_320x200_256_Color_Graphics;0x13
     xlatb cs:[bx]
     ja    Label0x2a7c                   ;Offset 0x2a7c
-    dec   al
+    dec   al                            ;Subtract one to see if it turns negative (and thus, not set)
     jns   Label0x2a93                   ;Offset 0x2a93
 Label0x2a7c:                            ;Offset 0x2a7c
-    mov   al, 02h
+    mov   al, 02h                       ;400 Scan lines
     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode400;Offset 0x489 0x10
     jne   Label0x2a93                   ;Offset 0x2a93
-    dec   ax
-    call  Func0x2aaa                    ;Offset 0x2aaa
+    dec   ax                            ;350 Scan lines
+    call  IsMDAHiResEnhanced            ;Offset 0x2aaa
     je    Label0x2a93                   ;Offset 0x2a93
     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_80x25_Monochrome_Text;Offset 0x449 0x7
     je    Label0x2a93                   ;Offset 0x2a93
-    dec   ax
+    dec   ax                            ;200 Scan lines
 Label0x2a93:                            ;Offset 0x2a93
     pop   bx
     ret   
-Func0x2a6a ENDP
+GetNumberOfActiveScanlines ENDP
 
     nop                                 ;hello
 
-;Offset 0x2a96
-Data0x2a96              DB 000h, 000h, 000h, 000h, 001h, 001h, 001h, 000h, 003h, 001h
-                        DB 001h, 001h, 001h, 001h, 001h, 002h, 002h, 004h, 004h, 001h
+;
+;
+;                                               000h means it's determined another way
+;                                               All others are decremented by one and returned.
+;Offset 0x2a96                                    Display mode:
+NumberOfActiveScanlinesPerModePlusOne DB 000h   ; 0x00
+                                      DB 000h   ; 0x01
+                                      DB 000h   ; 0x02
+                                      DB 000h   ; 0x03
+                                      DB 001h   ; 0x04
+                                      DB 001h   ; 0x05
+                                      DB 001h   ; 0x06
+                                      DB 000h   ; 0x07
+                                      DB 003h   ; 0x08
+                                      DB 001h   ; 0x09
+                                      DB 001h   ; 0x0a
+                                      DB 001h   ; 0x0b
+                                      DB 001h   ; 0x0c
+                                      DB 001h   ; 0x0d
+                                      DB 001h   ; 0x0e
+                                      DB 002h   ; 0x0f
+                                      DB 002h   ; 0x10
+                                      DB 004h   ; 0x11
+                                      DB 004h   ; 0x12
+                                      DB 001h   ; 0x13
 
-Func0x2aaa PROC NEAR                    ;Offset 0x2aaa
+IsMDAHiResEnhanced PROC NEAR            ;Offset 0x2aaa
     push  ax
     mov   al, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
     and   al, BDA_EFBS_AdapterTypeMask  ;0xf
@@ -5547,15 +5665,15 @@ Func0x2aaa PROC NEAR                    ;Offset 0x2aaa
 Label0x2ab6:                            ;Offset 0x2ab6
     pop   ax
     ret
-Func0x2aaa ENDP
+IsMDAHiResEnhanced ENDP
 
 Func0x2ab8 PROC NEAR                    ;Offset 0x2ab8
     push  ax
     mov   al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     call  Func0x60a3                    ;Offset 0x60a3
-    cmp   al, 07h
+    cmp   al, BDA_DM_80x25_Monochrome_Text;0x7
     je    Label0x2ac9                   ;Offset 0x2ac9
-    cmp   al, 03h
+    cmp   al, BDA_DM_80x25_16_Color_Text;0x3
     ja    Label0x2ac9                   ;Offset 0x2ac9
     xor   al, al
 Label0x2ac9:                            ;Offset 0x2ac9
@@ -5659,7 +5777,7 @@ ToggleScreenOnOff PROC NEAR             ;Offset 0x2b21
     and   ax, 20dfh                     ;Filter ah to only VGA_SEQ1_ScreenOff, and filter out screen off in original value
     or    al, ah                        ;set screen off bit in original value
     mov   ah, dh                        ;ah = original register value
-    mov   dh, 03h                       ;
+    mov   dh, 03h                       ;Restore port high byte
     out   dx, al                        ;write updated register value
     ret
 ToggleScreenOnOff ENDP
@@ -5902,7 +6020,7 @@ SetupSquareWave ENDP
     xchg bx, bx
     xchg bx, bx
 
-Int5Handler:                            ;Offset 0x2c60
+PrintScreenHandler:                     ;Offset 0x2c60
     sti   
     push ax
     push bx
@@ -5921,7 +6039,7 @@ Int5Handler:                            ;Offset 0x2c60
     mov  ah, 03h
     int  10h
     push dx
-    call Func0x2cba                     ;Offset 0x2cba
+    call PrintCRLF                      ;Offset 0x2cba
     mov  cl, 0ffh
     xor  dx, dx
 Label0x2c84:                            ;Offset 0x2c84
@@ -5933,13 +6051,13 @@ Label0x2c84:                            ;Offset 0x2c84
     jne  Label0x2c92                    ;Offset 0x2c92
     mov  al, 20h
 Label0x2c92:                            ;Offset 0x2c92
-    call Func0x2cc1                     ;Offset 0x2cc1
+    call PrintCharacter                 ;Offset 0x2cc1
     jne  Label0x2cab                    ;Offset 0x2cab
     inc  dx
     ;cmp  dl, bl
     DB 3Ah, 0D3h                        ;Misassemble!
     jb   Label0x2c84                    ;Offset 0x2c84
-    call Func0x2cba                     ;Offset 0x2cba
+    call PrintCRLF                      ;Offset 0x2cba
     xor  dl, dl
     inc  dh
     cmp  dh, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
@@ -5958,13 +6076,13 @@ Label0x2cb4:                            ;Offset 0x2cb4
     pop  ax
     iret
 
-Func0x2cba PROC NEAR                    ;Offset 0x2cba
+PrintCRLF PROC NEAR                     ;Offset 0x2cba
     mov  al, 0dh
-    call Func0x2cc1                     ;Offset 0x2cc1
+    call PrintCharacter                 ;Offset 0x2cc1
     mov  al, 0ah
-Func0x2cba ENDP
+PrintCRLF ENDP
 ;continue!
-Func0x2cc1 PROC NEAR                    ;Offset 0x2cc1
+PrintCharacter PROC NEAR                ;Offset 0x2cc1
     push dx
     xor  dx, dx
     xor  ah, ah
@@ -5972,7 +6090,7 @@ Func0x2cc1 PROC NEAR                    ;Offset 0x2cc1
     test ah, 29h
     pop  dx
     ret
-Func0x2cc1 ENDP
+PrintCharacter ENDP
 
     nop                                 ;hello
 
@@ -6033,7 +6151,7 @@ Data0x2E26              DB 000h, 002h, 008h, 00Ah, 020h, 022h, 024h, 02Ah, 015h,
 Data0x2e4e              DB 000h, 005h, 008h, 00Bh, 00Eh, 011h, 014h, 018h, 01Ch, 020h, 024h, 028h, 02Dh, 032h, 038h, 03Fh
 ;Offset 0x2e5e
                         DW 4000h        ;BDA_VideoDisplayDataArea
-                        DW 00D8h        ;count (below)
+                        DW 00D8h        ;count (below) RGB, 0xd8 * 3
 ;Offset 0x2e62
 Data0x2e62              DB 000h, 000h, 03Fh, 010h, 000h, 03Fh, 01Fh, 000h, 03Fh, 02Fh, 000h, 03Fh, 03Fh, 000h, 03Fh, 03Fh
                         DB 000h, 02Fh, 03Fh, 000h, 01Fh, 03Fh, 000h, 010h, 03Fh, 000h, 000h, 03Fh, 010h, 000h, 03Fh, 01Fh
@@ -6048,41 +6166,37 @@ Data0x2e62              DB 000h, 000h, 03Fh, 010h, 000h, 03Fh, 01Fh, 000h, 03Fh,
                         DB 02Dh, 03Ah, 03Fh, 02Dh, 036h, 03Fh, 02Dh, 031h, 03Fh, 02Dh, 02Dh, 03Fh, 031h, 02Dh, 03Fh, 036h
                         DB 02Dh, 03Fh, 03Ah, 02Dh, 03Fh, 03Fh, 02Dh, 03Ah, 03Fh, 02Dh, 036h, 03Fh, 02Dh, 031h, 03Fh, 02Dh
                         DB 02Dh, 03Fh, 02Dh, 02Dh, 03Fh, 031h, 02Dh, 03Fh, 036h, 02Dh, 03Fh, 03Ah, 02Dh, 03Fh, 03Fh, 02Dh
-                        DB 03Ah, 03Fh, 02Dh, 036h, 03Fh, 02Dh, 031h, 03Fh
-;Offset 0x2f3a
-                        DW 0000h        ;BDA_VideoDisplayDataArea 0 = terminate
-;Offset 0x2f3c
-                        DW 071Ch        ;count (below) !!! seems wrong?
-                        DB 000h, 01Ch, 00Eh, 000h, 01Ch, 015h, 000h, 01Ch, 01Ch, 000h, 01Ch, 01Ch, 000h, 015h, 01Ch, 000h
-                        DB 00Eh, 01Ch, 000h, 007h, 01Ch, 000h, 000h, 01Ch, 007h, 000h, 01Ch, 00Eh, 000h, 01Ch, 015h, 000h
-                        DB 01Ch, 01Ch, 000h, 015h, 01Ch, 000h, 00Eh, 01Ch, 000h, 007h, 01Ch, 000h, 000h, 01Ch, 000h, 000h
-                        DB 01Ch, 007h, 000h, 01Ch, 00Eh, 000h, 01Ch, 015h, 000h, 01Ch, 01Ch, 000h, 015h, 01Ch, 000h, 00Eh
-                        DB 01Ch, 000h, 007h, 01Ch, 00Eh, 00Eh, 01Ch, 011h, 00Eh, 01Ch, 015h, 00Eh, 01Ch, 018h, 00Eh, 01Ch
-                        DB 01Ch, 00Eh, 01Ch, 01Ch, 00Eh, 018h, 01Ch, 00Eh, 015h, 01Ch, 00Eh, 011h, 01Ch, 00Eh, 00Eh, 01Ch
-                        DB 011h, 00Eh, 01Ch, 015h, 00Eh, 01Ch, 018h, 00Eh, 01Ch, 01Ch, 00Eh, 018h, 01Ch, 00Eh, 015h, 01Ch
-                        DB 00Eh, 011h, 01Ch, 00Eh, 00Eh, 01Ch, 00Eh, 00Eh, 01Ch, 011h, 00Eh, 01Ch, 015h, 00Eh, 01Ch, 018h
-                        DB 00Eh, 01Ch, 01Ch, 00Eh, 018h, 01Ch, 00Eh, 015h, 01Ch, 00Eh, 011h, 01Ch, 014h, 014h, 01Ch, 016h
-                        DB 014h, 01Ch, 018h, 014h, 01Ch, 01Ah, 014h, 01Ch, 01Ch, 014h, 01Ch, 01Ch, 014h, 01Ah, 01Ch, 014h
-                        DB 018h, 01Ch, 014h, 016h, 01Ch, 014h, 014h, 01Ch, 016h, 014h, 01Ch, 018h, 014h, 01Ch, 01Ah, 014h
-                        DB 01Ch, 01Ch, 014h, 01Ah, 01Ch, 014h, 018h, 01Ch, 014h, 016h, 01Ch, 014h, 014h, 01Ch, 014h, 014h
-                        DB 01Ch, 016h, 014h, 01Ch, 018h, 014h, 01Ch, 01Ah, 014h, 01Ch, 01Ch, 014h, 01Ah, 01Ch, 014h, 018h
-                        DB 01Ch, 014h, 016h, 01Ch, 000h, 000h, 010h, 004h, 000h, 010h, 008h, 000h, 010h, 00Ch, 000h, 010h
-                        DB 010h, 000h, 010h, 010h, 000h, 00Ch, 010h, 000h, 008h, 010h, 000h, 004h, 010h, 000h, 000h, 010h
-                        DB 004h, 000h, 010h, 008h, 000h, 010h, 00Ch, 000h, 010h, 010h, 000h, 00Ch, 010h, 000h, 008h, 010h
-                        DB 000h, 004h, 010h, 000h, 000h, 010h, 000h, 000h, 010h, 004h, 000h, 010h, 008h, 000h, 010h, 00Ch
-                        DB 000h, 010h, 010h, 000h, 00Ch, 010h, 000h, 008h, 010h, 000h, 004h, 010h, 008h, 008h, 010h, 00Ah
-                        DB 008h, 010h, 00Ch, 008h, 010h, 00Eh, 008h, 010h, 010h, 008h, 010h, 010h, 008h, 00Eh, 010h, 008h
-                        DB 00Ch, 010h, 008h, 00Ah, 010h, 008h, 008h, 010h, 00Ah, 008h, 010h, 00Ch, 008h, 010h, 00Eh, 008h
-                        DB 010h, 010h, 008h, 00Eh, 010h, 008h, 00Ch, 010h, 008h, 00Ah, 010h, 008h, 008h, 010h, 008h, 008h
-                        DB 010h, 00Ah, 008h, 010h, 00Ch, 008h, 010h, 00Eh, 008h, 010h, 010h, 008h, 00Eh, 010h, 008h, 00Ch
-                        DB 010h, 008h, 00Ah, 010h, 00Bh, 00Bh, 010h, 00Ch, 00Bh, 010h, 00Dh, 00Bh, 010h, 00Fh, 00Bh, 010h
-                        DB 010h, 00Bh, 010h, 010h, 00Bh, 00Fh, 010h, 00Bh, 00Dh, 010h, 00Bh, 00Ch, 010h, 00Bh, 00Bh, 010h
-                        DB 00Ch, 00Bh, 010h, 00Dh, 00Bh, 010h, 00Fh, 00Bh, 010h, 010h, 00Bh, 00Fh, 010h, 00Bh, 00Dh, 010h
-                        DB 00Bh, 00Ch, 010h, 00Bh, 00Bh, 010h, 00Bh, 00Bh, 010h, 00Ch, 00Bh, 010h, 00Dh, 00Bh, 010h, 00Fh
-                        DB 00Bh, 010h, 010h, 00Bh, 00Fh, 010h, 00Bh, 00Dh, 010h, 00Bh, 00Ch, 010h
+                        DB 03Ah, 03Fh, 02Dh, 036h, 03Fh, 02Dh, 031h, 03Fh, 000h, 000h, 01Ch, 007h, 000h, 01Ch, 00Eh, 000h
+                        DB 01Ch, 015h, 000h, 01Ch, 01Ch, 000h, 01Ch, 01Ch, 000h, 015h, 01Ch, 000h, 00Eh, 01Ch, 000h, 007h
+                        DB 01Ch, 000h, 000h, 01Ch, 007h, 000h, 01Ch, 00Eh, 000h, 01Ch, 015h, 000h, 01Ch, 01Ch, 000h, 015h
+                        DB 01Ch, 000h, 00Eh, 01Ch, 000h, 007h, 01Ch, 000h, 000h, 01Ch, 000h, 000h, 01Ch, 007h, 000h, 01Ch
+                        DB 00Eh, 000h, 01Ch, 015h, 000h, 01Ch, 01Ch, 000h, 015h, 01Ch, 000h, 00Eh, 01Ch, 000h, 007h, 01Ch
+                        DB 00Eh, 00Eh, 01Ch, 011h, 00Eh, 01Ch, 015h, 00Eh, 01Ch, 018h, 00Eh, 01Ch, 01Ch, 00Eh, 01Ch, 01Ch
+                        DB 00Eh, 018h, 01Ch, 00Eh, 015h, 01Ch, 00Eh, 011h, 01Ch, 00Eh, 00Eh, 01Ch, 011h, 00Eh, 01Ch, 015h
+                        DB 00Eh, 01Ch, 018h, 00Eh, 01Ch, 01Ch, 00Eh, 018h, 01Ch, 00Eh, 015h, 01Ch, 00Eh, 011h, 01Ch, 00Eh
+                        DB 00Eh, 01Ch, 00Eh, 00Eh, 01Ch, 011h, 00Eh, 01Ch, 015h, 00Eh, 01Ch, 018h, 00Eh, 01Ch, 01Ch, 00Eh
+                        DB 018h, 01Ch, 00Eh, 015h, 01Ch, 00Eh, 011h, 01Ch, 014h, 014h, 01Ch, 016h, 014h, 01Ch, 018h, 014h
+                        DB 01Ch, 01Ah, 014h, 01Ch, 01Ch, 014h, 01Ch, 01Ch, 014h, 01Ah, 01Ch, 014h, 018h, 01Ch, 014h, 016h
+                        DB 01Ch, 014h, 014h, 01Ch, 016h, 014h, 01Ch, 018h, 014h, 01Ch, 01Ah, 014h, 01Ch, 01Ch, 014h, 01Ah
+                        DB 01Ch, 014h, 018h, 01Ch, 014h, 016h, 01Ch, 014h, 014h, 01Ch, 014h, 014h, 01Ch, 016h, 014h, 01Ch
+                        DB 018h, 014h, 01Ch, 01Ah, 014h, 01Ch, 01Ch, 014h, 01Ah, 01Ch, 014h, 018h, 01Ch, 014h, 016h, 01Ch
+                        DB 000h, 000h, 010h, 004h, 000h, 010h, 008h, 000h, 010h, 00Ch, 000h, 010h, 010h, 000h, 010h, 010h
+                        DB 000h, 00Ch, 010h, 000h, 008h, 010h, 000h, 004h, 010h, 000h, 000h, 010h, 004h, 000h, 010h, 008h
+                        DB 000h, 010h, 00Ch, 000h, 010h, 010h, 000h, 00Ch, 010h, 000h, 008h, 010h, 000h, 004h, 010h, 000h
+                        DB 000h, 010h, 000h, 000h, 010h, 004h, 000h, 010h, 008h, 000h, 010h, 00Ch, 000h, 010h, 010h, 000h
+                        DB 00Ch, 010h, 000h, 008h, 010h, 000h, 004h, 010h, 008h, 008h, 010h, 00Ah, 008h, 010h, 00Ch, 008h
+                        DB 010h, 00Eh, 008h, 010h, 010h, 008h, 010h, 010h, 008h, 00Eh, 010h, 008h, 00Ch, 010h, 008h, 00Ah
+                        DB 010h, 008h, 008h, 010h, 00Ah, 008h, 010h, 00Ch, 008h, 010h, 00Eh, 008h, 010h, 010h, 008h, 00Eh
+                        DB 010h, 008h, 00Ch, 010h, 008h, 00Ah, 010h, 008h, 008h, 010h, 008h, 008h, 010h, 00Ah, 008h, 010h
+                        DB 00Ch, 008h, 010h, 00Eh, 008h, 010h, 010h, 008h, 00Eh, 010h, 008h, 00Ch, 010h, 008h, 00Ah, 010h
+                        DB 00Bh, 00Bh, 010h, 00Ch, 00Bh, 010h, 00Dh, 00Bh, 010h, 00Fh, 00Bh, 010h, 010h, 00Bh, 010h, 010h
+                        DB 00Bh, 00Fh, 010h, 00Bh, 00Dh, 010h, 00Bh, 00Ch, 010h, 00Bh, 00Bh, 010h, 00Ch, 00Bh, 010h, 00Dh
+                        DB 00Bh, 010h, 00Fh, 00Bh, 010h, 010h, 00Bh, 00Fh, 010h, 00Bh, 00Dh, 010h, 00Bh, 00Ch, 010h, 00Bh
+                        DB 00Bh, 010h, 00Bh, 00Bh, 010h, 00Ch, 00Bh, 010h, 00Dh, 00Bh, 010h, 00Fh, 00Bh, 010h, 010h, 00Bh
+                        DB 00Fh, 010h, 00Bh, 00Dh, 010h, 00Bh, 00Ch, 010h
 
 ;Offset 0x30ea
-Data0x30ea              DB 000h, 00Eh, 019h, 02Bh
+RowsOnScreen            DB 000h, 00Eh, 019h, 02Bh
 
 ;Offset 0x30ee
 Data0x30ee              DW offset Font8x16;Offset 0x3900
@@ -6093,7 +6207,9 @@ Data0x30ee              DW offset Font8x16;Offset 0x3900
                         DW offset Data0x4900;Offset 0x4900
 
 ;Offset 0x30fa
-                        DB 087h, 0DBh, 087h, 0DBh, 087h, 0DBh
+    xchg bx, bx                         ;hello
+    xchg bx, bx
+    xchg bx, bx
 
 ;Offset 0x3100
 Font8x8                 DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 07Eh, 081h, 0A5h, 081h, 0BDh, 099h, 081h, 07Eh
@@ -6486,27 +6602,26 @@ Font8x16                DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h,
                         DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
 
 ;Offset 0x4900
-Data0x4900              DB 01Dh, 000h, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh, 066h, 024h, 000h, 000h, 000h, 000h, 000h
-                        DB 000h, 030h, 000h, 000h, 03Ch, 066h, 0C3h, 0C3h, 0DBh, 0DBh, 0C3h, 0C3h, 066h, 03Ch, 000h, 000h
-                        DB 000h, 000h, 04Dh, 000h, 000h, 0C3h, 0E7h, 0FFh, 0FFh, 0DBh, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 000h
-                        DB 000h, 000h, 000h, 054h, 000h, 000h, 0FFh, 0DBh, 099h, 018h, 018h, 018h, 018h, 018h, 018h, 03Ch
-                        DB 000h, 000h, 000h, 000h, 056h, 000h, 000h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 066h, 03Ch
-                        DB 018h, 000h, 000h, 000h, 000h, 057h, 000h, 000h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 0DBh, 0DBh, 0FFh
-                        DB 066h, 066h, 000h, 000h, 000h, 000h, 058h, 000h, 000h, 0C3h, 0C3h, 066h, 03Ch, 018h, 018h, 03Ch
-                        DB 066h, 0C3h, 0C3h, 000h, 000h, 000h, 000h, 059h, 000h, 000h, 0C3h, 0C3h, 0C3h, 066h, 03Ch, 018h
-                        DB 018h, 018h, 018h, 03Ch, 000h, 000h, 000h, 000h, 05Ah, 000h, 000h, 0FFh, 0C3h, 086h, 00Ch, 018h
-                        DB 030h, 060h, 0C1h, 0C3h, 0FFh, 000h, 000h, 000h, 000h, 06Dh, 000h, 000h, 000h, 000h, 000h, 0E6h
-                        DB 0FFh, 0DBh, 0DBh, 0DBh, 0DBh, 0DBh, 000h, 000h, 000h, 000h, 076h, 000h, 000h, 000h, 000h, 000h
-                        DB 0C3h, 0C3h, 0C3h, 0C3h, 066h, 03Ch, 018h, 000h, 000h, 000h, 000h, 077h, 000h, 000h, 000h, 000h
-                        DB 000h, 0C3h, 0C3h, 0C3h, 0DBh, 0DBh, 0FFh, 066h, 000h, 000h, 000h, 000h, 078h, 000h, 000h, 000h
-                        DB 000h, 000h, 0C3h, 066h, 03Ch, 018h, 03Ch, 066h, 0C3h, 000h, 000h, 000h, 000h, 091h, 000h, 000h
-                        DB 000h, 000h, 000h, 06Eh, 03Bh, 01Bh, 07Eh, 0D8h, 0DCh, 077h, 000h, 000h, 000h, 000h, 09Bh, 000h
-                        DB 018h, 018h, 07Eh, 0C3h, 0C0h, 0C0h, 0C0h, 0C3h, 07Eh, 018h, 018h, 000h, 000h, 000h, 000h, 09Dh
-                        DB 000h, 000h, 0C3h, 066h, 03Ch, 018h, 0FFh, 018h, 0FFh, 018h, 018h, 018h, 000h, 000h, 000h, 000h
-                        DB 09Eh, 000h, 0FCh, 066h, 066h, 07Ch, 062h, 066h, 06Fh, 066h, 066h, 066h, 0F3h, 000h, 000h, 000h
-                        DB 000h, 0ABh, 000h, 0C0h, 0C0h, 0C2h, 0C6h, 0CCh, 018h, 030h, 060h, 0CEh, 09Bh, 006h, 00Ch, 01Fh
-                        DB 000h, 000h, 0ACh, 000h, 0C0h, 0C0h, 0C2h, 0C6h, 0CCh, 018h, 030h, 066h, 0CEh, 096h, 03Eh, 006h
-                        DB 006h, 000h, 000h, 000h
+Data0x4900              DB 01Dh, 000h, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh, 066h, 024h, 000h, 000h, 000h, 000h, 000h, 000h
+                        DB 030h, 000h, 000h, 03Ch, 066h, 0C3h, 0C3h, 0DBh, 0DBh, 0C3h, 0C3h, 066h, 03Ch, 000h, 000h, 000h, 000h
+                        DB 04Dh, 000h, 000h, 0C3h, 0E7h, 0FFh, 0FFh, 0DBh, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 000h, 000h, 000h, 000h
+                        DB 054h, 000h, 000h, 0FFh, 0DBh, 099h, 018h, 018h, 018h, 018h, 018h, 018h, 03Ch, 000h, 000h, 000h, 000h
+                        DB 056h, 000h, 000h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 066h, 03Ch, 018h, 000h, 000h, 000h, 000h
+                        DB 057h, 000h, 000h, 0C3h, 0C3h, 0C3h, 0C3h, 0C3h, 0DBh, 0DBh, 0FFh, 066h, 066h, 000h, 000h, 000h, 000h
+                        DB 058h, 000h, 000h, 0C3h, 0C3h, 066h, 03Ch, 018h, 018h, 03Ch, 066h, 0C3h, 0C3h, 000h, 000h, 000h, 000h
+                        DB 059h, 000h, 000h, 0C3h, 0C3h, 0C3h, 066h, 03Ch, 018h, 018h, 018h, 018h, 03Ch, 000h, 000h, 000h, 000h
+                        DB 05Ah, 000h, 000h, 0FFh, 0C3h, 086h, 00Ch, 018h, 030h, 060h, 0C1h, 0C3h, 0FFh, 000h, 000h, 000h, 000h
+                        DB 06Dh, 000h, 000h, 000h, 000h, 000h, 0E6h, 0FFh, 0DBh, 0DBh, 0DBh, 0DBh, 0DBh, 000h, 000h, 000h, 000h
+                        DB 076h, 000h, 000h, 000h, 000h, 000h, 0C3h, 0C3h, 0C3h, 0C3h, 066h, 03Ch, 018h, 000h, 000h, 000h, 000h
+                        DB 077h, 000h, 000h, 000h, 000h, 000h, 0C3h, 0C3h, 0C3h, 0DBh, 0DBh, 0FFh, 066h, 000h, 000h, 000h, 000h
+                        DB 078h, 000h, 000h, 000h, 000h, 000h, 0C3h, 066h, 03Ch, 018h, 03Ch, 066h, 0C3h, 000h, 000h, 000h, 000h
+                        DB 091h, 000h, 000h, 000h, 000h, 000h, 06Eh, 03Bh, 01Bh, 07Eh, 0D8h, 0DCh, 077h, 000h, 000h, 000h, 000h
+                        DB 09Bh, 000h, 018h, 018h, 07Eh, 0C3h, 0C0h, 0C0h, 0C0h, 0C3h, 07Eh, 018h, 018h, 000h, 000h, 000h, 000h
+                        DB 09Dh, 000h, 000h, 0C3h, 066h, 03Ch, 018h, 0FFh, 018h, 0FFh, 018h, 018h, 018h, 000h, 000h, 000h, 000h
+                        DB 09Eh, 000h, 0FCh, 066h, 066h, 07Ch, 062h, 066h, 06Fh, 066h, 066h, 066h, 0F3h, 000h, 000h, 000h, 000h
+                        DB 0ABh, 000h, 0C0h, 0C0h, 0C2h, 0C6h, 0CCh, 018h, 030h, 060h, 0CEh, 09Bh, 006h, 00Ch, 01Fh, 000h, 000h
+                        DB 0ACh, 000h, 0C0h, 0C0h, 0C2h, 0C6h, 0CCh, 018h, 030h, 066h, 0CEh, 096h, 03Eh, 006h, 006h, 000h, 000h
+                        DB 000h
 
 ;Offset 0x4a44
                         DB 00Dh, 00Ah
@@ -6523,25 +6638,25 @@ Data0x4900              DB 01Dh, 000h, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh,
 
 VESAPowerManagement:                    ;Offset 0x4b0c
     cmp  bl, 00h
-    jne  Label0x4b13                    ;Offset 0x4b13
-    jmp  Label0x4b25                    ;Offset 0x4b25
-Label0x4b13:                            ;Offset 0x4b13
+    jne  VPMNot0                        ;Offset 0x4b13
+    jmp  VPMGetCaps                     ;Offset 0x4b25
+VPMNot0:                                ;Offset 0x4b13
     cmp  bl, 01h
-    jne  Label0x4b1a                    ;Offset 0x4b1a
-    jmp  Label0x4b50                    ;Offset 0x4b50
-Label0x4b1a:                            ;Offset 0x4b1a
+    jne  VPMNot1                        ;Offset 0x4b1a
+    jmp  VPMSetDisplayPowerState        ;Offset 0x4b50
+VPMNot1:                                ;Offset 0x4b1a
     cmp  bl, 02h
-    jne  Label0x4b21                    ;Offset 0x4b21
-    jmp  Label0x4b2d                    ;Offset 0x4b2d
-Label0x4b21:                            ;Offset 0x4b21
+    jne  VPMNot2                        ;Offset 0x4b21
+    jmp  VPMGetDisplayPowerState        ;Offset 0x4b2d
+VPMNot2:                                ;Offset 0x4b21
     mov  ax, 014fh
     iret
-Label0x4b25:                            ;Offset 0x4b25
+VPMGetCaps:                             ;Offset 0x4b25
     mov  ax, 004fh
     mov  bh, 07h
     mov  bl, 10h
     iret
-Label0x4b2d:                            ;Offset 0x4b2d
+VPMGetDisplayPowerState:                ;Offset 0x4b2d
     push dx
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     nop
@@ -6549,21 +6664,21 @@ Label0x4b2d:                            ;Offset 0x4b2d
     out  dx, al
     inc  dx
     in   al, dx
-    xor  bh, bh
+    xor  bh, bh                         ;0 = Display is on
     and  al, MGA_CRTCEXT1_HorSyncOff OR MGA_CRTCEXT1_VerSyncOff;0x30
     je   Label0x4b4b                    ;Offset 0x4b4b
-    inc  bh
+    inc  bh                             ;1 = Display in standby
     cmp  al, MGA_CRTCEXT1_HorSyncOff    ;0x10
     je   Label0x4b4b                    ;Offset 0x4b4b
-    inc  bh
+    inc  bh                             ;2 = Display is suspended
     cmp  al, MGA_CRTCEXT1_VerSyncOff    ;0x20
     je   Label0x4b4b                    ;Offset 0x4b4b
-    shl  bh, 01h
+    shl  bh, 01h                        ;4 = Display is off
 Label0x4b4b:                            ;Offset 0x4b4b
     mov  ax, 004fh
     pop  dx
     iret
-Label0x4b50:                            ;Offset 0x4b50
+VPMSetDisplayPowerState:                ;Offset 0x4b50
     push dx
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     nop  
@@ -6578,7 +6693,7 @@ Label0x4b50:                            ;Offset 0x4b50
 Label0x4b64:                            ;Offset 0x4b64
     in   al, dx
     and  al, NOT (MGA_CRTCEXT1_HorSyncOff OR MGA_CRTCEXT1_VerSyncOff);0xcf
-    or   bh, bh
+    or   bh, bh                         ;0 = Turn display on
     jne  Label0x4b81                    ;Offset 0x4b81
     out  dx, al
     call ScreenOn2                      ;Offset 0x4bc8
@@ -6590,17 +6705,17 @@ Label0x4b7c:                            ;Offset 0x4b7c
     mov  ax, 004fh
     jmp  Label0x4bb3                    ;Offset 0x4bb3
 Label0x4b81:                            ;Offset 0x4b81
-    cmp  bh, 01h
+    cmp  bh, 01h                        ;1 = Set display to standby
     jne  Label0x4b8a                    ;Offset 0x4b8a
     or   al, MGA_CRTCEXT1_HorSyncOff    ;0x10
     jmp  Label0x4b9a                    ;Offset 0x4b9a
 Label0x4b8a:                            ;Offset 0x4b8a
-    cmp  bh, 02h
+    cmp  bh, 02h                        ;2 = Suspend display
     jne  Label0x4b93                    ;Offset 0x4b93
     or   al, MGA_CRTCEXT1_VerSyncOff    ;0x20
     jmp  Label0x4b9a                    ;Offset 0x4b9a
 Label0x4b93:                            ;Offset 0x4b93
-    cmp  bh, 04h
+    cmp  bh, 04h                        ;4 = Turn display off
     jne  Label0x4bb0                    ;Offset 0x4bb0
     or   al, MGA_CRTCEXT1_HorSyncOff OR MGA_CRTCEXT1_VerSyncOff;0x30
 Label0x4b9a:                            ;Offset 0x4b9a
@@ -6655,7 +6770,7 @@ ScreenOn2 ENDP
                         DB 000h, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 000h
                         DB 000h, 000h
 
-;These four tables are order dependent (There's a pointer compare in one of the functions)
+;These five tables are order dependent (There's a pointer compare in one of the functions)
 
 ;Offset 0x4be5
 DDCFuncsNewer           DW offset DDCDisablePin1    ;Offset 0x4d42  ;0
@@ -7525,31 +7640,20 @@ Func0x51a6 PROC NEAR                    ;Offset 0x51a6
     ret
 Func0x51a6 ENDP
 
-;
-;inputs:
-;   si = Pointer to DDC/MISC functions
-;
-;outputs:
-;   al = 0ah - number of tries it took
-;
-;destroys:
-;   -
-;note: Not sure if that's what it does, but the documentation is rather sparse.
-;      No functions set the output to 1, only to 0.
-DetectInput PROC NEAR                   ;Offset 0x51b2
+Func0x51b2 PROC NEAR                    ;Offset 0x51b2
     push ecx
     call word ptr cs:[si + MGA_DDCDisable0];0x00
     call SleepIfNeeded                  ;Offset 0x5121
     call word ptr cs:[si + MGA_DDCDisable1];0x02
     mov  cl, 0ah
-KeepListening:                          ;Offset 0x51c0
+Label0x51c0:                            ;Offset 0x51c0
     call SleepIfNeeded                  ;Offset 0x5121
     dec  cl
     je   TimeOut                        ;Offset 0x51de
     call word ptr cs:[si + MGA_DDCRead1];0x0a
-    jae  KeepListening                  ;Offset 0x51c0
+    jae  Label0x51c0                    ;Offset 0x51c0
     call word ptr cs:[si + MGA_DDCRead0];0x08
-    jae  KeepListening                  ;Offset 0x51c0
+    jae  Label0x51c0                    ;Offset 0x51c0
     call word ptr cs:[si + MGA_DDCSet0] ;0x04
     call SleepIfNeeded                  ;Offset 0x5121
     call word ptr cs:[si + MGA_DDCSet1] ;0x06
@@ -7557,7 +7661,7 @@ TimeOut:                                ;Offset 0x51de
     mov  al, cl
     pop  ecx
     ret
-DetectInput ENDP
+Func0x51b2 ENDP
 
 TurnOffOutput PROC NEAR                 ;Offset 0x51e3
     push ecx
@@ -7701,17 +7805,6 @@ Label0x52f3:                            ;Offset 0x52f3
     ret
 Func0x52c5 ENDP
 
-;inputs:
-;   cl = 
-;   ch = 
-;  edx = 
-;   si = 
-;
-;outputs:
-;
-;
-;destroys:
-;
 Func0x52fa PROC NEAR                    ;Offset 0x52fa
     push     ecx
     shr      ecx, 08h
@@ -7723,7 +7816,7 @@ Func0x52fa PROC NEAR                    ;Offset 0x52fa
 Label0x5311:                            ;Offset 0x5311
     cmp      cl, 00h
     je       Label0x533b                ;Offset 0x533b
-    call     DetectInput                ;Offset 0x51b2
+    call     Func0x51b2                 ;Offset 0x51b2
     or       al, al
     je       NotDetected                ;Offset 0x53f1
     mov      al, 60h
@@ -7741,7 +7834,7 @@ Label0x533b:                            ;Offset 0x533b
 Label0x533d:                            ;Offset 0x533d
     push     edx
     push     edi
-    call     DetectInput                ;Offset 0x51b2
+    call     Func0x51b2                 ;Offset 0x51b2
     or       al, al
     je       NotDetected                ;Offset 0x53f1
     or       dx, dx
@@ -7777,7 +7870,7 @@ Label0x538a:                            ;Offset 0x538a
     call     SleepIfNeeded              ;Offset 0x5121
     dec      al
     jne      Label0x538a                ;Offset 0x538a
-    call     DetectInput                ;Offset 0x51b2
+    call     Func0x51b2                 ;Offset 0x51b2
     or       al, al
     je       Label0x53e2                ;Offset 0x53e2
 Label0x5398:                            ;Offset 0x5398
@@ -7866,7 +7959,7 @@ Func0x5427 PROC NEAR                    ;Offset 0x5427
     push     0000h
     pop      ds
     push     word ptr ds:[BDA_SoftResetFlag];Offset 0x472
-    mov      word ptr ds:[BDA_SoftResetFlag], 0ffh;Offset 0x472
+    mov      word ptr ds:[BDA_SoftResetFlag], 00ffh;Offset 0x472
     or       al, al
     ;je       Label0x5449                ;Offset 0x5449
     DB 00Fh, 084h, 006h, 000h           ;Misassemble
@@ -7891,67 +7984,67 @@ Label0x5449:                            ;Offset 0x5449
 Func0x5427 ENDP
 
 ;Offset 0x5477
-SupportedVESAVideoModes DW 0101h
-                        DW 0110h
-                        DW 0111h
-                        DW 0112h
+SupportedVESAVideoModes DW 0101h        ;640x480x256
+                        DW 0110h        ;640x480x32K
+                        DW 0111h        ;640x480x64K
+                        DW 0112h        ;640x480x16M
 
 ;Offset 0x547f
-Data0x547f              DW 0100h
+Data0x547f              DW 0100h        ;640x400x256
 
 ;Offset 0x5481
-Data0x5481              DW 0102h
-                        DW 0103h
-                        DW 0113h
-                        DW 0114h
-                        DW 0115h
+Data0x5481              DW 0102h        ;800x600x16
+                        DW 0103h        ;800x600x256
+                        DW 0113h        ;800x600x32K
+                        DW 0114h        ;800x600x64K
+                        DW 0115h        ;800x600x16M
 
 ;Offset 0x548b
-Data0x548b              DW 0105h
-                        DW 0116h
-                        DW 0117h
-                        DW 0118h
+Data0x548b              DW 0105h        ;1024x768x256
+                        DW 0116h        ;1024x768x32K
+                        DW 0117h        ;1024x768x64K
+                        DW 0118h        ;1024x768x16M
 
 ;Offset 0x5493                        
-Data0x5493              DW 0107h
-                        DW 0119h
-                        DW 011ah
-                        DW 011bh
+Data0x5493              DW 0107h        ;1280x1024x256
+                        DW 0119h        ;1280x1024x32K
+                        DW 011ah        ;1280x1024x64K
+                        DW 011bh        ;1280x1024x16M
 
 ;Offset 0x549b
-Data0x549b              DW 010ah
-                        DW 0ffffh
+Data0x549b              DW 010ah        ;132x43 text
+                        DW 0FFFFh
 
 ;Offset 0x549f
-Data0x549f              DW offset Data0x56f1, 0010h     ;Offset 0x56f1
-                        DW offset Data0x56ff, 0010h     ;Offset 0x56ff
-                        DW offset Data0x5737, 0000h     ;Offset 0x5737
-                        DW offset Data0x570d, 0010h     ;Offset 0x570d
+Data0x549f              DW offset Data0x56f1, 0010h     ;Offset 0x56f1  0x100   640x400x256
+                        DW offset Data0x56ff, 0010h     ;Offset 0x56ff  0x101   640x480x256
+                        DW offset Data0x5737, 0000h     ;Offset 0x5737  0x102   800x600x16
+                        DW offset Data0x570d, 0010h     ;Offset 0x570d  0x103   800x600x256
                         DW 0000h, 0000h
-                        DW offset Data0x571b, 0010h     ;Offset 0x571b
+                        DW offset Data0x571b, 0010h     ;Offset 0x571b  0x105   1024x768x256
                         DW 0000h, 0000h
-                        DW offset Data0x5729, 0010h     ;Offset 0x5729
+                        DW offset Data0x5729, 0010h     ;Offset 0x5729  0x107   1280x1024x256
                         DW 0000h, 00c0h
                         DW 0000h, 0040h
-                        DW offset Data0x5745, 00c0h     ;Offset 0x5745
+                        DW offset Data0x5745, 00c0h     ;Offset 0x5745  0x10a   132x43 text
                         DW 0000h, 00c0h
                         DW 0000h, 00c0h
                         DW 0000h, 0000h
                         DW 0000h, 0000h
                         DW 0000h, 0000h
-                        DW offset Data0x56ff, 0020h     ;Offset 0x56ff
-                        DW offset Data0x56ff, 0060h     ;Offset 0x56ff
-                        DW offset Data0x56ff, 0030h     ;Offset 0x56ff
-                        DW offset Data0x570d, 0020h     ;Offset 0x570d
-                        DW offset Data0x570d, 0060h     ;Offset 0x570d
-                        DW offset Data0x570d, 0030h     ;Offset 0x570d
-                        DW offset Data0x571b, 0020h     ;Offset 0x571b
-                        DW offset Data0x571b, 0060h     ;Offset 0x571b
-                        DW offset Data0x571b, 0030h     ;Offset 0x571b
-                        DW offset Data0x5729, 0020h     ;Offset 0x5729
-                        DW offset Data0x5729, 0060h     ;Offset 0x5729
-                        DW offset Data0x5729, 0030h     ;Offset 0x5729
-                        DW offset Data0x56f1, 0010h     ;Offset 0x56f1
+                        DW offset Data0x56ff, 0020h     ;Offset 0x56ff  0x110   640x480x32K
+                        DW offset Data0x56ff, 0060h     ;Offset 0x56ff  0x111   640x480x64K
+                        DW offset Data0x56ff, 0030h     ;Offset 0x56ff  0x112   640x480x16M
+                        DW offset Data0x570d, 0020h     ;Offset 0x570d  0x113   800x600x32K
+                        DW offset Data0x570d, 0060h     ;Offset 0x570d  0x114   800x600x64K
+                        DW offset Data0x570d, 0030h     ;Offset 0x570d  0x115   800x600x16M
+                        DW offset Data0x571b, 0020h     ;Offset 0x571b  0x116   1024x768x32K
+                        DW offset Data0x571b, 0060h     ;Offset 0x571b  0x117   1024x768x64K
+                        DW offset Data0x571b, 0030h     ;Offset 0x571b  0x118   1024x768x16M
+                        DW offset Data0x5729, 0020h     ;Offset 0x5729  0x119   1280x1024x32K
+                        DW offset Data0x5729, 0060h     ;Offset 0x5729  0x11a   1280x1024x64K
+                        DW offset Data0x5729, 0030h     ;Offset 0x5729  0x11b   1280x1024x16M
+                        DW offset Data0x56f1, 0010h     ;Offset 0x56f1  0x11c   1600x1200x256
 
 ;Offset 0x5513
 Data0x5513              DB 008h, 010h, 001h, 008h, 001h, 004h, 000h
@@ -7966,89 +8059,103 @@ Data0x5522              DB 005h, 00Bh, 006h, 005h, 005h, 000h, 000h, 000h
 Data0x552a              DB 008h, 010h, 008h, 008h, 008h, 000h, 008h, 018h
 
 ;Offset 0x5532
-Data0x5532              DB 050h, 00Bh, 008h
-                        DB 000h, 020h, 001h, 00Fh, 000h, 00Eh, 06Fh, 05Fh, 04Fh, 04Fh, 003h, 051h, 09Dh, 00Bh, 03Eh, 000h
-                        DB 040h, 020h, 000h, 000h, 000h, 000h, 000h, 0C1h, 023h, 08Fh, 050h, 000h, 08Fh, 00Ch, 0C3h, 0FFh
-                        DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch, 00Dh, 00Eh, 00Fh
-                        DB 041h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
+Data0x5532              DB 050h, 00Bh, 008h, 000h, 020h, 001h, 00Fh, 000h, 00Eh, 06Fh, 05Fh, 04Fh, 04Fh, 003h, 051h, 09Dh
+                        DB 00Bh, 03Eh, 000h, 040h, 020h, 000h, 000h, 000h, 000h, 000h, 0C1h, 023h, 08Fh, 050h, 000h, 08Fh
+                        DB 00Ch, 0C3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch
+                        DB 00Dh, 00Eh, 00Fh, 041h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
 
 ;Offset 0x5572
-Data0x5572              DB 050h, 00Bh, 008h
-                        DB 000h, 020h, 001h, 00Fh, 000h, 00Eh, 0EFh, 05Fh, 04Fh, 04Fh, 003h, 051h, 09Dh, 00Bh, 03Eh, 000h
-                        DB 040h, 020h, 000h, 000h, 000h, 000h, 000h, 0E9h, 0ABh, 0DFh, 050h, 000h, 0DFh, 00Ch, 0C3h, 0FFh
-                        DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch, 00Dh, 00Eh, 00Fh
-                        DB 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
+Data0x5572              DB 050h, 00Bh, 008h, 000h, 020h, 001h, 00Fh, 000h, 00Eh, 0EFh, 05Fh, 04Fh, 04Fh, 003h, 051h, 09Dh
+                        DB 00Bh, 03Eh, 000h, 040h, 020h, 000h, 000h, 000h, 000h, 000h, 0E9h, 0ABh, 0DFh, 050h, 000h, 0DFh
+                        DB 00Ch, 0C3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch
+                        DB 00Dh, 00Eh, 00Fh, 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
 
 ;Offset 0x55b2
-Data0x55b2              DB 050h, 00Bh, 008h
-                        DB 000h, 020h, 001h, 00Fh, 000h, 00Eh, 02Fh, 07Fh, 063h, 063h, 003h, 068h, 018h, 072h, 0F0h, 000h
-                        DB 060h, 020h, 000h, 000h, 000h, 000h, 000h, 058h, 0ACh, 057h, 064h, 000h, 057h, 073h, 0C3h, 0FFh
-                        DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch, 00Dh, 00Eh, 00Fh
-                        DB 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
+Data0x55b2              DB 050h, 00Bh, 008h, 000h, 020h, 001h, 00Fh, 000h, 00Eh, 02Fh, 07Fh, 063h, 063h, 003h, 068h, 018h
+                        DB 072h, 0F0h, 000h, 060h, 020h, 000h, 000h, 000h, 000h, 000h, 058h, 0ACh, 057h, 064h, 000h, 057h
+                        DB 073h, 0C3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch
+                        DB 00Dh, 00Eh, 00Fh, 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
 
 ;Offset 0x55f2
-Data0x55f2              DB 050h, 00Bh, 008h
-                        DB 000h, 020h, 001h, 00Fh, 000h, 00Eh, 0EFh, 0A3h, 07Fh, 07Fh, 007h, 082h, 093h, 024h, 0F5h, 000h
-                        DB 060h, 020h, 000h, 000h, 000h, 000h, 000h, 002h, 0A8h, 0FFh, 080h, 000h, 0FFh, 025h, 0C3h, 0FFh
-                        DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch, 00Dh, 00Eh, 00Fh
-                        DB 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
+Data0x55f2              DB 050h, 00Bh, 008h, 000h, 020h, 001h, 00Fh, 000h, 00Eh, 0EFh, 0A3h, 07Fh, 07Fh, 007h, 082h, 093h
+                        DB 024h, 0F5h, 000h, 060h, 020h, 000h, 000h, 000h, 000h, 000h, 002h, 0A8h, 0FFh, 080h, 000h, 0FFh
+                        DB 025h, 0C3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch
+                        DB 00Dh, 00Eh, 00Fh, 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh, 0FFh
 
 ;Offset 0x5632
-Data0x5632              DB 050h, 00Bh, 008h
-                        DB 000h, 020h, 001h, 00Fh, 000h, 00Eh, 02Fh, 0CEh, 09Fh, 09Fh, 012h, 0A5h, 013h, 028h, 05Ah, 000h
-                        DB 060h, 020h, 000h, 000h, 000h, 000h, 000h, 000h, 0A3h, 0FFh, 0A0h, 000h, 0FFh, 029h, 0C3h, 0FFh
-                        DB 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch, 00Dh, 00Eh, 00Fh
-                        DB 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh
+Data0x5632              DB 050h, 00Bh, 008h, 000h, 020h, 001h, 00Fh, 000h, 00Eh, 02Fh, 0CEh, 09Fh, 09Fh, 012h, 0A5h, 013h
+                        DB 028h, 05Ah, 000h, 060h, 020h, 000h, 000h, 000h, 000h, 000h, 000h, 0A3h, 0FFh, 0A0h, 000h, 0FFh
+                        DB 029h, 0C3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 006h, 007h, 008h, 009h, 00Ah, 00Bh, 00Ch
+                        DB 00Dh, 00Eh, 00Fh, 041h, 002h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 040h, 005h, 00Fh
 
 ;Offset 0x5671
-Data0x5671              DB 064h, 024h, 010h, 000h
-                        DB 0F0h, 001h, 00Fh, 000h, 006h, 02Fh
+Data0x5671              DB 064h, 024h, 010h, 000h, 0F0h, 001h, 00Fh, 000h, 006h, 02Fh
 
 ;Offset 0x567b
-Data0x567b              DB 07Ah, 063h, 063h, 080h, 06Bh, 01Bh, 072h, 0F0h, 000h, 060h
-                        DB 000h, 000h, 000h, 000h, 000h, 000h, 058h, 0ACh, 057h, 032h, 000h, 057h, 000h, 0E3h, 0FFh, 000h
-                        DB 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 001h
-                        DB 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
+Data0x567b              DB 07Ah, 063h, 063h, 080h, 06Bh, 01Bh
+                        DB 072h, 0F0h, 000h, 060h, 000h, 000h, 000h, 000h, 000h, 000h, 058h, 0ACh, 057h, 032h, 000h, 057h
+                        DB 000h, 0E3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
+                        DB 03Dh, 03Eh, 03Fh, 001h, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 005h, 00Fh, 0FFh
 
 ;Offset 0x56b1
-Data0x56b1              DB 084h, 02Ah, 008h, 058h
-                        DB 02Ch, 001h, 003h, 000h, 002h, 06Fh, 09Eh, 083h, 084h, 001h, 087h, 08Dh, 0CBh, 01Fh, 000h, 047h
-                        DB 006h, 007h, 000h, 000h, 000h, 000h, 09Bh, 0ADh, 057h, 042h, 01Fh, 05Bh, 0C8h, 0A3h, 0FFh, 000h
-                        DB 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch, 03Dh, 03Eh, 03Fh, 00Ch
-                        DB 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 010h, 00Eh, 000h, 0FFh
+Data0x56b1              DB 084h, 02Ah, 008h, 058h, 02Ch, 001h, 003h, 000h, 002h, 06Fh, 09Eh, 083h, 084h, 001h, 087h, 08Dh
+                        DB 0CBh, 01Fh, 000h, 047h, 006h, 007h, 000h, 000h, 000h, 000h, 09Bh, 0ADh, 057h, 042h, 01Fh, 05Bh
+                        DB 0C8h, 0A3h, 0FFh, 000h, 001h, 002h, 003h, 004h, 005h, 014h, 007h, 038h, 039h, 03Ah, 03Bh, 03Ch
+                        DB 03Dh, 03Eh, 03Fh, 00Ch, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 010h, 00Eh, 000h, 0FFh
 
 ;Offset 0x56f1
-Data0x56f1              DB 057h, 062h, 000h, 000h, 080h, 002h, 090h, 001h, 01Ch, 013h
+Data0x56f1              DB 057h, 062h, 000h, 000h
+                        DW 0280h        ;640
+                        DW 0190h        ;400
+                        DB 01Ch, 013h
                         DW offset Data0x5532;Offset 0x5532
                         DB 040h, 000h
 
 ;Offset 0x56ff
-Data0x56ff              DB 057h, 062h, 000h, 000h, 080h, 002h, 0E0h, 001h, 01Ch, 013h
+Data0x56ff              DB 057h, 062h, 000h, 000h
+                        DW 0280h        ;640
+                        DW 01E0h        ;480
+                        DB 01Ch, 013h
                         DW offset Data0x5572;Offset 0x5572
                         DB 040h, 000h
                         
 ;Offset 0x570d
-Data0x570d              DB 040h, 09Ch, 000h, 000h, 020h, 003h, 058h, 002h, 01Ch, 013h
+Data0x570d              DB 040h, 09Ch, 000h, 000h
+                        DW 0320h        ;800
+                        DW 0258h        ;600
+                        DB 01Ch, 013h
                         DW offset Data0x55b2;Offset 0x55b2
                         DB 000h, 000h
 
 ;Offset 0x571b
-Data0x571b              DB 0E8h, 0FDh, 000h, 000h, 000h, 004h, 000h, 003h, 01Ch, 013h
+Data0x571b              DB 0E8h, 0FDh, 000h, 000h
+                        DW 0400h        ;1024
+                        DW 0300h        ;768
+                        DB 01Ch, 013h
                         DW offset Data0x55f2;Offset 0x55f2
                         DB 000h, 000h
                         
 ;Offset 0x5729
-Data0x5729              DB 0E0h, 0A5h, 001h, 000h, 000h, 005h, 000h, 004h, 01Ch, 013h
+Data0x5729              DB 0E0h, 0A5h, 001h, 000h
+                        DW 0500h        ;1280
+                        DW 0400h        ;1024
+                        DB 01Ch, 013h
                         DW offset Data0x5632;Offset 0x5632
                         DB 040h, 021h
 
 ;Offset 0x5737
-Data0x5737              DB 058h, 098h, 000h, 000h, 020h, 003h, 058h, 002h, 01Bh, 012h
+Data0x5737              DB 058h, 098h, 000h, 000h
+                        DW 0320h        ;800
+                        DW 0258h        ;600
+                        DB 01Bh, 012h
                         DW offset Data0x5671;Offset 0x5671
                         DB 000h, 000h
 
 ;Offset 0x5745
-Data0x5745              DB 078h, 0A0h, 000h, 000h, 020h, 004h, 058h, 001h, 018h, 003h
+Data0x5745              DB 078h, 0A0h, 000h, 000h
+                        DW 0420h        ;1056
+                        DW 0158h        ;344
+                        DB 018h, 003h
                         DW offset Data0x56b1;Offset 0x56b1
                         DB 000h, 000h
 
@@ -8100,9 +8207,8 @@ RevisionString          DB '00', 000h
 
 ;Offset 0x57d8
                         DB 'VBE/MGA'
-
-;Offset 0x57df
-                        DB 001h, 001h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 03Fh, 001h, 002h
+                        DB 001h, 001h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 03Fh
+                        DW 00201h       ;BIOS Version (2.1)
 
 VESAHandler:                            ;Offset 0x57eb
     cmp       al, 14h                   ;Matrox OEM extension (bl=00h = installation check / get caps) https://www.ctyme.com/intr/rb-0306.htm
@@ -9037,7 +9143,7 @@ GetProtectedModeInterface:              ;Offset 0x5f21
     jne       Label0x5f3e               ;Offset 0x5f3e
     mov       ax, cs
     mov       es, ax
-    mov       di, offset Data0x7ce0     ;Offset 0x7ce0
+    mov       di, offset PINS           ;Offset 0x7ce0
     xor       ax, ax
     mov       al, byte ptr es:[di + 02h]
     add       di, ax
@@ -9079,7 +9185,7 @@ Label0x5f72:                            ;Offset 0x5f72
 Label0x5f7e:                            ;Offset 0x5f7e
     push      si
     mov       bx, ax
-    add       si, offset Data0x7ce0     ;Offset 0x7ce0
+    add       si, offset PINS           ;Offset 0x7ce0
     mov       cl, byte ptr cs:[si]
     mov       ax, 004fh
     pop       si
@@ -10827,7 +10933,7 @@ Func0x6b4d PROC NEAR                    ;Offset 0x6b4d
     push   bx
     push   cx
     push   di
-    cmp    byte ptr cs:[Data0x7ff4], 02h
+    cmp    byte ptr cs:[DeviceRevision], MGA_G400_Rev2;Offset 0x7ff4 0x2
     jne    Label0x6b69                  ;Offset 0x6b69
     mov    bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     mov    al, PCI_ACCESS_WriteWord     ;0xc
@@ -11399,58 +11505,70 @@ Label0x7014:                            ;Offset 0x7014
 Func0x6ffc ENDP
 
 ;Offset 0x7029
-Data0x7029              DB 028h
-                        DB 002h, 00Ch, 006h, 014h, 090h, 001h, 00Ah, 002h, 021h, 028h, 000h, 050h, 002h, 00Ch, 006h, 000h
-                        DB 090h, 001h, 00Ah, 002h, 021h, 028h, 000h, 050h, 002h, 00Ch, 006h, 000h, 05Eh, 001h, 00Ah, 002h
-                        DB 021h, 041h, 000h, 050h, 002h, 00Ch, 006h, 000h, 0E0h, 001h, 00Ah, 002h, 021h, 000h, 000h, 028h
-                        DB 002h, 00Ch, 006h, 014h, 05Eh, 001h, 00Ah, 002h, 021h, 041h, 000h
+Data0x7029              DB 028h, 002h, 00Ch, 006h, 014h, 090h, 001h, 00Ah, 002h, 021h
+                        DB 028h, 000h, 050h, 002h, 00Ch, 006h, 000h, 090h, 001h, 00Ah
+                        DB 002h, 021h, 028h, 000h, 050h, 002h, 00Ch, 006h, 000h, 05Eh
+                        DB 001h, 00Ah, 002h, 021h, 041h, 000h, 050h, 002h, 00Ch, 006h
+                        DB 000h, 0E0h, 001h, 00Ah, 002h, 021h, 000h, 000h, 028h, 002h
+                        DB 00Ch, 006h, 014h, 05Eh, 001h, 00Ah, 002h, 021h, 041h, 000h
 
 ;Offset 0x7065
-Data0x7065              DB 028h, 003h, 011h, 014h, 02Ch, 090h, 001h, 003h, 006h, 01Dh, 0B8h
-                        DB 000h, 050h, 003h, 011h, 014h, 018h, 090h, 001h, 003h, 006h, 01Dh, 0B8h, 000h, 050h, 003h, 011h
-                        DB 014h, 018h, 05Eh, 001h, 003h, 006h, 01Dh, 0D1h, 000h, 050h, 003h, 011h, 014h, 018h, 0E0h, 001h
-                        DB 003h, 006h, 01Dh, 090h, 000h, 028h, 003h, 011h, 014h, 02Ch, 05Eh, 001h, 003h, 006h, 01Dh, 0D1h
-                        DB 000h
+Data0x7065              DB 028h, 003h, 011h, 014h, 02Ch, 090h, 001h, 003h, 006h, 01Dh
+                        DB 0B8h, 000h, 050h, 003h, 011h, 014h, 018h, 090h, 001h, 003h
+                        DB 006h, 01Dh, 0B8h, 000h, 050h, 003h, 011h, 014h, 018h, 05Eh
+                        DB 001h, 003h, 006h, 01Dh, 0D1h, 000h, 050h, 003h, 011h, 014h
+                        DB 018h, 0E0h, 001h, 003h, 006h, 01Dh, 090h, 000h, 028h, 003h
+                        DB 011h, 014h, 02Ch, 05Eh, 001h, 003h, 006h, 01Dh, 0D1h, 000h
 
 ;Offset 0x70a1
-Data0x70a1              DB 028h, 001h, 005h, 011h, 03Ch, 090h, 001h, 002h, 002h, 004h, 038h, 001h, 050h, 001h, 005h
-                        DB 011h, 028h, 090h, 001h, 002h, 002h, 004h, 038h, 001h, 050h, 001h, 005h, 011h, 028h, 05Eh, 001h
-                        DB 002h, 002h, 004h, 051h, 001h, 050h, 001h, 005h, 011h, 028h, 0E0h, 001h, 002h, 002h, 004h, 010h
-                        DB 001h, 028h, 001h, 005h, 011h, 03Ch, 05Eh, 001h, 002h, 002h, 004h, 051h, 001h
+Data0x70a1              DB 028h, 001h, 005h, 011h, 03Ch, 090h, 001h, 002h, 002h, 004h
+                        DB 038h, 001h, 050h, 001h, 005h, 011h, 028h, 090h, 001h, 002h
+                        DB 002h, 004h, 038h, 001h, 050h, 001h, 005h, 011h, 028h, 05Eh
+                        DB 001h, 002h, 002h, 004h, 051h, 001h, 050h, 001h, 005h, 011h
+                        DB 028h, 0E0h, 001h, 002h, 002h, 004h, 010h, 001h, 028h, 001h
+                        DB 005h, 011h, 03Ch, 05Eh, 001h, 002h, 002h, 004h, 051h, 001h
 
 ;Offset 0x70dd
 Data0x70dd              DB 0E8h, 0FDh, 000h, 000h, 0F2h, 055h, 000h, 000h
 
 ;Offset 0x70e5
-Data0x70e5              DB 0A3h, 063h, 071h, 099h, 074h
-                        DB 005h, 024h, 0F1h, 000h, 060h, 000h, 000h, 000h, 000h, 000h, 000h, 0AEh, 084h, 057h, 032h, 000h
-                        DB 0ABh, 0D1h, 0E3h
+Data0x70e5              DB 0A3h, 063h, 071h, 099h, 074h, 005h, 024h, 0F1h
+                        DB 000h, 060h, 000h, 000h, 000h, 000h, 000h, 000h
+                        DB 0AEh, 084h, 057h, 032h, 000h, 0ABh, 0D1h, 0E3h
 
 ;Offset 0x70fd
 Data0x70fd              DB 0E0h, 0A5h, 001h, 000h, 032h, 056h, 040h, 021h
 
 ;Offset 0x7105
-Data0x7105              DB 0B2h, 063h, 081h, 098h, 082h, 007h, 003h, 03Eh, 000h, 040h, 000h
-                        DB 000h, 000h, 000h, 009h, 060h, 096h, 027h, 02Bh, 032h, 000h, 095h, 099h, 0E7h, 0FFh
+Data0x7105              DB 0B2h, 063h, 081h, 098h, 082h, 007h, 003h, 03Eh
+                        DB 000h, 040h, 000h, 000h, 000h, 000h, 009h, 060h
+                        DB 096h, 027h, 02Bh, 032h, 000h, 095h, 099h, 0E7h
+                        
+                        DB 0FFh
 
 ;Offset 0x711e
-Data0x711e              DB 0E8h, 003h, 003h, 0E8h, 017h, 003h, 000h, 000h, 000h, 0F2h, 015h, 002h
+Data0x711e              DB 0E8h, 003h, 003h, 0E8h
+                        DB 017h, 003h, 000h, 000h
+                        DB 000h, 0F2h, 015h, 002h
 
 ;Offset 0x712a
-Data0x712a              DB 0D0h, 00Fh, 005h, 0D0h, 00Fh, 005h, 0A0h, 01Fh, 00Ah, 0E4h, 00Bh, 003h, 0E4h, 00Bh, 003h, 0C8h
-                        DB 017h, 006h
+Data0x712a              DB 0D0h, 00Fh, 005h, 0D0h, 00Fh, 005h, 0A0h, 01Fh, 00Ah
+                        DB 0E4h, 00Bh, 003h, 0E4h, 00Bh, 003h, 0C8h, 017h, 006h
 
 ;Offset 0x713c
-Data0x713c              DB 0D8h, 01Ch, 007h, 0D8h, 015h, 006h, 000h, 000h, 000h, 062h, 01Bh, 005h, 000h, 000h
-                        DB 000h, 0F0h, 00Fh, 003h
+Data0x713c              DB 0D8h, 01Ch, 007h, 0D8h, 015h, 006h, 000h, 000h, 000h
+                        DB 062h, 01Bh, 005h, 000h, 000h, 000h, 0F0h, 00Fh, 003h
 
 ;Offset 0x714e
-Data0x714e              DB 0B0h, 00Bh, 00Bh, 0B0h, 00Bh, 00Bh, 060h, 017h, 016h, 0C4h, 016h, 009h
-                        DB 0C4h, 016h, 009h, 088h, 00Dh, 011h, 0E0h, 01Fh, 006h, 0E0h, 01Fh, 006h, 0C0h, 01Fh, 00Bh
+Data0x714e              DB 0B0h, 00Bh, 00Bh, 0B0h, 00Bh, 00Bh, 060h, 017h, 016h
+                        DB 0C4h, 016h, 009h, 0C4h, 016h, 009h, 088h, 00Dh, 011h
+                        DB 0E0h, 01Fh, 006h, 0E0h, 01Fh, 006h, 0C0h, 01Fh, 00Bh
 
 ;Offset 0x7169
-Data0x7169              DB 000h, 000h, 00Ch, 00Ch, 000h, 000h, 00Ch, 018h, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 000h, 00Ch, 018h
-                        DB 018h, 018h, 018h, 030h, 030h, 018h, 018h, 000h, 00Ch, 00Ch, 024h, 024h, 00Ch
+Data0x7169              DB 000h, 000h, 00Ch, 00Ch, 000h, 000h, 00Ch, 018h, 0FFh
+                        DB 0FFh, 0FFh, 0FFh, 0FFh, 000h, 00Ch, 018h, 018h, 018h
+                        DB 018h, 030h, 030h, 018h, 018h, 000h, 00Ch, 00Ch, 024h
+                        DB 024h, 00Ch
 
 Func0x7186 PROC NEAR                    ;Offset 0x7186
     push   ds
@@ -12389,7 +12507,7 @@ FindMGAG400Mechanism2 PROC NEAR         ;Offset 0x7944
     push   cx
     push   dx
     xor    bx, bx
-    mov    al, 00h
+    mov    al, PCI_Header_Word_VendorID ;0x0
     mov    dx, PCI_M2_ForwardRegister   ;Port 0xcfa
     out    dx, al
     mov    al, 80h
@@ -12401,15 +12519,15 @@ Label0x7958:                            ;Offset 0x7958
     in     ax, dx
     cmp    ax, PCI_VENDOR_Matrox        ;0x102b
     jne    Label0x797a                  ;Offset 0x797a
-    mov    dl, 02h                      ;Port 0xc002
+    mov    dl, PCI_Header_Word_DeviceID ;0x2
     in     ax, dx
     cmp    ax, PCI_DEVICE_G400AGP       ;0x0525
     jne    Label0x797a                  ;Offset 0x797a
-    mov    dl, 04h                      ;Port 0xc004
+    mov    dl, PCI_Header_Word_Command  ;0x4
     in     al, dx
     and    al, 01h
     je     Label0x797a                  ;Offset 0x797a
-    mov    dl, 0ah                      ;Port 0xc00a
+    mov    dl, PCI_Header_Byte_SubClassCode;0xa
     in     al, dx
     or     al, al
     jne    Label0x797a                  ;Offset 0x797a
@@ -12843,7 +12961,7 @@ Func0x7cb0 ENDP
     nop   
 
 ;Offset 0x7ce0
-Data0x7ce0              DB 02Eh, 041h
+PINS                    DB 02Eh, 041h
                         DB 080h ;Offset from 0x7ce0 to the protected mode table: 0x7ce0 + 0x80 = 0x7d60
                         DB 0FFh, 000h, 004h, 0FFh, 0FFh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
                         DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
@@ -13135,7 +13253,7 @@ DB 03Ch, 030h                           ;    cmp  al, 30h
 DB 072h, 04Eh                           ;    jb   Label0x7f62                    ;Offset 0x7f62
 DB 03Ch, 035h                           ;    cmp  al, 35h
 DB 077h, 04Ah                           ;    ja   Label0x7f62                    ;Offset 0x7f62
-DB 0BEh, 020h, 000h, 000h, 000          ;    mov  esi, 00000020h
+DB 0BEh, 020h, 000h, 000h, 000h         ;    mov  esi, 00000020h
 DB 0EBh, 01Eh                           ;    jmp  Label0x7f3d                    ;Offset 0x7f3d
 DB 090h                                 ;    nop
 DB 090h                                 ;    nop
@@ -13185,15 +13303,7 @@ DB 0C3h                                 ;    ret
 DB 000h
 
 ;Offset 0x7f6d
-                        DB 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
-                        DB 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh
+DB 82h dup (0FFh)
 
 ;Offset 0x7fef
 Data0x7fef              DB 000h
@@ -13208,15 +13318,19 @@ Data0x7ff1              DB 000h
 PCIBusDeviceIDFunctionID DW 00000h
 
 ;Offset 0x7ff4
-Data0x7ff4              DB 000h
+DeviceRevision          DB 000h
 
 ;Offset 0x7ff5
 Data0x7ff5              DB 000h
 
 ;Offset 0x7ff6
-DB 000h, 000h, 000h, 000h, 000h, 000h, 0E0h, 07Ch, 0FFh
+DB 000h, 000h, 000h, 000h, 000h, 000h
 
-ORG 7fffh
+;Offset 0x7ffc
+PINSPointer             DW offset PINS  ;Offset 0x7ce0
+
+DB 0FFh
+
 DB 0BBh
 ROMEnd:
 END

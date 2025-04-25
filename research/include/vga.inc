@@ -45,6 +45,9 @@ VGA_AttributeControllerDataR            EQU 03c1h;0x3c1
 VGA_AttributeControllerDataR_lowbyte    EQU 0c1h;0xc1
 VGA_InputStatus0                        EQU 03c2h;0x3c2
 VGA_InputStatus0_lowbyte                EQU 0c2h;0xc2
+    VGA_IS_SwitchSense                  EQU 010h;0x10
+    VGA_IS_FeatureInputs01              EQU 060h;0x60
+    VGA_IS_VerticalRetraceInterrupt     EQU 080h;0x80
 VGA_MiscellaneousWrite                  EQU 03c2h;0x3c2
 VGA_MiscellaneousWrite_lowbyte          EQU 0c2h;0xc2
     VGA_Misc_IOAddressSel_MDA           EQU 000h;0x00
@@ -137,12 +140,18 @@ VGA_GraphicsControllerIndex_lowbyte     EQU 0ceh;0xce
         VGA_GCTL3_FuncSourceORLatched   EQU 010h;0x10
         VGA_GCTL3_FuncSourceXORLatched  EQU 018h;0x18
     VGA_GCTLIdx_ReadMapSelect           EQU 004h;0x04
+        VGA_GCTL4_Map0                  EQU 000h;0x00
+        VGA_GCTL4_Map1                  EQU 001h;0x01
+        VGA_GCTL4_Map2                  EQU 002h;0x02
+        VGA_GCTL4_Map3                  EQU 003h;0x03
     VGA_GCTLIdx_GraphicMode             EQU 005h;0x05
         VGA_GCTL5_BLU                   EQU 000h;0x00
         VGA_GCTL5_CPUDirect             EQU 001h;0x01
         VGA_GCTL5_SplatBLU              EQU 002h;0x02
         VGA_GCTL5_ReadMem               EQU 000h;0x00
         VGA_GCTL5_ReadColCmp            EQU 008h;0x08
+        VGA_GCTL5_ReadMapSelect         EQU 000h;0x00
+        VGA_GCTL5_OddEven               EQU 010h;0x10
         VGA_GCTL5_256ColorMode          EQU 040h;0x40
     VGA_GCTLIdx_Miscellaneous           EQU 006h;0x06
         VGA_GCTL6_AlphaMode             EQU 000h;0x00
@@ -153,6 +162,7 @@ VGA_GraphicsControllerIndex_lowbyte     EQU 0ceh;0xce
         VGA_GCTL6_Mem_A0000_AFFFF       EQU 004h;0x04
         VGA_GCTL6_Mem_B0000_B7FFF       EQU 008h;0x08
         VGA_GCTL6_Mem_B8000_BFFFF       EQU 00ch;0x0c
+        VGA_GCTL6_Mem_MASK              EQU 0fch;0xfc - Including the reserved fields for easier use.
     VGA_GCTLIdx_ColorDontCare           EQU 007h;0x07
     VGA_GCTLIdx_BitMask                 EQU 008h;0x08
 VGA_GraphicsControllerData              EQU 03cfh;0x3cf
@@ -202,6 +212,8 @@ VGA_CGAModeControl_lowbyte              EQU 0d8h;0xd8
     VGA_CGAMC_Intensity                 EQU 000h;0x00
     VGA_CGAMC_Blinking                  EQU 020h;0x20
 VGA_FeatureControlWD                    EQU 03dah;0x3da
+    VGA_FC_Bit0                         EQU 001h;0x01
+    VGA_FC_Bit1                         EQU 002h;0x02
 VGA_FeatureControlWD_lowbyte            EQU 0dah;0xda
 VGA_InputStatus1D                       EQU 03dah;0x3da
 VGA_InputStatus1D_lowbyte               EQU 0dah;0xda

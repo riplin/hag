@@ -32,6 +32,7 @@ BDA_DisplayMode                         EQU 0449h;Byte 0x449
     BDA_DM_640x480_BW_Graphics          EQU 11h
     BDA_DM_640x480_16_Color_Graphics    EQU 12h
     BDA_DM_320x200_256_Color_Graphics   EQU 13h
+    BDA_DM_DONT_CLEAR_SCREEN            EQU 80h
 BDA_NumberOfScreenColumns               EQU 044Ah;Word 0x44a
 BDA_VideoBufferSize                     EQU 044Ch;Word 0x44c
 BDA_VideoBufferOffset                   EQU 044Eh;Word 0x44e

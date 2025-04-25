@@ -97,6 +97,7 @@ MGA_INDD_PixelClockControl              EQU 01ah;0x1a
     MGA_PIXCLKCTRL_SelMASK              EQU 003h;0x03
     MGA_PIXCLKCTRL_ClockEnable          EQU 000h;0x00
     MGA_PIXCLKCTRL_ClockDisable         EQU 004h;0x04
+    MGA_PIXCLKCTRL_ClockMASK            EQU 004h;0x04
     MGA_PIXCLKCTRL_PixelPLLPowerDown    EQU 000h;0x00
     MGA_PIXCLKCTRL_PixelPLLPowerUp      EQU 008h;0x08
 MGA_INDD_GeneralControl                 EQU 01dh;0x1d
@@ -104,19 +105,24 @@ MGA_INDD_GeneralControl                 EQU 01dh;0x1d
     MGA_GENCTRL_AlphaEnable             EQU 002h;0x02
     MGA_GENCTRL_PedestalContr0IRE       EQU 000h;0x00
     MGA_GENCTRL_PedestalContr7p5IRE     EQU 010h;0x10
+    MGA_GENCTRL_PedestalControl_MASK    EQU 010h;0x10
     MGA_GENCTRL_GreenSyncOutEnable      EQU 000h;0x00
     MGA_GENCTRL_GreenSyncOutDisable     EQU 020h;0x20
+    MGA_GENCTRL_GreenSyncOut_MASK       EQU 020h;0x20
 MGA_INDD_MiscellaneousControl           EQU 01eh;0x1e
     MGA_MISCCTRL_DAC_Disable            EQU 000h;0x00
     MGA_MISCCTRL_DAC_Enable             EQU 001h;0x01
+    MGA_MISCCTRL_DAC_MASK               EQU 001h;0x01
     MGA_MISCCTRL_MAFC_MAFC              EQU 002h;0x02
     MGA_MISCCTRL_MAFC_PanelLinkMode     EQU 004h;0x04
     MGA_MISCCTRL_MAFC_Disable           EQU 006h;0x06
     MGA_MISCCTRL_MAFC_MASK              EQU 006h;0x06
     MGA_MISCCTRL_DAC_6Bit               EQU 000h;0x00
     MGA_MISCCTRL_DAC_8Bit               EQU 008h;0x08
+    MGA_MISCCTRL_DAC_Bit_MASK           EQU 008h;0x08
     MGA_MISCCTRL_LUT_Disable            EQU 000h;0x00
     MGA_MISCCTRL_LUT_Enable             EQU 010h;0x00
+    MGA_MISCCTRL_LUT_MASK               EQU 010h;0x00
     MGA_MISCCTRL_VDOutSel_MAFC12        EQU 000h;0x00
     MGA_MISCCTRL_VDOutSel_BYPASS656     EQU 040h;0x40
 MGA_INDD_GeneralPurposeIOControl        EQU 02ah;0x2a
@@ -146,6 +152,7 @@ MGA_INDD_SenseTest                      EQU 03ah;0x3a
 MGA_INDD_CRC_RemainderLow               EQU 03ch;0x3c
 MGA_INDD_CRC_RemainderHigh              EQU 03dh;0x3d
 MGA_INDD_CRC_BitSelect                  EQU 03eh;0x3e
+MGA_INDD_Reserved3f                     EQU 03fh;0x3f
 MGA_INDD_ColorKeyMask                   EQU 040h;0x40
 MGA_INDD_Reserved41                     EQU 041h;0x41
 MGA_INDD_ColorKey                       EQU 042h;0x42
@@ -210,25 +217,6 @@ MGA_INDD_CursorColor15Green             EQU 085h;0x85
 MGA_INDD_CursorColor15Blue              EQU 086h;0x86
 
 PCI_MGA_Option                          EQU 040h;0x40
-    PCI_MGA_Opt_SysClockSelectPCI       EQU 000h;0x00
-    PCI_MGA_Opt_SysClockSelectPLL       EQU 001h;0x01
-    PCI_MGA_Opt_SysClockSelectMCLK      EQU 002h;0x02
-    PCI_MGA_Opt_SysClockSelectMask      EQU 003h;0x03
-    PCI_MGA_Opt_SysClockDisable         EQU 004h;0x04
-    PCI_MGA_Opt_GfxClockDivSel2         EQU 000h;0x00
-    PCI_MGA_Opt_GfxClockDivSel3d2       EQU 008h;0x08
-    PCI_MGA_Opt_MemClockDivSel2         EQU 000h;0x00
-    PCI_MGA_Opt_MemClockDivSel3d2       EQU 010h;0x10
-    PCI_MGA_Opt_SysPLLPowerUp           EQU 020h;0x20
-    PCI_MGA_Opt_PLLSel                  EQU 040h;0x40
-    PCI_MGA_Opt_VGAIOMapEnable          EQU 100h;0x100
-    PCI_MGA_Opt_MemConfig0              EQU 400h;0x400
-    PCI_MGA_Opt_MemConfig1              EQU 800h;0x800
-    PCI_MGA_Opt_MemConfig2              EQU 1000h;0x1000
-    PCI_MGA_Opt_RefreshCounter_MASK     EQU 001f8000h;0x001f8000
-    PCA_MGA_Opt_HWPlaneWriteMaskOff     EQU 0000h;0x0000
-    PCA_MGA_Opt_HWPlaneWriteMaskOn      EQU 4000h;0x4000
-    PCI_MGA_Opt_NoRetry                 EQU 20000000h;0x20000000
 PCI_MGA_IndirectAccessIndex             EQU 044h;0x44
 PCI_MGA_IndirectAccessData              EQU 048h;0x48
 PCI_MGA_SubsystemVendorIDWrite          EQU 04ch;0x4c
@@ -249,51 +237,7 @@ PCI_MGA_AGPCommand                      EQU 0f8h;0xf8
     PCI_MGA_AGPCMD_RQDepthMask          EQU 1f000000h;0x1f000000
 
 MGA_MemAddr_MemoryAccess                EQU 1c04h;
-    MGA_MA_MA_MemoryActive              EQU 00000000h;0x00000000
-    MGA_MA_MA_MemoryReset               EQU 00008000h;0x00008000
 MGA_MemAddr_MemoryControlWaitState      EQU 1c08h;0x1c08
-    MGA_MA_MCWS_CASLatency2Cycles       EQU 00000000h;0x00000000
-    MGA_MA_MCWS_CASLatency3Cycles       EQU 00000001h;0x00000001
-    MGA_MA_MCWS_CASLatency4Cycles       EQU 00000002h;0x00000002
-    MGA_MA_MCWS_CASLatency_MASK         EQU 00000007h;0x00000007
-    MGA_MA_MCWS_RAS2RASDelay1Cycle      EQU 00000000h;0x00000000
-    MGA_MA_MCWS_RAS2RASDelay2Cycles     EQU 00000010h;0x00000010
-    MGA_MA_MCWS_RAS2RASDelay3Cycles     EQU 00000020h;0x00000020
-    MGA_MA_MCWS_RAS2RASDelay_MASK       EQU 00000030h;0x00000030
-    MGA_MA_MCWS_RAS2CASDelay2Cycles     EQU 00000000h;0x00000000
-    MGA_MA_MCWS_RAS2CASDelay3Cycles     EQU 00000080h;0x00000080
-    MGA_MA_MCWS_RAS2CASDelay4Cycles     EQU 00000100h;0x00000100
-    MGA_MA_MCWS_RAS2CASDelay_MASK       EQU 00000180h;0x00000180
-    MGA_MA_MCWS_RASMinActive3Cycles     EQU 00000000h;0x00000000
-    MGA_MA_MCWS_RASMinActive4Cycles     EQU 00000800h;0x00000800
-    MGA_MA_MCWS_RASMinActive5Cycles     EQU 00001000h;0x00001000
-    MGA_MA_MCWS_RASMinActive6Cycles     EQU 00001800h;0x00001800
-    MGA_MA_MCWS_RASMinActive7Cycles     EQU 00002000h;0x00002000
-    MGA_MA_MCWS_RASMinActive8Cycles     EQU 00002800h;0x00002800
-    MGA_MA_MCWS_RASMinActive_MASK       EQU 00003800h;0x00003800
-    MGA_MA_MCWS_RASPrechrgDelay2Cycles  EQU 00000000h;0x00000000
-    MGA_MA_MCWS_RASPrechrgDelay3Cycles  EQU 00004000h;0x00004000
-    MGA_MA_MCWS_RASPrechrgDelay4Cycles  EQU 00008000h;0x00008000
-    MGA_MA_MCWS_RASPrechrgDelay5Cycles  EQU 0000c000h;0x0000c000
-    MGA_MA_MCWS_RASPrechrgDelay_MASK    EQU 0000c000h;0x0000c000
-    MGA_MA_MCWS_WriteRecovrDelay1Cycle  EQU 00000000h;0x00000000
-    MGA_MA_MCWS_WriteRecovrDelay2Cycles EQU 00040000h;0x00040000
-    MGA_MA_MCWS_WriteRecovrDelay_MASK   EQU 000c0000h;0x000c0000
-    MGA_MA_MCWS_Rd2PrechrgDelNCycles    EQU 00000000h;0x00000000
-    MGA_MA_MCWS_Rd2PrechrgDelNpCLm2Cyc  EQU 00200000h;0x00200000
-    MGA_MA_MCWS_Rd2PrechrgDelay_MASK    EQU 00200000h;0x00200000
-    MGA_MA_MCWS_SpecModeRegDelay1Cycle  EQU 00000000h;0x00000000
-    MGA_MA_MCWS_SpecModeRegDelay2Cycles EQU 00800000h;0x00800000
-    MGA_MA_MCWS_SpecModeRegDelay_MASK   EQU 01800000h;0x01800000
-    MGA_MA_MCWS_BlockWriteDelay1Cycle   EQU 00000000h;0x00000000
-    MGA_MA_MCWS_BlockWriteDelay2Cycles  EQU 04000000h;0x04000000
-    MGA_MA_MCWS_BlockWriteDelay_MASK    EQU 0c000000h;0x0c000000
-    MGA_MA_MCWS_BW2PrechrgDelay1Cycle   EQU 00000000h;0x00000000
-    MGA_MA_MCWS_BW2PrechrgDelay2Cycles  EQU 20000000h;0x20000000
-    MGA_MA_MCWS_BW2PrechrgDelay3Cycles  EQU 40000000h;0x40000000
-    MGA_MA_MCWS_BW2PrechrgDelay4Cycles  EQU 60000000h;0x60000000
-    MGA_MA_MCWS_BW2PrechrgDelay5Cycles  EQU 80000000h;0x80000000
-    MGA_MA_MCWS_BW2PrechrgDelay_MASK    EQU e0000000h;0xe0000000
 MGA_MemAddr_ZDepthOrigin                EQU 1c0ch;0x1c0c
 MGA_MemAddr_PlaneWriteMask              EQU 1c1ch;0x1c1c
 MGA_MemAddr_Status                      EQU 1e14h;0x1e14
