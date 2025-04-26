@@ -1,4 +1,4 @@
-;Matrox G200 AGP BIOS v3.3 b34 disassembly
+;Matrox G200 PCI BIOS v3.3 b30 disassembly
 
 ;Resources:
 ;
@@ -19,7 +19,7 @@
 ;Disassembler: https://shell-storm.org/online/Online-Assembler-and-Disassembler/ (allowed me to disassemble specific sections manually)
 ;
 ;I use MASM 6.11 (DOS)
-;Build with MASM: ml /AT 900-33.asm
+;Build with MASM: ml /AT 899-33.asm
 ;Produces a .COM file. Just rename to .BIN
 ;
 ;There are a number of commented out lines of code.
@@ -52,7 +52,7 @@ PCI_VENDOR_ALI                          EQU 10b9h;0x10b9
 PCI_DEVICE_M1541_Aladdin                EQU 1541h;0x1541
 PCI_DEVICE_M5243_PCItoAGP_Controller    EQU 5243h;0x5243
 PCI_VENDOR_Matrox                       EQU 102bh;0x102b
-PCI_DEVICE_G200AGP                      EQU 0521h;0x0521
+PCI_DEVICE_G200PCI                      EQU 0520h;0x0520
 
 PCI_ACCESS_ReadByte                     EQU 08h;0x08
 PCI_ACCESS_ReadWord                     EQU 09h;0x09
@@ -90,7 +90,7 @@ jmp entry                               ;Offset 0x80
                         DW offset PCIHeader
                         DW 0000h        ;PnP header pointer
                         DW 2000h        ;Unknown
-                        DB 'IBM COMPATIBLE MATROX/MGA-G200 VGA/VBE BIOS (V3.3) b34 ', 000h
+                        DB 'IBM COMPATIBLE MATROX/MGA-G200 VGA/VBE BIOS (V3.3) b30 ', 000h
 
 ;Offset 0x56
     xchg bx, bx                         ;hello
@@ -102,29 +102,29 @@ jmp entry                               ;Offset 0x80
 ;Offset 0x60
 PCIHeader               DB 'PCIR'       ;PCI header magic
                         DW PCI_VENDOR_Matrox;Vendor ID
-                        DW PCI_DEVICE_G200AGP;Device ID
+                        DW PCI_DEVICE_G200PCI;Device ID
                         DW 0000h        ;Pointer to vital product data (0 = none)
                         DW 0018h        ;PCI data structure length
                         DB 00h          ;PCI data structure revision
                         DB 00h, 00h, 03h;PCI device class code
                         DW (ROMEnd - ROMStart)/512;Rom size in 512 byte blocks
-                        DW 2233h        ;Revision level of code
+                        DW 1e33h        ;Revision level of code
                         DB 00h          ;Code type (0 = x86)
                         DB 80h          ;Last image indicator
                         DW 0000h        ;Reserved
-                        DB '900-33', 000h
+                        DB '899-33', 000h
                         DB 0FFh
 
-entry:                                  ;Offset 0x80
+entry:
     push      bp
     xor       ax, ax
     mov       ds, ax
     mov       es, ax
-    call      FindMGAG200               ;Offset 0x79f8
+    call      FindMGAG200               ;Offset 0x79ea
     mov       word ptr cs:[PCIBusDeviceIDFunctionID], bx;Offset 0x7ff2 Store Bus, Device ID and Function ID
     call      RebootMGAG200             ;Offset 0x77b5
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
-    call      TalkToMonitorAndSetupAGPBus;Offset 0x782e
+    call      TalkToMonitorAndConfigureAladdinChipset;Offset 0x782e
     call      TurnScreenOff             ;Offset 0x2b15
     call      Func0x7325                ;Offset 0x7325
     cmp       byte ptr cs:[Data0x7ff5], 00h;Offset 0x7ff5
@@ -143,7 +143,7 @@ Label0xc1:                              ;Offset 0xc1
     je        Label0xd0                 ;Offset 0xd0
     mov       word ptr cs:[Data0x53f6], 0ffffh;Offset 0x53f6
 Label0xd0:                              ;Offset 0xd0
-    test      byte ptr cs:[Data0x7d34], 08h;Offset 0x7d34
+    test      byte ptr cs:[Data0x7d14], 08h;Offset 0x7d14
     je        Label0xeb                 ;Offset 0xeb
     mov       di, PCI_MGA_Option        ;0x40
     nop
@@ -159,15 +159,15 @@ Label0xeb:                              ;Offset 0xeb
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
     out       dx, ax
     mov       cx, 0078h
-    call      Func0x7b21                ;Offset 0x7b21
-    call      Func0x7a04                ;Offset 0x7a04
+    call      Func0x7b13                ;Offset 0x7b13
+    call      Func0x79f6                ;Offset 0x79f6
     push      bx
     mov       al, 40h                   ;Color
     call      SetupInterruptsTextModeAndBDA;Offset 0x158
     pop       bx
-    call      CacheMemorySize           ;Offset 0x7c41
+    call      CacheMemorySize           ;Offset 0x7c33
     xor       cx, cx
-    call      Func0x7b21                ;Offset 0x7b21
+    call      Func0x7b13                ;Offset 0x7b13
     test      byte ptr cs:[Data0x7ff1], 80h;Offset 0x7ff1
     je        Label0x11f                ;Offset 0x11f
     test      byte ptr cs:[Data0x7ff1], 20h;Offset 0x7ff1
@@ -194,14 +194,14 @@ Label0x122:                             ;Offset 0x122
     xor       si, si
     mov       cx, 7fffh                 ;Rom size - 1
 ReadROMByteLoop:                        ;Offset 0x149
-    add       al, byte ptr cs:[si]      ;Recalculate the check byte at end of ROM
+    add       al, byte ptr cs:[si]
     inc       si
     loop      ReadROMByteLoop           ;Offset 0x149
     neg       al
-    mov       byte ptr cs:[si], al      ;Store new check byte
+    mov       byte ptr cs:[si], al
     pop       bp
     xor       ax, ax
-    retf                                ;All set up. Return control to system.
+    retf
 
 SetupInterruptsTextModeAndBDA PROC NEAR ;Offset 0x158
     cli       
@@ -918,6 +918,7 @@ Int10CallTable          DW SetVideoMode;Offset 0x0c30                           
     xchg bx, bx
     xchg bx, bx
 
+
 Int10Handler:                           ;Offset 0xb60
     cmp  ax, 4f10h
     jne  Label0xb6a                     ;Offset 0xb6a
@@ -1203,7 +1204,7 @@ Func0xd08 PROC NEAR                     ;Offset 0xd08
     pop       bx
     je        Label0xd5c                ;Offset 0xd5c
     xor       cx, cx
-    call      Func0x7b21                ;Offset 0x7b21
+    call      Func0x7b13                ;Offset 0x7b13
     call      TurnScreenOn              ;Offset 0x2b11
 Label0xd5c:                             ;Offset 0xd5c
     pop       cx
@@ -6623,7 +6624,7 @@ Data0x48f0              DB 01Dh, 000h, 000h, 000h, 000h, 000h, 024h, 066h, 0FFh,
 ;Offset 0x4add
                         DB 'DATE: 11/21/00', 000h
 ;Offset 0x4aec
-                        DB 'Revision: 0.34 ', 000h
+                        DB 'Revision: 0.30 ', 000h
 
 VESAPowerManagement:                    ;Offset 0x4afc
     cmp  bl, 00h
@@ -6914,7 +6915,7 @@ DDCReadEDID ENDP
 
 Func0x4cdb PROC NEAR                    ;Offset 0x4cdb
     mov  al, 00h
-    test byte ptr cs:[Data0x7d3b], 40h  ;Offset 0x7d3b
+    test byte ptr cs:[Data0x7d1b], 40h  ;Offset 0x7d1b
     je   Label0x4cf1                    ;Offset 0x4cf1
     mov  al, 01h
     test byte ptr cs:[Data0x7ff1], 80h  ;Offset 0x7ff1
@@ -9041,7 +9042,7 @@ GetProtectedModeInterface:              ;Offset 0x5e73
     jne       Label0x5e90               ;Offset 0x5e90
     mov       ax, cs
     mov       es, ax
-    mov       di, offset PINS           ;Offset 0x7d00
+    mov       di, offset PINS           ;Offset 0x7ce0
     xor       ax, ax
     mov       al, byte ptr es:[di + 02h]
     add       di, ax
@@ -9083,7 +9084,7 @@ Label0x5ec4:                            ;Offset 0x5ec4
 Label0x5ed0:                            ;Offset 0x5ed0
     push      si
     mov       bx, ax
-    add       si, offset PINS           ;Offset 0x7d00
+    add       si, offset PINS           ;Offset 0x7ce0
     mov       cl, byte ptr cs:[si]
     mov       ax, 004fh
     pop       si
@@ -9482,7 +9483,7 @@ Label0x6183:                            ;Offset 0x6183
     nop
     call WriteIndexedRegister           ;Offset 0x6a6b
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
-    mov  ah, byte ptr cs:[Data0x7d37]   ;Offset 0x7d37
+    mov  ah, byte ptr cs:[Data0x7d17]   ;Offset 0x7d17
     shr  ah, 03h
     and  ah, 07h
     mov  al, 06h
@@ -9528,7 +9529,7 @@ Label0x61d2:                            ;Offset 0x61d2
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, NOT MGA_GENCTRL_PedestalContr7p5IRE;0xef
-    mov       al, byte ptr cs:[Data0x7d35];Offset 0x7d35
+    mov       al, byte ptr cs:[Data0x7d15];Offset 0x7d15
     and       al, 01h
     shl       al, 04h                   ;Pedestal control?
     or        cl, al
@@ -9542,7 +9543,7 @@ Label0x61d2:                            ;Offset 0x61d2
     nop
     call      ReadIndexedRegister       ;Offset 0x6a80
     and       cl, NOT MGA_GENCTRL_GreenSyncOutDisable;0xdf
-    mov       al, byte ptr cs:[Data0x7d35];Offset 0x7d35
+    mov       al, byte ptr cs:[Data0x7d15];Offset 0x7d15
     and       al, 20h                   ;green sync out config
     or        cl, al
     mov       ch, MGA_INDD_GeneralControl;0x1d
@@ -9587,7 +9588,7 @@ Return:                                 ;Offset 0x624f
     mov       ax, (MGA_CRTCExt_VertCounterExt SHL 8) OR 00h;0x200
     call      MGAWriteCRTCExtensionRegister;Offset 0x2d6
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
-    mov       ah, byte ptr cs:[Data0x7d35];Offset 0x7d35
+    mov       ah, byte ptr cs:[Data0x7d15];Offset 0x7d15
     and       ah, 10h                   ;bit 4
     shl       ah, 02h                   ;moves to bit 6, MGA_CRTCEXT3_CompSyncEnable
     mov       al, MGA_CRTCExt_Misc      ;0x3
@@ -9597,7 +9598,7 @@ Return:                                 ;Offset 0x624f
     mov       ax, (MGA_CRTCExt_HorVidHalfCount SHL 8) OR 00h;0x500
     call      MGAWriteCRTCExtensionRegister;Offset 0x2d6
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
-    mov       ah, byte ptr cs:[Data0x7d37];Offset 0x7d37
+    mov       ah, byte ptr cs:[Data0x7d17];Offset 0x7d17
     and       ah, MGA_CRTCEXT6_HiPrioLevelMASK;0x7 bits 0,1,2
     mov       al, MGA_CRTCExt_PrioRequestControl;0x6
     out       dx, ax
@@ -10857,11 +10858,11 @@ Func0x6a97 PROC NEAR                    ;Offset 0x6a97
     push  ax
     push  bx
     xor   dx, dx
-    mov   dl, byte ptr cs:[Data0x7d2b]  ;Offset 0x7d2b
+    mov   dl, byte ptr cs:[Data0x7d0b]  ;Offset 0x7d0b
     cmp   dl, 0ffh
     jne   Label0x6b02                   ;Offset 0x6b02
     call  GetMemoryIn64KBlocks          ;Offset 0x665c
-    mov   dl, byte ptr cs:[Data0x7d37]  ;Offset 0x7d37
+    mov   dl, byte ptr cs:[Data0x7d17]  ;Offset 0x7d17
     cmp   dl, 0ffh
     jne   Label0x6ace                   ;Offset 0x6ace
     push  di
@@ -10894,26 +10895,26 @@ Label0x6ace:                            ;Offset 0x6ace
     jle   Label0x6af6                   ;Offset 0x6af6
     mov   bx, dx
     shr   bl, 06h
-    mov   dl, byte ptr cs:[bx + Data0x7d2d];Offset 0x7d2d
+    mov   dl, byte ptr cs:[bx + Data0x7d0d];Offset 0x7d0d
     cmp   dl, 0ffh
     jne   Label0x6b02                   ;Offset 0x6b02
 Label0x6af6:                            ;Offset 0x6af6
-    mov   dl, byte ptr cs:[Data0x7d2c]  ;Offset 0x7d2c
+    mov   dl, byte ptr cs:[Data0x7d0c]  ;Offset 0x7d0c
     cmp   dl, 0ffh
     jne   Label0x6b02                   ;Offset 0x6b02
     mov   dl, 3fh
 Label0x6b02:                            ;Offset 0x6b02
-    mov   bh, byte ptr cs:[Data0x7d3a]  ;Offset 0x7d3a
+    mov   bh, byte ptr cs:[Data0x7d1a]  ;Offset 0x7d1a
     and   bh, 0ch
     shl   bh, 03h
     mov   cx, 0001h
     or    cl, bh
-    mov   bl, byte ptr cs:[Data0x7d34]  ;Offset 0x7d34
+    mov   bl, byte ptr cs:[Data0x7d14]  ;Offset 0x7d14
     cmp   bl, 0ffh
     jne   Label0x6b1e                   ;Offset 0x6b1e
     mov   bl, 00h
 Label0x6b1e:                            ;Offset 0x6b1e
-    test  byte ptr cs:[Data0x7d3a], 04h ;Offset 0x7d3a
+    test  byte ptr cs:[Data0x7d1a], 04h ;Offset 0x7d1a
     jne   Label0x6b3c                   ;Offset 0x6b3c
     test  bl, 01h
     jne   Label0x6b30                   ;Offset 0x6b30
@@ -10944,7 +10945,7 @@ Func0x6b47 PROC NEAR                    ;Offset 0x6b47
     mov    dword ptr [bp - 18h], 0ffffffffh
     mov    dword ptr [bp - 04h], eax
     xor    eax, eax
-    mov    al, byte ptr cs:[Data0x7d24] ;Offset 0x7d24
+    mov    al, byte ptr cs:[Data0x7d04] ;Offset 0x7d04
     cmp    al, 0ffh
     ;je     Label0x6b7c                  ;Offset 0x6b7c
     DB 00Fh, 084h, 012h, 000h
@@ -10988,7 +10989,7 @@ Label0x6be4:                            ;Offset 0x6be4
     xor    edx, edx
     xor    ebx, ebx
     mov    eax, 00006978h
-    test   byte ptr cs:[Data0x7d34], 20h;Offset 0x7d34
+    test   byte ptr cs:[Data0x7d14], 20h;Offset 0x7d14
     ;je     Label0x6c00                  ;Offset 0x6c00
     DB 00Fh, 084h, 006h, 000h
     mov    eax, 000037eeh
@@ -11215,7 +11216,7 @@ Label0x6de5:                            ;Offset 0x6de5
     mov    di, PCI_MGA_Option2 + 01h    ;0x51
     mov    al, PCI_ACCESS_ReadByte      ;0x8
     call   AccessPCIRegister            ;Offset 0x68f8
-    mov    dl, byte ptr cs:[Data0x7d3a] ;Offset 0x7d3a
+    mov    dl, byte ptr cs:[Data0x7d1a] ;Offset 0x7d1a
     and    dl, 03h
     shl    dl, 04h
     mov    ch, cl
@@ -11404,7 +11405,7 @@ Func0x6f83 PROC NEAR                    ;Offset 0x6f83
     push   eax
     push   ebx
     push   ecx
-    mov    cl, byte ptr cs:[Data0x7d29] ;Offset 0x7d29
+    mov    cl, byte ptr cs:[Data0x7d09] ;Offset 0x7d09
     cmp    cl, 0ffh
     ;jne    Label0x6f97                  ;Offset 0x6f97
     DB 00Fh, 085h, 002h, 000h
@@ -11422,7 +11423,7 @@ Label0x6fa7:                            ;Offset 0x6fa7
     call   Func0x6b47                   ;Offset 0x6b47
     mov    cl, 04h
     call   Func0x6e51                   ;Offset 0x6e51
-    mov    cl, byte ptr cs:[Data0x7d2a] ;Offset 0x7d2a
+    mov    cl, byte ptr cs:[Data0x7d0a] ;Offset 0x7d0a
     cmp    cl, 0ffh
     ;jne    Label0x6fc0                  ;Offset 0x6fc0
     DB 00Fh, 085h, 002h, 000h
@@ -11806,7 +11807,7 @@ Label0x73c0:                            ;Offset 0x73c0
     pop       ds
     mov       byte ptr ss:[di], 00h
     mov       si, offset Data0x4bf9     ;Offset 0x4bf9
-    test      byte ptr cs:[Data0x7d3b], 40h;Offset 0x7d3b
+    test      byte ptr cs:[Data0x7d1b], 40h;Offset 0x7d1b
     jne       Label0x73ea               ;Offset 0x73ea
     mov       si, offset DDCFuncs       ;Offset 0x4be1
     push      cx
@@ -12349,23 +12350,19 @@ SkipStore:                              ;Offset 0x781e
     ret
 RebootMGAG200 ENDP
 
-TalkToMonitorAndSetupAGPBus PROC NEAR   ;Offset 0x782e
+TalkToMonitorAndConfigureAladdinChipset PROC NEAR;Offset 0x782e
     push   ax
     push   si
     push   di
-    call   Func0x78a4                   ;Offset 0x78a4
-    mov    al, PCI_ACCESS_WriteDWord    ;0xd
-    mov    di, PCI_MGA_AGPCommand       ;0xf8
-    mov    ecx, PCI_MGA_AGPCMD_Rate2x OR PCI_MGA_AGPCMD_AGPEnable OR PCI_MGA_AGPCMD_SBAEnable OR PCI_MGA_AGPCMD_RQDepthMask;0x1f000302
-    call   AccessPCIRegister            ;Offset 0x68f8
-    call   ConfigureAladdinChipset      ;Offset 0x7849
+    call   Func0x7896                   ;Offset 0x7896
+    call   ConfigureAladdinChipset      ;Offset 0x783b
     pop    di
     pop    si
     pop    ax
     ret
-TalkToMonitorAndSetupAGPBus ENDP
+TalkToMonitorAndConfigureAladdinChipset ENDP
 
-ConfigureAladdinChipset PROC NEAR       ;Offset 0x7849
+ConfigureAladdinChipset PROC NEAR       ;Offset 0x783b
     push   bx
     mov    ax, 0b102h                   ;Find PCI Device
     mov    cx, PCI_DEVICE_M1541_Aladdin ;0x1541 Device ID
@@ -12373,7 +12370,7 @@ ConfigureAladdinChipset PROC NEAR       ;Offset 0x7849
     mov    si, 0000h                    ;Device Index
     int    1ah
     cmp    ah, 00h
-    ;jne    NotFound                     ;Offset 0x789d
+    ;jne    NotFound                     ;Offset 0x788f
     DB 00Fh, 085h, 03Eh, 000h
     mov    al, PCI_ACCESS_ReadByte      ;0x8
     mov    di, ALI_M1541_CPUtoPCIWriteBufferOption;0x86
@@ -12398,46 +12395,47 @@ ConfigureAladdinChipset PROC NEAR       ;Offset 0x7849
     or     cl, ALI_M5243_ForcePCI66GATMode;0x8
     mov    al, PCI_ACCESS_WriteByte     ;0xb
     call   AccessPCIRegister            ;Offset 0x68f8
-NotFound:                               ;Offset 0x789d
+NotFound:                               ;Offset 0x788f
     pop    bx
     ret
 ConfigureAladdinChipset ENDP
 
-;Offset 0x789f
-Data0x789f              DB 012h
+
+;Offset 0x7891
+Data0x7891              DB 012h
                         DB 000h
                         DB 013h
                         DB 03Fh
                         DB 060h
 
-Func0x78a4 PROC NEAR                    ;Offset 0x78a4
-    push   ds
-    push   ecx
-    push   edx
-    and    ecx, 0000ffffh
-    mov    ch, 80h
-    lea    di, [Data0x789f]             ;Offset 0x789f
-    push   cs
-    pop    ds
-    lea    si, [MISCFuncs]              ;Offset 0x4bed
-    mov    edx, 00000005h
-Label0x78c2:                            ;Offset 0x78c2
-    call   Func0x5258                   ;Offset 0x5258
-    or     ax, ax
-    jne    Label0x78d3                  ;Offset 0x78d3
-    cmp    ch, 88h
-    je     Label0x78d3                  ;Offset 0x78d3
-    add    ch, 04h
-    jmp    Label0x78c2                  ;Offset 0x78c2
-Label0x78d3:                            ;Offset 0x78d3
-    pop    edx
-    pop    ecx
-    pop    ds
+Func0x7896 PROC NEAR                    ;Offset 0x7896
+    push  ds
+    push  ecx
+    push  edx
+    and   ecx, 0000ffffh
+    mov   ch, 80h
+    lea   di, [Data0x7891]              ;Offset 0x7891
+    push  cs
+    pop   ds
+    lea   si, [MISCFuncs]               ;Offset 0x4bed
+    mov   edx, 00000005h
+Label0x78b4:                            ;Offset 0x78b4
+    call  Func0x5258                    ;Offset 0x5258
+    or    ax, ax
+    jne   Label0x78c5                   ;Offset 0x78c5
+    cmp   ch, 88h
+    je    Label0x78c5                   ;Offset 0x78c5
+    add   ch, 04h
+    jmp   Label0x78b4                   ;Offset 0x78b4
+Label0x78c5:                            ;Offset 0x78c5
+    pop   edx
+    pop   ecx
+    pop   ds
     ret
-Func0x78a4 ENDP
+Func0x7896 ENDP
 
 ;PCI Configuration Mechanism 2
-FindMGAG200Mechanism2 PROC NEAR         ;Offset 0x78d9
+FindMGAG200Mechanism2 PROC NEAR         ;Offset 0x78cb
     push   ax
     push   cx
     push   dx
@@ -12449,30 +12447,30 @@ FindMGAG200Mechanism2 PROC NEAR         ;Offset 0x78d9
     mov    dx, PCI_M2_ConfigSpaceEnable ;Port 0xcf8
     out    dx, al
     mov    dx, PCI_M2_DataBase          ;Port 0xc000
-Label0x78ed:                            ;Offset 0x78ed
+Label0x78df:                            ;Offset 0x78df
     xor    dl, dl
     in     ax, dx
     cmp    ax, PCI_VENDOR_Matrox        ;0x102b
-    jne    Label0x790f                  ;Offset 0x790f
+    jne    Label0x7901                  ;Offset 0x7901
     mov    dl, PCI_Header_Word_DeviceID ;0x2
     in     ax, dx
-    cmp    ax, PCI_DEVICE_G200AGP       ;0x0521
-    jne    Label0x790f                  ;Offset 0x790f
+    cmp    ax, PCI_DEVICE_G200PCI       ;0x0520
+    jne    Label0x7901                  ;Offset 0x7901
     mov    dl, PCI_Header_Word_Command  ;0x4
     in     al, dx
     and    al, PCI_Cmd_IOSpace          ;0x1
-    je     Label0x790f                  ;Offset 0x790f
+    je     Label0x7901                  ;Offset 0x7901
     mov    dl, PCI_Header_Byte_SubClassCode;0xa
     in     al, dx
     or     al, al
-    jne    Label0x790f                  ;Offset 0x790f
+    jne    Label0x7901                  ;Offset 0x7901
     mov    bh, dh
-    jmp    Label0x792c                  ;Offset 0x792c
-Label0x790f:                            ;Offset 0x790f
+    jmp    Label0x791e                  ;Offset 0x791e
+Label0x7901:                            ;Offset 0x7901
     xor    dl, dl
     inc    dh
     cmp    dh, 0d0h
-    jne    Label0x78ed                  ;Offset 0x78ed
+    jne    Label0x78df                  ;Offset 0x78df
     mov    dh, 0c0h
     inc    bx
     mov    al, bl
@@ -12481,9 +12479,9 @@ Label0x790f:                            ;Offset 0x790f
     out    dx, al
     pop    dx
     cmp    bx, 0100h
-    jne    Label0x78ed                  ;Offset 0x78ed
+    jne    Label0x78df                  ;Offset 0x78df
     mov    bx, 0ffffh
-Label0x792c:                            ;Offset 0x792c
+Label0x791e:                            ;Offset 0x791e
     xor    al, al
     mov    dx, PCI_M2_ConfigSpaceEnable ;Port 0xcf8
     out    dx, al
@@ -12503,7 +12501,7 @@ FindMGAG200Mechanism2 ENDP
 ;destroys:
 ;   -
 ;
-FindMGAG200Mechanism1 PROC NEAR         ;Offset 0x7936
+FindMGAG200Mechanism1 PROC NEAR         ;Offset 0x7928
     push  eax
     push  ebx
     push  ecx
@@ -12513,16 +12511,16 @@ FindMGAG200Mechanism1 PROC NEAR         ;Offset 0x7936
     xor   ch, ch
     mov   ebx, PCI_M1_ConfigAddres_Enable;0x80000000
     mov   dh, 0ch                       ;PCI M1 port high byte
-LoopBus:                                ;Offset 0x794a
+LoopBus:                                ;Offset 0x793c
     mov   cl, 20h                       ;Check 32 devices on this bus
-LoopDevices:                            ;Offset 0x794c
+LoopDevices:                            ;Offset 0x793e
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
     mov   eax, ebx
     out   dx, eax                       ;Address for Header field 0
     mov   dl, PCI_M1_ConfigData_lowbyte ;Port 0xcfc
     in    eax, dx                       ;Read Device + Vendor ID's
-    cmp   eax, (PCI_DEVICE_G200AGP SHL 16) OR PCI_VENDOR_Matrox;0x0521102b
-    jne   NextDevice                    ;Offset 0x7985
+    cmp   eax, (PCI_DEVICE_G200PCI SHL 16) OR PCI_VENDOR_Matrox;0x0520102b
+    jne   NextDevice                    ;Offset 0x7977
     mov   eax, ebx
     mov   al, PCI_Header_Word_Command   ;0x4
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
@@ -12530,7 +12528,7 @@ LoopDevices:                            ;Offset 0x794c
     mov   dl, PCI_M1_ConfigData_B0_lowbyte;Port 0xcfc
     in    al, dx
     and   al, PCI_Cmd_IOSpace           ;0x1 Check if not IO space
-    je    NextDevice                    ;Offset 0x7985
+    je    NextDevice                    ;Offset 0x7977
     mov   eax, ebx
     mov   al, PCI_Header_Byte_RevisionID;0x8
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
@@ -12538,21 +12536,21 @@ LoopDevices:                            ;Offset 0x794c
     mov   dl, PCI_M1_ConfigData_B2_lowbyte;Port 0xcfe
     in    al, dx                        ;PCI_Header_Byte_SubClassCode
     or    al, al                        ;Check if not 0
-    jne   NextDevice                    ;Offset 0x7985
+    jne   NextDevice                    ;Offset 0x7977
     shr   ebx, 08h                      ;bx = Bus, Device ID and function ID
-    jmp   DeviceFound                   ;Offset 0x79a4
-NextDevice:                             ;Offset 0x7985
+    jmp   DeviceFound                   ;Offset 0x7996
+NextDevice:                             ;Offset 0x7977
     dec   cl
-    je    NextBus                       ;Offset 0x7992
+    je    NextBus                       ;Offset 0x7984
     add   ebx, 00000800h                ;Next device
-    jmp   LoopDevices                   ;Offset 0x794c
-NextBus:                                ;Offset 0x7992
+    jmp   LoopDevices                   ;Offset 0x793e
+NextBus:                                ;Offset 0x7984
     and   bx, 07ffh                     ;Drop device index
     add   ebx, 00010000h                ;Next Bus
     dec   ch
-    jne   LoopBus                       ;Offset 0x794a
+    jne   LoopBus                       ;Offset 0x793c
     mov   bx, 0ffffh                    ;Device not found, set Bus, device ID and function ID to invalid
-DeviceFound:                            ;Offset 0x79a4
+DeviceFound:                            ;Offset 0x7996
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
     xor   eax, eax
     out   dx, eax
@@ -12576,7 +12574,7 @@ FindMGAG200Mechanism1 ENDP
 ;destroys:
 ;   cx, dx
 ;
-FindIntelTriton430FXChipset PROC NEAR   ;Offset 0x79b9
+FindIntelTriton430FXChipset PROC NEAR   ;Offset 0x79ab
     push  ebx
     pushf
     cli
@@ -12584,21 +12582,21 @@ FindIntelTriton430FXChipset PROC NEAR   ;Offset 0x79b9
     mov   ebx, PCI_M1_ConfigAddres_Enable;0x80000000
     mov   dh, 0ch
     mov   cl, 10h
-CheckNextDevice:                        ;Offset 0x79c9
+CheckNextDevice:                        ;Offset 0x79bb
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
     mov   eax, ebx
     out   dx, eax
     mov   dl, PCI_M1_ConfigData_lowbyte;Port 0xcfc
     in    eax, dx
     cmp   eax, (PCI_DEVICE_Triton_430FX SHL 16) OR PCI_VENDOR_Intel;Intel Triton 430FX chipset 0x122d8086
-    je    FoundDevice                   ;Offset 0x79ec
+    je    FoundDevice                   ;Offset 0x79de
     dec   cl
-    je    SearchDone                    ;Offset 0x79e9
+    je    SearchDone                    ;Offset 0x79db
     add   ebx, 00000800h
-    jmp   CheckNextDevice               ;Offset 0x79c9
-SearchDone:                             ;Offset 0x79e9
+    jmp   CheckNextDevice               ;Offset 0x79bb
+SearchDone:                             ;Offset 0x79db
     xor   eax, eax
-FoundDevice:                            ;Offset 0x79ec
+FoundDevice:                            ;Offset 0x79de
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
     xchg  eax, ebx
     out   dx, eax                       ;Select device for changes.
@@ -12612,18 +12610,18 @@ FindIntelTriton430FXChipset ENDP
 ;outputs:
 ;   bx = Bus, Device ID and Function ID
 ;
-FindMGAG200 PROC NEAR                   ;Offset 0x79f8
-    call  FindMGAG200Mechanism1         ;Offset 0x7936
+FindMGAG200 PROC NEAR                   ;Offset 0x79ea
+    call  FindMGAG200Mechanism1         ;Offset 0x7928
     inc   bx                            ;Check if found
-    jne   Found                         ;Offset 0x7a02
-    call  FindMGAG200Mechanism2         ;Offset 0x78d9
+    jne   Found                         ;Offset 0x79f4
+    call  FindMGAG200Mechanism2         ;Offset 0x78cb
     inc   bx
-Found:                                  ;Offset 0x7a02
+Found:                                  ;Offset 0x79f4
     dec   bx
     ret
 FindMGAG200 ENDP
 
-Func0x7a04 PROC NEAR                    ;Offset 0x7a04
+Func0x79f6 PROC NEAR                    ;Offset 0x79f6
     push   ax
     push   bx
     push   ecx
@@ -12633,8 +12631,8 @@ Func0x7a04 PROC NEAR                    ;Offset 0x7a04
     mov    dx, VGA_SequenceIndex        ;Port 0x3c4
     mov    ax, (VGA_SEQ1_ScreenOff SHL 8)OR VGA_SEQIdx_ClockingMode;0x2001
     out    dx, ax
-    test   byte ptr cs:[Data0x7d34], 10h;Offset 0x7d34
-    ;jne    Label0x7a3c                  ;Offset 0x7a3c
+    test   byte ptr cs:[Data0x7d14], 10h;Offset 0x7d14
+    ;jne    Label0x7a2e                  ;Offset 0x7a2e
     DB 00Fh, 085h, 01Ch, 000h
     mov    si, MGA_MemAddr_PlaneWriteMask;0x1c1c
     mov    ecx, 0a5a5a5a5h              ;mask pattern
@@ -12645,20 +12643,20 @@ Func0x7a04 PROC NEAR                    ;Offset 0x7a04
     or     cl, PCA_MGA_Opt_HWPlaneWriteMaskOn SHR 8;0x40
     mov    al, PCI_ACCESS_WriteByte     ;0xb
     call   AccessPCIRegister            ;Offset 0x68f8
-Label0x7a3c:                            ;Offset 0x7a3c
+Label0x7a2e:                            ;Offset 0x7a2e
     mov    si, MGA_MemAddr_MemoryControlWaitState;0x1c08
-    ;mov    ecx, dword ptr cs:[MemoryControlWaitState];Offset 0x7d30
-    DB 02Eh, 066h, 08Bh, 00Eh, 030h, 07Dh
+    ;mov    ecx, dword ptr cs:[MemoryControlWaitState];Offset 0x7d10
+    DB 02Eh, 066h, 08Bh, 00Eh, 010h, 07Dh
     cmp    ecx, 0ffffffffh
-    ;jne    Label0x7a53                  ;Offset 0x7a53
+    ;jne    Label0x7a45                  ;Offset 0x7a45
     DB 00Fh, 085h, 006h, 000h
     mov    ecx, 04244ca1h
-Label0x7a53:                            ;Offset 0x7a53
+Label0x7a45:                            ;Offset 0x7a45
     call   IndirectRegisterWriteDWord   ;Offset 0x6a03
     mov    di, PCI_MGA_Option + 01h     ;0x41
     mov    al, PCI_ACCESS_ReadByte      ;0x8
     call   AccessPCIRegister            ;Offset 0x68f8
-    mov    dl, byte ptr cs:[Data0x7d36] ;Offset 0x7d36
+    mov    dl, byte ptr cs:[Data0x7d16] ;Offset 0x7d16
     mov    ch, dl
     and    ch, 07h
     shl    ch, 02h
@@ -12668,7 +12666,7 @@ Label0x7a53:                            ;Offset 0x7a53
     mov    di, PCI_MGA_Option2 + 01h    ;0x51
     mov    al, PCI_ACCESS_ReadByte      ;0x8
     call   AccessPCIRegister            ;Offset 0x68f8
-    mov    dl, byte ptr cs:[Data0x7d3a] ;Offset 0x7d3a
+    mov    dl, byte ptr cs:[Data0x7d1a] ;Offset 0x7d1a
     mov    ch, dl
     and    ch, 03h
     shl    ch, 04h
@@ -12677,12 +12675,12 @@ Label0x7a53:                            ;Offset 0x7a53
     mov    al, PCI_ACCESS_WriteByte     ;0xb
     call   AccessPCIRegister            ;Offset 0x68f8
     mov    si, MGA_MemAddr_MemoryReadBack + 03h;0x1e47
-    mov    cl, byte ptr cs:[Data0x7d39] ;Offset 0x7d39
+    mov    cl, byte ptr cs:[Data0x7d19] ;Offset 0x7d19
     and    cl, 0f0h
     shr    cl, 03h
     call   IndirectRegisterWriteByte    ;Offset 0x69c7
     mov    si, MGA_MemAddr_MemoryReadBack + 02h;0x1e46
-    mov    cl, byte ptr cs:[Data0x7d39] ;Offset 0x7d39
+    mov    cl, byte ptr cs:[Data0x7d19] ;Offset 0x7d19
     and    cl, 03h
     ror    cl, 02h
     call   IndirectRegisterWriteByte    ;Offset 0x69c7
@@ -12703,7 +12701,7 @@ Label0x7a53:                            ;Offset 0x7a53
     call   Sleep2                       ;Offset 0x2bfc
     mov    si, MGA_MemAddr_MemoryReadBack;0x1e44
     xor    cx, cx
-    mov    dl, byte ptr cs:[MemoryClockBaseReadDelayDefault];Offset 0x7d38
+    mov    dl, byte ptr cs:[MemoryClockBaseReadDelayDefault];Offset 0x7d18
     mov    cl, dl
     and    cl, 0f0h
     shl    cx, 01h
@@ -12726,9 +12724,9 @@ Label0x7a53:                            ;Offset 0x7a53
     pop    bx
     pop    ax
     ret
-Func0x7a04 ENDP
+Func0x79f6 ENDP
 
-Func0x7b21 PROC NEAR                    ;Offset 0x7b21
+Func0x7b13 PROC NEAR                    ;Offset 0x7b13
     push  ax
     push  bx
     push  ecx
@@ -12736,16 +12734,16 @@ Func0x7b21 PROC NEAR                    ;Offset 0x7b21
     push  di
     push  cx
     mov   bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
-    call  FindIntelTriton430FXChipset   ;Offset 0x79b9
+    call  FindIntelTriton430FXChipset   ;Offset 0x79ab
     or    ax, ax
-    je    NoIntelTriton430FX            ;Offset 0x7b45
+    je    NoIntelTriton430FX            ;Offset 0x7b37
     mov   al, PCI_ACCESS_ReadByte       ;0x8
     mov   di, PCI_MGA_Option + 03h      ;0x43
     call  AccessPCIRegister             ;Offset 0x68f8
     or    cl, (PCI_MGA_Opt_NoRetry SHR 24);0x20
     mov   al, PCI_ACCESS_WriteByte      ;0xb
     call  AccessPCIRegister             ;Offset 0x68f8
-NoIntelTriton430FX:                     ;Offset 0x7b45
+NoIntelTriton430FX:                     ;Offset 0x7b37
     mov   cl, MGA_INDD_VoltageReferenceControl;0x18
     mov   ch, MGA_VREFCTRL_SysPLLVoltRefBlkPwrUp OR MGA_VREFCTRL_SysPLLVoltRefPLLRefBlk;0x03
     call  WriteIndexedRegister          ;Offset 0x6a6b
@@ -12760,14 +12758,14 @@ NoIntelTriton430FX:                     ;Offset 0x7b45
     mov   al, 01h
     call  Sleep2                        ;Offset 0x2bfc
     xor   dx, dx
-PLLNotFrequencyLocked:                  ;Offset 0x7b68
+PLLNotFrequencyLocked:                  ;Offset 0x7b5a
     dec   dx
-    je    PLLFreqLockTimeout            ;Offset 0x7b75
+    je    PLLFreqLockTimeout            ;Offset 0x7b67
     mov   cl, MGA_INDD_SYSPLL_Status    ;0x2f
     call  ReadIndexedRegister           ;Offset 0x6a80
     and   cl, MGA_SYSPLLSTAT_FrequencyLock;0x40
-    je    PLLNotFrequencyLocked         ;Offset 0x7b68
-PLLFreqLockTimeout:                     ;Offset 0x7b75
+    je    PLLNotFrequencyLocked         ;Offset 0x7b5a
+PLLFreqLockTimeout:                     ;Offset 0x7b67
     mov   cl, MGA_INDD_PixelClockControl;0x1a
     call  ReadIndexedRegister           ;Offset 0x6a80
     or    cl, MGA_PIXCLKCTRL_PixelPLLPowerUp;0x8
@@ -12777,14 +12775,14 @@ PLLFreqLockTimeout:                     ;Offset 0x7b75
     mov   al, 01h
     call  Sleep2                        ;Offset 0x2bfc
     xor   dx, dx
-PIXNotFrequencyLocked:                  ;Offset 0x7b8b
+PIXNotFrequencyLocked:                  ;Offset 0x7b7d
     dec   dx
-    je    PIXFreqLockTimeout            ;Offset 0x7b98
+    je    PIXFreqLockTimeout            ;Offset 0x7b8a
     mov   cl, MGA_INDD_PIXPLL_Status    ;0x4f
     call  ReadIndexedRegister           ;Offset 0x6a80
     and   cl, MGA_PIXPLLSTAT_FrequencyLock;0x40
-    je    PIXNotFrequencyLocked         ;Offset 0x7b8b
-PIXFreqLockTimeout:                     ;Offset 0x7b98
+    je    PIXNotFrequencyLocked         ;Offset 0x7b7d
+PIXFreqLockTimeout:                     ;Offset 0x7b8a
     mov   cl, MGA_INDD_MiscellaneousControl;0x1e
     call  ReadIndexedRegister           ;Offset 0x6a80
     or    cl, MGA_MISCCTRL_LUT_Enable   ;0x10
@@ -12837,13 +12835,13 @@ PIXFreqLockTimeout:                     ;Offset 0x7b98
     call  WriteIndexedRegister          ;Offset 0x6a6b
     pop   dx
     or    dx, dx
-    je    Label0x7c24                   ;Offset 0x7c24
+    je    Label0x7c16                   ;Offset 0x7c16
     mov   cx, 0041h
-    jmp   Label0x7c27                   ;Offset 0x7c27
+    jmp   Label0x7c19                   ;Offset 0x7c19
     nop
-Label0x7c24:                            ;Offset 0x7c24
+Label0x7c16:                            ;Offset 0x7c16
     call  Func0x6a97                    ;Offset 0x6a97
-Label0x7c27:                            ;Offset 0x7c27
+Label0x7c19:                            ;Offset 0x7c19
     mov   ax, dx
     xor   dx, dx
     mov   bx, 03e8h
@@ -12857,10 +12855,10 @@ Label0x7c27:                            ;Offset 0x7c27
     pop   bx
     pop   ax
     ret
-Func0x7b21 ENDP
+Func0x7b13 ENDP
 
-CacheMemorySize PROC NEAR               ;Offset 0x7c41
-    call  GetMemorySize                 ;Offset 0x7c4c
+CacheMemorySize PROC NEAR               ;Offset 0x7c33
+    call  GetMemorySize                 ;Offset 0x7c3e
     shr   ax, 04h
     mov   byte ptr cs:[MemorySizeInMB], al;Offset 0x7ff0
     ret
@@ -12872,7 +12870,7 @@ CacheMemorySize ENDP
 ;outputs:
 ;   ax = Size of memory in 64KB blocks
 ;
-GetMemorySize PROC NEAR                 ;Offset 0x7c4c
+GetMemorySize PROC NEAR                 ;Offset 0x7c3e
     push  bx
     push  cx
     push  dx
@@ -12889,8 +12887,8 @@ GetMemorySize PROC NEAR                 ;Offset 0x7c4c
     or    ah, VGA_SEQ1_ScreenOff        ;0x20
     out   dx, ax
     mov   cx, 04b0h
-Label0x7c63:                            ;Offset 0x7c63
-    loop  Label0x7c63                   ;Offset 0x7c63 Speed sensitive!
+Label0x7c55:                            ;Offset 0x7c55
+    loop  Label0x7c55                   ;Offset 0x7c55 Speed sensitive!
     mov   dx, VGA_GraphicsControllerIndex;Port 0x3ce
     mov   al, VGA_GCTLIdx_Miscellaneous ;0x6
     out   dx, al
@@ -12901,19 +12899,19 @@ Label0x7c63:                            ;Offset 0x7c63
     out   dx, ax
     mov   dx, VGA_InputStatus1D         ;Port 0x3da
     xor   cx, cx
-Label0x7c79:                            ;Offset 0x7c79
+Label0x7c6b:                            ;Offset 0x7c6b
     dec   cx
-    je    Label0x7c89                   ;Offset 0x7c89
+    je    Label0x7c7b                   ;Offset 0x7c7b
     in    al, dx
     and   al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
-    jne   Label0x7c79                   ;Offset 0x7c79
-Label0x7c81:                            ;Offset 0x7c81
+    jne   Label0x7c6b                   ;Offset 0x7c6b
+Label0x7c73:                            ;Offset 0x7c73
     dec   cx
-    je    Label0x7c89                   ;Offset 0x7c89
+    je    Label0x7c7b                   ;Offset 0x7c7b
     in    al, dx
     and   al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
-    je    Label0x7c81                   ;Offset 0x7c81
-Label0x7c89:                            ;Offset 0x7c89
+    je    Label0x7c73                   ;Offset 0x7c73
+Label0x7c7b:                            ;Offset 0x7c7b
     mov   dx, MGA_CRTCExtensionIndex    ;Port 0x3de
     mov   al, MGA_CRTCExt_Misc          ;0x3
     out   dx, al
@@ -12931,7 +12929,7 @@ Label0x7c89:                            ;Offset 0x7c89
     mov   di, 0020h                     ;2MB
     mov   bx, 0100h                     ;16MB max
     mov   ax, (20h SHL 8)OR MGA_CRTCExt_MemoryPage;0x2004 Start at 2MB
-Label0x7cab:                            ;Offset 0x7cab
+Label0x7c9d:                            ;Offset 0x7c9d
     out   dx, ax
     mov   ch, byte ptr [si]
     mov   cl, 0a5h
@@ -12945,12 +12943,12 @@ Label0x7cab:                            ;Offset 0x7cab
     pop   di
     cmp   cl, byte ptr [si]
     mov   byte ptr [si], ch
-    jne   Label0x7ccd                   ;Offset 0x7ccd
+    jne   Label0x7cbf                   ;Offset 0x7cbf
     add   di, 0010h                     ;Found one more MB
     add   ah, 10h                       ;Increment by 1MB
     cmp   bx, di
-    jne   Label0x7cab                   ;Offset 0x7cab
-Label0x7ccd:                            ;Offset 0x7ccd
+    jne   Label0x7c9d                   ;Offset 0x7c9d
+Label0x7cbf:                            ;Offset 0x7cbf
     pop   ax
     out   dx, ax
     pop   ax
@@ -12973,100 +12971,91 @@ Label0x7ccd:                            ;Offset 0x7ccd
     ret
 GetMemorySize ENDP
 
-    xchg bx, bx                         ;hello
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
-    xchg bx, bx
+    xchg  bx, bx                        ;hello
+    xchg  bx, bx
+    xchg  bx, bx
+    xchg  bx, bx
+    xchg  bx, bx
 
-;Offset 0x7d00
+;Offset 0x7ce0
 PINS                    DB 02Eh, 041h
                         DB 040h ;Offset from 0x7ce0 to the protected mode table: 0x7d00 + 0x40 = 0x7d40
                         DB 0FFh, 000h, 003h, 0FFh, 0FFh, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
                         DB 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
                         DB 000h, 000h, 0FFh, 0FFh
 
-;Offset 0x7d24
-Data0x7d24              DB 0FFh
+;Offset 0x7d04
+Data0x7d04              DB 0FFh
                         DB 0FFh, 0FFh, 0FFh, 0FFh
 
-;Offset 0x7d29
-Data0x7d29              DB 0FFh
+;Offset 0x7d09
+Data0x7d09              DB 0FFh
 
-;Offset 0x7d2a
-Data0x7d2a              DB 0FFh
+;Offset 0x7d0a
+Data0x7d0a              DB 0FFh
 
-;OFfset 0x7d2b
-Data0x7d2b              DB 0FFh
+;OFfset 0x7d0b
+Data0x7d0b              DB 0FFh
 
-;Offset 0x7d2c
-Data0x7d2c              DB 03Eh
+;Offset 0x7d0c
+Data0x7d0c              DB 03Eh
 
-;Offset 0x7d2d
-Data0x7d2d              DB 0FFh
+;Offset 0x7d0d
+Data0x7d0d              DB 0FFh
 
                         DB 0FFh, 0FFh
 
-;Offset 0x7d30
+;Offset 0x7d10
 MemoryControlWaitState  DD 03258A31h    ;These are the memory timings of the G100, which are incompatible with the G200!!!!!
 
-;Offset 0x7d34
-Data0x7d34              DB 000h
+;Offset 0x7d14
+Data0x7d14              DB 000h
 
-;Offset 0x7d35
-Data0x7d35              DB 0EEh         ;bit 0 = Pedestal control (pedcon), General control register XGENCTRL
+;Offset 0x7d15
+Data0x7d15              DB 0EEh         ;bit 0 = Pedestal control (pedcon), General control register XGENCTRL
                                         ;bit 4 = Composite Sync Enable (csyncen) in CRTCEXT3
                                         ;bit 5 = Green sync output control (iogsyncdis) 
 
-;Offset 0x7d36
-Data0x7d36              DB 0FFh
+;Offset 0x7d16
+Data0x7d16              DB 0FFh
 
-;Offset 0x7d37
-Data0x7d37              DB 0FFh         ;bit 2-0 = hiprilvl in CRTCEXT3
+;Offset 0x7d17
+Data0x7d17              DB 0FFh         ;bit 2-0 = hiprilvl in CRTCEXT3
 
-;Offset 0x7d38
+;Offset 0x7d18
 MemoryClockBaseReadDelayDefault DB 088h ;bit 3-0 = mclkbrd0 in MEMRDBK
                                         ;bit 7-4 = mclkbrd1 in MEMRDBK
 
-;Offset 0x7d39
-Data0x7d39              DB 000h         ;bit 1-0 = strmfctl in MEMRDBK
+;Offset 0x7d19
+Data0x7d19              DB 000h         ;bit 1-0 = strmfctl in MEMRDBK
                                         ;bit 7-4 = mrsopcod(lower 4 bits) in MEMRDBK
 
-;Offset 0x7d3a
-Data0x7d3a              DB 000h
+;Offset 0x7d1a
+Data0x7d1a              DB 000h
 
-;Offset 0x7d3b
-Data0x7d3b              DB 0FFh
+;Offset 0x7d1b
+Data0x7d1b              DB 0FFh
 
-;Offset 0x7d3e
+;Offset 0x7d1e
                         DB 0FFh, 0FFh, 0FFh, 0FFh
-                        
-;Offset 0x7d40
-                        DW 0005Fh       ;00h    WORD    offset (within table) of protected-mode code for Function 5 (Set Window) : Points to 0x7d9f
-                        DW 00092h       ;02h    WORD    offset of protected-mode code for Function 7 (Set Disp Start) : Points to 0x7dd2
-                        DW 000FEh       ;04h    WORD    offset of protected-mode code for Function 9 (Set Primary Palette) : Points to 0x7e3e
+
+;Offset 0x7d20
+                        DW 0005Fh       ;00h    WORD    offset (within table) of protected-mode code for Function 5 (Set Window) : Points to 0x7d7f
+                        DW 00092h       ;02h    WORD    offset of protected-mode code for Function 7 (Set Disp Start) : Points to 0x7dc2
+                        DW 000FEh       ;04h    WORD    offset of protected-mode code for Function 9 (Set Primary Palette) : Points to 0x7e1e
                         DW 0000Ch       ;06h    WORD    offset (within table) of list of I/O ports and memory locations
-                                        ;               for which I/O privilege may be required in protected mode (0000h if no list) : Points to 0x7d4c
+                                        ;               for which I/O privilege may be required in protected mode (0000h if no list) : Points to 0x7d2c
                                         ;08h    var     code and optional port/memory list
                         DW 0020Ch       ;Size
                         DW 00000h       ;?
 
-;Offset 0x7d4c
+;Offset 0x7d2c
                         DW 003DEh       ;Port list
                         DW 003DFh
                         DW 0FFFFh
                         DW 0FFFFh       ;Memory list
 
-;Offset 0x7d54
+;Offset 0x7d34
                         DB 0E8h, 003h, 003h, 0E8h, 017h, 003h, 000h, 000h, 000h, 0F2h, 015h, 002h
                         DB 0D0h, 00Fh, 005h, 0D0h, 00Fh, 005h, 0A0h, 01Fh, 00Ah, 0E4h, 00Bh, 003h, 0E4h, 00Bh, 003h, 0C8h
                         DB 017h, 006h, 0D8h, 01Ch, 007h, 0D8h, 015h, 006h, 000h, 000h, 000h, 062h, 01Bh, 005h, 000h, 000h
@@ -13075,20 +13064,20 @@ Data0x7d3b              DB 0FFh
 
 ;Can't have 16-bit tiny code and 32-bit flat code in the same file, so here is the data with code as comment:
 
-                                        ;SetWindow32bit PROC NEAR                ;Offset 0x7d9f
+                                        ;SetWindow32bit PROC NEAR                ;Offset 0x7d7f
 DB 066h, 052h                           ;    push dx
 DB 051h                                 ;    push ecx
-DB 0E8h, 017h, 001h, 000h, 000h         ;    call Func32bit0x7ebe                ;Offset 0x7ebe
+DB 0E8h, 017h, 001h, 000h, 000h         ;    call Func32bit0x7eae                ;Offset 0x7eae
 DB 00Ah, 0FFh                           ;    or   bh, bh
-DB 075h, 00Fh                           ;    jne  Label0x7dba                    ;Offset 0x7dba
+DB 075h, 00Fh                           ;    jne  Label0x7d9a                    ;Offset 0x7d9a
 DB 08Ah, 0E2h                           ;    mov  ah, dl
 DB 002h, 0E1h                           ;    add  ah, cl
 DB 059h                                 ;    pop  ecx
 DB 0B0h, 004h                           ;    mov  al, MGA_CRTCExt_MemoryPage     ;0x4
 DB 066h, 0BAh, 0DEh, 003h               ;    mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
 DB 066h, 0EFh                           ;    out  dx, ax
-DB 0EBh, 011h                           ;    jmp  Label0x7dcb                    ;Offset 0x7dcb
-                                        ;Label0x7dba:                            ;Offset 0x7dba
+DB 0EBh, 011h                           ;    jmp  Label0x7dab                    ;Offset 0x7dab
+                                        ;Label0x7d9a:                            ;Offset 0x7d9a
 DB 066h, 0BAh, 0DEh, 003h               ;    mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
 DB 0B0h, 004h                           ;    mov  al, MGA_CRTCExt_MemoryPage     ;0x4
 DB 0EEh                                 ;    out  dx, al
@@ -13098,13 +13087,13 @@ DB 02Ah, 0C1h                           ;    sub  al, cl
 DB 059h                                 ;    pop  ecx
 DB 08Ah, 0D0h                           ;    mov  dl, al
 DB 032h, 0F6h                           ;    xor  dh, dh
-                                        ;Label0x7dcb:                            ;Offset 0x7dcb
+                                        ;Label0x7dab:                            ;Offset 0x7dab
 DB 066h, 05Ah                           ;    pop  dx
 DB 066h, 0B8h, 04Fh, 000h               ;    mov  ax, 004fh
 DB 0C3h                                 ;    ret
                                         ;SetWindow32bit ENDP
 
-                                        ;SetDisplayStart32bit PROC NEAR          ;Offset 0x7dd2
+                                        ;SetDisplayStart32bit PROC NEAR          ;Offset 0x7db2
 DB 050h                                 ;    push eax
 DB 066h, 051h                           ;    push cx
 DB 066h, 052h                           ;    push dx
@@ -13113,22 +13102,22 @@ DB 0C1h, 0C0h, 010h                     ;    rol  eax, 10h
 DB 066h, 08Bh, 0C1h                     ;    mov  ax, cx
 DB 0D1h, 0E8h                           ;    shr  eax, 01h
 DB 051h                                 ;    push ecx
-DB 0E8h, 0D6h, 000h, 000h, 000h         ;    call Func32bit0x7ebe                ;Offset 0x7ebe
+DB 0E8h, 0D6h, 000h, 000h, 000h         ;    call Func32bit0x7e9e                ;Offset 0x7e9e
 DB 0C1h, 0E9h, 008h                     ;    shr  ecx, 08h
 DB 003h, 0C1h                           ;    add  eax, ecx
 DB 059h                                 ;    pop  ecx
 DB 050h                                 ;    push eax
 DB 0F6h, 0C3h, 080h                     ;    test bl, 80h
-DB 00Fh, 084h, 010h, 000h, 000h, 000h   ;    je   Label0x7e08                    ;Offset 0x7e08
+DB 00Fh, 084h, 010h, 000h, 000h, 000h   ;    je   Label0x7de8                    ;Offset 0x7de8
 DB 066h, 0BAh, 0DAh, 003h               ;    mov  dx, VGA_InputStatus1D          ;Port 0x3da
 DB 066h, 033h, 0C9h                     ;    xor  cx, cx
-                                        ;Label0x7dff:                            ;Offset 0x7dff
+                                        ;Label0x7ddf:                            ;Offset 0x7ddf
 DB 066h, 049h                           ;    dec  cx
-DB 074h, 005h                           ;    je   Label0x7e08                    ;Offset 0x7e08
+DB 074h, 005h                           ;    je   Label0x7de8                    ;Offset 0x7de8
 DB 0ECh                                 ;    in   al, dx
 DB 024h, 008h                           ;    and  al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
-DB 074h, 0F7h                           ;    je   Label0x7dff                    ;Offset 0x7dff
-                                        ;Label0x7e08:                            ;Offset 0x7e08
+DB 074h, 0F7h                           ;    je   Label0x7ddf                    ;Offset 0x7ddf
+                                        ;Label0x7de8:                            ;Offset 0x7de8
 DB 066h, 0BAh, 0D4h, 003h               ;    mov  dx, VGA_CRTControllerIndexD    ;Port 0x3d4
 DB 0B0h, 00Dh                           ;    mov  al, VGA_CRTCIdx_StartAddrLow   ;0xd
 DB 0EEh                                 ;    out  dx, al
@@ -13159,11 +13148,11 @@ DB 058h                                 ;    pop  eax
 DB 0C3h                                 ;    ret
                                         ;SetDisplayStart32bit ENDP
 
-                                        ;SetPrimaryPalette32bit PROC NEAR        ;Offset 0x7e3e
+                                        ;SetPrimaryPalette32bit PROC NEAR        ;Offset 0x7e2e
 DB 080h, 0FBh, 002h                     ;    cmp  bl, 02h
-DB 074h, 076h                           ;    je   Label0x7eb9                    ;Offset 0x7eb9
+DB 074h, 076h                           ;    je   Label0x7e99                    ;Offset 0x7e99
 DB 080h, 0FBh, 003h                     ;    cmp  bl, 03h
-DB 074h, 071h                           ;    je   Label0x7eb9                    ;Offset 0x7eb9
+DB 074h, 071h                           ;    je   Label0x7e99                    ;Offset 0x7e99
 DB 066h, 053h                           ;    push bx
 DB 066h, 051h                           ;    push cx
 DB 066h, 052h                           ;    push dx
@@ -13174,28 +13163,28 @@ DB 0EEh                                 ;    out  dx, al
 DB 066h, 051h                           ;    push cx
 DB 08Ah, 0C3h                           ;    mov  al, bl
 DB 03Ch, 080h                           ;    cmp  al, 80h
-DB 075h, 017h                           ;    jne  Label0x7e75                    ;Offset 0x7e75
+DB 075h, 017h                           ;    jne  Label0x7e55                    ;Offset 0x7e55
 DB 0B2h, 0DAh                           ;    mov  dl, VGA_InputStatus1D_lowbyte  ;Port 0x3da
 DB 066h, 033h, 0C9h                     ;    xor  cx, cx
-                                        ;Label0x7e63:                            ;Offset 0x7e63
+                                        ;Label0x7e43:                            ;Offset 0x7e43
 DB 066h, 049h                           ;    dec  cx
-DB 074h, 00Eh                           ;    je   Label0x7e75                    ;Offset 0x7e75
+DB 074h, 00Eh                           ;    je   Label0x7e55                    ;Offset 0x7e55
 DB 0ECh                                 ;    in   al, dx
 DB 024h, 008h                           ;    and  al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
-DB 075h, 0F7h                           ;    jne  Label0x7e63                    ;Offset 0x7e63
-                                        ;Label0x7e6c:                            ;Offset 0x7e6c
+DB 075h, 0F7h                           ;    jne  Label0x7e43                    ;Offset 0x7e43
+                                        ;Label0x7e4c:                            ;Offset 0x7e4c
 DB 066h, 049h                           ;    dec  cx
-DB 074h, 005h                           ;    je   Label0x7e75                    ;Offset 0x7e75
+DB 074h, 005h                           ;    je   Label0x7e55                    ;Offset 0x7e55
 DB 0ECh                                 ;    in   al, dx
 DB 024h, 008h                           ;    and  al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
-DB 074h, 0F7h                           ;    je   Label0x7e6c                    ;Offset 0x7e6c
-                                        ;Label0x7e75:                            ;Offset 0x7e75
+DB 074h, 0F7h                           ;    je   Label0x7e4c                    ;Offset 0x7e4c
+                                        ;Label0x7e55:                            ;Offset 0x7e55
 DB 066h, 059h                           ;    pop  cx
 DB 0B2h, 0C9h                           ;    mov  dl, VGA_RAMDACData_lowbyte     ;Port 0x3c9
 DB 08Ah, 0C3h                           ;    mov  al, bl
 DB 024h, 001h                           ;    and  al, 01h
-DB 074h, 018h                           ;    je   Label0x7e97                    ;Offset 0x7e97
-                                        ;Label0x7e7f:                            ;Offset 0x7e7f
+DB 074h, 018h                           ;    je   Label0x7e77                    ;Offset 0x7e77
+                                        ;Label0x7e5f:                            ;Offset 0x7e5f
 DB 0ECh                                 ;    in   al, dx
 DB 026h, 088h, 047h, 002h               ;    mov  byte ptr es:[edi + 02h], al
 DB 0ECh                                 ;    in   al, dx
@@ -13207,9 +13196,9 @@ DB 047h                                 ;    inc  edi
 DB 047h                                 ;    inc  edi
 DB 047h                                 ;    inc  edi
 DB 066h, 049h                           ;    dec  cx
-DB 075h, 0EAh                           ;    jne  Label0x7e7f                    ;Offset 0x7e7f
-DB 0EBh, 016h                           ;    jmp  Label0x7ead                    ;Offset 0x7ead
-                                        ;Label0x7e97:                            ;Offset 0x7e97
+DB 075h, 0EAh                           ;    jne  Label0x7e5f                    ;Offset 0x7e5f
+DB 0EBh, 016h                           ;    jmp  Label0x7e8d                    ;Offset 0x7e8d
+                                        ;Label0x7e77:                            ;Offset 0x7e77
 DB 026h, 08Ah, 047h, 002h               ;    mov  al, byte ptr es:[edi + 02h]
 DB 0EEh                                 ;    out  dx, al
 DB 026h, 08Ah, 047h, 001h               ;    mov  al, byte ptr es:[edi + 01h]
@@ -13221,20 +13210,20 @@ DB 047h                                 ;    inc  edi
 DB 047h                                 ;    inc  edi
 DB 047h                                 ;    inc  edi
 DB 066h, 049h                           ;    dec  cx
-DB 075h, 0EAh                           ;    jne  Label0x7e97                    ;Offset 0x7e97
-                                        ;Label0x7ead:                            ;Offset 0x7ead
+DB 075h, 0EAh                           ;    jne  Label0x7e77                    ;Offset 0x7e77
+                                        ;Label0x7e8d:                            ;Offset 0x7e8d
 DB 05Fh                                 ;    pop  edi
 DB 066h, 05Ah                           ;    pop  dx
 DB 066h, 059h                           ;    pop  cx
 DB 066h, 05Bh                           ;    pop  bx
 DB 066h, 0B8h, 04Fh, 000h               ;    mov  ax, 004fh
 DB 0C3h                                 ;    ret
-                                        ;Label0x7eb9:                            ;Offset 0x7eb9
+                                        ;Label0x7e99:                            ;Offset 0x7e99
 DB 066h, 0B8h, 04Fh, 002h               ;    mov  ax, 024fh
 DB 0C3h                                 ;    ret
                                         ;SetPrimaryPalette32bit ENDP
 
-                                        ;Func32bit0x7ebe PROC NEAR               ;Offset 0x7ebe
+                                        ;Func32bit0x7e9e PROC NEAR               ;Offset 0x7e9e
 DB 050h                                 ;    push eax
 DB 057h                                 ;    push edi
 DB 056h                                 ;    push esi
@@ -13248,45 +13237,45 @@ DB 066h, 042h                           ;    inc  dx
 DB 0ECh                                 ;    in   al, dx
 DB 08Ah, 0E0h                           ;    mov  ah, al
 DB 0A8h, 080h                           ;    test al, 80h
-DB 074h, 06Bh                           ;    je   Label0x7f42                    ;Offset 0x7f42
+DB 074h, 06Bh                           ;    je   Label0x7f22                    ;Offset 0x7f22
 DB 024h, 03Fh                           ;    and  al, 3fh
 DB 03Ch, 020h                           ;    cmp  al, 20h
-DB 072h, 065h                           ;    jb   Label0x7f42                    ;Offset 0x7f42
+DB 072h, 065h                           ;    jb   Label0x7f22                    ;Offset 0x7f22
 DB 080h, 0E4h, 040h                     ;    and  ah, 40h
-DB 075h, 020h                           ;    jne  Label0x7f02                    ;Offset 0x7f02
+DB 075h, 020h                           ;    jne  Label0x7ee2                    ;Offset 0x7ee2
 DB 03Ch, 023h                           ;    cmp  al, 23h
-DB 077h, 00Ah                           ;    ja   Label0x7ef0                    ;Offset 0x7ef0
+DB 077h, 00Ah                           ;    ja   Label0x7ed0                    ;Offset 0x7ed0
 DB 0BEh, 014h, 000h, 000h, 000h         ;    mov  esi, 00000014h
-DB 0EBh, 030h                           ;    jmp  Label0x7f1d                    ;Offset 0x7f1d
+DB 0EBh, 030h                           ;    jmp  Label0x7efd                    ;Offset 0x7efd
+DB 090h                                 ;    nop
+DB 090h                                 ;    nop
+DB 090h                                 ;    nop
+                                        ;Label0x7ed0:                            ;Offset 0x7ed0
+DB 03Ch, 030h                           ;    cmp  al, 30h
+DB 072h, 04Eh                           ;    jb   Label0x7f22                    ;Offset 0x7f22
+DB 03Ch, 035h                           ;    cmp  al, 35h
+DB 077h, 04Ah                           ;    ja   Label0x7f22                    ;Offset 0x7f22
+DB 0BEh, 020h, 000h, 000h, 000h         ;    mov  esi, 00000020h
+DB 0EBh, 01Eh                           ;    jmp  Label0x7efd                    ;Offset 0x7efd
+DB 090h                                 ;    nop
+DB 090h                                 ;    nop
+DB 090h                                 ;    nop
+                                        ;Label0x7ee2:                            ;Offset 0x7ee2
+DB 03Ch, 025h                           ;    cmp  al, 25h
+DB 077h, 00Ah                           ;    ja   Label0x7ef0                    ;Offset 0x7ef0
+DB 0BEh, 032h, 000h, 000h, 000h         ;    mov  esi, 00000032h
+DB 0EBh, 010h                           ;    jmp  Label0x7efd                    ;Offset 0x7efd
 DB 090h                                 ;    nop
 DB 090h                                 ;    nop
 DB 090h                                 ;    nop
                                         ;Label0x7ef0:                            ;Offset 0x7ef0
 DB 03Ch, 030h                           ;    cmp  al, 30h
-DB 072h, 04Eh                           ;    jb   Label0x7f42                    ;Offset 0x7f42
-DB 03Ch, 035h                           ;    cmp  al, 35h
-DB 077h, 04Ah                           ;    ja   Label0x7f42                    ;Offset 0x7f42
-DB 0BEh, 020h, 000h, 000h, 000h         ;    mov  esi, 00000020h
-DB 0EBh, 01Eh                           ;    jmp  Label0x7f1d                    ;Offset 0x7f1d
-DB 090h                                 ;    nop
-DB 090h                                 ;    nop
-DB 090h                                 ;    nop
-                                        ;Label0x7f02:                            ;Offset 0x7f02
-DB 03Ch, 025h                           ;    cmp  al, 25h
-DB 077h, 00Ah                           ;    ja   Label0x7f10                    ;Offset 0x7f10
-DB 0BEh, 032h, 000h, 000h, 000h         ;    mov  esi, 00000032h
-DB 0EBh, 010h                           ;    jmp  Label0x7f1d                    ;Offset 0x7f1d
-DB 090h                                 ;    nop
-DB 090h                                 ;    nop
-DB 090h                                 ;    nop
-                                        ;Label0x7f10:                            ;Offset 0x7f10
-DB 03Ch, 030h                           ;    cmp  al, 30h
-DB 072h, 02Eh                           ;    jb   Label0x7f42                    ;Offset 0x7f42
+DB 072h, 02Eh                           ;    jb   Label0x7f22                    ;Offset 0x7f22
 DB 03Ch, 038h                           ;    cmp  al, 38h
-DB 077h, 02Ah                           ;    ja   Label0x7f42                    ;Offset 0x7f42
+DB 077h, 02Ah                           ;    ja   Label0x7f22                    ;Offset 0x7f22
 DB 0BEh, 044h, 000h, 000h, 000h         ;    mov  esi, 00000044h
-                                        ;Label0x7f1d:                            ;Offset 0x7f1d
-DB 0E8h, 026h, 000h, 000h, 000h         ;    call Func32bit0x7f48                ;Offset 0x7f48
+                                        ;Label0x7efd:                            ;Offset 0x7efd
+DB 0E8h, 026h, 000h, 000h, 000h         ;    call Func32bit0x7f28                ;Offset 0x7f28
 DB 0BFh, 0E2h, 001h, 000h, 000h         ;    mov  edi, 000001e2h
 DB 02Bh, 0CFh                           ;    sub  ecx, edi
 DB 003h, 0CEh                           ;    add  ecx, esi
@@ -13299,24 +13288,25 @@ DB 033h, 0C9h                           ;    xor  ecx, ecx
 DB 02Eh, 066h, 08Bh, 00Eh               ;    mov  cx, word ptr cs:[esi]
 DB 0C1h, 0E1h, 008h                     ;    shl  ecx, 08h
 DB 02Eh, 08Ah, 04Eh, 002h               ;    mov  cl, byte ptr cs:[esi + 02h]
-                                        ;Label0x7f42:                            ;Offset 0x7f42
+                                        ;Label0x7f22:                            ;Offset 0x7f22
 DB 066h, 05Ah                           ;    pop  dx
 DB 05Eh                                 ;    pop  esi
 DB 05Fh                                 ;    pop  edi
 DB 058h                                 ;    pop  eax
 DB 0C3h                                 ;    ret
-                                        ;Func32bit0x7ebe ENDP
+                                        ;Func32bit0x7e9e ENDP
 
-                                        ;Func32bit0x7f48 PROC NEAR               ;Offset 0x7f48
+                                        ;Func32bit0x7f28 PROC NEAR               ;Offset 0x7f28
 DB 08Bh, 00Ch, 024h                     ;    mov  ecx, dword ptr [esp]
 DB 0C3h                                 ;    ret
-                                        ;Func32bit0x7f48 ENDP
+                                        ;Func32bit0x7f28 ENDP
 
-;Offset 0x7fec
+
+;Offset 0x7f2c
 DB 000h
 
-;Offset 0x7fed
-DB 0a2h dup (0FFh)
+;Offset 0x7f2d
+DB 0c2h dup (0FFh)
 
 ;Offset 0x7fef
 Data0x7fef              DB 000h
@@ -13344,6 +13334,6 @@ PINSPointer             DW offset PINS  ;Offset 0x7d00
 
 DB 0FFh
 
-DB 75h
+DB 5Eh
 ROMEnd:
 END

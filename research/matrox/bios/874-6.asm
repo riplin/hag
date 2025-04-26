@@ -19,7 +19,7 @@
 ;Disassembler: https://shell-storm.org/online/Online-Assembler-and-Disassembler/ (allowed me to disassemble specific sections manually)
 ;
 ;I use MASM 6.11 (DOS)
-;Build with MASM: ml /AT 897-21.asm
+;Build with MASM: ml /AT 874-6.asm
 ;Produces a .COM file. Just rename to .BIN
 ;
 ;There are a number of commented out lines of code.
