@@ -25,6 +25,17 @@ MGA_CRTCExtensionIndex_lowbyte          EQU 0deh;0xde
         MGA_CRTCEXT1_HorBlankEnd        EQU 040h;0x40
         MGA_CRTCEXT1_VerResetEnable     EQU 080h;0x80
     MGA_CRTCExt_VertCounterExt          EQU 002h;0x02
+        MGA_CRTCEXT2_VertTotal10        EQU 001h;0x01
+        MGA_CRTCEXT2_VertTotal11        EQU 002h;0x02
+        MGA_CRTCEXT2_VertTotal11_10     EQU 003h;0x03
+        MGA_CRTCEXT2_VertDispEnd10      EQU 004h;0x04
+        MGA_CRTCEXT2_VertBlnkStart10    EQU 008h;0x08
+        MGA_CRTCEXT2_VertBlnkStart11    EQU 010h;0x10
+        MGA_CRTCEXT2_VertBlnkStart11_10 EQU 018h;0x18
+        MGA_CRTCEXT2_VertRetrStrt10     EQU 020h;0x20
+        MGA_CRTCEXT2_VertRetrStrt11     EQU 040h;0x40
+        MGA_CRTCEXT2_VertRetrStrt11_10  EQU 060h;0x60
+        MGA_CRTCEXT2_LineComp10         EQU 080h;0x80
     MGA_CRTCExt_Misc                    EQU 003h;0x03
         MGA_CRTCEXT3_ScaleDiv1          EQU 000h;0x00
         MGA_CRTCEXT3_ScaleDiv2          EQU 001h;0x01

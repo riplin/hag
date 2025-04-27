@@ -8171,7 +8171,7 @@ VESACallTable           DW offset GetSuperVGAInformation;Offset 0x584f          
                         DW offset GetSetDACPaletteControl;Offset 0x5e63         ;8
                         DW offset GetSetPaletteEntries;Offset 0x5eaf            ;9
                         DW offset GetProtectedModeInterface;Offset 0x5f21       ;a
-                        DW offset GetDeviceContextBuffer;Offset 0x5f41          ;b
+                        DW offset GetNearestPixelClock;Offset 0x5f41            ;b
 
 ;Offset 0x576b
 VESAResponseTemplate    DB 'VESA'       ;00h  4 BYTEs   (ret) signature ("VESA")
@@ -9153,7 +9153,7 @@ Label0x5f3e:                            ;Offset 0x5f3e
     mov       al, 004fh
     iret
 
-GetDeviceContextBuffer:                 ;Offset 0x5f41
+GetNearestPixelClock:                   ;Offset 0x5f41
     push      ax
     push      si
     push      edx

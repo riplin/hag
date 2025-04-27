@@ -163,3 +163,16 @@ MGA_MemAddr_MemoryReadBack              EQU 1e44h;0x1e44
     PCI_MGA_Opt_BIOSEnable              EQU 40000000h;0x40000000
     PCI_MGA_Opt_LittleEndian            EQU 00000000h;0x00000000
     PCI_MGA_Opt_BigEndian               EQU 80000000h;0x80000000
+
+;PCI_MGA_Option2
+    PCI_MGA_Opt2_MBufType0LVTTL         EQU 00000000h;0x00000000
+    PCI_MGA_Opt2_MBufType0SSTL_3        EQU 00001000h;0x00001000
+    PCI_MGA_Opt2_MBufType1LVTTL         EQU 00000000h;0x00000000
+    PCI_MGA_Opt2_MBufType1SSTL_3        EQU 00002000h;0x00002000
+    PCI_MGA_Opt2_MBufType_MASK          EQU 00003000h;0x00003000
+    PCI_MGA_Opt2_UseGfxClockDiv         EQU 00000000h;0x00000000
+    PCI_MGA_Opt2_NoGfxClockDiv          EQU 00004000h;0x00004000
+    PCI_MGA_Opt2_GfxClockDiv_MASK       EQU 00004000h;0x00004000
+    PCI_MGA_Opt2_UseMemClockDiv         EQU 00000000h;0x00000000
+    PCI_MGA_Opt2_NoMemClockDiv          EQU 00008000h;0x00008000
+    PCI_MGA_Opt2_MemClockDiv_MASK       EQU 00008000h;0x00008000

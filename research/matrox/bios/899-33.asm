@@ -7917,35 +7917,93 @@ Data0x53f6              DW 010ah        ;132x43 text
                         DW 0FFFFh
 
 ;Offset 0x53fa
-Data0x53fa              DW offset Data0x564c, 0010h     ;Offset 0x564c  0x100   640x400x256
-                        DW offset Data0x565a, 0010h     ;Offset 0x565a  0x101   640x480x256
-                        DW offset Data0x5692, 0000h     ;Offset 0x5692  0x102   800x600x16
-                        DW offset Data0x5668, 0010h     ;Offset 0x5668  0x103   800x600x256
-                        DW 0000h, 0000h
-                        DW offset Data0x5676, 0010h     ;Offset 0x5676  0x105   1024x768x256
-                        DW 0000h, 0000h
-                        DW offset Data0x5684, 0010h     ;Offset 0x5684  0x107   1280x1024x256
-                        DW 0000h, 00c0h
-                        DW 0000h, 0040h
-                        DW offset Data0x56a0, 00c0h     ;Offset 0x56a0  0x10a   132x43 text
-                        DW 0000h, 00c0h
-                        DW 0000h, 00c0h
-                        DW 0000h, 0000h
-                        DW 0000h, 0000h
-                        DW 0000h, 0000h
-                        DW offset Data0x565a, 0020h     ;Offset 0x565a  0x110   640x480x32K
-                        DW offset Data0x565a, 0060h     ;Offset 0x565a  0x111   640x480x64K
-                        DW offset Data0x565a, 0030h     ;Offset 0x565a  0x112   640x480x16M
-                        DW offset Data0x5668, 0020h     ;Offset 0x5668  0x113   800x600x32K
-                        DW offset Data0x5668, 0060h     ;Offset 0x5668  0x114   800x600x64K
-                        DW offset Data0x5668, 0030h     ;Offset 0x5668  0x115   800x600x16M
-                        DW offset Data0x5676, 0020h     ;Offset 0x5676  0x116   1024x768x32K
-                        DW offset Data0x5676, 0060h     ;Offset 0x5676  0x117   1024x768x64K
-                        DW offset Data0x5676, 0030h     ;Offset 0x5676  0x118   1024x768x16M
-                        DW offset Data0x5684, 0020h     ;Offset 0x5684  0x119   1280x1024x32K
-                        DW offset Data0x5684, 0060h     ;Offset 0x5684  0x11a   1280x1024x64K
-                        DW offset Data0x5684, 0030h     ;Offset 0x5684  0x11b   1280x1024x16M
-                        DW offset Data0x564c, 0010h     ;Offset 0x564c  0x11c   640x400x16 again?
+Data0x53fa              DW offset Data0x564c            ;Offset 0x564c  0x100   640x400x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x101   640x480x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW offset Data0x5692            ;Offset 0x5692  0x102   800x600x16
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x103   800x600x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x105   1024x768x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x107   1280x1024x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW 00000h
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 00000h
+                        DB BDA_EFBS_FeatureConnector1_0 ;0x40
+                        DB 000h
+                        DW offset Data0x56a0            ;Offset 0x56a0  0x10a   132x43 text
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 00000h
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 0000h
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x110   640x480x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x111   640x480x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x112   640x480x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x113   800x600x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x114   800x600x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x115   800x600x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x116   1024x768x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x117   1024x768x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x118   1024x768x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x119   1280x1024x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x11a   1280x1024x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x11b   1280x1024x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x564c            ;Offset 0x564c  0x11c   640x400x16 again?
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
 
 ;Offset 0x546e
 Data0x546e              DB 008h, 010h, 001h, 008h, 001h, 004h, 000h
@@ -8005,60 +8063,67 @@ Data0x560c              DB 084h, 02Ah, 008h, 058h, 02Ch, 001h, 003h, 000h, 002h,
                         DB 03Dh, 03Eh, 03Fh, 00Ch, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 010h, 00Eh, 000h, 0FFh
 
 ;Offset 0x564c
-Data0x564c              DB 057h, 062h, 000h, 000h
+Data0x564c              DD 000006257h   ;25,175
                         DW 0280h        ;640
                         DW 0190h        ;400
                         DB 01Ch, 013h
                         DW offset Data0x548d;Offset 0548dh
-                        DB 040h, 000h
+                        DB MGA_CRTCEXT1_HorBlankEnd;0x40
+                        DB 000h
 
 ;Offset 0x565a
-Data0x565a              DB 057h, 062h, 000h, 000h
+Data0x565a              DD 000006257h   ;25,175
                         DW 0280h        ;640
                         DW 01E0h        ;480
                         DB 01Ch, 013h
                         DW offset Data0x54cd;Offset 0x54cd
-                        DB 040h, 000h
+                        DB MGA_CRTCEXT1_HorBlankEnd;0x40
+                        DB 000h
 
 ;Offset 0x5668
-Data0x5668              DB 040h, 09Ch, 000h, 000h
+Data0x5668              DD 000009C40h   ;40,000
                         DW 0320h        ;800
                         DW 0258h        ;600
                         DB 01Ch, 013h
                         DW offset Data0x550d;Offset 0x550d
-                        DB 000h, 000h
+                        DB 000h
+                        DB 000h
 
 ;Offset 0x5676
-Data0x5676              DB 0E8h, 0FDh, 000h, 000h
+Data0x5676              DD 00000FDE8h   ;65,000
                         DW 0400h        ;1024
                         DW 0300h        ;768
                         DB 01Ch, 013h
                         DW offset Data0x554d;Offset 0x554d
-                        DB 000h, 000h
+                        DB 000h
+                        DB 000h
 
 ;Offset 0x5684
-Data0x5684              DB 0E0h, 0A5h, 001h, 000h
+Data0x5684              DD 00001A5E0h   ;108,000
                         DW 0500h        ;1280
                         DW 0400h        ;1024
                         DB 01Ch, 013h
                         DW offset Data0x558d;Offset 0x558d
-                        DB 040h, 021h
+                        DB MGA_CRTCEXT1_HorBlankEnd;0x40
+                        DB MGA_CRTCEXT2_VertRetrStrt10 OR MGA_CRTCEXT2_VertTotal10;021h
 
 ;Offset 0x5692
-Data0x5692              DB 058h, 098h, 000h, 000h
+Data0x5692              DD 000009858h   ;39,000
                         DW 0320h        ;800
                         DW 0258h        ;600
                         DB 01Bh, 012h
                         DW offset Data0x55cc;Offset 0x55cc
-                        DB 000h, 000h
+                        DB 000h
+                        DB 000h
 
 ;Offset 0x56a0
-Data0x56a0              DB 078h, 0A0h, 000h, 000h
+Data0x56a0              DD 00000A078h   ;41,080
                         DW 0420h        ;1056
                         DW 0158h        ;344
                         DB 018h, 003h
                         DW offset Data0x560c;Offset 0x560c
-                        DB 000h, 000h
+                        DB 000h
+                        DB 000h
 
 ;Offset 0x56ae
 VESACallTable           DW offset GetSuperVGAInformation;Offset 0x57a7          ;0
@@ -8072,7 +8137,7 @@ VESACallTable           DW offset GetSuperVGAInformation;Offset 0x57a7          
                         DW offset GetSetDACPaletteControl;Offset 0x5db8         ;8
                         DW offset GetSetPaletteEntries;Offset 0x5e01            ;9
                         DW offset GetProtectedModeInterface;Offset 0x5e73       ;a
-                        DW offset GetDeviceContextBuffer;Offset 0x5e93          ;b
+                        DW offset GetNearestPixelClock;Offset 0x5e93            ;b
 
 ;Offset 0x56c6
 VESAResponseTemplate    DB 'VESA'       ;00h  4 BYTEs   (ret) signature ("VESA")
@@ -9052,7 +9117,7 @@ Label0x5e90:                            ;Offset 0x5e90
     mov       al, 004fh
     iret
 
-GetDeviceContextBuffer:                 ;Offset 0x5e93
+GetNearestPixelClock:                   ;Offset 0x5e93
     push      ax
     push      si
     push      edx
@@ -11302,11 +11367,11 @@ Label0x6eae:                            ;Offset 0x6eae
     mov    cl, al
     call   WriteIndexedRegister         ;Offset 0x6a6b
     mov    ch, dl
-    inc    cl
+    inc    cl                           ;MGA_INDD_PIXPLL_N_Value
     call   WriteIndexedRegister         ;Offset 0x6a6b
     shr    edx, 0dh
     mov    ch, dl
-    inc    cl
+    inc    cl                           ;MGA_INDD_PIXPLL_P_Value
     call   WriteIndexedRegister         ;Offset 0x6a6b
     pop    dx
     push   dx

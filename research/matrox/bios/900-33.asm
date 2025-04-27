@@ -39,12 +39,12 @@ include ..\..\include\vga.inc
 include g200.inc
 
 ;Offset in calltables. Not sure on the names yet.
-MGA_DDCDisable0                         EQU 00h;0x00
-MGA_DDCDisable1                         EQU 02h;0x02
-MGA_DDCSet0                             EQU 04h;0x04
-MGA_DDCSet1                             EQU 06h;0x06
-MGA_DDCRead0                            EQU 08h;0x08
-MGA_DDCRead1                            EQU 0ah;0x0a
+MGA_DDCPin0Send1                        EQU 00h;0x00
+MGA_DDCPin1Send1                        EQU 02h;0x02
+MGA_DDCPin0Send0                        EQU 04h;0x04
+MGA_DDCPin1Send0                        EQU 06h;0x06
+MGA_DDCPin0Read                         EQU 08h;0x08
+MGA_DDCPin1Read                         EQU 0ah;0x0a
 
 PCI_VENDOR_Intel                        EQU 8086h;0x8086
 PCI_DEVICE_Triton_430FX                 EQU 122dh;0x122d
@@ -60,6 +60,14 @@ PCI_ACCESS_ReadDWord                    EQU 0ah;0x0a
 PCI_ACCESS_WriteByte                    EQU 0bh;0x0b
 PCI_ACCESS_WriteWord                    EQU 0ch;0x0c
 PCI_ACCESS_WriteDWord                   EQU 0dh;0x0d
+
+;ConfigurePixelClocks cx:
+MGA_CPC_PLLSetA                         EQU 000h;0x00
+MGA_CPC_PLLSetB                         EQU 001h;0x01
+MGA_CPC_PLLSetC                         EQU 002h;0x02
+MGA_CPC_ClockPCI                        EQU 000h;0x00
+MGA_CPC_ClockPLL                        EQU 004h;0x04
+MGA_CPC_ClockVDOCLK                     EQU 008h;0x08
 
 MGA_G200_Rev3                           EQU 03h;0x03
 
@@ -6762,26 +6770,26 @@ ScreenOn2 ENDP
 ;These four tables are order dependent (There's a pointer compare in one of the functions)
 
 ;Offset 0x4bd5
-DDCFuncsRev3Up          DW offset DDCDisablePin1    ;Offset 0x4d37  ;0
-                        DW offset DDCDisablePin3    ;Offset 0x4d1b  ;2
-                        DW offset DDCPin1SetOutput0 ;Offset 0x4d82  ;4
-                        DW offset DDCPin3SetOutput0 ;Offset 0x4d53  ;6
+DDCFuncsRev3Up          DW offset DDCPin1Send1      ;Offset 0x4d37  ;0
+                        DW offset DDCPin3Send1      ;Offset 0x4d1b  ;2
+                        DW offset DDCPin1Send0      ;Offset 0x4d82  ;4
+                        DW offset DDCPin3Send0      ;Offset 0x4d53  ;6
                         DW offset DDCPins01Read     ;Offset 0x4dfd  ;8
                         DW offset DDCPins23Read     ;Offset 0x4e23  ;a
 
 ;Offset 0x4be1
-DDCFuncs                DW offset DDCDisablePin1    ;Offset 0x4d37  ;0
-                        DW offset DDCDisablePin3    ;Offset 0x4d1b  ;2
-                        DW offset DDCPin1SetOutput0 ;Offset 0x4d82  ;4
-                        DW offset DDCPin3SetOutput0 ;Offset 0x4d53  ;6
+DDCFuncs                DW offset DDCPin1Send1      ;Offset 0x4d37  ;0
+                        DW offset DDCPin3Send1      ;Offset 0x4d1b  ;2
+                        DW offset DDCPin1Send0      ;Offset 0x4d82  ;4
+                        DW offset DDCPin3Send0      ;Offset 0x4d53  ;6
                         DW offset DDCPin1Read       ;Offset 0x4db1  ;8
                         DW offset DDCPin3Read       ;Offset 0x4dd7  ;a
 
 ;Offset 0x4bed
-MISCFuncs               DW offset MISCDisablePin0   ;Offset 0x4e65  ;0
-                        DW offset MISCDisablePin1   ;Offset 0x4e49  ;2
-                        DW offset MISCPin0SetOutput0;Offset 0x4eb0  ;4
-                        DW offset MISCPin1SetOutput0;Offset 0x4e81  ;6
+MISCFuncs               DW offset MISCPin0Send1     ;Offset 0x4e65  ;0
+                        DW offset MISCPin1Send1     ;Offset 0x4e49  ;2
+                        DW offset MISCPin0Send0     ;Offset 0x4eb0  ;4
+                        DW offset MISCPin1Send0     ;Offset 0x4e81  ;6
                         DW offset MISCPin0Read      ;Offset 0x4edf  ;8
                         DW offset MISCPin1Read      ;Offset 0x4f05  ;a
 
@@ -6805,6 +6813,7 @@ DDCUnknownFunction:                     ;Offset 0x4c13
     mov  ax, 0100h
     iret
 
+;Unused function
 Func0x4c17 PROC NEAR                    ;Offset 0x4c17
     push cx
     mov  cx, 0000h
@@ -6944,7 +6953,7 @@ Label0x4d1a:                            ;Offset 0x4d1a
     ret
 Func0x4cdb ENDP
 
-DDCDisablePin3 PROC NEAR                ;Offset 0x4d1b
+DDCPin3Send1 PROC NEAR                  ;Offset 0x4d1b
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
@@ -6960,9 +6969,9 @@ DDCDisablePin3 PROC NEAR                ;Offset 0x4d1b
     pop  edx
     pop  ecx
     ret
-DDCDisablePin3 ENDP
+DDCPin3Send1 ENDP
 
-DDCDisablePin1 PROC NEAR                ;Offset 0x4d37
+DDCPin1Send1 PROC NEAR                  ;Offset 0x4d37
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
@@ -6978,9 +6987,9 @@ DDCDisablePin1 PROC NEAR                ;Offset 0x4d37
     pop  edx
     pop  ecx
     ret
-DDCDisablePin1 ENDP
+DDCPin1Send1 ENDP
 
-DDCPin3SetOutput0 PROC NEAR             ;Offset 0x4d53
+DDCPin3Send0 PROC NEAR                  ;Offset 0x4d53
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
@@ -7006,9 +7015,9 @@ DDCPin3SetOutput0 PROC NEAR             ;Offset 0x4d53
     pop  edx
     pop  ecx
     ret
-DDCPin3SetOutput0 ENDP
+DDCPin3Send0 ENDP
 
-DDCPin1SetOutput0 PROC NEAR             ;Offset 0x4d82
+DDCPin1Send0 PROC NEAR                  ;Offset 0x4d82
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
@@ -7034,7 +7043,7 @@ DDCPin1SetOutput0 PROC NEAR             ;Offset 0x4d82
     pop  edx
     pop  ecx
     ret
-DDCPin1SetOutput0 ENDP
+DDCPin1Send0 ENDP
 
 DDCPin1Read PROC NEAR                   ;Offset 0x4db1
     push ecx
@@ -7128,7 +7137,7 @@ DDCPins23Read PROC NEAR                 ;Offset 0x4e23
     ret
 DDCPins23Read ENDP
 
-MISCDisablePin1 PROC NEAR               ;Offset 0x4e49
+MISCPin1Send1 PROC NEAR               ;Offset 0x4e49
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
@@ -7144,9 +7153,9 @@ MISCDisablePin1 PROC NEAR               ;Offset 0x4e49
     pop  edx
     pop  ecx
     ret
-MISCDisablePin1 ENDP
+MISCPin1Send1 ENDP
 
-MISCDisablePin0 PROC NEAR               ;Offset 0x4e65
+MISCPin0Send1 PROC NEAR               ;Offset 0x4e65
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
@@ -7162,9 +7171,9 @@ MISCDisablePin0 PROC NEAR               ;Offset 0x4e65
     pop  edx
     pop  ecx
     ret
-MISCDisablePin0 ENDP
+MISCPin0Send1 ENDP
 
-MISCPin1SetOutput0 PROC NEAR            ;Offset 0x4e81
+MISCPin1Send0 PROC NEAR                 ;Offset 0x4e81
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
@@ -7190,9 +7199,9 @@ MISCPin1SetOutput0 PROC NEAR            ;Offset 0x4e81
     pop  edx
     pop  ecx
     ret
-MISCPin1SetOutput0 ENDP
+MISCPin1Send0 ENDP
 
-MISCPin0SetOutput0 PROC NEAR            ;Offset 0x4eb0
+MISCPin0Send0 PROC NEAR                 ;Offset 0x4eb0
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
@@ -7218,7 +7227,7 @@ MISCPin0SetOutput0 PROC NEAR            ;Offset 0x4eb0
     pop  edx
     pop  ecx
     ret
-MISCPin0SetOutput0 ENDP
+MISCPin0Send0 ENDP
 
 MISCPin0Read PROC NEAR                  ;Offset 0x4edf
     push ecx
@@ -7510,6 +7519,13 @@ TimeOut:                                ;Offset 0x50c4
     ret
 Sleep ENDP
 
+;Unused function
+;
+;Pattern:
+;
+;Pin0: 1111111111111111111
+;Pin1: x010101010101010101
+;
 Func0x50d9 PROC NEAR                    ;Offset 0x50d9
     push cx
     push ds
@@ -7517,13 +7533,13 @@ Func0x50d9 PROC NEAR                    ;Offset 0x50d9
     pop  ds
     push word ptr ds:[BDA_SoftResetFlag];Offset 0x472
     push ds
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call SleepIfNeeded                  ;Offset 0x507f
     mov  cx, 0009h
 Label0x50ec:                            ;Offset 0x50ec
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
     call SleepIfNeeded                  ;Offset 0x507f
     loop Label0x50ec                    ;Offset 0x50ec
     pop  ds
@@ -7533,120 +7549,153 @@ Label0x50ec:                            ;Offset 0x50ec
     ret
 Func0x50d9 ENDP
 
+;Pin1: 0
+;
 Func0x5104 PROC NEAR                    ;Offset 0x5104
     push ecx
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call SleepIfNeeded                  ;Offset 0x507f
     pop  ecx
     ret
 Func0x5104 ENDP
 
-Func0x5110 PROC NEAR                   ;Offset 0x5110
+;
+;Pin0: 11r...00
+;Pin1: x1r...x0
+;
+;Note: Reads until both Pin0 and Pin1 are 1
+SendStartBit PROC NEAR                  ;Offset 0x5110
     push ecx
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
     mov  cl, 0ah
-Label0x511e:                            ;Offset 0x511e
+WaitFor1:                               ;Offset 0x511e
     call SleepIfNeeded                  ;Offset 0x507f
     dec  cl
     je   TimeOut                        ;Offset 0x513c
-    call word ptr cs:[si + MGA_DDCRead1];0x0a
-    jae  Label0x511e                    ;Offset 0x511e
-    call word ptr cs:[si + MGA_DDCRead0];0x08
-    jae  Label0x511e                    ;Offset 0x511e
-    call word ptr cs:[si + MGA_DDCSet0] ;0x04
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  WaitFor1                       ;Offset 0x511e
+    call word ptr cs:[si + MGA_DDCPin0Read];0x08
+    jae  WaitFor1                       ;Offset 0x511e
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
 TimeOut:                                ;Offset 0x513c
     mov  al, cl
     pop  ecx
     ret
-Func0x5110 ENDP
+SendStartBit ENDP
 
-TurnOffOutput PROC NEAR                 ;Offset 0x5141
+;
+;Pin0: 0001
+;Pin1: x011
+;
+SendStopBit PROC NEAR                   ;Offset 0x5141
     push ecx
-    call word ptr cs:[si + MGA_DDCSet0] ;0x04
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call SleepIfNeeded                  ;Offset 0x507f
     pop  ecx
     ret
-TurnOffOutput ENDP
+SendStopBit ENDP
 
-Func0x5161 PROC NEAR                    ;Offset 0x5161
+;
+;Pin0: 1r...xxxxxx
+;Pin1: xxxxx1r...0
+;
+WaitAck PROC NEAR                       ;Offset 0x5161
     push ecx
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     mov  cl, 0ah
-Label0x5168:                            ;Offset 0x5168
+Wait0:                                  ;Offset 0x5168
     dec  cl
-    je   Label0x518f                    ;Offset 0x518f
+    je   TimeOut                        ;Offset 0x518f
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCRead0];0x08
-    jb   Label0x5168                    ;Offset 0x5168
+    call word ptr cs:[si + MGA_DDCPin0Read];0x08
+    jb   Wait0                          ;Offset 0x5168
     mov  cl, 0ah
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
-Label0x517b:                            ;Offset 0x517b
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
+Wait1:                                  ;Offset 0x517b
     dec  cl
-    je   Label0x518f                    ;Offset 0x518f
+    je   TimeOut                        ;Offset 0x518f
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCRead1];0x0a
-    jae  Label0x517b                    ;Offset 0x517b
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  Wait1                          ;Offset 0x517b
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call SleepIfNeeded                  ;Offset 0x507f
-Label0x518f:                            ;Offset 0x518f
+TimeOut:                                ;Offset 0x518f
     mov  al, cl
     pop  ecx
     ret
-Func0x5161 ENDP
+WaitAck ENDP
 
-Func0x5194 PROC NEAR                    ;Offset 0x5194
+;
+;Pin0: 0000001
+;Pin1: x1r...0
+;
+SendAck PROC NEAR                       ;Offset 0x5194
     push ecx
-    call word ptr cs:[si + MGA_DDCSet0] ;0x04
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
     mov  cl, 0ah
-Label0x51a3:                            ;Offset 0x51a3
+Wait1:                                  ;Offset 0x51a3
     dec  cl
-    je   Label0x51ba                    ;Offset 0x51ba
+    je   TimeOut                        ;Offset 0x51ba
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCRead1];0x0a
-    jae  Label0x51a3                    ;Offset 0x51a3
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  Wait1                          ;Offset 0x51a3
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call SleepIfNeeded                  ;Offset 0x507f
-Label0x51ba:                            ;Offset 0x51ba
+TimeOut:                                ;Offset 0x51ba
     mov  al, cl
     pop  ecx
     ret
-Func0x5194 ENDP
+SendAck ENDP
 
+;
+;Pin0: 1111111
+;Pin1: x1r...0
+;
 Func0x51bf PROC NEAR                    ;Offset 0x51bf
     push ecx
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call SleepIfNeeded                  ;Offset 0x507f
     mov  cl, 0ah
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
 Label0x51cd:                            ;Offset 0x51cd
     dec  cl
-    je   Label0x51e4                    ;Offset 0x51e4
+    je   TimeOut                        ;Offset 0x51e4
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCRead1];0x0a
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
     jae  Label0x51cd                    ;Offset 0x51cd
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call SleepIfNeeded                  ;Offset 0x507f
-Label0x51e4:                            ;Offset 0x51e4
+TimeOut:                                ;Offset 0x51e4
     mov  al, cl
     pop  ecx
     ret
 Func0x51bf ENDP
 
-Func0x51e9 PROC NEAR                    ;Offset 0x51e9
+;input:
+;   al = data
+;
+;Data in: abcdefgh
+;
+;Pin0: aaaaaabbbbbbb
+;Pin1: x1r...01r...0 etc
+;
+;output:
+;   al = 0 = success, not 0 = failure
+I2CSendByte PROC NEAR                   ;Offset 0x51e9
     push ecx
     push edx
     mov  cl, 08h
@@ -7654,58 +7703,73 @@ Func0x51e9 PROC NEAR                    ;Offset 0x51e9
 Label0x51f1:                            ;Offset 0x51f1
     shl  ch, 01h
     jb   Label0x51fb                    ;Offset 0x51fb
-    call word ptr cs:[si + MGA_DDCSet0] ;0x04
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
     jmp  Label0x51fe                    ;Offset 0x51fe
 Label0x51fb:                            ;Offset 0x51fb
-    call word ptr cs:[si + MGA_DDCDisable0];0x00
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
 Label0x51fe:                            ;Offset 0x51fe
     mov  dl, 0ah
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
 Label0x5207:                            ;Offset 0x5207
     dec  dl
-    je   Label0x521c                    ;Offset 0x521c
+    je   TimeOut                        ;Offset 0x521c
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCRead1];0x0a
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
     jae  Label0x5207                    ;Offset 0x5207
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
+    call word ptr cs:[si + MGA_DDCPin1Send0] ;0x06
     dec  cl
     jne  Label0x51f1                    ;Offset 0x51f1
-Label0x521c:                            ;Offset 0x521c
+TimeOut:                                ;Offset 0x521c
     mov  al, dl
     pop  edx
     pop  ecx
     ret
-Func0x51e9 ENDP
+I2CSendByte ENDP
 
-Func0x5223 PROC NEAR                    ;Offset 0x5223
+;
+;Pin0: xxxxxaxxxxxb
+;Pin1: 1r...01r...0 etc
+;
+;Data out: abcdefgh
+;
+;ah = 0 = success, not 0 = time out
+;al = data
+I2CReadByte PROC NEAR                   ;Offset 0x5223
     push ecx
     push edx
     xor  ch, ch
     mov  cl, 08h
 Label0x522b:                            ;Offset 0x522b
     mov  dl, 0ah
-    call word ptr cs:[si + MGA_DDCDisable1];0x02
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
 Label0x5231:                            ;Offset 0x5231
     dec  dl
-    je   Label0x5251                    ;Offset 0x5251
+    je   TimeOut                        ;Offset 0x5251
     call SleepIfNeeded                  ;Offset 0x507f
-    call word ptr cs:[si + MGA_DDCRead1];0x0a
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
     jae  Label0x5231                    ;Offset 0x5231
-    call word ptr cs:[si + MGA_DDCRead0];0x08
+    call word ptr cs:[si + MGA_DDCPin0Read];0x08
     rcl  ch, 01h
-    call word ptr cs:[si + MGA_DDCSet1] ;0x06
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call SleepIfNeeded                  ;Offset 0x507f
     dec  cl
     jne  Label0x522b                    ;Offset 0x522b
     mov  al, ch
-Label0x5251:                            ;Offset 0x5251
+TimeOut:                                ;Offset 0x5251
     mov  ah, dl
     pop  edx
     pop  ecx
     ret
-Func0x5223 ENDP
+I2CReadByte ENDP
 
+;
+;inputs:
+;   ecx   = 
+;   edx   =
+;   es:di = 
+;
+;
 Func0x5258 PROC NEAR                    ;Offset 0x5258
     push     ecx
     shr      ecx, 08h
@@ -7717,48 +7781,48 @@ Func0x5258 PROC NEAR                    ;Offset 0x5258
 Label0x526f:                            ;Offset 0x526f
     cmp      cl, 00h
     je       Label0x5299                ;Offset 0x5299
-    call     Func0x5110                 ;Offset 0x5110
+    call     SendStartBit               ;Offset 0x5110
     or       al, al
-    je       NotDetected                ;Offset 0x534f
-    mov      al, 60h
-    call     Func0x51e9                 ;Offset 0x51e9
+    je       TimeOut                    ;Offset 0x534f
+    mov      al, 60h                    ;Segment pointer address?
+    call     I2CSendByte                ;Offset 0x51e9
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
-    call     Func0x5161                 ;Offset 0x5161
-    mov      al, cl
-    call     Func0x51e9                 ;Offset 0x51e9
+    je       SendStop                   ;Offset 0x5340
+    call     WaitAck                    ;Offset 0x5161
+    mov      al, cl                     ;Segment Pointer value?
+    call     I2CSendByte                ;Offset 0x51e9
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
-    call     Func0x5161                 ;Offset 0x5161
+    je       SendStop                   ;Offset 0x5340
+    call     WaitAck                    ;Offset 0x5161
 Label0x5299:                            ;Offset 0x5299
     mov      cl, 01h
 Label0x529b:                            ;Offset 0x529b
     push     edx
     push     edi
-    call     Func0x5110                 ;Offset 0x5110
+    call     SendStartBit               ;Offset 0x5110
     or       al, al
-    je       NotDetected                ;Offset 0x534f
+    je       TimeOut                    ;Offset 0x534f
     or       dx, dx
     ;je       Label0x52f6                ;Offset 0x52f6
     DB 00Fh, 084h, 048h, 000h           ;Weird misassemble
     mov      al, ch
-    and      al, 0feh
-    call     Func0x51e9                 ;Offset 0x51e9
+    and      al, 0feh                   ;DDC Write address?
+    call     I2CSendByte                ;Offset 0x51e9
     or       al, al
-    ;je       Label0x5340                ;Offset 0x5340
+    ;je       SendStop                   ;Offset 0x5340
     DB 00Fh, 084h, 085h, 000h           ;Weird misassemble
-    call     Func0x5161                 ;Offset 0x5161
+    call     WaitAck                    ;Offset 0x5161
     or       al, al
-    ;je       Label0x5340                ;Offset 0x5340
+    ;je       SendStop                   ;Offset 0x5340
     DB 00Fh, 084h, 07Ch, 000h           ;Weird misassemble
 Label0x52c4:                            ;Offset 0x52c4
-    mov      al, byte ptr [di]
-    call     Func0x51e9                 ;Offset 0x51e9
+    mov      al, byte ptr [di]          ;DDC Offset?
+    call     I2CSendByte                ;Offset 0x51e9
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
-    call     Func0x5161                 ;Offset 0x5161
+    je       SendStop                   ;Offset 0x5340
+    call     WaitAck                    ;Offset 0x5161
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
+    je       SendStop                   ;Offset 0x5340
     inc      di
     dec      dx
     jne      Label0x52c4                ;Offset 0x52c4
@@ -7771,52 +7835,52 @@ Label0x52e8:                            ;Offset 0x52e8
     call     SleepIfNeeded              ;Offset 0x507f
     dec      al
     jne      Label0x52e8                ;Offset 0x52e8
-    call     Func0x5110                 ;Offset 0x5110
+    call     SendStartBit               ;Offset 0x5110
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
+    je       SendStop                   ;Offset 0x5340
 Label0x52f6:                            ;Offset 0x52f6
     mov      al, ch
     or       al, 01h
-    call     Func0x51e9                 ;Offset 0x51e9
+    call     I2CSendByte                ;Offset 0x51e9
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
-    call     Func0x5161                 ;Offset 0x5161
+    je       SendStop                   ;Offset 0x5340
+    call     WaitAck                    ;Offset 0x5161
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
+    je       SendStop                   ;Offset 0x5340
     shr      edi, 10h
     shr      edx, 10h
     dec      dx
     ;je       Label0x532a                ;Offset 0x532a
     DB 00Fh, 084h, 015h, 000h           ;Weird misassemble
 Label0x5315:                            ;Offset 0x5315
-    call     Func0x5223                 ;Offset 0x5223
+    call     I2CReadByte                ;Offset 0x5223
     or       ah, ah
-    je       Label0x5340                ;Offset 0x5340
+    je       SendStop                   ;Offset 0x5340
     mov      byte ptr es:[di], al
-    call     Func0x5194                 ;Offset 0x5194
+    call     SendAck                    ;Offset 0x5194
     or       al, al
-    je       Label0x5340                ;Offset 0x5340
+    je       SendStop                   ;Offset 0x5340
     inc      di
     dec      dx
     jne      Label0x5315                ;Offset 0x5315
 Label0x532a:                            ;Offset 0x532a
-    call     Func0x5223                 ;Offset 0x5223
+    call     I2CReadByte                ;Offset 0x5223
     or       ah, ah
-    je       Label0x5340                ;Offset 0x5340
+    je       SendStop                   ;Offset 0x5340
     mov      byte ptr es:[di], al
     call     Func0x51bf                 ;Offset 0x51bf
 Label0x5337:                            ;Offset 0x5337
     mov      cl, 01h
     or       ecx, 00010000h
-Label0x5340:                            ;Offset 0x5340
+SendStop:                               ;Offset 0x5340
     call     SleepIfNeeded              ;Offset 0x507f
-    call     TurnOffOutput              ;Offset 0x5141
+    call     SendStopBit                ;Offset 0x5141
     mov      al, 05h
 Delay:                                  ;Offset 0x5348
     call     SleepIfNeeded              ;Offset 0x507f
     dec      al
     jne      Delay                      ;Offset 0x5348
-NotDetected:                            ;Offset 0x534f
+TimeOut:                                ;Offset 0x534f
     pop      edi
     pop      edx
     dec      cl
@@ -7848,6 +7912,10 @@ Label0x5376:                            ;Offset 0x5376
     ret
 Func0x5362 ENDP
 
+;
+;
+;
+;
 Func0x5382 PROC NEAR                    ;Offset 0x5382
     push     ds
     push     bx
@@ -7916,35 +7984,93 @@ Data0x53f6              DW 010ah        ;132x43 text
                         DW 0FFFFh
 
 ;Offset 0x53fa
-Data0x53fa              DW offset Data0x564c, 0010h     ;Offset 0x564c  0x100   640x400x256
-                        DW offset Data0x565a, 0010h     ;Offset 0x565a  0x101   640x480x256
-                        DW offset Data0x5692, 0000h     ;Offset 0x5692  0x102   800x600x16
-                        DW offset Data0x5668, 0010h     ;Offset 0x5668  0x103   800x600x256
-                        DW 0000h, 0000h
-                        DW offset Data0x5676, 0010h     ;Offset 0x5676  0x105   1024x768x256
-                        DW 0000h, 0000h
-                        DW offset Data0x5684, 0010h     ;Offset 0x5684  0x107   1280x1024x256
-                        DW 0000h, 00c0h
-                        DW 0000h, 0040h
-                        DW offset Data0x56a0, 00c0h     ;Offset 0x56a0  0x10a   132x43 text
-                        DW 0000h, 00c0h
-                        DW 0000h, 00c0h
-                        DW 0000h, 0000h
-                        DW 0000h, 0000h
-                        DW 0000h, 0000h
-                        DW offset Data0x565a, 0020h     ;Offset 0x565a  0x110   640x480x32K
-                        DW offset Data0x565a, 0060h     ;Offset 0x565a  0x111   640x480x64K
-                        DW offset Data0x565a, 0030h     ;Offset 0x565a  0x112   640x480x16M
-                        DW offset Data0x5668, 0020h     ;Offset 0x5668  0x113   800x600x32K
-                        DW offset Data0x5668, 0060h     ;Offset 0x5668  0x114   800x600x64K
-                        DW offset Data0x5668, 0030h     ;Offset 0x5668  0x115   800x600x16M
-                        DW offset Data0x5676, 0020h     ;Offset 0x5676  0x116   1024x768x32K
-                        DW offset Data0x5676, 0060h     ;Offset 0x5676  0x117   1024x768x64K
-                        DW offset Data0x5676, 0030h     ;Offset 0x5676  0x118   1024x768x16M
-                        DW offset Data0x5684, 0020h     ;Offset 0x5684  0x119   1280x1024x32K
-                        DW offset Data0x5684, 0060h     ;Offset 0x5684  0x11a   1280x1024x64K
-                        DW offset Data0x5684, 0030h     ;Offset 0x5684  0x11b   1280x1024x16M
-                        DW offset Data0x564c, 0010h     ;Offset 0x564c  0x11c   640x400x16 again?
+Data0x53fa              DW offset Data0x564c            ;Offset 0x564c  0x100   640x400x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x101   640x480x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW offset Data0x5692            ;Offset 0x5692  0x102   800x600x16
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x103   800x600x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x105   1024x768x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x107   1280x1024x256
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
+                        DW 00000h
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 00000h
+                        DB BDA_EFBS_FeatureConnector1_0 ;0x40
+                        DB 000h
+                        DW offset Data0x56a0            ;Offset 0x56a0  0x10a   132x43 text
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 00000h
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 0000h
+                        DB BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_FeatureConnector1_1;0xc0
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW 00000h
+                        DB 000h
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x110   640x480x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x111   640x480x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x565a            ;Offset 0x565a  0x112   640x480x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x113   800x600x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x114   800x600x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x5668            ;Offset 0x5668  0x115   800x600x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x116   1024x768x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x117   1024x768x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x5676            ;Offset 0x5676  0x118   1024x768x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x119   1280x1024x32K
+                        DB BDA_EFBS_FeatureConnector0_1 ;0x20
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x11a   1280x1024x64K
+                        DB BDA_EFBS_FeatureConnector0_1 OR BDA_EFBS_FeatureConnector1_0;0x60
+                        DB 000h
+                        DW offset Data0x5684            ;Offset 0x5684  0x11b   1280x1024x16M
+                        DB BDA_EFBS_FeatureConnector0_0 OR BDA_EFBS_FeatureConnector0_1;0x30
+                        DB 000h
+                        DW offset Data0x564c            ;Offset 0x564c  0x11c   640x400x16 again?
+                        DB BDA_EFBS_FeatureConnector0_0 ;0x10
+                        DB 000h
 
 ;Offset 0x546e
 Data0x546e              DB 008h, 010h, 001h, 008h, 001h, 004h, 000h
@@ -8004,7 +8130,7 @@ Data0x560c              DB 084h, 02Ah, 008h, 058h, 02Ch, 001h, 003h, 000h, 002h,
                         DB 03Dh, 03Eh, 03Fh, 00Ch, 000h, 00Fh, 000h, 000h, 000h, 000h, 000h, 000h, 010h, 00Eh, 000h, 0FFh
 
 ;Offset 0x564c
-Data0x564c              DB 057h, 062h, 000h, 000h
+Data0x564c              DD 000006257h   ;25,175 KHz
                         DW 0280h        ;640
                         DW 0190h        ;400
                         DB 01Ch, 013h
@@ -8012,7 +8138,7 @@ Data0x564c              DB 057h, 062h, 000h, 000h
                         DB 040h, 000h
 
 ;Offset 0x565a
-Data0x565a              DB 057h, 062h, 000h, 000h
+Data0x565a              DD 000006257h   ;25,175 KHz
                         DW 0280h        ;640
                         DW 01E0h        ;480
                         DB 01Ch, 013h
@@ -8020,7 +8146,7 @@ Data0x565a              DB 057h, 062h, 000h, 000h
                         DB 040h, 000h
 
 ;Offset 0x5668
-Data0x5668              DB 040h, 09Ch, 000h, 000h
+Data0x5668              DD 000009C40h   ;40,000 KHz
                         DW 0320h        ;800
                         DW 0258h        ;600
                         DB 01Ch, 013h
@@ -8028,7 +8154,7 @@ Data0x5668              DB 040h, 09Ch, 000h, 000h
                         DB 000h, 000h
 
 ;Offset 0x5676
-Data0x5676              DB 0E8h, 0FDh, 000h, 000h
+Data0x5676              DD 00000FDE8h   ;65,000 KHz
                         DW 0400h        ;1024
                         DW 0300h        ;768
                         DB 01Ch, 013h
@@ -8036,7 +8162,7 @@ Data0x5676              DB 0E8h, 0FDh, 000h, 000h
                         DB 000h, 000h
 
 ;Offset 0x5684
-Data0x5684              DB 0E0h, 0A5h, 001h, 000h
+Data0x5684              DD 00001A5E0h   ;108,000 KHz
                         DW 0500h        ;1280
                         DW 0400h        ;1024
                         DB 01Ch, 013h
@@ -8044,7 +8170,7 @@ Data0x5684              DB 0E0h, 0A5h, 001h, 000h
                         DB 040h, 021h
 
 ;Offset 0x5692
-Data0x5692              DB 058h, 098h, 000h, 000h
+Data0x5692              DD 000009858h   ;39,000 KHz
                         DW 0320h        ;800
                         DW 0258h        ;600
                         DB 01Bh, 012h
@@ -8052,7 +8178,7 @@ Data0x5692              DB 058h, 098h, 000h, 000h
                         DB 000h, 000h
 
 ;Offset 0x56a0
-Data0x56a0              DB 078h, 0A0h, 000h, 000h
+Data0x56a0              DD 00000A078h   ;41,080 KHz
                         DW 0420h        ;1056
                         DW 0158h        ;344
                         DB 018h, 003h
@@ -8071,7 +8197,7 @@ VESACallTable           DW offset GetSuperVGAInformation;Offset 0x57a7          
                         DW offset GetSetDACPaletteControl;Offset 0x5db8         ;8
                         DW offset GetSetPaletteEntries;Offset 0x5e01            ;9
                         DW offset GetProtectedModeInterface;Offset 0x5e73       ;a
-                        DW offset GetDeviceContextBuffer;Offset 0x5e93          ;b
+                        DW offset GetNearestPixelClock;Offset 0x5e93            ;b
 
 ;Offset 0x56c6
 VESAResponseTemplate    DB 'VESA'       ;00h  4 BYTEs   (ret) signature ("VESA")
@@ -9051,7 +9177,15 @@ Label0x5e90:                            ;Offset 0x5e90
     mov       al, 004fh
     iret
 
-GetDeviceContextBuffer:                 ;Offset 0x5e93
+;inputs:
+;    ax = sub function (0 = request), (not 0 = set)
+;   ecx = Requested clock frequency in Hz
+;    dx = mode number (unused)
+;
+;outputs (sub function 0):
+;   ecx = nearest clock rate in Hz
+;
+GetNearestPixelClock:                   ;Offset 0x5e93
     push      ax
     push      si
     push      edx
@@ -9060,17 +9194,17 @@ GetDeviceContextBuffer:                 ;Offset 0x5e93
     mov       si, ax
     xor       edx, edx
     mov       eax, ecx
-    mov       ecx, 000003e8h
-    div       ecx
-    mov       bx, 0002h
+    mov       ecx, 000003e8h            ;1,000
+    div       ecx                       ;divide clock rate by 1,000 (so convert to Khz)
+    mov       bx, 0002h                 ;Unused in function, stomped
     nop
-    call      Func0x6b47                ;Offset 0x6b47
-    mul       ecx
+    call      CalculatePLL_MNPS_AndNearestClockRate;Offset 0x6b47
+    mul       ecx                       ;multiply by 1,000 (back to Hz)
     mov       ecx, eax
     and       si, 00ffh
     je        Label0x5ec4               ;Offset 0x5ec4
-    mov       cl, 06h
-    call      Func0x6e51                ;Offset 0x6e51
+    mov       cl, MGA_CPC_PLLSetC OR MGA_CPC_ClockPLL;0x6
+    call      ConfigurePixelClocks      ;Offset 0x6e51
 Label0x5ec4:                            ;Offset 0x5ec4
     pop       ebx
     pop       eax
@@ -10373,7 +10507,8 @@ Label0x6816:                            ;Offset 0x6816
     ret
 Func0x66b1 ENDP
 
-Func0x6837 PROC NEAR                    ;Offset 0x6837
+;Thankfully, this function is not used.
+WriteUndocumentedRegister PROC NEAR     ;Offset 0x6837
     push  cx
     mov   bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     mov   al, byte ptr cs:[Data0x7ff1]  ;Offset 0x7ff1
@@ -10405,7 +10540,7 @@ Label0x6861:                            ;Offset 0x6861
     call  WriteIndexedRegister          ;Offset 0x6a6b
     pop   cx
     ret
-Func0x6837 ENDP
+WriteUndocumentedRegister ENDP
 
 Func0x686a PROC NEAR                    ;Offset 0x686a
     push  ax
@@ -10935,7 +11070,23 @@ Label0x6b3c:                            ;Offset 0x6b3c
     ret
 Func0x6a97 ENDP
 
-Func0x6b47 PROC NEAR                    ;Offset 0x6b47
+;
+;Calculate the M, N, P and S values for the PLL's and nearest clock rate in KHz
+;given an input frequency in KHz
+;
+;inputs:
+;   eax = requested frequency in KHz
+;
+;outputs:
+;   eax = nearest clock rate in KHz
+;   ebx = M,N,P and S values
+;         bl holds N in lower 7 bits
+;         bh holds M in lower 5 bits
+;         bh holds P in upper 3 bits
+;         S 2 bits sit above bh
+;         00000000 000000SS PPPMMMMM xNNNNNNN
+;
+CalculatePLL_MNPS_AndNearestClockRate PROC NEAR;Offset 0x6b47
     push   bp
     mov    bp, sp
     sub    sp, 001ch
@@ -10950,17 +11101,17 @@ Func0x6b47 PROC NEAR                    ;Offset 0x6b47
     DB 00Fh, 084h, 012h, 000h
     ;add    ax, 64h
     DB 005h, 064h, 000h
-    mov    ebx, 000003e8h
+    mov    ebx, 000003e8h               ;1,000
     mul    ebx
     mov    dword ptr [bp - 08h], eax
     jmp    Label0x6b84                  ;Offset 0x6b84
 Label0x6b7c:                            ;Offset 0x6b7c
-    mov    dword ptr [bp - 08h], 00035b60h
+    mov    dword ptr [bp - 08h], 00035b60h;220,000
 Label0x6b84:                            ;Offset 0x6b84
     mov    eax, dword ptr [bp - 04h]
-    cmp    eax, 00001876h
+    cmp    eax, 00001876h               ;6,262
     jae    Label0x6b96                  ;Offset 0x6b96
-    mov    eax, 00001876h
+    mov    eax, 00001876h               ;6,262
 Label0x6b96:                            ;Offset 0x6b96
     cmp    eax, dword ptr [bp - 08h]
     jbe    Label0x6ba0                  ;Offset 0x6ba0
@@ -10970,7 +11121,7 @@ Label0x6ba0:                            ;Offset 0x6ba0
     xor    edx, edx
     mov    ebx, 00000005h
     mul    ebx
-    mov    ebx, 000003e8h
+    mov    ebx, 000003e8h               ;1,000
     div    ebx
     mov    dword ptr [bp - 1ch], eax
     mov    ecx, 00000003h
@@ -10978,7 +11129,7 @@ Label0x6bc3:                            ;Offset 0x6bc3
     mov    eax, dword ptr [bp - 04h]
     shl    eax, cl
     shl    ecx, 10h
-    cmp    eax, 0000c350h
+    cmp    eax, 0000c350h               ;50,000
     jb     Label0x6c7d                  ;Offset 0x6c7d
     cmp    eax, dword ptr [bp - 08h]
     ja     Label0x6c73                  ;Offset 0x6c73
@@ -10987,11 +11138,11 @@ Label0x6bc3:                            ;Offset 0x6bc3
 Label0x6be4:                            ;Offset 0x6be4
     xor    edx, edx
     xor    ebx, ebx
-    mov    eax, 00006978h
+    mov    eax, 00006978h               ;27,000
     test   byte ptr cs:[Data0x7d34], 20h;Offset 0x7d34
     ;je     Label0x6c00                  ;Offset 0x6c00
     DB 00Fh, 084h, 006h, 000h
-    mov    eax, 000037eeh
+    mov    eax, 000037eeh               ;14,318
 Label0x6c00:                            ;Offset 0x6c00
     mov    bl, cl
     inc    bl
@@ -11002,7 +11153,7 @@ Label0x6c00:                            ;Offset 0x6c00
     cmp    eax, dword ptr [bp - 08h]
     ;ja     Label0x6c68                  ;Offset 0x6c68
     DB 00Fh, 087h, 052h, 000h
-    ;cmp    eax, 0000c350h
+    ;cmp    eax, 0000c350h               ;50,000
     DB 066h, 03Dh, 050h, 0C3h, 000h, 000h
     ;jb    Label0x6c5f                   ;Offset 0x6c5f
     DB 00Fh, 082h, 03Fh, 000h
@@ -11054,25 +11205,25 @@ Label0x6c85:                            ;Offset 0x6c85
     shl    ax, 0dh
     or     bx, ax
     xor    eax, eax
-    cmp    edx, 000186a0h
+    cmp    edx, 000186a0h               ;100,000
     ja     Label0x6caf                  ;Offset 0x6caf
-    mov    ax, 0000h
+    mov    ax, 0000h                    ;PixPLL S
     jmp    Label0x6cce                  ;Offset 0x6cce
 Label0x6caf:                            ;Offset 0x6caf
-    cmp    edx, 000222e0h
+    cmp    edx, 000222e0h               ;140,000
     ja     Label0x6cbd                  ;Offset 0x6cbd
-    mov    ax, 0001h
+    mov    ax, 0001h                    ;PixPLL S
     jmp    Label0x6cce                  ;Offset 0x6cce
 Label0x6cbd:                            ;Offset 0x6cbd
-    cmp    edx, 0002bf20h
+    cmp    edx, 0002bf20h               ;180,000
     ja     Label0x6ccb                  ;Offset 0x6ccb
-    mov    ax, 0002h
+    mov    ax, 0002h                    ;PixPLL S
     jmp    Label0x6cce                  ;Offset 0x6cce
 Label0x6ccb:                            ;Offset 0x6ccb
-    mov    ax, 0003h
+    mov    ax, 0003h                    ;PixPLL S
 Label0x6cce:                            ;Offset 0x6cce
     shl    eax, 10h
-    or     ebx, eax
+    or     ebx, eax                     ;Merge S value
     mov    eax, edx
     shr    eax, cl
     pop    edx
@@ -11080,22 +11231,25 @@ Label0x6cce:                            ;Offset 0x6cce
     mov    sp, bp
     pop    bp
     ret
-Func0x6b47 ENDP
+CalculatePLL_MNPS_AndNearestClockRate ENDP
 
 ;
 ;inputs:
-;   cx = bit 2 = gclkdiv
-;            3 = mclkdiv
-;
-Func0x6ce3 PROC NEAR                    ;Offset 0x6ce3
+;  edx = Requested frequency in Hz
+;   cx = bits 1-0 = sysclksl
+;        bit    2 = gclkdiv
+;        bit    3 = mclkdiv
+;        bit    5 = nogclkdiv
+;        bit    6 = nomclkdiv
+ConfigureSystemClock PROC NEAR          ;Offset 0x6ce3
     push   eax
     push   ebx
     push   ecx
     push   edx
     push   esi
     push   cx
-    and    cl, 01h
-    jne    Label0x6d32                  ;Offset 0x6d32
+    and    cl, 01h                      ;bit 0
+    jne    NotPLL                       ;Offset 0x6d32
     mov    bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     mov    di, PCI_MGA_Option           ;0x40
     mov    al, PCI_ACCESS_ReadByte      ;0x8
@@ -11107,7 +11261,7 @@ Func0x6ce3 PROC NEAR                    ;Offset 0x6ce3
     mov    al, PCI_ACCESS_ReadByte      ;0x8
     call   AccessPCIRegister            ;Offset 0x68f8
     mov    al, dl
-    and    al, 03h                      ;bits 1,0
+    and    al, PCI_MGA_Opt_SysClockSelect_MASK;bits 1,0
     jne    Label0x6d1f                  ;Offset 0x6d1f
     and    cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
     mov    al, PCI_ACCESS_WriteByte     ;0xb
@@ -11121,10 +11275,10 @@ Label0x6d1f:                            ;Offset 0x6d1f
     mov    al, PCI_ACCESS_WriteByte     ;0xb
     call   AccessPCIRegister            ;Offset 0x68f8
     jmp    Label0x6de5                  ;Offset 0x6de5
-Label0x6d32:                            ;Offset 0x6d32
+NotPLL:                                 ;Offset 0x6d32
     mov    eax, edx
-    mov    bx, 0000h
-    call   Func0x6b47                   ;Offset 0x6b47
+    mov    bx, 0000h                    ;Unused in function, stomped
+    call   CalculatePLL_MNPS_AndNearestClockRate;Offset 0x6b47
     push   ebx
     mov    bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
     mov    di, PCI_MGA_Option           ;0x40
@@ -11206,9 +11360,9 @@ Label0x6de5:                            ;Offset 0x6de5
     mov    di, PCI_MGA_Option2 + 01h    ;0x51
     mov    al, PCI_ACCESS_ReadByte      ;0x8
     call   AccessPCIRegister            ;Offset 0x68f8
-    and    cl, 3fh
-    and    dl, 60h
-    shl    dl, 01h
+    and    cl, NOT ((PCI_MGA_Opt2_GfxClockDiv_MASK OR PCI_MGA_Opt2_MemClockDiv_MASK) SHR 8);0x3f
+    and    dl, 60h                      ;bits 6,5
+    shl    dl, 01h                      ;bits 7,6
     or     cl, dl
     mov    al, PCI_ACCESS_WriteByte     ;0xb
     call   AccessPCIRegister            ;Offset 0x68f8
@@ -11216,10 +11370,10 @@ Label0x6de5:                            ;Offset 0x6de5
     mov    al, PCI_ACCESS_ReadByte      ;0x8
     call   AccessPCIRegister            ;Offset 0x68f8
     mov    dl, byte ptr cs:[Data0x7d3a] ;Offset 0x7d3a
-    and    dl, 03h
+    and    dl, PCI_MGA_Opt2_MBufType_MASK SHR 12;0x3
     shl    dl, 04h
     mov    ch, cl
-    and    cl, 30h
+    and    cl, PCI_MGA_Opt2_MBufType_MASK SHR 8;0x30
     ;cmp    cl, dl
     DB 03Ah, 0CAh
     je     Label0x6e36                  ;Offset 0x6e36
@@ -11241,9 +11395,20 @@ Label0x6e36:                            ;Offset 0x6e36
     pop    ebx
     pop    eax
     ret
-Func0x6ce3 ENDP
+ConfigureSystemClock ENDP
 
-Func0x6e51 PROC NEAR                    ;Offset 0x6e51
+;
+;inputs:
+;   ebx = M,N,P and S values
+;         bl holds N in lower 7 bits
+;         bh holds M in lower 5 bits
+;         bh holds P in upper 3 bits
+;         S 2 bits sit above bh
+;         00000000 000000SS PPPMMMMM xNNNNNNN
+;    cl = bits 1-0 = PLL Set A = 0, B = 1, C = 2
+;         bits 7-2 = Clock select: 0 = PCI, 1 = PLL, 2 = VDOCLK
+;
+ConfigurePixelClocks PROC NEAR          ;Offset 0x6e51
     push   eax
     push   ebx
     push   ecx
@@ -11383,17 +11548,26 @@ Label0x6f33:                            ;Offset 0x6f33
     pop    ebx
     pop    eax
     ret
-Func0x6e51 ENDP
+ConfigurePixelClocks ENDP
 
+;inputs:
+;   edx = requested frequency in KHz
+;
+;outputs:
+;   -
+;
+;destroys:
+;   -
+;
 Func0x6f68 PROC NEAR                    ;Offset 0x6f68
     push   eax
     push   ebx
     push   ecx
-    mov    cl, 06h
+    mov    cl, MGA_CPC_PLLSetC OR MGA_CPC_ClockPLL;0x6
     mov    eax, edx
-    mov    bx, 0002h
-    call   Func0x6b47                   ;Offset 0x6b47
-    call   Func0x6e51                   ;Offset 0x6e51
+    mov    bx, 0002h                    ;Unused in function, stomped
+    call   CalculatePLL_MNPS_AndNearestClockRate;Offset 0x6b47
+    call   ConfigurePixelClocks         ;Offset 0x6e51
     pop    ecx
     pop    ebx
     pop    eax
@@ -11416,12 +11590,12 @@ Label0x6f97:                            ;Offset 0x6f97
     or     ax, ax
     ;jne    Label0x6fa7                  ;Offset 0x6fa7
     DB 00Fh, 085h, 003h, 000h
-    mov    ax, 6257h
+    mov    ax, 6257h                    ;25,175
 Label0x6fa7:                            ;Offset 0x6fa7
-    mov    bx, 0002h
-    call   Func0x6b47                   ;Offset 0x6b47
-    mov    cl, 04h
-    call   Func0x6e51                   ;Offset 0x6e51
+    mov    bx, 0002h                    ;Unused in function, stomped
+    call   CalculatePLL_MNPS_AndNearestClockRate;Offset 0x6b47
+    mov    cl, MGA_CPC_PLLSetA OR MGA_CPC_ClockPLL;0x4
+    call   ConfigurePixelClocks         ;Offset 0x6e51
     mov    cl, byte ptr cs:[Data0x7d2a] ;Offset 0x7d2a
     cmp    cl, 0ffh
     ;jne    Label0x6fc0                  ;Offset 0x6fc0
@@ -11434,12 +11608,12 @@ Label0x6fc0:                            ;Offset 0x6fc0
     or     ax, ax
     ;jne    Label0x6fd0                  ;Offset 0x6fd0
     DB 00Fh, 085h, 003h, 000h
-    mov    ax, 6ea2h
+    mov    ax, 6ea2h                    ;28,322
 Label0x6fd0:                            ;Offset 0x6fd0
-    mov    bx, 0002h
-    call   Func0x6b47                   ;Offset 0x6b47
-    mov    cl, 05h
-    call   Func0x6e51                   ;Offset 0x6e51
+    mov    bx, 0002h                    ;Unused in function, stomped
+    call   CalculatePLL_MNPS_AndNearestClockRate;Offset 0x6b47
+    mov    cl, MGA_CPC_PLLSetB OR MGA_CPC_ClockPLL;0x5
+    call   ConfigurePixelClocks         ;Offset 0x6e51
     pop    ecx
     pop    ebx
     pop    eax
@@ -11449,17 +11623,17 @@ Func0x6f83 ENDP
 Func0x6fe2 PROC NEAR                    ;Offset 0x6fe2
     push   eax
     push   ebx
-    mov    eax, 0000fde8h
+    mov    eax, 0000fde8h               ;65,000
     test   byte ptr cs:[Data0x7ff1], 40h;Offset 0x7ff1
     je     Label0x6ffa                  ;Offset 0x6ffa
-    mov    eax, 00011d28h
+    mov    eax, 00011d28h               ;73,000
 Label0x6ffa:                            ;Offset 0x6ffa
-    mov    bx, 0002h
-    call   Func0x6b47                   ;Offset 0x6b47
-    mov    cl, 04h
-    call   Func0x6e51                   ;Offset 0x6e51
-    mov    cl, 05h
-    call   Func0x6e51                   ;Offset 0x6e51
+    mov    bx, 0002h                    ;Unused in function, stomped
+    call   CalculatePLL_MNPS_AndNearestClockRate;Offset 0x6b47
+    mov    cl, MGA_CPC_PLLSetA OR MGA_CPC_ClockPLL;0x4
+    call   ConfigurePixelClocks         ;Offset 0x6e51
+    mov    cl, MGA_CPC_PLLSetB OR MGA_CPC_ClockPLL;0x5
+    call   ConfigurePixelClocks         ;Offset 0x6e51
     pop    ebx
     pop    eax
     ret
@@ -12838,19 +13012,19 @@ PIXFreqLockTimeout:                     ;Offset 0x7b98
     pop   dx
     or    dx, dx
     je    Label0x7c24                   ;Offset 0x7c24
-    mov   cx, 0041h
+    mov   cx, PCI_MGA_Opt_SysClockSelectPLL OR ((PCI_MGA_Opt2_NoMemClockDiv OR PCI_MGA_Opt2_UseGfxClockDiv) SHR 9);0x41
     jmp   Label0x7c27                   ;Offset 0x7c27
     nop
 Label0x7c24:                            ;Offset 0x7c24
     call  Func0x6a97                    ;Offset 0x6a97
 Label0x7c27:                            ;Offset 0x7c27
-    mov   ax, dx
+    mov   ax, dx                        ;ax = frequency in KHz
     xor   dx, dx
-    mov   bx, 03e8h
-    mul   bx
+    mov   bx, 03e8h                     ;1,000
+    mul   bx                            ;dx:ax is frequency in Hz
     shl   edx, 10h
-    mov   dx, ax
-    call  Func0x6ce3                    ;Offset 0x6ce3
+    mov   dx, ax                        ;edx = frequency in Hz
+    call  ConfigureSystemClock          ;Offset 0x6ce3
     pop   di
     pop   edx
     pop   ecx
@@ -13042,7 +13216,7 @@ Data0x7d39              DB 000h         ;bit 1-0 = strmfctl in MEMRDBK
                                         ;bit 7-4 = mrsopcod(lower 4 bits) in MEMRDBK
 
 ;Offset 0x7d3a
-Data0x7d3a              DB 000h
+Data0x7d3a              DB 000h         ;bit 1-0 = mbuftype in OPTION2
 
 ;Offset 0x7d3b
 Data0x7d3b              DB 0FFh
