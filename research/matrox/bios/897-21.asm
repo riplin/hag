@@ -9956,9 +9956,9 @@ Func0x64f3 PROC NEAR                    ;Offset 0x64f3
     inc       dx
     in        al, dx
     mov       dl, al
-    and       dl, MGA_CRTEXT0_StartAddress21;0x40
+    and       dl, MGA_CRTEXT0_StartAddress20;0x40
     shr       dl, 02h
-    and       al, MGA_CRTEXT0_StartAddress20_16;0xf
+    and       al, MGA_CRTEXT0_StartAddress19_16;0xf
     or        al, dl
     shl       eax, 10h
     mov       dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
@@ -10013,7 +10013,7 @@ Label0x6543:                            ;Offset 0x6543
     pop       ax
     mov       ah, al
     mov       ch, al
-    and       ah, MGA_CRTEXT0_StartAddress20_16;0xf
+    and       ah, MGA_CRTEXT0_StartAddress19_16;0xf
     and       ch, 10h
     shl       ch, 02h
     in        al, dx
@@ -10260,7 +10260,7 @@ CheckMemoryMappedRegsAndExtendedRegister PROC NEAR;Offset 0x66f6
     push      dx
     push      si
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
-    mov       si, MGA_MemAddr_PalletteRamWriteAddress;Offset 0x3c00
+    mov       si, MGA_MemAddr_PaletteRamWriteAddress;Offset 0x3c00
     nop
     call      IndirectRegisterReadByte  ;Offset 0x6afe  Read current index
     not       cl                        ;invert index

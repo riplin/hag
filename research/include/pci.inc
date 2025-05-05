@@ -34,8 +34,11 @@ PCI_Header_Word_Command                 EQU 004h;0x04
     PCI_Cmd_MemWriteAndInvalidateEnbl   EQU 010h;0x10
     PCI_Cmd_VGAPaletteSnoop             EQU 020h;0x20
     PCI_Cmd_ParityErrorResponse         EQU 040h;0x40
+    PCI_Cmd_SERRDisable                 EQU 000h;0x000
     PCI_Cmd_SERREnable                  EQU 100h;0x100
+    PCI_Cmd_FastBackToBackDisable       EQU 000h;0x000
     PCI_Cmd_FastBackToBackEnable        EQU 200h;0x200
+    PCI_Cmd_InterruptEnable             EQU 000h;0x000
     PCI_Cmd_InterruptDisable            EQU 400h;0x400
 PCI_Header_Word_Status                  EQU 006h;0x06
 PCI_Header_Byte_RevisionID              EQU 008h;0x08
@@ -62,3 +65,27 @@ PCI_H0_Byte_InterruptLine               EQU 03ch;0x3c
 PCI_H0_Byte_InterruptPIN                EQU 03dh;0x3d
 PCI_H0_Byte_MinGrant                    EQU 03eh;0x3e
 PCI_H0_Byte_MaxLatency                  EQU 03fh;0x3f
+
+
+PCI_H1_DWord_BaseAddress0               EQU 010h;0x10
+PCI_H1_DWord_BaseAddress1               EQU 014h;0x14
+PCI_H1_Byte_PrimaryBusNumber            EQU 018h;0x18
+PCI_H1_Byte_SecondaryBusNumber          EQU 019h;0x19
+PCI_H1_Byte_SubordinateBusNumber        EQU 01ah;0x1a
+PCI_H1_Byte_SecondaryLatencyTimer       EQU 01bh;0x1b
+PCI_H1_Byte_IOBase                      EQU 01ch;0x1c
+PCI_H1_Byte_IOLimit                     EQU 01dh;0x1d
+PCI_H1_Word_SecondaryStatus             EQU 01eh;0x1e
+PCI_H1_Word_MemoryBase                  EQU 020h;0x20
+PCI_H1_Word_MemoryLimit                 EQU 022h;0x22
+PCI_H1_Word_PrefetchableMemoryBase      EQU 024h;0x24
+PCI_H1_Word_PrefetchableMemoryLimit     EQU 026h;0x26
+PCI_H1_DWord_PrefetchableBaseUpper32Bit EQU 028h;0x28
+PCI_H1_DWord_PrefetchableLimitUpper32Bit EQU 02ch;0x2c
+PCI_H1_Word_IOBaseUpper16Bit            EQU 030h;0x30
+PCI_H1_Word_IOLimitUpper16Bit           EQU 032h;0x32
+PCI_H1_Byte_CapabilityPointer           EQU 034h;0x34
+PCI_H1_DWord_ExpansionRomBaseAddress    EQU 038h;0x38
+PCI_H1_Byte_InterruptLine               EQU 03ch;0x3c
+PCI_H1_Byte_InterruptPin                EQU 03dh;0x3d
+PCI_H1_Word_BridgeControl               EQU 03eh;0x3e

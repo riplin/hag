@@ -1,4 +1,7 @@
-;Matrox G100/G200/G400 shared registers
+;Matrox Mystique Registers (only includes the ones used by the BIOS)
+
+;MGA_CRTCExtensionIndex
+    MGA_CRTCExt_Reserved7               EQU 007h;0x07
 
 ;VGA_CRTControllerIndex
     MGA_CRTCIdx_CPUReadLatch            EQU 022h;0x22
@@ -13,7 +16,6 @@ MGA_CRTCExtensionIndex_lowbyte          EQU 0deh;0xde
     MGA_CRTCExt_AddrGeneratorExt        EQU 000h;0x00
         MGA_CRTEXT0_StartAddress19_16   EQU 00fh;0x0f
         MGA_CRTEXT0_Offset9_8           EQU 030h;0x30
-        MGA_CRTEXT0_StartAddress20      EQU 040h;0x40
         MGA_CRTEXT0_Interlace           EQU 080h;0x80
     MGA_CRTCExt_HorCounterExt           EQU 001h;0x01
         MGA_CRTCEXT1_HorTotal8          EQU 001h;0x01
@@ -49,25 +51,6 @@ MGA_CRTCExtensionIndex_lowbyte          EQU 0deh;0xde
         MGA_CRTCEXT3_MGAModeEnable      EQU 080h;0x80
     MGA_CRTCExt_MemoryPage              EQU 004h;0x04
     MGA_CRTCExt_HorVidHalfCount         EQU 005h;0x05
-    MGA_CRTCExt_PrioRequestControl      EQU 006h;0x06
-        MGA_CRTCEXT6_HiPrioLevel1       EQU 000h;0x00
-        MGA_CRTCEXT6_HiPrioLevel2       EQU 001h;0x01
-        MGA_CRTCEXT6_HiPrioLevel3       EQU 002h;0x02
-        MGA_CRTCEXT6_HiPrioLevel4       EQU 003h;0x03
-        MGA_CRTCEXT6_HiPrioLevel5       EQU 004h;0x04
-        MGA_CRTCEXT6_HiPrioLevel6       EQU 005h;0x05
-        MGA_CRTCEXT6_HiPrioLevel7       EQU 006h;0x06
-        MGA_CRTCEXT6_HiPrioLevel8       EQU 007h;0x07
-        MGA_CRTCEXT6_HiPrioLevelMASK    EQU 007h;0x07
-        MGA_CRTCEXT6_MaxPrioLevel1      EQU 000h;0x00
-        MGA_CRTCEXT6_MaxPrioLevel2      EQU 010h;0x10
-        MGA_CRTCEXT6_MaxPrioLevel3      EQU 020h;0x20
-        MGA_CRTCEXT6_MaxPrioLevel4      EQU 030h;0x30
-        MGA_CRTCEXT6_MaxPrioLevel5      EQU 040h;0x40
-        MGA_CRTCEXT6_MaxPrioLevel6      EQU 050h;0x50
-        MGA_CRTCEXT6_MaxPrioLevel7      EQU 060h;0x60
-        MGA_CRTCEXT6_MaxPrioLevel8      EQU 070h;0x70
-        MGA_CRTCEXT6_MaxPrioLevelMASK   EQU 070h;0x70
 MGA_CRTCExtensionData                   EQU 03dfh;0x3df
 MGA_CRTCExtensionData_lowbyte           EQU 0dfh;0xdf
 
@@ -180,78 +163,174 @@ MGA_INDD_PIXPLL_P_ValueSetC             EQU 04eh;0x4e
     MGA_PIXPLL_M_MASK                   EQU 01fh;0x1f
 MGA_INDD_PIXPLL_Status                  EQU 04fh;0x4f
     MGA_PIXPLLSTAT_FrequencyLock        EQU 040h;0x40
-MGA_INDD_KEYING_OperatingMode           EQU 051h;0x51
-MGA_INDD_ColorMask0Red                  EQU 052h;0x52
-MGA_INDD_ColorMask0Green                EQU 053h;0x53
-MGA_INDD_ColorMask0Blue                 EQU 054h;0x54
-MGA_INDD_ColorKey0Red                   EQU 055h;0x55
-MGA_INDD_ColorKey0Green                 EQU 056h;0x56
-MGA_INDD_ColorKey0Blue                  EQU 057h;0x57
-MGA_INDD_CursorColor3Red                EQU 060h;0x60
-MGA_INDD_CursorColor3Green              EQU 061h;0x61
-MGA_INDD_CursorColor3Blue               EQU 062h;0x62
-MGA_INDD_CursorColor4Red                EQU 063h;0x63
-MGA_INDD_CursorColor4Green              EQU 064h;0x64
-MGA_INDD_CursorColor4Blue               EQU 065h;0x65
-MGA_INDD_CursorColor5Red                EQU 066h;0x66
-MGA_INDD_CursorColor5Green              EQU 067h;0x67
-MGA_INDD_CursorColor5Blue               EQU 068h;0x68
-MGA_INDD_CursorColor6Red                EQU 069h;0x69
-MGA_INDD_CursorColor6Green              EQU 06ah;0x6a
-MGA_INDD_CursorColor6Blue               EQU 06bh;0x6b
-MGA_INDD_CursorColor7Red                EQU 06ch;0x6c
-MGA_INDD_CursorColor7Green              EQU 06dh;0x6d
-MGA_INDD_CursorColor7Blue               EQU 06eh;0x6e
-MGA_INDD_CursorColor8Red                EQU 06fh;0x6f
-MGA_INDD_CursorColor8Green              EQU 070h;0x70
-MGA_INDD_CursorColor8Blue               EQU 071h;0x71
-MGA_INDD_CursorColor9Red                EQU 072h;0x72
-MGA_INDD_CursorColor9Green              EQU 073h;0x73
-MGA_INDD_CursorColor9Blue               EQU 074h;0x74
-MGA_INDD_CursorColor10Red               EQU 075h;0x75
-MGA_INDD_CursorColor10Green             EQU 076h;0x76
-MGA_INDD_CursorColor10Blue              EQU 077h;0x77
-MGA_INDD_CursorColor11Red               EQU 078h;0x78
-MGA_INDD_CursorColor11Green             EQU 079h;0x79
-MGA_INDD_CursorColor11Blue              EQU 07ah;0x7a
-MGA_INDD_CursorColor12Red               EQU 07bh;0x7b
-MGA_INDD_CursorColor12Green             EQU 07ch;0x7c
-MGA_INDD_CursorColor12Blue              EQU 07dh;0x7d
-MGA_INDD_CursorColor13Red               EQU 07eh;0x7e
-MGA_INDD_CursorColor13Green             EQU 07fh;0x7f
-MGA_INDD_CursorColor13Blue              EQU 080h;0x80
-MGA_INDD_CursorColor14Red               EQU 081h;0x81
-MGA_INDD_CursorColor14Green             EQU 082h;0x82
-MGA_INDD_CursorColor14Blue              EQU 083h;0x83
-MGA_INDD_CursorColor15Red               EQU 084h;0x84
-MGA_INDD_CursorColor15Green             EQU 085h;0x85
-MGA_INDD_CursorColor15Blue              EQU 086h;0x86
 
+;
+; 3 3 2 22222 222 2 1111 1 1 1 1 11
+; 1 0 9 87654 321 0 9876 5 4 3 2 109 8 76 5 4 3 2 10
+;        |   |     |    |       |     |      |
+; 8 4 2 18421 842 1 8421 8 4 2 1 842 1 84 2 1 8 4 21
+; 0 0 0 00000 xxx 0 0000 0 0 0 0 000 0 xx 0 0 0 0 00
+; | | |     |     |    | | | | |   | |    | | | |  |
+; | | |     |     |    | | | | |   | |    | | | |  +--- sysclksl
+; | | |     |     |    | | | | |   | |    | | | |
+; | | |     |     |    | | | | |   | |    | | | +------ sysclkdis
+; | | |     |     |    | | | | |   | |    | | |
+; | | |     |     |    | | | | |   | |    | | +-------- gclkdiv
+; | | |     |     |    | | | | |   | |    | |
+; | | |     |     |    | | | | |   | |    | +---------- mclkdiv
+; | | |     |     |    | | | | |   | |    |
+; | | |     |     |    | | | | |   | |    +------------ syspllpdn
+; | | |     |     |    | | | | |   | |
+; | | |     |     |    | | | | |   | +----------------- vgaioen
+; | | |     |     |    | | | | |   |
+; | | |     |     |    | | | | |   +------------------- fbmskn
+; | | |     |     |    | | | | |
+; | | |     |     |    | | | | +----------------------- memconfig
+; | | |     |     |    | | | |
+; | | |     |     |    | | | +------------------------- splitmode
+; | | |     |     |    | | |
+; | | |     |     |    | | +--------------------------- hardpwmsk
+; | | |     |     |    | |
+; | | |     |     |    | +----------------------------- unimem
+; | | |     |     |    |
+; | | |     |     |    +------------------------------- rfhcnt
+; | | |     |     |
+; | | |     |     +------------------------------------ eepromwt
+; | | |     |
+; | | |     +------------------------------------------ product id
+; | | |
+; | | +------------------------------------------------ noretry
+; | |
+; | +-------------------------------------------------- biosen
+; |
+; +---------------------------------------------------- powerpc
+;
 PCI_MGA_Option                          EQU 040h;0x40
+    PCI_MGA_Opt_SysClockSelectPCI       EQU 00000000h;0x00000000
+    PCI_MGA_Opt_SysClockSelectPLL       EQU 00000001h;0x00000001
+    PCI_MGA_Opt_SysClockSelectMCLK      EQU 00000002h;0x00000002
+    PCI_MGA_Opt_SysClockSelect_MASK     EQU 00000003h;0x00000003
+    PCI_MGA_Opt_SysClockEnable          EQU 00000000h;0x00000000
+    PCI_MGA_Opt_SysClockDisable         EQU 00000004h;0x00000004
+    PCI_MGA_Opt_SysClock_MASK           EQU 00000004h;0x00000004
+    PCI_MGA_Opt_GfxClockDivSel3         EQU 00000000h;0x00000000
+    PCI_MGA_Opt_GfxClockDivSel1         EQU 00000008h;0x00000008    
+    PCI_MGA_Opt_MemClockDivSel3         EQU 00000000h;0x00000000
+    PCI_MGA_Opt_MemClockDivSel1         EQU 00000010h;0x00000010
+    PCI_MGA_Opt_SysPLLPowerDown         EQU 00000000h;0x00000000
+    PCI_MGA_Opt_SysPLLPowerUp           EQU 00000020h;0x00000020
+    PCI_MGA_Opt_VGAIOMapDisable         EQU 00000000h;0x00000000
+    PCI_MGA_Opt_VGAIOMapEnable          EQU 00000100h;0x00000100
+    PCI_MGA_Opt_FrameBufMask1MB         EQU 00000000h;0x00000000
+    PCI_MGA_Opt_FrameBufMask2MB         EQU 00000200h;0x00000200
+    PCI_MGA_Opt_FrameBufMask4MB         EQU 00000600h;0x00000600
+    PCI_MGA_Opt_FrameBufMask8MB         EQU 00000e00h;0x00000e00
+    PCI_MGA_Opt_MemCfg128Kx32           EQU 00000000h;0x00000000
+    PCI_MGA_Opt_MemCfg512Kx16           EQU 00001000h;0x00001000
+    PCI_MGA_Opt_MemCfg_MASK             EQU 00001000h;0x00001000
+    PCI_MGA_Opt_SplitModeDisable        EQU 00000000h;0x00000000
+    PCI_MGA_Opt_SplitModeEnable         EQU 00002000h;0x00002000
+    PCA_MGA_Opt_HWPlaneWriteMaskOff     EQU 00000000h;0x00000000
+    PCA_MGA_Opt_HWPlaneWriteMaskOn      EQU 00004000h;0x00004000
+    PCI_MGA_Opt_RefreshCounter_MASK     EQU 000f0000h;0x000f0000
+    PCI_MGA_Opt_EEPROMWriteDisable      EQU 00000000h;0x00000000
+    PCI_MGA_Opt_EEPROMWriteEnable       EQU 00100000h;0x00100000
+    PCI_MGA_Opt_ProductIdMask           EQU 1f000000h;0x1f000000
+    PCI_MGA_Opt_Retry                   EQU 00000000h;0x00000000
+    PCI_MGA_Opt_NoRetry                 EQU 20000000h;0x20000000
+    PCI_MGA_Opt_BIOSDisable             EQU 00000000h;0x00000000
+    PCI_MGA_Opt_BIOSEnable              EQU 40000000h;0x40000000
+    PCI_MGA_Opt_LittleEndian            EQU 00000000h;0x00000000
+    PCI_MGA_Opt_BigEndian               EQU 80000000h;0x80000000
 PCI_MGA_IndirectAccessIndex             EQU 044h;0x44
 PCI_MGA_IndirectAccessData              EQU 048h;0x48
-PCI_MGA_SubsystemVendorIDWrite          EQU 04ch;0x4c
-PCI_MGA_SubsystemIDWrite                EQU 04eh;0x4e
-PCI_MGA_Option2                         EQU 050h;0x50
-PCI_MGA_PowerMgmtIdentifier             EQU 0dch;0xdc
-PCI_MGA_PowerMgmtControlStatus          EQU 0e0h;0xe0
-    PCI_MGA_PWRCTRL_D0                  EQU 000h;0x00
-    PCI_MGA_PWRCTRL_D3                  EQU 003h;0x03
-PCI_MGA_AGPCapIdentifier                EQU 0f0h;0xf0
-PCI_MGA_AGPStatus                       EQU 0f4h;0xf4
-PCI_MGA_AGPCommand                      EQU 0f8h;0xf8
-    PCI_MGA_AGPCMD_RateReset            EQU 000h;0x00
-    PCI_MGA_AGPCMD_Rate1x               EQU 001h;0x01
-    PCI_MGA_AGPCMD_Rate2x               EQU 002h;0x02
-    PCI_MGA_AGPCMD_AGPEnable            EQU 100h;0x100
-    PCI_MGA_AGPCMD_SBAEnable            EQU 200h;0x200
-    PCI_MGA_AGPCMD_RQDepthMask          EQU 1f000000h;0x1f000000
 
+;
+; 3 3 2 2 2222 2222 1111 1 1 11 11
+; 1 0 9 8 7654 3210 9876 5 4 32 1098 7654 32 10
+;        |    |    |    |      |    |    |
+; 8 4 2 1 8421 8421 8421 8 4 21 8421 8421 84 21
+; 0 0 0 x xxxx xxxx xxxx 0 0 xx xxxx xxxx xx 00
+; | | |                  | |                  |
+; | | |                  | |                  +--- pwidth
+; | | |                  | |
+; | | |                  | +---------------------- jedecrst
+; | | |                  |
+; | | |                  +------------------------ memreset
+; | | |
+; | | +------------------------------------------- tlutload
+; | |
+; | +--------------------------------------------- nodither
+; |
+; +----------------------------------------------- dit555
+;
 MGA_MemAddr_MemoryAccess                EQU 1c04h;0x1c04
+    MGA_MA_MA_PixelWidth8bpp            EQU 00000000h;0x00000000
+    MGA_MA_MA_PixelWidth16bpp           EQU 00000001h;0x00000001
+    MGA_MA_MA_PixelWidth32bpp           EQU 00000002h;0x00000002
+    MGA_MA_MA_PixelWidth24bpp           EQU 00000003h;0x00000003
+    MGA_MA_MA_PixelWidth_MASK           EQU 00000003h;0x00000003
+    MGA_MA_MA_MemSeqRegReset8Refresh    EQU 00000000h;0x00000000
+    MGA_MA_MA_MemSeq8RefresRegRest      EQU 00004000h;0x00004000
+    MGA_MA_MA_MemoryActive              EQU 00000000h;0x00000000
+    MGA_MA_MA_MemoryReset               EQU 00008000h;0x00008000
+    MGA_MA_MA_FrameBufferTarget         EQU 00000000h;0x00000000
+    MGA_MA_MA_TextureLUTTarget          EQU 20000000h;0x20000000
+    MGA_MA_MA_DitherEnable              EQU 00000000h;0x00000000
+    MGA_MA_MA_DitherDisable             EQU 40000000h;0x40000000
+    MGA_MA_MA_Dither565Mode             EQU 00000000h;0x00000000
+    MGA_MA_MA_Dither555Mode             EQU 80000000h;0x80000000
+
+
+;
+; 3322 2222 2222 11 11 1111 11 
+; 1098 7654 3210 98 76 5432 109 8 7654 32 10 
+;     |    |    |     |    |     |    |     
+; 8421 8421 8421 84 21 8421 842 1 8421 84 21
+; xxxx xxxx xxxx xx 00 xxxx xxx 0 xxxx xx 00
+;                    |          |          |
+;                    |          |          +--- casltncy
+;                    |          |
+;                    |          +-------------- rcdelay
+;                    |
+;                    +------------------------- rasmin
+;
 MGA_MemAddr_MemoryControlWaitState      EQU 1c08h;0x1c08
-MGA_MemAddr_ZDepthOrigin                EQU 1c0ch;0x1c0c
-MGA_MemAddr_PlaneWriteMask              EQU 1c1ch;0x1c1c
-MGA_MemAddr_Status                      EQU 1e14h;0x1e14
-    MGA_MA_STAT_SoftwareFlag_MASK       EQU 0f0000000h;0xf0000000
+    MGA_MA_MCWS_CASLatency2Cycles       EQU 00000000h;0x00000000
+    MGA_MA_MCWS_CASLatency3Cycles       EQU 00000001h;0x00000001
+    MGA_MA_MCWS_CASLatency_MASK         EQU 00000001h;0x00000001
+    MGA_MA_MCWS_RAS2CASDelay2Cycles     EQU 00000000h;0x00000000
+    MGA_MA_MCWS_RAS2CASDelay3Cycles     EQU 00000100h;0x00000100
+    MGA_MA_MCWS_RAS2CASDelay_MASK       EQU 00000100h;0x00000100
+    MGA_MA_MCWS_RASMinActive4Cycles     EQU 00000000h;0x00000000
+    MGA_MA_MCWS_RASMinActive5Cycles     EQU 00010000h;0x00010000
+    MGA_MA_MCWS_RASMinActive6Cycles     EQU 00020000h;0x00020000
+    MGA_MA_MCWS_RASMinActive7Cycles     EQU 00030000h;0x00030000
+    MGA_MA_MCWS_RASMinActive_MASK       EQU 00030000h;0x00030000
+
 MGA_MemAddr_PaletteRamWriteAddress      EQU 3c00h;0x3c00
 MGA_MemAddr_IndexedData                 EQU 3c0ah;0x3c0a
+
+
+VBE_MGA_VendorName                      EQU 013h;0x13 DWord
+VBE_MGA_VendorNameOfs                   EQU 013h;0x13 Word
+VBE_MGA_VendorNameSeg                   EQU 015h;0x15 Word
+VBE_MGA_ProductName                     EQU 017h;0x17 DWord
+VBE_MGA_ProductNameOfs                  EQU 017h;0x17 Word
+VBE_MGA_ProductNameSeg                  EQU 019h;0x19 Word
+VBE_MGA_Revision                        EQU 01bh;0x1b DWord
+VBE_MGA_RevisionOfs                     EQU 01bh;0x1b Word
+VBE_MGA_RevisionSeg                     EQU 01dh;0x1d Word
+VBE_MGA_OEMName                         EQU 01fh;0x1f DWord
+VBE_MGA_OEMNameOfs                      EQU 01fh;0x1f Word
+VBE_MGA_OEMNameSeg                      EQU 021h;0x21 Word
+VBE_MGA_BuildVersion                    EQU 023h;0x23 DWord
+VBE_MGA_BuildVersionOfs                 EQU 023h;0x23 Word
+VBE_MGA_BuildVersionSeg                 EQU 025h;0x25 Word
+VBE_MGA_PINS                            EQU 027h;0x27 DWord
+VBE_MGA_PINSOfs                         EQU 027h;0x27 Word
+VBE_MGA_PINSSeg                         EQU 029h;0x29 Word
+VBE_MGA_MemoryIn64KBBlocks              EQU 02bh;0x2b Word
+VBE_MGA_LinearFrameBuffer               EQU 02dh;0x2d DWord
+VBE_MGA_LinearControlAperture           EQU 031h;0x31 DWord
+VBE_MGA_PCIBusDeviceIdFunctionId        EQU 035h;0x35 Word

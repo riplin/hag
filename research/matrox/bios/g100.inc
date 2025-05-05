@@ -52,7 +52,7 @@ include gshared.inc
     PCI_MGA_Opt_SysClockDisable         EQU 00000004h;0x00000004
     PCI_MGA_Opt_SysClock_MASK           EQU 00000004h;0x00000004
     PCI_MGA_Opt_GfxClockDivSel2         EQU 00000000h;0x00000000
-    PCI_MGA_Opt_GfxClockDivSel3         EQU 00000008h;0x00000008    
+    PCI_MGA_Opt_GfxClockDivSel3         EQU 00000008h;0x00000008
     PCI_MGA_Opt_MemClockDivSel2         EQU 00000000h;0x00000000
     PCI_MGA_Opt_MemClockDivSel3         EQU 00000010h;0x00000010
     PCI_MGA_Opt_SysPLLPowerDown         EQU 00000000h;0x00000000

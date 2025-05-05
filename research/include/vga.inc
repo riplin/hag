@@ -50,8 +50,6 @@ VGA_InputStatus0_lowbyte                EQU 0c2h;0xc2
     VGA_IS_VerticalRetraceInterrupt     EQU 080h;0x80
 VGA_MiscellaneousWrite                  EQU 03c2h;0x3c2
 VGA_MiscellaneousWrite_lowbyte          EQU 0c2h;0xc2
-    VGA_Misc_IOAddressSel_MDA           EQU 000h;0x00
-    VGA_Misc_IOAddressSel_CGA           EQU 001h;0x01
 VGA_VideoSubsystemEnable                EQU 03c3h;0x3c3
 VGA_VideoSubsystemEnable_lowbyte        EQU 0c3h;0xc3
 VGA_SequenceIndex                       EQU 03c4h;0x3c4
@@ -118,9 +116,12 @@ VGA_FeatureControlR                     EQU 03cah;0x3ca
 VGA_FeatureControlR_lowbyte             EQU 0cah;0xca
 VGA_MiscellaneousRead                   EQU 03cch;0x3cc
 VGA_MiscellaneousRead_lowbyte           EQU 0cch;0xcc
+    VGA_Misc_IOAddressSel_MDA           EQU 000h;0x00
+    VGA_Misc_IOAddressSel_CGA           EQU 001h;0x01
     VGA_MISC_Clock25p175MHz             EQU 000h;0x00
     VGA_MISC_Clock28p322MHz             EQU 004h;0x04
     VGA_MISC_ClockSelectMask            EQU 00ch;0x0c
+    VGA_MISC_VideoDisable               EQU 010h;0x10
 VGA_GraphicsControllerIndex             EQU 03ceh;0x3ce
 VGA_GraphicsControllerIndex_lowbyte     EQU 0ceh;0xce
     VGA_GCTLIdx_SetReset                EQU 000h;0x00
