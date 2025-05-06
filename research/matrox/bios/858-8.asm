@@ -40,12 +40,12 @@ include ..\..\include\vga.inc
 include myst.inc
 
 ;Offset in calltables. Not sure on the names yet.
-MGA_DDCDisable0                         EQU 00h;0x00
-MGA_DDCDisable1                         EQU 02h;0x02
-MGA_DDCSet0                             EQU 04h;0x04
-MGA_DDCSet1                             EQU 06h;0x06
-MGA_DDCRead0                            EQU 08h;0x08
-MGA_DDCRead1                            EQU 0ah;0x0a
+MGA_DDCPin0Send1                        EQU 00h;0x00
+MGA_DDCPin1Send1                        EQU 02h;0x02
+MGA_DDCPin0Send0                        EQU 04h;0x04
+MGA_DDCPin1Send0                        EQU 06h;0x06
+MGA_DDCPin0Read                         EQU 08h;0x08
+MGA_DDCPin1Read                         EQU 0ah;0x0a
 
 PCI_VENDOR_Intel                        EQU 8086h;0x8086
 PCI_DEVICE_Triton_430FX                 EQU 122dh;0x122d
@@ -64,6 +64,14 @@ PCI_ACCESS_WriteByte                    EQU 0bh;0x0b
 PCI_ACCESS_WriteWord                    EQU 0ch;0x0c
 PCI_ACCESS_WriteDWord                   EQU 0dh;0x0d
 
+;ConfigurePixelClocks cx:
+MGA_CPC_PLLSetA                         EQU 000h;0x00
+MGA_CPC_PLLSetB                         EQU 001h;0x01
+MGA_CPC_PLLSetC                         EQU 002h;0x02
+MGA_CPC_ClockPCI                        EQU 000h;0x00
+MGA_CPC_ClockPLL                        EQU 004h;0x04
+MGA_CPC_ClockVDOCLK                     EQU 008h;0x08
+
 .MODEL tiny
 .386
 .CODE
@@ -77,7 +85,7 @@ jmp entry                               ;Offset 0x80
 
 ;Offset 0x5
                         DB 018h         ;BIOS Version (1.8)
-                        DB 0D0h, 03h, 0E0h, 004h, 0E0h, 011h, 00Eh, 037h, 01Ah, 012h
+                        DB 0D0h, 003h, 0E0h, 004h, 0E0h, 011h, 00Eh, 037h, 01Ah, 012h
                         DB 024h, 012h, 0FFh, 0FFh, 000h, 000h, 000h, 000h
 
 ;Offset 0x18
@@ -108,6 +116,7 @@ PCIHeader               DB 'PCIR'       ;PCI header magic
                         DB 00h          ;Code type (0 = x86)
                         DB 80h          ;Last image indicator
                         DW 0000h        ;Reserved
+
 ;Offset 0x78
 BuildVersion            DB '858-8', 000h
                         DB 0FFh, 0FFh
@@ -121,7 +130,7 @@ entry:                                  ;Offset 0x80
     cmp       ax, 0c000h                ;Segment 0xc000
     je        Label0xac                 ;Offset 0xac
     mov       al, 04h
-    mov       byte ptr cs:[02h], al
+    mov       byte ptr cs:[ROMSize], al ;Offset 0x2 Resize ROM to 2KB
     xor       ax, ax
     xor       si, si
     mov       cx, 07ffh
@@ -166,15 +175,15 @@ Label0x102:                             ;Offset 0x102
     call      FindMystique              ;Offset 0x57c6
     call      TurnScreenOff             ;Offset 0x3109
     mov       cx, 0058h
-    call      Func0x5c6d                ;Offset 0x5c6d
-    call      Func0x6190                ;Offset 0x6190
+    call      PowerUpPLLsLUTsAndConfigure;Offset 0x5c6d
+    call      ConfigureAndSelectPLLSetB ;Offset 0x6190
     push      bx
     mov       al, 40h
     call      SetupInterruptsTextModeAndBDA;Offset 0x147
     pop       bx
-    call      Func0x5d85                ;Offset 0x5d85
+    call      SetMemoryTimingsAndRefresh;Offset 0x5d85
     xor       cx, cx
-    call      Func0x5c6d                ;Offset 0x5c6d
+    call      PowerUpPLLsLUTsAndConfigure;Offset 0x5c6d
     cld
     mov       dx, VGA_CRTControllerIndexD;Port 0x3d4
     call      Func0x2ce3                ;Offset 0x2ce3
@@ -212,7 +221,7 @@ SetupInterruptsTextModeAndBDA PROC NEAR ;Offset 0x147
     jne       IsColor                   ;Offset 0x18b
     or        ch, BDA_VDDA_GrayScale OR BDA_VDDA_MonochromeMonitor;0x6
 IsColor:                                ;Offset 0x18b
-    lea       bx, [VideoOverrideTable1];Offset 0x3d0
+    lea       bx, [VideoOverrideTable1] ;Offset 0x3d0
     call      SetupVideoParameterControlBlock;Offset 0x1a3
     mov       byte ptr ds:[BDA_VideoDisplayDataArea], ch;Offset 0x489
     call      SetCardAddressOrFallbackToSystemAdapter;Offset 0x1c0
@@ -227,7 +236,7 @@ SetupVideoParameterControlBlock PROC NEAR;Offset 0x1a3
     cmp       ax, word ptr cs:[VideoOverrideTable2.VideoParameterTable.sgm];Offset 0x424
     jne       IsShadowed                ;Offset 0x1b0
     ;add       bx, (offset VideoOverrideTable2) - (offset VideoOverrideTable1);0x52
-    DB 081h, 0C3h, 052h, 000h
+    DB 081h, 0C3h, 052h, 000h           ;!!!!!!!!!!!!!! Assembles to different variant.
 IsShadowed:                             ;Offset 0x1b0
     mov       word ptr ds:[BDA_VideoParameterControlBlockPtrOfs], bx;Offset 0x4a8
     mov       word ptr ds:[BDA_VideoParameterControlBlockPtrSeg], ax;Offset 0x4aa
@@ -270,13 +279,13 @@ SetCardMode PROC NEAR                   ;Offset 0x1db
     mov       ah, 1ah
     call      TestRegister              ;Offset 0x214 - Make sure
     jne       IsVGA                     ;Offset 0x213
-    lodsb     byte ptr cs:[si]
+    lodsb     byte ptr cs:[si]          ;Card is not VGA.
     and       byte ptr ds:[BDA_DetectedHardware], NOT BDA_DH_InitialVideoModeMask;Offset 0x410 0xcf
     or        byte ptr ds:[BDA_DetectedHardware], al;Offset 0x410
-    lodsb     byte ptr cs:[si]
-    cbw
+    lodsb     byte ptr cs:[si]          ;Load fallback mode
+    cbw                                 ;zero out ah
     int       42h                       ;Call System interrupt handler to set video mode.
-    and   byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_VGA;Offset 0x489 0xfe
+    and       byte ptr ds:[BDA_VideoDisplayDataArea], NOT BDA_VDDA_VGA;Offset 0x489 0xfe
 IsVGA:                                  ;Offset 0x213
     ret
 SetCardMode ENDP
@@ -297,7 +306,7 @@ TestRegister PROC NEAR                  ;Offset 0x214
     mov       bl, al                    ;Store result in bl
     mov       al, ah                    ;Move test value to al
     out       dx, al                    ;Write test value to register
-    jmp       Delay                     ;Offset 0x21c
+    jmp       Delay                     ;Offset 0x21c   !!!!!!Speed sensitive!
 Delay:                                  ;Offset 0x21c
     in        al, dx                    ;Read back test value
     ;cmp       al, ah                    ;Compare read test value to original test value
@@ -339,12 +348,12 @@ SetTextMode PROC NEAR                   ;Offset 0x24f
     inc       dx                        ;Port 0x3c9
     mov       cx, 300h                  ;768 values
 LoopColors:                             ;Offset 0x259
-    out       dx, al
+    out       dx, al                    ;Zero all colors
     loop      LoopColors                ;Offset 0x259
     mov       al, byte ptr ds:[BDA_VideoDisplayDataArea];Offset 0x489
     and       al, BDA_VDDA_MonochromeMonitor OR BDA_VDDA_VGA;0x5
     cmp       al, BDA_VDDA_MonochromeMonitor OR BDA_VDDA_VGA;0x5
-    mov       bl, al
+    mov       bl, al                    ;store modified vdda
     je        SetMonochrome             ;Offset 0x273
     mov       ax, (BDA_DH_80x25Color SHL 8) OR BDA_DM_80x25_16_Color_Text;0x2003
     mov       bh, BDA_EFBS_MDAHiResEnhanced_2;0x9
@@ -374,10 +383,10 @@ SetDisplayCombinationCode PROC NEAR     ;Offset 0x29c
 IsColor:                                ;Offset 0x2a8
     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489 0x1
     jne   IsVGA                         ;Offset 0x2bf
-    inc   ax
+    inc   ax                            ;BDA_DCC_MDPA
     test  byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487 0x2
     je    IsVGA                         ;Offset 0x2bf
-    inc   ax
+    inc   ax                            ;BDA_DCC_CGA
     call  CheckRegistersMemoryMapped    ;Offset 0x2c5
     jne   IsVGA                         ;Offset 0x2bf
     mov   al, BDA_DCC_PGC               ;0x6
@@ -395,19 +404,19 @@ SetDisplayCombinationCode ENDP
 ;destroys:
 ;   dx, si
 CheckRegistersMemoryMapped PROC NEAR    ;Offset 0x2c5
-    push ax
-    push ds
-    mov  ax, 0c600h                     ;Segment 0xc600
-    mov  ds, ax
-    mov  si, VGA_CRTControllerIndexD    ;Offset / Port 0x3d4
-    mov  ah, 28h
-    xchg byte ptr [si], ah
-    mov  dx, si
-    in   al, dx
-    mov  byte ptr [si], ah
-    cmp  al, 28h
-    pop  ds
-    pop  ax
+    push  ax
+    push  ds
+    mov   ax, 0c600h                    ;Segment 0xc600
+    mov   ds, ax
+    mov   si, VGA_CRTControllerIndexD   ;Offset / Port 0x3d4
+    mov   ah, 28h
+    xchg  byte ptr [si], ah
+    mov   dx, si
+    in    al, dx
+    mov   byte ptr [si], ah
+    cmp   al, 28h
+    pop   ds
+    pop   ax
     ret
 CheckRegistersMemoryMapped ENDP
 
@@ -581,7 +590,7 @@ StaticFunctionalityTable DB 0FFh        ;Modes supported 1: bit 0 to bit 7 = 1 m
                                         ;bit 5      DCC extension supported
                                         ;bits 6-7   Unused (0)
                         DB 000h         ;Reserved
-\
+
 ;Offset 0x4a8
 Data0x4a8               DB BDA_CMCRV_Monochrome OR BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x2c
                         DB BDA_CMCRV_VideoEnabled OR BDA_CMCRV_Blinking;0x28
@@ -3797,7 +3806,7 @@ RAMDACFunctions PROC NEAR               ;Offset 0x23f5
     mov       ah, 1bh
     ;cmp       al, ah
     DB 3Ah, 0C4h                        ;misassemble
-    ja        EmptyFunction            ;Offset 0x2409
+    ja        EmptyFunction             ;Offset 0x2409
     cbw
     mov       si, ax
     shl       si, 01h
@@ -3927,7 +3936,7 @@ ToggleIntensityBlinkingBit ENDP
 GetIndividualPaletteRegister PROC NEAR  ;Offset 0x24bd
     mov       ah, bl
 GetIndividualPaletteRegister ENDP
-
+;continue!
 Func0x24bf PROC NEAR                    ;Offset 0x24bf
     call      Func0x30ed                ;Offset 0x30ed
     mov       bh, al
@@ -4248,7 +4257,7 @@ Label0x267e:                            ;Offset 0x267e
 Label0x2695:                            ;Offset 0x2695
     mov       word ptr ds:[BDA_PointHeightOfCharacterMatrix], cx;Offset 0x485
     mov       al, dl
-    and       bx, 0ffh
+    and       bx, 00ffh
     je        Label0x26ad               ;Offset 0x26ad
     mov       al, 19h
     cmp       bl, 03h
@@ -4414,7 +4423,7 @@ DisableMemSpace:                        ;Offset 0x2792
     and  cl, NOT (PCI_MGA_Opt_VGAIOMapEnable SHR 8);0xfe
     and  dl, (PCI_MGA_Opt_VGAIOMapEnable SHR 8);0x1
     je   DoWrite                        ;Offset 0x27ac
-    or   cl, dl
+    or   cl, dl                         ;OR in the new value (one)
 DoWrite:                                ;Offset 0x27ac
     mov  al, PCI_ACCESS_WriteByte       ;0xb
     nop
@@ -4433,7 +4442,7 @@ Disable:                                ;Offset 0x27bc
 SetGrayscaleSumming ENDP
 
 SetCursorEmulation PROC NEAR            ;Offset 0x27c2
-    je   Enable                          ;Offset 0x27ca
+    je   Enable                         ;Offset 0x27ca
     and  byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_CursorEmulationEnabled;Offset 0x487 0xfe
     ret
 Enable:                                 ;Offset 0x27ca
@@ -4681,14 +4690,14 @@ Label0x2922:                            ;Offset 0x2922
     call      GetDisplayCombinationCode ;Offset 0x3147
     xchg      ax, bx
     stosw
-    mov       al, byte ptr ds:[BDA_DisplayMode]  ;Offset 0x449
+    mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     cbw
     push      ax
     lea       bx, [ColorsPerModePlusOne];Offset 0x2a00
     xlatb     cs:[bx]
     dec       ax
     jns       ColorsUnder256            ;Offset 0x2954
-    mov       ax, 0100h
+    mov       ax, 0100h                 ;Set colors to 256 (mode 0x13)
 ColorsUnder256:                         ;Offset 0x2954
     stosw
     pop       ax
@@ -4744,17 +4753,17 @@ ColorsUnder256:                         ;Offset 0x2954
     push      di
     xor       dx, dx
     mov       al, 02h
-    call      Func0x29ee          ;Offset 0x29ee
+    call      Func0x29ee                ;Offset 0x29ee
     mov       al, 0ah
-    call      Func0x29e5          ;Offset 0x29e5
+    call      Func0x29e5                ;Offset 0x29e5
     mov       al, 0ch
-    call      Func0x29e5          ;Offset 0x29e5
+    call      Func0x29e5                ;Offset 0x29e5
     mov       al, 08h
-    call      Func0x29e5          ;Offset 0x29e5
+    call      Func0x29e5                ;Offset 0x29e5
     mov       al, 04h
-    call      Func0x29e5          ;Offset 0x29e5
+    call      Func0x29e5                ;Offset 0x29e5
     mov       al, 06h
-    call      Func0x29e5          ;Offset 0x29e5
+    call      Func0x29e5                ;Offset 0x29e5
     xchg      ax, dx
     pop       di
     pop       es
@@ -4801,7 +4810,6 @@ ColorsPerModePlusOne    DB 011h, 011h, 011h, 011h, 005h, 005h, 003h, 001h, 001h,
 ;Offset 0x2a14
 NumberOfPagesPerMode    DB 008h, 008h, 008h, 008h, 001h, 001h, 001h, 008h, 000h, 000h
                         DB 000h, 000h, 000h, 008h, 004h, 002h, 002h, 001h, 001h, 001h 
-
 
 SaveRestoreVideoState PROC NEAR         ;Offset 0x2a28
     push      cx
@@ -4889,7 +4897,7 @@ Func0x2a98 PROC NEAR                    ;Offset 0x2a98
     mov       si, dx
     in        al, dx
     stosb
-    add       dl, 06h
+    add       dl, 06h                   ;Port 0x3?a
     in        al, dx
     mov       dl, VGA_GraphicsControllerIndex_lowbyte;Port 0x3ce
     in        al, dx
@@ -4981,14 +4989,14 @@ BackupBiosDataAreaVideoSections ENDP
     nop                                 ;https://i.imgur.com/NGkg1Ip.jpeg
 
 ;Offset 0x2b32
-BiosDataAreaVideoSections   DW 0001eh, BDA_DisplayMode;Offset 0x449
-                            DW 00007h, BDA_RowsOnScreen;Offset 0x484
-                            DW 00004h, BDA_VideoParameterControlBlockPointer;Offset 0x4a8
-                            DW 00004h, INT_5_HandlerOfs;Offset 0x014
-                            DW 00004h, INT_1D_HandlerOfs;Offset 0x074
-                            DW 00004h, INT_1F_HandlerOfs;Offset 0x07c
-                            DW 00004h, INT_43_HandlerOfs;Offset 0x10c
-                            DW 00000h
+BiosDataAreaVideoSections   DW 001eh, BDA_DisplayMode;Offset 0x449
+                            DW 0007h, BDA_RowsOnScreen;Offset 0x484
+                            DW 0004h, BDA_VideoParameterControlBlockPointer;Offset 0x4a8
+                            DW 0004h, INT_5_HandlerOfs;Offset 0x014
+                            DW 0004h, INT_1D_HandlerOfs;Offset 0x074
+                            DW 0004h, INT_1F_HandlerOfs;Offset 0x07c
+                            DW 0004h, INT_43_HandlerOfs;Offset 0x10c
+                            DW 0000h
 
 Func0x2b50 PROC NEAR                    ;Offset 0x2b50
     push      cx
@@ -5085,7 +5093,7 @@ Func0x2b75 PROC NEAR                    ;Offset 0x2b75
 Func0x2b75 ENDP
 
 Func0x2bf6 PROC NEAR                    ;Offset 0x2bf6
-    mov       si, word ptr es:[bx +02h]
+    mov       si, word ptr es:[bx + 02h]
 Func0x2bf6 ENDP
 ;continue!
 RestoreBiosDataAreaVideoSections PROC NEAR;Offset 0x2bfa
@@ -5598,7 +5606,7 @@ Label0x2edd:                            ;Offset 0x2edd
     jmp       Label0x2edd               ;Offset 0x2edd
 Label0x2ef6:                            ;Offset 0x2ef6
     mov       dl, VGA_AttributeControllerIndex_lowbyte;0x3c0
-    mov       al, 20h
+    mov       al, VGA_ATTR_PaletteAddressSource;0x20
     out       dx, al
     sti
     pop       dx
@@ -5753,7 +5761,7 @@ Func0x2fcc PROC NEAR                    ;Offset 0x2fcc
     mov       al, 1ch
     mul       cl
     add       ax, dx
-    add       ax, 80h
+    add       ax, 0080h
     mov       al, ah
     ret
 Func0x2fcc ENDP
@@ -5806,6 +5814,14 @@ Data0x3004              DB 000h, 013h, 017h, 000h   ; 0x00
                         DB 000h, 000h, 000h, 01Bh   ; 0x12
                         DB 01Ch, 000h, 000h, 000h   ; 0x13
 
+;
+;outputs:
+;   al = number of active scan lines
+;        0 = 200
+;        1 = 350
+;        2 = 400
+;        3 = 480
+;
 GetNumberOfActiveScanlines PROC NEAR    ;Offset 0x3054
     mov   al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     push  bx
@@ -6057,11 +6073,12 @@ LookupVideoParameterControlBlockPointer PROC NEAR;Offset 0x317d
     les   si, ds:[BDA_VideoParameterControlBlockPointer];Offset 0x4a8    es:si = Video Save/Override Pointer table
     test  al, 02h                       ;Test if al bit 2 is set.
     je    DereferencePointerWithOffset  ;Offset 0x318f  if not set, then lookup in primary table
-    push  ax
+    push  ax                            ;else save ax
     mov   al, BDA_VPCB_SecondarySavePointerTbl;0x10 load offset 0x10 instead (secondary save pointer)
     call  DereferencePointerWithOffset  ;Offset 0x318f
-    pop   ax
-    je    Func0x319a                    ;Offset 0x319a
+    pop   ax                            ;restore ax
+    je    Func0x319a                    ;Offset 0x319a  if previous call yielded null, return else call with original value
+                                        ;with secondary save pointer
 LookupVideoParameterControlBlockPointer ENDP
 ;continue!
 ;
@@ -6083,7 +6100,7 @@ DereferencePointerWithOffset PROC NEAR  ;Offset 0x318f
     mov   ax, es                        ;store es in ax
     or    ax, si                        ;or ax and si (set flags)
 DereferencePointerWithOffset ENDP
-
+;continue!
 Func0x319a PROC NEAR                    ;Offset 0x319a
     ret
 Func0x319a ENDP
@@ -6124,7 +6141,7 @@ Label0x31c6:                            ;Offset 0x31c6
     jne   Label0x31c6                   ;Offset 0x31c6
     pop   ax
 Func0x31be ENDP
-
+;continue!
 Func0x31cc PROC NEAR                    ;Offset 0x31cc
     push  ax
     mov   dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
@@ -6206,86 +6223,86 @@ NoSleep:                                ;Offset 0x322c
 Sleep2 ENDP
 
 SetupSquareWave PROC NEAR               ;Offset 0x3230
-    push  ax
-    mov   al, PIT_MC_OpMode_SquareWaveGenerator OR PIT_MC_AccMode_LoByteHiByte OR PIT_MC_ChanSel_2;0xb6
-    out   PIT_ModeCommand, al           ;Port 0x43
-    mov   ax, 04a9h                     ;1193 ticks
-    out   PIT_Channel2Data, al          ;Port 0x42
-    mov   al, ah
-    out   PIT_Channel2Data, al          ;Port 0x42
-    pop   ax
+    push ax
+    mov  al, PIT_MC_OpMode_SquareWaveGenerator OR PIT_MC_AccMode_LoByteHiByte OR PIT_MC_ChanSel_2;0xb6
+    out  PIT_ModeCommand, al            ;Port 0x43
+    mov  ax, 04a9h                      ;1193 ticks
+    out  PIT_Channel2Data, al           ;Port 0x42
+    mov  al, ah
+    out  PIT_Channel2Data, al           ;Port 0x42
+    pop  ax
     ret
 SetupSquareWave ENDP
 
 PrintScreenHandler:                     ;Offset 0x3240
     sti
-    push  ax
-    push  bx
-    push  cx
-    push  dx
-    push  ds
-    xor   ax, ax
-    mov   ds, ax
-    inc   ax
-    xchg  byte ptr ds:[BDA_PrintScreenStatus], al ;Offset 0x500
-    dec   ax
-    je    Label0x3294                   ;Offset 0x3294
-    mov   ah, 0fh
-    int   10h
-    mov   bl, ah
-    mov   ah, 03h
-    int   10h
-    push  dx
-    call  PrintCRLF                     ;Offset 0x329a
-    mov   cl, 0ffh
-    xor   dx, dx
+    push ax
+    push bx
+    push cx
+    push dx
+    push ds
+    xor  ax, ax
+    mov  ds, ax
+    inc  ax
+    xchg byte ptr ds:[BDA_PrintScreenStatus], al ;Offset 0x500
+    dec  ax
+    je   Label0x3294                    ;Offset 0x3294
+    mov  ah, 0fh
+    int  10h
+    mov  bl, ah
+    mov  ah, 03h
+    int  10h
+    push dx
+    call PrintCRLF                      ;Offset 0x329a
+    mov  cl, 0ffh
+    xor  dx, dx
 Label0x3264:                            ;Offset 0x3264
-    mov   ah, 02h
-    int   10h
-    mov   ah, 08h
-    int   10h
-    or    al, al
-    jne   Label0x3272                   ;Offset 0x3272
-    mov   al, 20h
+    mov  ah, 02h
+    int  10h
+    mov  ah, 08h
+    int  10h
+    or   al, al
+    jne  Label0x3272                    ;Offset 0x3272
+    mov  al, 20h
 Label0x3272:                            ;Offset 0x3272
-    call  PrintCharacter                ;Offset 0x32a1
-    jne   Label0x328b                   ;Offset 0x328b
-    inc   dx
-    ;cmp   dl, bl
+    call PrintCharacter                 ;Offset 0x32a1
+    jne  Label0x328b                    ;Offset 0x328b
+    inc  dx
+    ;cmp  dl, bl
     DB 3Ah, 0D3h                        ;Misassemble!
-    jb    Label0x3264                   ;Offset 0x3264
-    call  PrintCRLF                     ;Offset 0x329a
-    xor   dl, dl
-    inc   dh
-    cmp   dh, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
-    jbe   Label0x3264                   ;Offset 0x3264
-    xor   cl, cl
+    jb   Label0x3264                    ;Offset 0x3264
+    call PrintCRLF                      ;Offset 0x329a
+    xor  dl, dl
+    inc  dh
+    cmp  dh, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
+    jbe  Label0x3264                    ;Offset 0x3264
+    xor  cl, cl
 Label0x328b:                            ;Offset 0x328b
-    pop   dx
-    mov   ah, 02h
-    int   10h
-    mov   byte ptr ds:[BDA_PrintScreenStatus], cl;Offset 0x500
+    pop  dx
+    mov  ah, 02h
+    int  10h
+    mov  byte ptr ds:[BDA_PrintScreenStatus], cl;Offset 0x500
 Label0x3294:                            ;Offset 0x3294
-    pop   ds
-    pop   dx
-    pop   cx
-    pop   bx
-    pop   ax
+    pop  ds
+    pop  dx
+    pop  cx
+    pop  bx
+    pop  ax
     iret
 
 PrintCRLF PROC NEAR                     ;Offset 0x329a
-    mov   al, 0dh
-    call  PrintCharacter                ;Offset 0x32a1
-    mov   al, 0ah
+    mov  al, 0dh
+    call PrintCharacter                 ;Offset 0x32a1
+    mov  al, 0ah
 PrintCRLF ENDP
 ;continue!
 PrintCharacter PROC NEAR                ;Offset 0x32a1
-    push  dx
-    xor   dx, dx
-    xor   ah, ah
-    int   17h
-    test  ah, 29h
-    pop   dx
+    push dx
+    xor  dx, dx
+    xor  ah, ah
+    int  17h
+    test ah, 29h
+    pop  dx
     ret
 PrintCharacter ENDP
 
@@ -6955,10 +6972,10 @@ EDIDHeader              DB 000h, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 0FFh, 000h
                         DB 000h, 000h
 
 ;Offset 0x5142
-DDCFuncs                DW offset DDCDisablePin1    ;Offset 0x51b7  ;0
-                        DW offset DDCDisablePin3    ;Offset 0x519b  ;2
-                        DW offset DDCPin1SetOutput0 ;Offset 0x5202  ;4
-                        DW offset DDCPin3SetOutput0 ;Offset 0x51d3  ;6
+DDCFuncs                DW offset DDCPin1Send1      ;Offset 0x51b7  ;0
+                        DW offset DDCPin3Send1      ;Offset 0x519b  ;2
+                        DW offset DDCPin1Send0      ;Offset 0x5202  ;4
+                        DW offset DDCPin3Send0      ;Offset 0x51d3  ;6
                         DW offset DDCPin1Read       ;Offset 0x5231  ;8
                         DW offset DDCPin3Read       ;Offset 0x5257  ;a
 
@@ -7003,7 +7020,7 @@ Label0x5189:                            ;Offset 0x5189
     pop  ds
     iret
 
-DDCDisablePin3 PROC NEAR                ;Offset 0x519b
+DDCPin3Send1 PROC NEAR                  ;Offset 0x519b
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
@@ -7019,9 +7036,9 @@ DDCDisablePin3 PROC NEAR                ;Offset 0x519b
     pop  edx
     pop  ecx
     ret
-DDCDisablePin3 ENDP
+DDCPin3Send1 ENDP
 
-DDCDisablePin1 PROC NEAR                ;Offset 0x51b7
+DDCPin1Send1 PROC NEAR                  ;Offset 0x51b7
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOControl;0x2a
@@ -7037,9 +7054,9 @@ DDCDisablePin1 PROC NEAR                ;Offset 0x51b7
     pop  edx
     pop  ecx
     ret
-DDCDisablePin1 ENDP
+DDCPin1Send1 ENDP
 
-DDCPin3SetOutput0 PROC NEAR             ;Offset 0x51d3
+DDCPin3Send0 PROC NEAR                  ;Offset 0x51d3
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
@@ -7065,9 +7082,9 @@ DDCPin3SetOutput0 PROC NEAR             ;Offset 0x51d3
     pop  edx
     pop  ecx
     ret
-DDCPin3SetOutput0 ENDP
+DDCPin3Send0 ENDP
 
-DDCPin1SetOutput0 PROC NEAR             ;Offset 0x5202
+DDCPin1Send0 PROC NEAR                  ;Offset 0x5202
     push ecx
     push edx
     mov  cl, MGA_INDD_GeneralPurposeIOData;0x2b
@@ -7093,7 +7110,7 @@ DDCPin1SetOutput0 PROC NEAR             ;Offset 0x5202
     pop  edx
     pop  ecx
     ret
-DDCPin1SetOutput0 ENDP
+DDCPin1Send0 ENDP
 
 DDCPin1Read PROC NEAR                   ;Offset 0x5231
     push ecx
@@ -7197,112 +7214,135 @@ Label0x52be:                            ;Offset 0x52be
     ret
 Sleep ENDP
 
+;Pin1: 0
+;
 Func0x52db PROC NEAR                    ;Offset 0x52db
     push ecx
-    call word ptr cs:[si + MGA_DDCSet1] ;0x6
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x6
     call Sleep                          ;Offset 0x527d
     pop  ecx
     ret
 Func0x52db ENDP
 
-Func0x52e7 PROC NEAR                    ;Offset 0x52e7
+;
+;Pin0: 11r...00
+;Pin1: x1r...x0
+;
+;Note: Reads until both Pin0 and Pin1 are 1
+SendStartBit PROC NEAR                  ;Offset 0x52e7
     push ecx
-    call word ptr cs:[si + MGA_DDCDisable0];0x0
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCDisable1];0x2
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
     mov  cl, 14h
-Is0:                                    ;Offset 0x52f5
+WaitFor1:                               ;Offset 0x52f5
     call Sleep                          ;Offset 0x527d
     dec  cl
     je   TimeOut                        ;Offset 0x5313
-    call word ptr cs:[si + MGA_DDCRead1];0xa
-    jae  Is0                            ;Offset 0x52f5
-    call word ptr cs:[si + MGA_DDCRead0];0x8
-    jae  Is0                            ;Offset 0x52f5
-    call word ptr cs:[si + MGA_DDCSet0] ;0x4
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  WaitFor1                       ;Offset 0x52f5
+    call word ptr cs:[si + MGA_DDCPin0Read];0x08
+    jae  WaitFor1                       ;Offset 0x52f5
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCSet1] ;0x6
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
 TimeOut:                                ;Offset 0x5313
     mov  al, cl
     pop  ecx
     ret
-Func0x52e7 ENDP
+SendStartBit ENDP
 
-Func0x5318 PROC NEAR                    ;Offset 0x5318
+;
+;Pin0: 0001
+;Pin1: x011
+;
+SendStopBit PROC NEAR                   ;Offset 0x5318
     push ecx
-    call word ptr cs:[si + MGA_DDCSet0] ;0x4
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCSet1] ;0x6
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCDisable1];0x2
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCDisable0];0x0
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call Sleep                          ;Offset 0x527d
     pop  ecx
     ret
-Func0x5318 ENDP
+SendStopBit ENDP
 
-Func0x5338 PROC NEAR                    ;Offset 0x5338
+;
+;Pin0: 1r...xxxxxx
+;Pin1: xxxxx1r...0
+;
+WaitAck PROC NEAR                       ;Offset 0x5338
     push ecx
-    call word ptr cs:[si + MGA_DDCDisable0];0x0
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     mov  cl, 14h
-Is1:                                    ;Offset 0x533f
+Wait0:                                  ;Offset 0x533f
     dec  cl
     je   TimeOut                        ;Offset 0x5366
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCRead0];0x8
-    jb   Is1                            ;Offset 0x533f
+    call word ptr cs:[si + MGA_DDCPin0Read];0x08
+    jb   Wait0                          ;Offset 0x533f
     mov  cl, 14h
-    call word ptr cs:[si + MGA_DDCDisable1];0x2
-Is0:                                    ;Offset 0x5352
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
+Wait1:                                  ;Offset 0x5352
     dec  cl
     je   TimeOut                        ;Offset 0x5366
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCRead1];0xa
-    jae  Is0                            ;Offset 0x5352
-    call word ptr cs:[si + MGA_DDCSet1] ;0x6
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  Wait1                          ;Offset 0x5352
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call Sleep                          ;Offset 0x527d
 TimeOut:                                ;Offset 0x5366
     mov  al, cl
     pop  ecx
     ret
-Func0x5338 ENDP
+WaitAck ENDP
 
-Func0x536b PROC NEAR                    ;Offset 0x536b
+;
+;Pin0: 0000001
+;Pin1: x1r...0
+;
+SendAck PROC NEAR                      ;Offset 0x536b
     push ecx
-    call word ptr cs:[si + MGA_DDCSet0] ;0x4
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCDisable1];0x2
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
     mov  cl, 14h
-Is0:                                    ;Offset 0x537a
+Wait1:                                  ;Offset 0x537a
     dec  cl
     je   TimeOut                        ;Offset 0x5391
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCRead1];0xa
-    jae  Is0                            ;Offset 0x537a
-    call word ptr cs:[si + MGA_DDCSet1] ;0x6
-    call word ptr cs:[si + MGA_DDCDisable0];0x0
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  Wait1                          ;Offset 0x537a
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call Sleep                          ;Offset 0x527d
 TimeOut:                                ;Offset 0x5391
     mov  al, cl
     pop  ecx
     ret
-Func0x536b ENDP
+SendAck ENDP
 
+;
+;Pin0: 1111111
+;Pin1: x1r...0
+;
 Func0x5396 PROC NEAR                    ;Offset 0x5396
     push ecx
-    call word ptr cs:[si + MGA_DDCDisable0];0x0
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call Sleep                          ;Offset 0x527d
     mov  cl, 14h
-    call word ptr cs:[si + MGA_DDCDisable1];0x2
-Is0:                                    ;Offset 0x53a4
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
+Wait1:                                  ;Offset 0x53a4
     dec  cl
     je   TimeOut                        ;Offset 0x53bb
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCRead1];0xa
-    jae  Is0                            ;Offset 0x53a4
-    call word ptr cs:[si + MGA_DDCSet1] ;0x6
-    call word ptr cs:[si + MGA_DDCDisable0];0x0
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  Wait1                          ;Offset 0x53a4
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
     call Sleep                          ;Offset 0x527d
 TimeOut:                                ;Offset 0x53bb
     mov  al, cl
@@ -7310,12 +7350,16 @@ TimeOut:                                ;Offset 0x53bb
     ret
 Func0x5396 ENDP
 
-;
-;inputs:
+;input:
 ;   al = data
 ;
-;outputs
-;   al = timeout status 0 = fail, not 0 = success
+;Data in: abcdefgh
+;
+;Pin0: aaaaaabbbbbbb
+;Pin1: x1r...01r...0 etc
+;
+;output:
+;   al = 0 = success, not 0 = failure
 I2CSendByte PROC NEAR                   ;Offset 0x53c0
     push ecx
     push edx
@@ -7323,22 +7367,22 @@ I2CSendByte PROC NEAR                   ;Offset 0x53c0
     mov  ch, al
 NextBit:                                ;Offset 0x53c8
     shl  ch, 01h
-    jb   Is1                            ;Offset 0x53d2
-    call word ptr cs:[si + MGA_DDCSet0] ;0x4
-    jmp  BitSet                         ;Offset 0x53d5
-Is1:                                    ;Offset 0x53d2
-    call word ptr cs:[si + MGA_DDCDisable0];0x0
-BitSet:                                 ;Offset 0x53d5
+    jb   Send1                          ;Offset 0x53d2
+    call word ptr cs:[si + MGA_DDCPin0Send0];0x04
+    jmp  Sent0                          ;Offset 0x53d5
+Send1:                                  ;Offset 0x53d2
+    call word ptr cs:[si + MGA_DDCPin0Send1];0x00
+Sent0:                                  ;Offset 0x53d5
     mov  dl, 14h
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCDisable1];0x2
-Is0:                                    ;Offset 0x53de
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
+Wait1:                                  ;Offset 0x53de
     dec  dl
     je   TimeOut                        ;Offset 0x53f3
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCRead1];0xa
-    jae  Is0                            ;Offset 0x53de
-    call word ptr cs:[si + MGA_DDCSet1];0x6
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  Wait1                          ;Offset 0x53de
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     dec  cl
     jne  NextBit                        ;Offset 0x53c8
 TimeOut:                                ;Offset 0x53f3
@@ -7349,10 +7393,13 @@ TimeOut:                                ;Offset 0x53f3
 I2CSendByte ENDP
 
 ;
-;outputs:
-;   al = data
-;   ah = timeout status 0 = fail, not 0 = success
+;Pin0: xxxxxaxxxxxb
+;Pin1: 1r...01r...0 etc
 ;
+;Data out: abcdefgh
+;
+;ah = 0 = success, not 0 = time out
+;al = data
 I2CReadByte PROC NEAR                   ;Offset 0x53fa
     push ecx
     push edx
@@ -7360,16 +7407,16 @@ I2CReadByte PROC NEAR                   ;Offset 0x53fa
     mov  cl, 08h
 NextBit:                                ;Offset 0x5402
     mov  dl, 14h
-    call word ptr cs:[si + MGA_DDCDisable1];0x2
-Is0:                                    ;Offset 0x5408
+    call word ptr cs:[si + MGA_DDCPin1Send1];0x02
+Wait1:                                  ;Offset 0x5408
     dec  dl
     je   TimeOut                        ;Offset 0x5428
     call Sleep                          ;Offset 0x527d
-    call word ptr cs:[si + MGA_DDCRead1];0xa
-    jae  Is0                            ;Offset 0x5408
-    call word ptr cs:[si + MGA_DDCRead0];0x8
+    call word ptr cs:[si + MGA_DDCPin1Read];0x0a
+    jae  Wait1                          ;Offset 0x5408
+    call word ptr cs:[si + MGA_DDCPin0Read];0x08
     rcl  ch, 01h                        ;Carry bit is read data
-    call word ptr cs:[si + MGA_DDCSet1] ;0x6
+    call word ptr cs:[si + MGA_DDCPin1Send0];0x06
     call Sleep                          ;Offset 0x527d
     dec  cl
     jne  NextBit                        ;Offset 0x5402
@@ -7416,21 +7463,21 @@ Func0x544f PROC NEAR                    ;Offset 0x544f
     call Func0x52db                     ;Offset 0x52db
     mov  cl, 0fh
 Label0x5465:                            ;Offset 0x5465
-    call Func0x52e7                     ;Offset 0x52e7
+    call SendStartBit                   ;Offset 0x52e7
     or   al, al
     je   Label0x5501                    ;Offset 0x5501
     mov  al, 0a0h
     call I2CSendByte                    ;Offset 0x53c0
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
-    call Func0x5338                     ;Offset 0x5338
+    call WaitAck                        ;Offset 0x5338
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
     mov  al, 00h
     call I2CSendByte                    ;Offset 0x53c0
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
-    call Func0x5338                     ;Offset 0x5338
+    call WaitAck                        ;Offset 0x5338
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
     mov  dl, 05h
@@ -7438,14 +7485,14 @@ Label0x5490:                            ;Offset 0x5490
     call Sleep                          ;Offset 0x527d
     dec  dl
     jne  Label0x5490                    ;Offset 0x5490
-    call Func0x52e7                     ;Offset 0x52e7
+    call SendStartBit                   ;Offset 0x52e7
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
     mov  al, 0a1h
     call I2CSendByte                    ;Offset 0x53c0
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
-    call Func0x5338                     ;Offset 0x5338
+    call WaitAck                        ;Offset 0x5338
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
     mov  cl, 7fh
@@ -7454,7 +7501,7 @@ Label0x54b0:                            ;Offset 0x54b0
     or   ah, ah
     je   Label0x54ef                    ;Offset 0x54ef
     mov  byte ptr es:[di], al
-    call Func0x536b                     ;Offset 0x536b
+    call SendAck                        ;Offset 0x536b
     or   al, al
     je   Label0x54ef                    ;Offset 0x54ef
     inc  di
@@ -7466,7 +7513,7 @@ Label0x54b0:                            ;Offset 0x54b0
     mov  byte ptr es:[di], al
     call Func0x5396                     ;Offset 0x5396
     call Sleep                          ;Offset 0x527d
-    call Func0x5318                     ;Offset 0x5318
+    call SendStopBit                    ;Offset 0x5318
     mov  dl, 05h
 Label0x54db:                            ;Offset 0x54db
     call Sleep                          ;Offset 0x527d
@@ -7481,7 +7528,7 @@ Label0x54db:                            ;Offset 0x54db
 Label0x54ef:                            ;Offset 0x54ef
     call Func0x5396                     ;Offset 0x5396
     call Sleep                          ;Offset 0x527d
-    call Func0x5318                     ;Offset 0x5318
+    call SendStopBit                    ;Offset 0x5318
     mov  dl, 05h
 Label0x54fa:                            ;Offset 0x54fa
     call Sleep                          ;Offset 0x527d
@@ -7623,7 +7670,7 @@ ReadSubClassCode PROC NEAR              ;Offset 0x55d5
     int  1ah
     mov  ax, 0b108h                     ;Read Configuration Byte
     mov  di, PCI_Header_Byte_SubClassCode;0xa
-    int  01ah
+    int  1ah
     and  cl, cl
 NotFound:                               ;Offset 0x55f9
     pop  di
@@ -7736,9 +7783,9 @@ LoopBus:                                ;Offset 0x568a
 LoopDevices:                            ;Offset 0x568c
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
     mov   eax, ebx
-    out   dx, eax
+    out   dx, eax                       ;Address for Header field 0
     mov   dl, PCI_M1_ConfigData_lowbyte ;Port 0xcfc
-    in    eax, dx
+    in    eax, dx                       ;Read Device + Vendor ID's
     cmp   eax, (PCI_DEVICE_MystiquePCI SHL 16) OR PCI_VENDOR_Matrox;0x51a102b
     jne   NextDevice                    ;Offset 0x56c5
     mov   eax, ebx
@@ -7816,7 +7863,7 @@ SearchDone:                             ;Offset 0x5726
 FoundDevice:                            ;Offset 0x5729
     mov   dl, PCI_M1_ConfigAddress_lowbyte;Port 0xcf8
     xchg  eax, ebx
-    out   dx, eax
+    out   dx, eax                       ;Select device for changes.
     xchg  eax, ebx
     pop   ebx
     ret
@@ -7872,7 +7919,7 @@ Mechanism1:                             ;Offset 0x5755
     out   dx, eax
     mov   dx, PCI_M1_ConfigData         ;Port 0xcfc
     and   di, 0003h
-    add   dx, di
+    add   dx, di                        ;Sub-register offset
     pop   ax
 PerformAccess:                          ;Offset 0x5771
     cmp   al, PCI_ACCESS_ReadByte       ;0x8
@@ -7997,7 +8044,7 @@ ReadPCIDeviceID ENDP
 CapAXTo0x40 PROC NEAR                   ;Offset 0x5832
     ;cmp   ax, 40h
     DB 080h, 0FCh, 040h
-    ;jbe  IsLess                         ;Offset 0x583b
+    ;jbe   IsLess                        ;Offset 0x583b
     DB 00Fh, 086h, 002h, 000h
     mov  ah, 40h
 IsLess:                                 ;Offset 0x583b
@@ -8178,7 +8225,7 @@ IndirectRegisterWriteByte PROC NEAR     ;Offset 0x591c
     pop    cx
     mov    al, PCI_ACCESS_WriteByte     ;0xb
     mov    di, PCI_MGA_IndirectAccessData;0x48
-    and    si, 03h
+    and    si, 0003h
     add    di, si
     call   AccessPCIRegister            ;Offset 0x5734
     pop    di
@@ -8208,7 +8255,7 @@ IndirectRegisterWriteWord PROC NEAR     ;Offset 0x593a
     pop    cx
     mov    al, PCI_ACCESS_WriteWord     ;0xc
     mov    di, PCI_MGA_IndirectAccessData;0x48
-    and    si, 03h
+    and    si, 0003h
     add    di, si
     call   AccessPCIRegister            ;Offset 0x5734
     pop    di
@@ -8439,92 +8486,92 @@ Label0x5a48:                            ;Offset 0x5a48
 SetStartAddress ENDP
 
 Func0x5a6a PROC NEAR                    ;Offset 0x5a6a
-    push  ebx
-    push  edx
-    xor   ebx, ebx
-    call  Func0x5ae1                    ;Offset 0x5ae1
-    shr   bx, 03h
-    call  GetStartAddress               ;Offset 0x59f9
-    xor   edx, edx
-    div   ebx
-    mov   cx, dx
-    push  ax
-    call  Func0x59c0                    ;Offset 0x59c0
-    and   al, 03h
-    je    Label0x5a94                   ;Offset 0x5a94
-    mov   ah, 04h
-    sub   ah, al
-    xchg  al, ah
-    xchg  ax, cx
-    shl   ax, cl
-    xchg  ax, cx
+    push      ebx
+    push      edx
+    xor       ebx, ebx
+    call      Func0x5ae1                ;Offset 0x5ae1
+    shr       bx, 03h
+    call      GetStartAddress           ;Offset 0x59f9
+    xor       edx, edx
+    div       ebx
+    mov       cx, dx
+    push      ax
+    call      Func0x59c0                ;Offset 0x59c0
+    and       al, 03h
+    je        Label0x5a94               ;Offset 0x5a94
+    mov       ah, 04h
+    sub       ah, al
+    xchg      al, ah
+    xchg      ax, cx
+    shl       ax, cl
+    xchg      ax, cx
 Label0x5a94:                            ;Offset 0x5a94
-    pop   ax
-    pop   edx
-    pop   ebx
-    mov   dx, ax
-    mov   al, 01h
-    call  Func0x59d6                    ;Offset 0x59d6
+    pop       ax
+    pop       edx
+    pop       ebx
+    mov       dx, ax
+    mov       al, 01h
+    call      Func0x59d6                ;Offset 0x59d6
     ret
 Func0x5a6a ENDP
 
 Func0x5aa1 PROC NEAR                    ;Offset 0x5aa1
-    push  ebx
-    push  ecx
-    push  edx
-    xor   al, al
-    call  Func0x59d6                    ;Offset 0x59d6
-    push  bx
-    push  cx
-    push  dx
-    call  Func0x5ae1                    ;Offset 0x5ae1
-    shr   bx, 03h
-    mov   ax, bx
-    pop   dx
-    mul   dx
-    push  dx
-    push  ax
-    pop   eax
-    xor   ecx, ecx
-    pop   cx
-    pop   bx
-    push  ax
-    call  Func0x59c0                    ;Offset 0x59c0
-    and   al, 03h
-    mov   ah, 04h
-    sub   ah, al
-    xchg  al, ah
-    xchg  ax, cx
-    shr   ax, cl
-    xchg  ax, cx
-    pop   ax
-    add   eax, ecx
-    call  SetStartAddress               ;Offset 0x5a28
-    pop   edx
-    pop   ecx
-    pop   ebx
+    push      ebx
+    push      ecx
+    push      edx
+    xor       al, al
+    call      Func0x59d6                ;Offset 0x59d6
+    push      bx
+    push      cx
+    push      dx
+    call      Func0x5ae1                ;Offset 0x5ae1
+    shr       bx, 03h
+    mov       ax, bx
+    pop       dx
+    mul       dx
+    push      dx
+    push      ax
+    pop       eax
+    xor       ecx, ecx
+    pop       cx
+    pop       bx
+    push      ax
+    call      Func0x59c0                ;Offset 0x59c0
+    and       al, 03h
+    mov       ah, 04h
+    sub       ah, al
+    xchg      al, ah
+    xchg      ax, cx
+    shr       ax, cl
+    xchg      ax, cx
+    pop       ax
+    add       eax, ecx
+    call      SetStartAddress           ;Offset 0x5a28
+    pop       edx
+    pop       ecx
+    pop       ebx
     ret
 Func0x5aa1 ENDP
 
 Func0x5ae1 PROC NEAR                    ;Offset 0x5ae1
-    push  ds
-    xor   ax, ax
-    mov   ds, ax
-    mov   dx, MGA_CRTCExtensionIndex    ;Port 0x3de
-    out   dx, al
-    inc   dx
-    in    al, dx
-    shr   al, 04h
-    xchg  al, ah
-    and   ah, 03h
-    mov   dl, VGA_CRTControllerIndexD_lowbyte;0xd4
-    mov   al, VGA_CRTCIdx_Offset        ;0x13
-    out   dx, al
-    inc   dx
-    in    al, dx
-    call  Func0x6416                    ;Offset 0x6416
-    je    Label0x5b02                   ;Offset 0x5b02
-    shl   ax, 01h
+    push      ds
+    xor       ax, ax
+    mov       ds, ax
+    mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
+    out       dx, al
+    inc       dx
+    in        al, dx
+    shr       al, 04h
+    xchg      al, ah
+    and       ah, 03h
+    mov       dl, VGA_CRTControllerIndexD_lowbyte;0xd4
+    mov       al, VGA_CRTCIdx_Offset    ;0x13
+    out       dx, al
+    inc       dx
+    in        al, dx
+    call      Func0x6416                ;Offset 0x6416
+    je        Label0x5b02               ;Offset 0x5b02
+    shl       ax, 01h
 Label0x5b02:                            ;Offset 0x5b02
     mov   bx, ax
     xor   ax, ax
@@ -8546,70 +8593,78 @@ Label0x5b02:                            ;Offset 0x5b02
 Func0x5ae1 ENDP
 
 Func0x5b25 PROC NEAR                    ;Offset 0x5b25
-    push  ds
-    push  cx
-    xor   cx, cx
-    mov   ds, cx
-    call  Func0x6416                    ;Offset 0x6416
-    je    Label0x5b32                   ;Offset 0x5b32
-    shr   ax, 01h
+    push      ds
+    push      cx
+    xor       cx, cx
+    mov       ds, cx
+    call      Func0x6416                    ;Offset 0x6416
+    je        Label0x5b32                   ;Offset 0x5b32
+    shr       ax, 01h
 Label0x5b32:                            ;Offset 0x5b32
-    mov   ch, byte ptr ds:[BDA_VideoBufferSize];Offset 0x44c
-    and   ch, 03h
-    dec   ch
-    mov   cl, 04h
-    sub   cl, ch
-    shr   ax, cl
-    mov   bx, ax
-    shl   bx, 03h
-    push  ax
-    shl   ah, 04h
-    mov   dx, MGA_CRTCExtensionIndex    ;Port 0x3de
-    xor   al, al
-    out   dx, al
-    inc   dx
-    in    al, dx
-    and   al, NOT MGA_CRTEXT0_Offset9_8 ;0xcf
-    or    al, ah
-    out   dx, al
-    mov   dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
-    mov   al, VGA_CRTCIdx_Offset        ;0x13
-    out   dx, al
-    inc   dx
-    pop   ax
-    out   dx, al
-    mov   dl, byte ptr ds:[BDA_VideoBufferSize + 01h];Offset 0x44d
-    xor   dh, dh
-    xor   ax, ax
-    div   bx
-    mov   dx, ax
-    pop   cx
-    pop   ds
+    mov      ch, byte ptr ds:[BDA_VideoBufferSize];Offset 0x44c
+    and      ch, 03h
+    dec      ch
+    mov      cl, 04h
+    sub      cl, ch
+    shr      ax, cl
+    mov      bx, ax
+    shl      bx, 03h
+    push     ax
+    shl      ah, 04h
+    mov      dx, MGA_CRTCExtensionIndex ;Port 0x3de
+    xor      al, al                    ;MGA_CRTCExt_AddrGeneratorExt
+    out      dx, al
+    inc      dx
+    in       al, dx
+    and      al, NOT MGA_CRTEXT0_Offset9_8;0xcf
+    or       al, ah
+    out      dx, al
+    mov      dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
+    mov      al, VGA_CRTCIdx_Offset     ;0x13
+    out      dx, al
+    inc      dx
+    pop      ax
+    out      dx, al
+    mov      dl, byte ptr ds:[BDA_VideoBufferSize + 01h];Offset 0x44d
+    xor      dh, dh
+    xor      ax, ax
+    div      bx
+    mov      dx, ax
+    pop      cx
+    pop      ds
     ret
 Func0x5b25 ENDP
 
 Func0x5b6e PROC NEAR                    ;Offset 0x5b6e
-    mov   bx, ax
-    call  Func0x59c0                    ;Offset 0x59c0
-    and   al, 03h
-    je    Label0x5b8f                   ;Offset 0x5b8f
-    mov   cl, al
-    dec   cl
-    mov   ax, 0010h
-    shr   ax, cl
-    xor   dx, dx
-    xchg  ax, bx
-    push  ax
-    div   bx
-    pop   ax
-    or    dx, dx
-    je    Label0x5b8f                   ;Offset 0x5b8f
-    sub   bx, dx
-    add   ax, bx
+    mov       bx, ax
+    call      Func0x59c0                ;Offset 0x59c0
+    and       al, 03h
+    je        Label0x5b8f               ;Offset 0x5b8f
+    mov       cl, al
+    dec       cl
+    mov       ax, 0010h
+    shr       ax, cl
+    xor       dx, dx
+    xchg      ax, bx
+    push      ax
+    div       bx
+    pop       ax
+    or        dx, dx
+    je        Label0x5b8f               ;Offset 0x5b8f
+    sub       bx, dx
+    add       ax, bx
 Label0x5b8f:                            ;Offset 0x5b8f
     ret
 Func0x5b6e ENDP
 
+;
+;inputs:
+;   cl = RAMDAC write index
+;   ch = Value
+;
+;destroys:
+;   ax
+;
 WriteIndexedRegister PROC NEAR          ;Offset 0x5b90
     push   si
     push   dx
@@ -8629,6 +8684,16 @@ Label0x5b9e:                            ;Offset 0x5b9e
     ret
 WriteIndexedRegister ENDP
 
+;
+;inputs:
+;   cl = RAMDAC read index
+;
+;outputs:
+;   cl = Value
+;
+;destroys:
+;   ax
+;
 ReadIndexedRegister PROC NEAR           ;Offset 0x5bab
     push   si
     push   dx
@@ -8666,7 +8731,7 @@ Label0x5bd4:                            ;Offset 0x5bd4
     ret
 WriteIndexedRegisters ENDP
 
-Func0x5bd9 PROC NEAR                    ;Offset 0x5bd9
+FetchDefaultSystemClockSpeed PROC NEAR  ;Offset 0x5bd9
     push ax
     push bx
     call GetMemorySize                  ;Offset 0x5866
@@ -8742,621 +8807,663 @@ Label0x5c6a:                            ;Offset 0x5c6a
     pop  bx
     pop  ax
     ret
-Func0x5bd9 ENDP
+FetchDefaultSystemClockSpeed ENDP
 
-Func0x5c6d PROC NEAR                    ;Offset 0x5c6d
-    push ax
-    push bx
-    push cx
-    push dx
-    push di
-    push cx
-    call FindMystique                   ;Offset 0x57c6
-    call FindIntelTriton430FXChipset    ;Offset 0x56f8
-    or   ax, ax
-    je   Label0x5c8d                    ;Offset 0x5c8d
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    mov  di, PCI_MGA_Option + 03h       ;0x43
-    call AccessPCIRegister              ;Offset 0x5734
-    or   cl, PCI_MGA_Opt_NoRetry SHR 24 ;0x20
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-Label0x5c8d:                            ;Offset 0x5c8d
-    mov  cl, MGA_INDD_VoltageReferenceControl;0x18
-    mov  ch, MGA_VREFCTRL_SysPLLVoltRefBlkPwrUp OR MGA_VREFCTRL_SysPLLVoltRefPLLRefBlk;0x3
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  al, 0fh
-    call Sleep2                         ;Offset 0x31f0
-    mov  di, PCI_MGA_Option             ;0x40
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    or   cl, PCI_MGA_Opt_SysPLLPowerUp  ;0x20
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  al, 01h
-    call Sleep2                         ;Offset 0x31f0
-    xor  dx, dx
-Label0x5cb0:                            ;Offset 0x5cb0
-    dec  dx
-    je   Label0x5cbd                    ;Offset 0x5cbd
-    mov  cl, MGA_INDD_SYSPLL_Status     ;0x2f
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, MGA_SYSPLLSTAT_FrequencyLock;0x40
-    je   Label0x5cb0                    ;Offset 0x5cb0
-Label0x5cbd:                            ;Offset 0x5cbd
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call ReadIndexedRegister            ;Offset 0x5bab
-    or   cl, MGA_PIXCLKCTRL_PixelPLLPowerUp;0x8
-    mov  ch, MGA_INDD_PixelClockControl ;0x1a
-    xchg cl, ch
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  al, 01h
-    call Sleep2                         ;Offset 0x31f0
-    xor  dx, dx
-Label0x5cd3:                            ;Offset 0x5cd3
-    dec  dx
-    je   Label0x5ce0                    ;Offset 0x5ce0
-    mov  cl, MGA_INDD_PIXPLL_Status     ;0x4f
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, MGA_PIXPLLSTAT_FrequencyLock;0x40
-    je   Label0x5cd3                    ;Offset 0x5cd3
-Label0x5ce0:                            ;Offset 0x5ce0
-    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
-    call ReadIndexedRegister            ;Offset 0x5bab
-    or   cl, MGA_MISCCTRL_LUT_Enable    ;0x10
-    mov  ch, MGA_INDD_MiscellaneousControl;0x1e
-    xchg cl, ch
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  cl, MGA_INDD_MiscellaneousControl;0x1e
-    call ReadIndexedRegister            ;Offset 0x5bab
-    or   cl, MGA_MISCCTRL_DAC_Enable    ;0x1
-    mov  ch, MGA_INDD_MiscellaneousControl;0x1e
-    xchg cl, ch
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  di, PCI_MGA_Option             ;0x40
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    or   cl, PCI_MGA_Opt_SysClockDisable;0x4
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  di, PCI_MGA_Option             ;0x40
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
-    or   cl, PCI_MGA_Opt_SysClockSelectPLL;0x1
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  di, PCI_MGA_Option             ;0x40
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT PCI_MGA_Opt_SysClockDisable;0xfb
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call ReadIndexedRegister            ;Offset 0x5bab
-    or   cl, MGA_PIXCLKCTRL_ClockDisable;4
-    mov  ch, MGA_INDD_PixelClockControl ;0x1a
-    xchg cl, ch
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, NOT MGA_PIXCLKCTRL_SelMASK ;0xfc
-    or   cl, MGA_PIXCLKCTRL_SelPLL      ;0x1
-    mov  ch, MGA_INDD_PixelClockControl ;0x1a
-    xchg cl, ch
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, NOT MGA_PIXCLKCTRL_ClockDisable;0xfb
-    mov  ch, MGA_INDD_PixelClockControl ;0x1a
-    xchg cl, ch
-    call WriteIndexedRegister           ;Offset 0x5b90
-    pop  ax
-    call Func0x5bd9                     ;Offset 0x5bd9
-    or   ax, ax
-    ;je   Label0x5d6d                    ;Offset 0x5d6d
+PowerUpPLLsLUTsAndConfigure PROC NEAR   ;Offset 0x5c6d
+    push  ax
+    push  bx
+    push  cx
+    push  dx
+    push  di
+    push  cx
+    call  FindMystique                  ;Offset 0x57c6
+    call  FindIntelTriton430FXChipset   ;Offset 0x56f8
+    or    ax, ax
+    je    NoIntelTriton430FX            ;Offset 0x5c8d
+    mov   al, PCI_ACCESS_ReadByte       ;0x8
+    mov   di, PCI_MGA_Option + 03h      ;0x43
+    call  AccessPCIRegister             ;Offset 0x5734
+    or    cl, (PCI_MGA_Opt_NoRetry SHR 24);0x20
+    mov   al, PCI_ACCESS_WriteByte      ;0xb
+    call  AccessPCIRegister             ;Offset 0x5734
+NoIntelTriton430FX:                     ;Offset 0x5c8d
+    mov   cl, MGA_INDD_VoltageReferenceControl;0x18
+    mov   ch, MGA_VREFCTRL_SysPLLVoltRefBlkPwrUp OR MGA_VREFCTRL_SysPLLVoltRefPLLRefBlk;0x3
+    call  WriteIndexedRegister          ;Offset 0x5b90
+    mov   al, 0fh
+    call  Sleep2                        ;Offset 0x31f0
+    mov   di, PCI_MGA_Option            ;0x40
+    mov   al, PCI_ACCESS_ReadByte       ;0x8
+    call  AccessPCIRegister             ;Offset 0x5734
+    or    cl, PCI_MGA_Opt_SysPLLPowerUp ;0x20
+    mov   al, PCI_ACCESS_WriteByte      ;0xb
+    call  AccessPCIRegister             ;Offset 0x5734
+    mov   al, 01h
+    call  Sleep2                        ;Offset 0x31f0
+    xor   dx, dx
+PLLNotFrequencyLocked:                  ;Offset 0x5cb0
+    dec   dx
+    je    PLLFreqLockTimeout            ;Offset 0x5cbd
+    mov   cl, MGA_INDD_SYSPLL_Status    ;0x2f
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    and   cl, MGA_SYSPLLSTAT_FrequencyLock;0x40
+    je    PLLNotFrequencyLocked         ;Offset 0x5cb0
+PLLFreqLockTimeout:                     ;Offset 0x5cbd
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    or    cl, MGA_PIXCLKCTRL_PixelPLLPowerUp;0x8
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
+    xchg  cl, ch
+    call  WriteIndexedRegister          ;Offset 0x5b90
+    mov   al, 01h
+    call  Sleep2                        ;Offset 0x31f0
+    xor   dx, dx
+PIXNotFrequencyLocked:                  ;Offset 0x5cd3
+    dec   dx
+    je    PIXFreqLockTimeout            ;Offset 0x5ce0
+    mov   cl, MGA_INDD_PIXPLL_Status    ;0x4f
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    and   cl, MGA_PIXPLLSTAT_FrequencyLock;0x40
+    je    PIXNotFrequencyLocked         ;Offset 0x5cd3
+PIXFreqLockTimeout:                     ;Offset 0x5ce0
+    mov   cl, MGA_INDD_MiscellaneousControl;0x1e
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    or    cl, MGA_MISCCTRL_LUT_Enable   ;0x10
+    mov   ch, MGA_INDD_MiscellaneousControl;0x1e
+    xchg  cl, ch
+    call  WriteIndexedRegister          ;Offset 0x5b90
+    mov   cl, MGA_INDD_MiscellaneousControl;0x1e
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    or    cl, MGA_MISCCTRL_DAC_Enable   ;0x1
+    mov   ch, MGA_INDD_MiscellaneousControl;0x1e
+    xchg  cl, ch
+    call  WriteIndexedRegister          ;Offset 0x5b90
+    mov   di, PCI_MGA_Option            ;0x40
+    mov   al, PCI_ACCESS_ReadByte       ;0x8
+    call  AccessPCIRegister             ;Offset 0x5734
+    or    cl, PCI_MGA_Opt_SysClockDisable;0x4
+    mov   al, PCI_ACCESS_WriteByte      ;0xb
+    call  AccessPCIRegister             ;Offset 0x5734
+    mov   di, PCI_MGA_Option            ;0x40
+    mov   al, PCI_ACCESS_ReadByte       ;0x8
+    call  AccessPCIRegister             ;Offset 0x5734
+    and   cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
+    or    cl, PCI_MGA_Opt_SysClockSelectPLL;0x1
+    mov   al, PCI_ACCESS_WriteByte      ;0xb
+    call  AccessPCIRegister             ;Offset 0x5734
+    mov   di, PCI_MGA_Option            ;0x40
+    mov   al, PCI_ACCESS_ReadByte       ;0x8
+    call  AccessPCIRegister             ;Offset 0x5734
+    and   cl, NOT PCI_MGA_Opt_SysClockDisable;0xfb
+    mov   al, PCI_ACCESS_WriteByte      ;0xb
+    call  AccessPCIRegister             ;Offset 0x5734
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    or    cl, MGA_PIXCLKCTRL_ClockDisable;0x4
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
+    xchg  cl, ch
+    call  WriteIndexedRegister          ;Offset 0x5b90
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    and   cl, NOT MGA_PIXCLKCTRL_SelMASK;0xfc
+    or    cl, MGA_PIXCLKCTRL_SelPLL     ;0x1
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
+    xchg  cl, ch
+    call  WriteIndexedRegister          ;Offset 0x5b90
+    mov   cl, MGA_INDD_PixelClockControl;0x1a
+    call  ReadIndexedRegister           ;Offset 0x5bab
+    and   cl, NOT MGA_PIXCLKCTRL_ClockDisable;0xfb
+    mov   ch, MGA_INDD_PixelClockControl;0x1a
+    xchg  cl, ch
+    call  WriteIndexedRegister          ;Offset 0x5b90
+    pop   ax
+    call  FetchDefaultSystemClockSpeed  ;Offset 0x5bd9
+    or    ax, ax
+    ;je    Label0x5d6d                   ;Offset 0x5d6d
     DB 00Fh, 084h, 002h, 000h
-    mov  dx, ax
+    mov   dx, ax
 Label0x5d6d:                            ;Offset 0x5d6d
-    mov  ax, dx
-    xor  dx, dx
-    mov  bx, 03e8h
-    mul  bx
-    shl  edx, 10h
-    mov  dx, ax
-    call Func0x5f91                     ;Offset 0x5f91
-    pop  di
-    pop  dx
-    pop  cx
-    pop  bx
-    pop  ax
+    mov   ax, dx                        ;ax = frequency in KHz
+    xor   dx, dx
+    mov   bx, 03e8h                     ;1,000
+    mul   bx                            ;dx:ax is frequency in Hz
+    shl   edx, 10h
+    mov   dx, ax                        ;edx = frequency in Hz
+    call  ConfigureSystemClock                    ;Offset 0x5f91
+    pop   di
+    pop   dx
+    pop   cx
+    pop   bx
+    pop   ax
     ret
-Func0x5c6d ENDP
+PowerUpPLLsLUTsAndConfigure ENDP
 
-Func0x5d85 PROC NEAR                    ;Offset 0x5d85
-    push ax
-    push bx
-    push cx
-    push dx
-    push di
-    call FindMystique                   ;Offset 0x57c6
-    mov  dx, VGA_SequenceIndex          ;Port 0x3c4
-    mov  ax, (VGA_SEQ1_ScreenOff SHL 8) OR VGA_SEQIdx_ClockingMode;0x2001
-    out  dx, ax
-    mov  si, MGA_MemAddr_MemoryControlWaitState;0x1c08
-    mov  dl, byte ptr cs:[MemoryControlWaitState];Offset 0x7813
-    mov  cl, dl
-    and  cl, MGA_MA_MCWS_RASMinActive_MASK SHR 14;0xc
-    shl  ecx, 0eh
-    mov  cl, dl
-    and  cl, MGA_MA_MCWS_CASLatency_MASK;0x1
-    shr  dl, 01h
-    mov  ch, dl
-    and  ch, MGA_MA_MCWS_RAS2CASDelay_MASK SHR 8;0x1
-    call IndirectRegisterWriteDWord     ;Offset 0x5958
-    mov  di, PCI_MGA_Option + 01h       ;0x41
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT (PCI_MGA_Opt_MemCfg_MASK SHR 8);0xef
-    or   cl, PCI_MGA_Opt_FrameBufMask8MB SHR 8;0xe
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  al, 01h
-    call Sleep2                         ;Offset 0x31f0
-    mov  si, MGA_MemAddr_MemoryAccess + 01h;0x1c05
-    mov  cl, MGA_MA_MA_MemoryActive SHR 8;0x0
-    call IndirectRegisterWriteByte      ;Offset 0x591c
-    mov  cl, MGA_MA_MA_MemoryReset SHR 8;0x80
-    call IndirectRegisterWriteByte      ;Offset 0x591c
-    mov  al, 01h
-    call Sleep2                         ;Offset 0x31f0
-    mov  cl, (MGA_MA_MA_MemSeq8RefresRegRest OR MGA_MA_MA_MemoryActive) SHR 8;0x40
-    call IndirectRegisterWriteByte      ;Offset 0x591c
-    mov  cl, MGA_MA_MA_MemoryReset SHR 8;0x80
-    call IndirectRegisterWriteByte      ;Offset 0x591c
-    push bx
-    xor  ax, ax
-    call Func0x5bd9                     ;Offset 0x5bd9
-    mov  ax, dx
-    shr  ax, 01h
-    cmp  al, 0ffh
-    jne  Label0x5df8                    ;Offset 0x5df8
-    mov  al, 42h
+SetMemoryTimingsAndRefresh PROC NEAR    ;Offset 0x5d85
+    push   ax
+    push   bx
+    push   cx
+    push   dx
+    push   di
+    call   FindMystique                 ;Offset 0x57c6
+    mov    dx, VGA_SequenceIndex        ;Port 0x3c4
+    mov    ax, (VGA_SEQ1_ScreenOff SHL 8) OR VGA_SEQIdx_ClockingMode;0x2001
+    out    dx, ax
+    mov    si, MGA_MemAddr_MemoryControlWaitState;0x1c08
+    mov    dl, byte ptr cs:[MemoryControlWaitState];Offset 0x7813
+    mov    cl, dl
+    and    cl, MGA_MA_MCWS_RASMinActive_MASK SHR 14;0xc
+    shl    ecx, 0eh
+    mov    cl, dl
+    and    cl, MGA_MA_MCWS_CASLatency_MASK;0x1
+    shr    dl, 01h
+    mov    ch, dl
+    and    ch, MGA_MA_MCWS_RAS2CASDelay_MASK SHR 8;0x1
+    call   IndirectRegisterWriteDWord   ;Offset 0x5958
+    mov    di, PCI_MGA_Option + 01h     ;0x41
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    and    cl, NOT (PCI_MGA_Opt_MemCfg_MASK SHR 8);0xef
+    or     cl, PCI_MGA_Opt_FrameBufMask8MB SHR 8;0xe
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    mov    al, 01h
+    call   Sleep2                       ;Offset 0x31f0
+    mov    si, MGA_MemAddr_MemoryAccess + 01h;0x1c05
+    mov    cl, MGA_MA_MA_MemoryActive SHR 8;0x0
+    call   IndirectRegisterWriteByte    ;Offset 0x591c
+    mov    cl, MGA_MA_MA_MemoryReset SHR 8;0x80
+    call   IndirectRegisterWriteByte    ;Offset 0x591c
+    mov    al, 01h
+    call   Sleep2                       ;Offset 0x31f0
+    mov    cl, (MGA_MA_MA_MemSeq8RefresRegRest OR MGA_MA_MA_MemoryActive) SHR 8;0x40
+    call   IndirectRegisterWriteByte    ;Offset 0x591c
+    mov    cl, MGA_MA_MA_MemoryReset SHR 8;0x80
+    call   IndirectRegisterWriteByte    ;Offset 0x591c
+    push   bx
+    xor    ax, ax
+    call   FetchDefaultSystemClockSpeed ;Offset 0x5bd9
+    mov    ax, dx
+    shr    ax, 01h
+    cmp    al, 0ffh
+    jne    Label0x5df8                  ;Offset 0x5df8
+    mov    al, 42h
 Label0x5df8:                            ;Offset 0x5df8
-    xor  dx, dx
-    mov  bx, 03e8h
-    mul  bx
-    mov  bx, 0040h
-    div  bx
-    inc  ax
-    mov  bx, 0010h
+    xor    dx, dx
+    mov    bx, 03e8h
+    mul    bx
+    mov    bx, 0040h
+    div    bx
+    inc    ax
+    mov    bx, 0010h
 Label0x5e08:                            ;Offset 0x5e08
-    dec  bx
-    mov  dx, bx
-    and  dx, 0eh
-    shl  dx, 07h
-    mov  cx, bx
-    and  cx, 01h
-    shl  cx, 06h
-    add  dx, cx
-    inc  dx
-    cmp  ax, dx
-    jl   Label0x5e08                    ;Offset 0x5e08
-    mov  dl, bl
-    pop  bx
-    mov  di, PCI_MGA_Option + 02h       ;0x42
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT (PCI_MGA_Opt_RefreshCounter_MASK SHR 16);0xf0
-    or   cl, dl
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  di, PCI_MGA_Option + 01h       ;0x41
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    or   cl, PCA_MGA_Opt_HWPlaneWriteMaskOn SHR 8;0x40
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    pop  di
-    pop  dx
-    pop  cx
-    pop  bx
-    pop  ax
+    dec    bx
+    mov    dx, bx
+    and    dx, 0eh
+    shl    dx, 07h
+    mov    cx, bx
+    and    cx, 01h
+    shl    cx, 06h
+    add    dx, cx
+    inc    dx
+    cmp    ax, dx
+    jl     Label0x5e08                  ;Offset 0x5e08
+    mov    dl, bl
+    pop    bx
+    mov    di, PCI_MGA_Option + 02h     ;0x42
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    and    cl, NOT (PCI_MGA_Opt_RefreshCounter_MASK SHR 16);0xf0
+    or     cl, dl
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    mov    di, PCI_MGA_Option + 01h     ;0x41
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    or     cl, PCA_MGA_Opt_HWPlaneWriteMaskOn SHR 8;0x40
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    pop    di
+    pop    dx
+    pop    cx
+    pop    bx
+    pop    ax
     ret
-Func0x5d85 ENDP
+SetMemoryTimingsAndRefresh ENDP
 
-Func0x5e4b PROC NEAR                    ;Offset 0x5e4b
-    push eax
-    push ecx
-    push edx
-    push esi
-    push edi
-    cmp  eax, 00001876h                 ;6,262
-    jge  Label0x5e63                    ;Offset 0x5e63
-    mov  eax, 00001876h                 ;6,262
+;
+;Calculate the M, N, P and S values for the PLL's given an input frequency in KHz
+;
+;inputs:
+;   eax = requested frequency in KHz
+;
+;outputs:
+;   ebx = M,N,P and S values
+;         bl holds N in lower 7 bits
+;         bh holds M in lower 5 bits
+;         bh holds P in upper 3 bits
+;         S 2 bits sit above bh
+;         00000000 000000SS PPPMMMMM xNNNNNNN
+;
+CalculatePLL_MNPS PROC NEAR             ;Offset 0x5e4b
+    push   eax
+    push   ecx
+    push   edx
+    push   esi
+    push   edi
+    cmp    eax, 00001876h               ;6,262
+    jge    Label0x5e63                  ;Offset 0x5e63
+    mov    eax, 00001876h               ;6,262
 Label0x5e63:                            ;Offset 0x5e63
-    cmp  eax, 000356f0h                 ;218,864
-    jle  Label0x5e71                    ;Offset 0x5e71
-    mov  eax, 000356f0h                 ;218,864
+    cmp    eax, 000356f0h               ;218,864
+    jle    Label0x5e71                  ;Offset 0x5e71
+    mov    eax, 000356f0h               ;218,864
 Label0x5e71:                            ;Offset 0x5e71
-    mov  esi, eax
-    mov  edi, 000356f0h                 ;218,864
-    mov  edx, 00035b60h                 ;220,000
-    mov  cl, 64h                        ;100
-    xor  ebx, ebx
+    mov    esi, eax
+    mov    edi, 000356f0h               ;218,864
+    mov    edx, 00035b60h               ;220,000
+    mov    cl, 64h                      ;100
+    xor    ebx, ebx
 Label0x5e85:                            ;Offset 0x5e85
-    cmp  cl, 80h                        ;128
-    je   Label0x5f86                    ;Offset 0x5f86
-    mov  ch, 00h
+    cmp    cl, 80h                      ;128
+    je     Label0x5f86                  ;Offset 0x5f86
+    mov    ch, 00h
 Label0x5e8e:                            ;Offset 0x5e8e
-    cmp  ch, 20h                        ;32
-    je   Label0x5f81                    ;Offset 0x5f81
-    push ebx
-    push edx
-    xor  edx, edx
-    mov  eax, 000037eeh                 ;14,318
-    xor  ebx, ebx
-    mov  bl, cl
-    inc  ebx
-    mul  ebx
-    xor  ebx, ebx
-    mov  bl, ch
-    inc  ebx
-    div  ebx
-    pop  edx
-    pop  ebx
-    cmp  eax, 0000c350h                 ;50,000
-    jl   Label0x5f7c                    ;Offset 0x5f7c
-    cmp  eax, 00035b60h                 ;220,000
-    jg   Label0x5f7c                    ;Offset 0x5f7c
-    shl  ecx, 10h
-    mov  cl, 00h
+    cmp    ch, 20h                      ;32
+    je     Label0x5f81                  ;Offset 0x5f81
+    push   ebx
+    push   edx
+    xor    edx, edx
+    mov    eax, 000037eeh               ;14,318
+    xor    ebx, ebx
+    mov    bl, cl
+    inc    ebx
+    mul    ebx
+    xor    ebx, ebx
+    mov    bl, ch
+    inc    ebx
+    div    ebx
+    pop    edx
+    pop    ebx
+    cmp    eax, 0000c350h               ;50,000
+    jl     Label0x5f7c                  ;Offset 0x5f7c
+    cmp    eax, 00035b60h               ;220,000
+    jg     Label0x5f7c                  ;Offset 0x5f7c
+    shl    ecx, 10h
+    mov    cl, 00h
 Label0x5ed4:                            ;Offset 0x5ed4
-    cmp  cl, 04h
-    jne  Label0x5ee0                    ;Offset 0x5ee0
-    shr  ecx, 10h
-    jmp  Label0x5f7c                    ;Offset 0x5f7c
+    cmp    cl, 04h
+    jne    Label0x5ee0                  ;Offset 0x5ee0
+    shr    ecx, 10h
+    jmp    Label0x5f7c                  ;Offset 0x5f7c
 Label0x5ee0:                            ;Offset 0x5ee0
-    push eax
-    push ebx
-    push edx
-    xor  edx, edx
-    mov  ebx, 00000001h
-    shl  ebx, cl
-    div  ebx
-    mov  edx, esi
-    cmp  eax, edx
-    jge  Label0x5eff                    ;Offset 0x5eff
-    xchg eax, edx
+    push   eax
+    push   ebx
+    push   edx
+    xor    edx, edx
+    mov    ebx, 00000001h
+    shl    ebx, cl
+    div    ebx
+    mov    edx, esi
+    cmp    eax, edx
+    jge    Label0x5eff                  ;Offset 0x5eff
+    xchg   eax, edx
 Label0x5eff:                            ;Offset 0x5eff
-    sub  eax, edx
-    pop  edx
-    pop  ebx
-    cmp  eax, edi
-    jg   Label0x5f75                    ;Offset 0x5f75
-    cmp  eax, edi
-    mov  edi, eax
-    jne  Label0x5f1c                    ;Offset 0x5f1c
-    pop  eax
-    push eax
-    cmp  eax, edx
-    jge  Label0x5f75                    ;Offset 0x5f75
+    sub    eax, edx
+    pop    edx
+    pop    ebx
+    cmp    eax, edi
+    jg     Label0x5f75                  ;Offset 0x5f75
+    cmp    eax, edi
+    mov    edi, eax
+    jne    Label0x5f1c                  ;Offset 0x5f1c
+    pop    eax
+    push   eax
+    cmp    eax, edx
+    jge    Label0x5f75                  ;Offset 0x5f75
 Label0x5f1c:                            ;Offset 0x5f1c
-    pop  eax
-    push eax
-    mov  edx, eax
-    xor  ebx, ebx
-    mov  eax, ecx
-    shr  eax, 10h
-    mov  bx, ax
-    and  bx, 1fffh
-    mov  ax, 0001h
-    shl  ax, cl
-    dec  ax
-    shl  ax, 0dh
-    or   bx, ax
-    xor  eax, eax
-    cmp  edx, 000186a0h                 ;100,000
-    jg   Label0x5f4f                    ;Offset 0x5f4f
-    mov  ax, 0000h
-    jmp  Label0x5f6e                    ;Offset 0x5f6e
+    pop    eax
+    push   eax
+    mov    edx, eax
+    xor    ebx, ebx
+    mov    eax, ecx
+    shr    eax, 10h
+    mov    bx, ax
+    and    bx, 1fffh
+    mov    ax, 0001h
+    shl    ax, cl
+    dec    ax
+    shl    ax, 0dh
+    or     bx, ax
+    xor    eax, eax
+    cmp    edx, 000186a0h               ;100,000
+    jg     Label0x5f4f                  ;Offset 0x5f4f
+    mov    ax, 0000h
+    jmp    Label0x5f6e                  ;Offset 0x5f6e
 Label0x5f4f:                            ;Offset 0x5f4f
-    cmp  edx, 000222e0h                 ;140,000
-    jg   Label0x5f5d                    ;Offset 0x5f5d
-    mov  ax, 0001h
-    jmp  Label0x5f6e                    ;Offset 0x5f6e
+    cmp    edx, 000222e0h               ;140,000
+    jg     Label0x5f5d                  ;Offset 0x5f5d
+    mov    ax, 0001h
+    jmp    Label0x5f6e                  ;Offset 0x5f6e
 Label0x5f5d:                            ;Offset 0x5f5d
-    cmp  edx, 0002bf20h                 ;180,000
-    jg   Label0x5f6b                    ;Offset 0x5f6b
-    mov  ax, 0002h
-    jmp  Label0x5f6e                    ;Offset 0x5f6e
+    cmp    edx, 0002bf20h               ;180,000
+    jg     Label0x5f6b                  ;Offset 0x5f6b
+    mov    ax, 0002h
+    jmp    Label0x5f6e                  ;Offset 0x5f6e
 Label0x5f6b:                            ;Offset 0x5f6b
-    mov  ax, 0003h
+    mov    ax, 0003h
 Label0x5f6e:                            ;Offset 0x5f6e
-    shl  eax, 10h
-    or   ebx, eax
+    shl    eax, 10h
+    or     ebx, eax
 Label0x5f75:                            ;Offset 0x5f75
-    pop  eax
-    inc  cl
-    jmp  Label0x5ed4                    ;Offset 0x5ed4
+    pop    eax
+    inc    cl
+    jmp    Label0x5ed4                  ;Offset 0x5ed4
 Label0x5f7c:                            ;Offset 0x5f7c
-    inc  ch
-    jmp  Label0x5e8e                    ;Offset 0x5e8e
+    inc    ch
+    jmp    Label0x5e8e                  ;Offset 0x5e8e
 Label0x5f81:                            ;Offset 0x5f81
-    inc  cl
-    jmp  Label0x5e85                    ;Offset 0x5e85
+    inc    cl
+    jmp    Label0x5e85                  ;Offset 0x5e85
 Label0x5f86:                            ;Offset 0x5f86
-    pop  edi
-    pop  esi
-    pop  edx
-    pop  ecx
-    pop  eax
+    pop    edi
+    pop    esi
+    pop    edx
+    pop    ecx
+    pop    eax
     ret
-Func0x5e4b ENDP
+CalculatePLL_MNPS ENDP
 
-Func0x5f91 PROC NEAR                    ;Offset 0x5f91
-    push eax
-    push ebx
-    push ecx
-    push edx
-    push esi
-    push cx
-    and  cl, 01h
-    jne  Label0x5fde                    ;Offset 0x5fde
-    call FindMystique                   ;Offset 0x57c6
-    mov  di, PCI_MGA_Option             ;0x40
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    or   cl, PCI_MGA_Opt_SysClockDisable;0x4
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    pop  dx
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  al, dl
-    and  al, PCI_MGA_Opt_SysClockSelect_MASK;0x3
-    jne  Label0x5fcb                    ;Offset 0x5fcb
-    and  cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    jmp  Label0x6063                    ;Offset 0x6063
+;
+;inputs:
+;  edx = Requested frequency in Hz
+;   cx = bits 1-0 = sysclksl
+;        bit    2 = gclkdiv
+;        bit    3 = mclkdiv
+;        bit    5 = nogclkdiv
+;        bit    6 = nomclkdiv
+ConfigureSystemClock PROC NEAR          ;Offset 0x5f91
+    push   eax
+    push   ebx
+    push   ecx
+    push   edx
+    push   esi
+    push   cx
+    and    cl, 01h                      ;bit 0
+    jne    NotPLL                       ;Offset 0x5fde
+    call   FindMystique                 ;Offset 0x57c6
+    mov    di, PCI_MGA_Option           ;0x40
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    or     cl, PCI_MGA_Opt_SysClockDisable;0x4
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    pop    dx
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    mov    al, dl
+    and    al, PCI_MGA_Opt_SysClockSelect_MASK;bits 1,0
+    jne    Label0x5fcb                  ;Offset 0x5fcb
+    and    cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    jmp    Label0x6063                  ;Offset 0x6063
 Label0x5fcb:                            ;Offset 0x5fcb
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
-    or   cl, PCI_MGA_Opt_SysClockSelectMCLK;0x2
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    jmp  Label0x6063                    ;Offset 0x6063
-Label0x5fde:                            ;Offset 0x5fde
-    mov  eax, edx
-    call Func0x5e4b                     ;Offset 0x5e4b
-    push ebx
-    call FindMystique                   ;Offset 0x57c6
-    mov  di, PCI_MGA_Option             ;0x40
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    or   cl, PCI_MGA_Opt_SysClockDisable;0x4
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT PCI_MGA_Opt_SysClock_MASK;0xfb
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    pop  edx
-    mov  cl, MGA_INDD_SYSPLL_M_Value    ;0x2c
-    mov  ch, dh
-    and  ch, MGA_SYSPLLM_Mask           ;0x1f
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  ch, dl
-    inc  cl
-    call WriteIndexedRegister           ;Offset 0x5b90
-    shr  edx, 0dh
-    mov  ch, dl
-    inc  cl
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  al, 01h
-    call Sleep2                         ;Offset 0x31f0
-    xor  dx, dx
-Label0x6038:                            ;Offset 0x6038
-    dec  dx
-    je   Label0x6045                    ;Offset 0x6045
-    mov  cl, MGA_INDD_SYSPLL_Status     ;0x2f
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, MGA_SYSPLLSTAT_FrequencyLock;0x40
-    je   Label0x6038                    ;Offset 0x6038
-Label0x6045:                            ;Offset 0x6045
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    or   cl, PCI_MGA_Opt_SysClockDisable;0x4
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    pop  dx
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
-    or   cl, PCI_MGA_Opt_SysClockSelectPLL;0x1
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    and    cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
+    or     cl, PCI_MGA_Opt_SysClockSelectMCLK;0x2
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    jmp    Label0x6063                  ;Offset 0x6063
+NotPLL:                                 ;Offset 0x5fde
+    mov    eax, edx
+    call   CalculatePLL_MNPS            ;Offset 0x5e4b
+    push   ebx
+    call   FindMystique                 ;Offset 0x57c6
+    mov    di, PCI_MGA_Option           ;0x40
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    or     cl, PCI_MGA_Opt_SysClockDisable;0x4
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    and    cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    and    cl, NOT PCI_MGA_Opt_SysClock_MASK;0xfb
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    pop    edx
+    mov    cl, MGA_INDD_SYSPLL_M_Value  ;0x2c
+    mov    ch, dh
+    and    ch, MGA_SYSPLLM_Mask         ;0x1f
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    mov    ch, dl
+    inc    cl                           ;MGA_INDD_SYSPLL_N_Value
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    shr    edx, 0dh
+    mov    ch, dl
+    inc    cl                           ;MGA_INDD_SYSPLL_P_Value
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    mov    al, 01h
+    call   Sleep2                       ;Offset 0x31f0
+    xor    dx, dx
+WaitForFrequencyLock:                   ;Offset 0x6038
+    dec    dx
+    je     TimeOut                      ;Offset 0x6045
+    mov    cl, MGA_INDD_SYSPLL_Status   ;0x2f
+    call   ReadIndexedRegister          ;Offset 0x5bab
+    and    cl, MGA_SYSPLLSTAT_FrequencyLock;0x40
+    je     WaitForFrequencyLock         ;Offset 0x6038
+TimeOut:                                ;Offset 0x6045
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    or     cl, PCI_MGA_Opt_SysClockDisable;0x4
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    pop    dx
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    and    cl, NOT PCI_MGA_Opt_SysClockSelect_MASK;0xfc
+    or     cl, PCI_MGA_Opt_SysClockSelectPLL;0x1
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
 Label0x6063:                            ;Offset 0x6063
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  al, dl
-    and  al, 0ch
-    shl  al, 01h
-    or   cl, al
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    mov  di, PCI_MGA_Option             ;0x40
-    mov  al, PCI_ACCESS_ReadByte        ;0x8
-    call AccessPCIRegister              ;Offset 0x5734
-    and  cl, NOT PCI_MGA_Opt_SysClock_MASK;0xfb
-    mov  al, PCI_ACCESS_WriteByte       ;0xb
-    call AccessPCIRegister              ;Offset 0x5734
-    pop  esi
-    pop  edx
-    pop  ecx
-    pop  ebx
-    pop  eax
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    mov    al, dl
+    and    al, 0ch                      ;gclkdiv & mclkdiv
+    shl    al, 01h                      ;...
+    or     cl, al
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    mov    di, PCI_MGA_Option           ;0x40
+    mov    al, PCI_ACCESS_ReadByte      ;0x8
+    call   AccessPCIRegister            ;Offset 0x5734
+    and    cl, NOT PCI_MGA_Opt_SysClock_MASK;0xfb
+    mov    al, PCI_ACCESS_WriteByte     ;0xb
+    call   AccessPCIRegister            ;Offset 0x5734
+    pop    esi
+    pop    edx
+    pop    ecx
+    pop    ebx
+    pop    eax
     ret
-Func0x5f91 ENDP
+ConfigureSystemClock ENDP
 
-Func0x6090 PROC NEAR                    ;Offset 0x6090
-    push eax
-    push ebx
-    push ecx
-    push edx
-    mov  edx, ebx
-    push edx
-    push cx
-    call FindMystique                   ;Offset 0x57c6
-    mov  dx, VGA_SequenceIndex          ;Port 0x3c4
-    mov  al, VGA_SEQIdx_ClockingMode    ;0x1
-    out  dx, al
-    inc  dx
-    in   al, dx
-    or   al, VGA_SEQ1_ScreenOff         ;0x20
-    out  dx, al
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call ReadIndexedRegister            ;Offset 0x5bab
-    or   cl, MGA_PIXCLKCTRL_ClockDisable;0x4
-    xchg ch, cl
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call WriteIndexedRegister           ;Offset 0x5b90
-    pop  cx
-    mov  al, cl
-    and  al, 03h
-    cmp  al, 00h
-    jne  Label0x60c8                    ;Offset 0x60c8
-    mov  al, MGA_INDD_PIXPLL_M_ValueSetA;0x44
-    jmp  Label0x60d2                    ;Offset 0x60d2
+;
+;inputs:
+;   ebx = M,N,P and S values
+;         bl holds N in lower 7 bits
+;         bh holds M in lower 5 bits
+;         bh holds P in upper 3 bits
+;         S 2 bits sit above bh
+;         00000000 000000SS PPPMMMMM xNNNNNNN
+;    cl = bits 1-0 = PLL Set A = 0, B = 1, C = 2
+;         bits 7-2 = Clock select: 0 = PCI, 1 = PLL, 2 = VDOCLK
+;
+ConfigurePixelClocks PROC NEAR          ;Offset 0x6090
+    push   eax
+    push   ebx
+    push   ecx
+    push   edx
+    mov    edx, ebx
+    push   edx
+    push   cx
+    call   FindMystique                 ;Offset 0x57c6
+    mov    dx, VGA_SequenceIndex        ;Port 0x3c4
+    mov    al, VGA_SEQIdx_ClockingMode  ;0x1
+    out    dx, al
+    inc    dx
+    in     al, dx
+    or     al, VGA_SEQ1_ScreenOff       ;0x20
+    out    dx, al
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x5bab
+    or     cl, MGA_PIXCLKCTRL_ClockDisable;0x4
+    xchg   ch, cl
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    pop    cx
+    mov    al, cl
+    and    al, 03h
+    cmp    al, 00h
+    jne    Label0x60c8                  ;Offset 0x60c8
+    mov    al, MGA_INDD_PIXPLL_M_ValueSetA;0x44
+    jmp    Label0x60d2                  ;Offset 0x60d2
 Label0x60c8:                            ;Offset 0x60c8
-    cmp  al, 01h
-    jne  Label0x60d0                    ;Offset 0x60d0
-    mov  al, MGA_INDD_PIXPLL_M_ValueSetB;0x48
-    jmp  Label0x60d2                    ;Offset 0x60d2
+    cmp    al, 01h
+    jne    Label0x60d0                  ;Offset 0x60d0
+    mov    al, MGA_INDD_PIXPLL_M_ValueSetB;0x48
+    jmp    Label0x60d2                  ;Offset 0x60d2
 Label0x60d0:                            ;Offset 0x60d0
-    mov  al, MGA_INDD_PIXPLL_M_ValueSetC;0x4c
+    mov    al, MGA_INDD_PIXPLL_M_ValueSetC;0x4c
 Label0x60d2:                            ;Offset 0x60d2
-    mov  ah, cl
-    shr  ah, 02h
-    cmp  ah, 01h
-    jne  Label0x60e0                    ;Offset 0x60e0
-    mov  ah, MGA_PIXCLKCTRL_SelPLL      ;0x01
-    jmp  Label0x60eb                    ;Offset 0x60eb
+    mov    ah, cl
+    shr    ah, 02h
+    cmp    ah, 01h
+    jne    Label0x60e0                  ;Offset 0x60e0
+    mov    ah, MGA_PIXCLKCTRL_SelPLL    ;0x01
+    jmp    Label0x60eb                  ;Offset 0x60eb
 Label0x60e0:                            ;Offset 0x60e0
-    cmp  ah, 00h
-    jne  Label0x60e9                    ;Offset 0x60e9
-    mov  ah, MGA_PIXCLKCTRL_SelPCI      ;0x0
-    jmp  Label0x60eb                    ;Offset 0x60eb
+    cmp    ah, 00h
+    jne    Label0x60e9                  ;Offset 0x60e9
+    mov    ah, MGA_PIXCLKCTRL_SelPCI    ;0x0
+    jmp    Label0x60eb                  ;Offset 0x60eb
 Label0x60e9:                            ;Offset 0x60e9
-    mov  ah, MGA_PIXCLKCTRL_SelVDOCLK   ;0x2
+    mov    ah, MGA_PIXCLKCTRL_SelVDOCLK ;0x2
 Label0x60eb:                            ;Offset 0x60eb
-    pop  edx
-    push ax
-    mov  ch, dh
-    and  ch, MGA_PIXPLL_M_MASK          ;0x1f
-    mov  cl, al
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  ch, dl
-    inc  cl
-    call WriteIndexedRegister           ;Offset 0x5b90
-    shr  edx, 0dh
-    mov  ch, dl
-    inc  cl
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  al, 01h
+    pop    edx
+    push   ax
+    mov    ch, dh
+    and    ch, MGA_PIXPLL_M_MASK        ;0x1f
+    mov    cl, al
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    mov    ch, dl
+    inc    cl                           ;MGA_INDD_PIXPLL_N_Value
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    shr    edx, 0dh
+    mov    ch, dl
+    inc    cl                           ;MGA_INDD_PIXPLL_P_Value
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    mov    al, 01h
     cli
-    call Sleep2                         ;Offset 0x31f0
+    call   Sleep2                       ;Offset 0x31f0
     sti
-    xor  dx, dx
+    xor    dx, dx
 Label0x6113:                            ;Offset 0x6113
-    dec  dx
-    je   Label0x6120                    ;Offset 0x6120
-    mov  cl, MGA_INDD_PIXPLL_Status     ;0x4f
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, MGA_PIXPLLSTAT_FrequencyLock;0x40
-    je   Label0x6113                    ;Offset 0x6113
+    dec    dx
+    je     Label0x6120                  ;Offset 0x6120
+    mov    cl, MGA_INDD_PIXPLL_Status   ;0x4f
+    call   ReadIndexedRegister          ;Offset 0x5bab
+    and    cl, MGA_PIXPLLSTAT_FrequencyLock;0x40
+    je     Label0x6113                  ;Offset 0x6113
 Label0x6120:                            ;Offset 0x6120
-    pop  dx
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, NOT MGA_PIXCLKCTRL_SelMASK ;0xfc
-    or   cl, dh
-    xchg cl, ch
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call WriteIndexedRegister           ;Offset 0x5b90
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call ReadIndexedRegister            ;Offset 0x5bab
-    and  cl, NOT MGA_PIXCLKCTRL_ClockMASK;0xfb
-    xchg ch, cl
-    mov  cl, MGA_INDD_PixelClockControl ;0x1a
-    call WriteIndexedRegister           ;Offset 0x5b90
-    cmp  dh, MGA_PIXCLKCTRL_SelPCI      ;0x0
-    jne  Label0x614a                    ;Offset 0x614a
-    mov  bl, VGA_MISC_Clock25p175MHz SHR 2;0x0
-    jmp  Label0x6155                    ;Offset 0x6155
+    pop    dx
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x5bab
+    and    cl, NOT MGA_PIXCLKCTRL_SelMASK;0xfc
+    or     cl, dh
+    xchg   cl, ch
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   ReadIndexedRegister          ;Offset 0x5bab
+    and    cl, NOT MGA_PIXCLKCTRL_ClockMASK;0xfb
+    xchg   ch, cl
+    mov    cl, MGA_INDD_PixelClockControl;0x1a
+    call   WriteIndexedRegister         ;Offset 0x5b90
+    cmp    dh, MGA_PIXCLKCTRL_SelPCI    ;0x0
+    jne    Label0x614a                  ;Offset 0x614a
+    mov    bl, VGA_MISC_Clock25p175MHz SHR 2;0x0
+    jmp    Label0x6155                  ;Offset 0x6155
 Label0x614a:                            ;Offset 0x614a
-    cmp  dh, MGA_PIXCLKCTRL_SelPLL      ;0x1
-    jne  Label0x6153                    ;Offset 0x6153
-    mov  bl, VGA_MISC_Clock28p322MHz SHR 2;0x1
-    jmp  Label0x6155                    ;Offset 0x6155
+    cmp    dh, MGA_PIXCLKCTRL_SelPLL    ;0x1
+    jne    Label0x6153                  ;Offset 0x6153
+    mov    bl, VGA_MISC_Clock28p322MHz SHR 2;0x1
+    jmp    Label0x6155                  ;Offset 0x6155
 Label0x6153:                            ;Offset 0x6153
-    mov  bl, MGA_MISC_MGAPixelClock SHR 2;0x3
+    mov    bl, MGA_MISC_MGAPixelClock SHR 2;0x3
 Label0x6155:                            ;Offset 0x6155
-    mov  dx, VGA_MiscellaneousRead      ;Port 0x3cc
-    in   al, dx
-    shl  bl, 02h
-    and  al, NOT VGA_MISC_ClockSelectMask;0xf3
-    or   al, bl
-    mov  dx, VGA_MiscellaneousWrite     ;Port 0x3c2
-    out  dx, al
-    mov  dx, VGA_SequenceIndex          ;Port 0x3c4
-    mov  al, VGA_SEQIdx_ClockingMode    ;0x1
-    out  dx, al
-    inc  dx
-    in   al, dx
-    and  al, NOT VGA_SEQ1_ScreenOff     ;0xdf
-    out  dx, al
-    pop  edx
-    pop  ecx
-    pop  ebx
-    pop  eax
+    mov    dx, VGA_MiscellaneousRead    ;Port 0x3cc
+    in     al, dx
+    shl    bl, 02h
+    and    al, NOT VGA_MISC_ClockSelectMask;0xf3
+    or     al, bl
+    mov    dx, VGA_MiscellaneousWrite   ;Port 0x3c2
+    out    dx, al
+    mov    dx, VGA_SequenceIndex        ;Port 0x3c4
+    mov    al, VGA_SEQIdx_ClockingMode  ;0x1
+    out    dx, al
+    inc    dx
+    in     al, dx
+    and    al, NOT VGA_SEQ1_ScreenOff   ;0xdf
+    out    dx, al
+    pop    edx
+    pop    ecx
+    pop    ebx
+    pop    eax
     ret
-Func0x6090 ENDP
+ConfigurePixelClocks ENDP
 
-Func0x6178 PROC NEAR                    ;Offset 0x6178
+;inputs:
+;   edx = requested frequency in KHz
+;
+;outputs:
+;   -
+;
+;destroys:
+;   -
+;
+ConfigureAndSelectPLLSetC PROC NEAR     ;Offset 0x6178
     push eax
     push ebx
     push ecx
-    mov  cl, 06h
+    mov  cl, MGA_CPC_PLLSetC OR MGA_CPC_ClockPLL;0x6
     mov  eax, edx
-    call Func0x5e4b                     ;Offset 0x5e4b
-    call Func0x6090                     ;Offset 0x6090
+    call CalculatePLL_MNPS              ;Offset 0x5e4b
+    call ConfigurePixelClocks           ;Offset 0x6090
     pop  ecx
     pop  ebx
     pop  eax
     ret
-Func0x6178 ENDP
+ConfigureAndSelectPLLSetC ENDP
 
-Func0x6190 PROC NEAR                    ;Offset 0x6190
+ConfigureAndSelectPLLSetB PROC NEAR     ;Offset 0x6190
     push eax
     push ebx
     push ecx
-    mov  cl, 05h
+    mov  cl, MGA_CPC_PLLSetB OR MGA_CPC_ClockPLL;0x5
     mov  ebx, 00016c66h                 ;93,286
-    call Func0x6090                     ;Offset 0x6090
+    call ConfigurePixelClocks           ;Offset 0x6090
     pop  ecx
     pop  ebx
     pop  eax
     ret
-Func0x6190 ENDP
+ConfigureAndSelectPLLSetB ENDP
 
 ;Offset 0x61a8
 IndexedRegisters        DB MGA_INDD_CursorBaseAddressLow            ;0x04
@@ -9460,7 +9567,7 @@ Func0x61d7 ENDP
 Func0x622f PROC NEAR                    ;Offset 0x622f
     push dx
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
-    xor  ax, ax
+    xor  ax, ax                         ;MGA_CRTCExt_AddrGeneratorExt
     out  dx, al
     inc  dx
     in   al, dx
@@ -9507,7 +9614,7 @@ Func0x6257 PROC NEAR                    ;Offset 0x6257
     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     call WriteIndexedRegister           ;Offset 0x5b90
     mov  cl, MGA_INDD_MultiplexControl  ;0x19
-    xor  ch, ch
+    xor  ch, ch                         ;MGA_MULCTRL_Depth8
     call WriteIndexedRegister           ;Offset 0x5b90
     mov  cl, MGA_INDD_GeneralControl    ;0x1d
     call ReadIndexedRegister            ;Offset 0x5bab
@@ -9556,7 +9663,7 @@ Label0x62db:                            ;Offset 0x62db
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     mov  ah, byte ptr cs:[Data0x7814]   ;Offset 0x7814
     and  ah, MGA_CRTCEXT3_CompSyncEnable SHR 2;10h
-    shl  ah, 02h
+    shl  ah, 02h                        ;MGA_CRTCEXT3_CompSyncEnable
     mov  al, MGA_CRTCExt_Misc           ;0x3
     out  dx, ax
     mov  ax, MGA_CRTCExt_MemoryPage SHL 8;0x400
@@ -9583,7 +9690,7 @@ Func0x6310 PROC NEAR                    ;Offset 0x6310
     call GetMemoryIn64KBlocks           ;Offset 0x5846
     call CapAXTo0x40                    ;Offset 0x5832
     mov  byte ptr es:[BDA_VideoBufferSize + 01h], ah;Offset 0x44d
-    mov  byte ptr es:[BDA_VideoBufferSize], 00h
+    mov  byte ptr es:[BDA_VideoBufferSize], 00h;Offset 0x44c
     mov  al, 03h
     and  al, byte ptr [si + 0bh]
     jne  Label0x6400                    ;Offset 0x6400
@@ -9601,7 +9708,7 @@ Func0x6310 PROC NEAR                    ;Offset 0x6310
     je   Label0x63b8                    ;Offset 0x63b8
     test byte ptr [si + 0bh], 20h
     je   Label0x6385                    ;Offset 0x6385
-    mov  byte ptr es:[BDA_VideoBufferSize], 03h
+    mov  byte ptr es:[BDA_VideoBufferSize], 03h;Offset 0x44c
     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
     call ReadIndexedRegister            ;Offset 0x5bab
     or   cl, MGA_MISCCTRL_DAC_8Bit      ;0x8
@@ -9891,7 +9998,7 @@ Func0x6518 PROC NEAR                    ;Offset 0x6518
     out       dx, al
     mov       edx, dword ptr [si]
     mov       cl, 2dh
-    call      Func0x6178                ;Offset 0x6178
+    call      ConfigureAndSelectPLLSetC ;Offset 0x6178
     xor       dx, dx
     xor       eax, eax
     mov       ax, word ptr [si + 0ch]
@@ -11145,7 +11252,7 @@ MatroxOEMExtensionTable DW offset InstallationCheckGetCaps;Offset 0x76d0
                         DW offset Label0x77d4;Offset 0x77d4
 
 VESAHandler:                            ;Offset 0x707e
-    cmp       al, 14h
+    cmp       al, 14h                   ;Matrox OEM extension
     je        Label0x7092               ;Offset 0x7092
     cmp       al, 0ah
     ja        Label0x70a4               ;Offset 0x70a4
@@ -11242,6 +11349,7 @@ Label0x711e:                            ;Offset 0x711e
     DB 00Dh, 001h, 000h
     jmp   Label0x7126                   ;Offset 0x7126
     nop
+Label0x7124:                            ;Offset 0x7124
     xor   ax, ax
 Label0x7126:                            ;Offset 0x7126
     pop   ds
@@ -11570,7 +11678,7 @@ Label0x73a4:                            ;Offset 0x73a4
 Label0x73b1:                            ;Offset 0x73b1
     mov   ah, 00h
     mov   al, bl
-    int   10h
+    int   10h                           ;Regular int 10h handler for standard modes
     inc   ax
     jne   Label0x73bf                   ;Offset 0x73bf
     mov   ax, 014fh
@@ -11580,15 +11688,15 @@ Label0x73bf:                            ;Offset 0x73bf
     and   bx, 7f7fh
     cmp   bx, VESA_MODE_640x400x256     ;0x100
     jl    Label0x73cd                   ;Offset 0x73cd
-    add   bl, 20h
+    add   bl, 20h                       ;VESA mode is (mode & 0x7f) + 0x20
 Label0x73cd:                            ;Offset 0x73cd
     xor   ax, ax
     mov   ds, ax
     mov   al, bl
     pop   bx
     mov   ah, bh
-    and   ah, 0c0h
-    or    al, ah
+    and   ah, 0c0h                      ;Top 2 bits are preserved
+    or    al, ah                        ;And stored along with the mode
     mov   byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
     mov   ax, 004fh
 Label0x73e1:                            ;Offset 0x73e1
@@ -11609,8 +11717,8 @@ SuperVGAGetCurrentVideoMode:            ;Offset 0x73ec
     xor  bx, bx
     mov  ah, al
     and  ah, 0c0h
-    and  al, 03fh
-    cmp  al, 020h
+    and  al, 3fh
+    cmp  al, 20h
     jl   Label0x740e                    ;Offset 0x740e
     cmp  al, 40h
     jge  Label0x740e                    ;Offset 0x740e
@@ -12060,7 +12168,7 @@ InstallationCheckGetCaps:               ;Offset 0x76d0
     pop       di
     mov       ax, cs
     mov       word ptr es:[di + VBE_MGA_VendorNameSeg], ax;0x15
-    mov       word ptr es:[di + VBE_MGA_ProductNameSeg], ax;0x190x19], ax
+    mov       word ptr es:[di + VBE_MGA_ProductNameSeg], ax;0x19
     mov       word ptr es:[di + VBE_MGA_RevisionSeg], ax;0x1d
     mov       word ptr es:[di + VBE_MGA_OEMNameSeg], ax;0x21
     mov       word ptr es:[di + VBE_MGA_BuildVersionSeg], ax;0x25
@@ -12160,7 +12268,7 @@ Label0x77b9:                            ;Offset 0x77b9
     shl  edx, 10h
     mov  dx, ax
     mov  cl, 2dh
-    call Func0x6178                     ;Offset 0x6178
+    call ConfigureAndSelectPLLSetC      ;Offset 0x6178
     xor  ah, ah
 Label0x77d1:                            ;Offset 0x77d1
     mov  al, 4fh
@@ -12390,7 +12498,6 @@ PINSPointer             DW offset PINS  ;Offset 0x7520
 
 DB 0FFh
 
-ORG 7fffh
 DB 01Bh
 ROMEnd:
 END

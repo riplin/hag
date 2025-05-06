@@ -167,7 +167,7 @@ Label0xeb:                              ;Offset 0xeb
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
     out       dx, ax
     mov       cx, 0078h
-    call      PowerUpPLLsLUTSAndConfigure;Offset 0x7b13
+    call      PowerUpPLLsLUTsAndConfigure;Offset 0x7b13
     call      SetMemoryTimingsAndRefresh ;Offset 0x79f6
     push      bx
     mov       al, 40h                   ;Color
@@ -175,7 +175,7 @@ Label0xeb:                              ;Offset 0xeb
     pop       bx
     call      CacheMemorySize           ;Offset 0x7c33
     xor       cx, cx
-    call      PowerUpPLLsLUTSAndConfigure;Offset 0x7b13
+    call      PowerUpPLLsLUTsAndConfigure;Offset 0x7b13
     test      byte ptr cs:[Data0x7ff1], 80h;Offset 0x7ff1
     je        Label0x11f                ;Offset 0x11f
     test      byte ptr cs:[Data0x7ff1], 20h;Offset 0x7ff1
@@ -1149,7 +1149,7 @@ Func0xcd2 PROC NEAR                     ;Offset 0xcd2
 Func0xcd2 ENDP
 
 Func0xce3 PROC NEAR                     ;Offset 0xce3
-    mov  byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484 0x18
+    mov  byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484
     or   ah, BDA_VMO_Inactive           ;0x8
     mov  byte ptr ds:[BDA_VideoModeOptions], ah;Offset 0x487
     cbw
@@ -1157,19 +1157,26 @@ Func0xce3 PROC NEAR                     ;Offset 0xce3
     ret
 Func0xce3 ENDP
 
+;
+;inputs:
+;   al = display mode
+;   ah = video mode options
+;   si = video base io port
+;
+;
 Func0xcf3 PROC NEAR                     ;Offset 0xcf3
-    test      ah, 02h
+    test      ah, BDA_VMO_Monochrome    ;0x2
     je        Func0xcd2                 ;Offset 0xcd2
-    mov       si, 03b4h                 ;Port 0x3b4
-    cmp       al, 07h
+    mov       si, VGA_CRTControllerIndexB;Port 0x3b4
+    cmp       al, BDA_DM_80x25_Monochrome_Text;0x7
     je        Func0xd08                 ;Offset 0xd08
-    cmp       al, 0fh
+    cmp       al, BDA_DM_640x350_Monochrome_Graphics;0xf
     je        Func0xd08                 ;Offset 0xd08
-    mov       al, 07h
+    mov       al, BDA_DM_80x25_Monochrome_Text;0x7
 Func0xcf3 ENDP
 ;continue!
 Func0xd05 PROC NEAR                     ;Offset 0xd05
-    and       ah, 7fh
+    and       ah, NOT BDA_VMO_DontClearDisplay;0x7f
 Func0xd05 ENDP
 ;continue!
 Func0xd08 PROC NEAR                     ;Offset 0xd08
@@ -1185,7 +1192,7 @@ Func0xd08 PROC NEAR                     ;Offset 0xd08
     test      byte ptr cs:[Data0x7ff1], 80h;Offset 0x7ff1
     je        Label0xd5c                ;Offset 0xd5c
     mov       ax, 1600h
-    int       2fh
+    int       2fh                       ;Windows Enhanced Mode Installation Check
     test      al, 7fh
     je        Label0xd5c                ;Offset 0xd5c
     push      bx
@@ -1204,14 +1211,14 @@ Func0xd08 PROC NEAR                     ;Offset 0xd08
     push      bx
     push      si
     mov       bx, word ptr cs:[PCIBusDeviceIDFunctionID];Offset 0x7ff2
-    mov       si, 1fc4h
+    mov       si, MGA_MemAddr_SequencerIndex;0x1fc4
     call      IndirectRegisterReadWord  ;Offset 0x6a38
-    test      ch, 20h
+    test      ch, 20h                   ;Test a reserved bit...
     pop       si
     pop       bx
     je        Label0xd5c                ;Offset 0xd5c
     xor       cx, cx
-    call      PowerUpPLLsLUTSAndConfigure;Offset 0x7b13
+    call      PowerUpPLLsLUTsAndConfigure;Offset 0x7b13
     call      TurnScreenOn              ;Offset 0x2b11
 Label0xd5c:                             ;Offset 0xd5c
     pop       cx
@@ -1234,7 +1241,7 @@ Label0xd63:                             ;Offset 0xd63
     out       dx, al
     in        al, dx
     mov       ah, 1eh
-    test      al, MGA_CRTCEXT3_MGAModeEnable;0x80
+    test      al, 80h                   ;Unknown bit
     jne       Label0xd88                ;Offset 0xd88
     mov       ah, 00h
 Label0xd88:                             ;Offset 0xd88
@@ -1475,7 +1482,7 @@ Func0xf4d PROC NEAR                     ;Offset 0xf4d
     int   6dh
 Label0xf67:                             ;Offset 0xf67
     xor   ax, ax
-    mov   word ptr ds:[BDA_CursorEndScanLine], ax;Offset 0x460
+    mov   word ptr ds:[BDA_CursorEndStartScanLine], ax;Offset 0x460
     call  Func0xfc7                     ;Offset 0xfc7
     ret
 Func0xf4d ENDP
@@ -1764,13 +1771,13 @@ SelectActiveDisplayPage PROC NEAR       ;Offset 0x112c
     ja        Label0x1148               ;Offset 0x1148
     shr       ax, 01h
 Label0x1148:                            ;Offset 0x1148
-    call      SetStartAddress           ;Offset 0x1153
+    call      SetStartAddressVGA        ;Offset 0x1153
     shl       si, 01h
     mov       ax, word ptr [si + DBA_CursorPositionPage0];Offset 0x450
     jmp       Func0x10f0                ;Offset 0x10f0
 SelectActiveDisplayPage ENDP
 
-SetStartAddress PROC NEAR               ;Offset 0x1153
+SetStartAddressVGA PROC NEAR            ;Offset 0x1153
     push      ax
     mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     mov       al, VGA_CRTCIdx_StartAddrHigh;0xc
@@ -1780,7 +1787,7 @@ SetStartAddress PROC NEAR               ;Offset 0x1153
     mov       al, VGA_CRTCIdx_StartAddrLow;0xd
     out       dx, ax
     ret
-SetStartAddress ENDP
+SetStartAddressVGA ENDP
 
 ScrollUpWindow PROC NEAR                ;Offset 0x1162
     push      bx
@@ -2399,7 +2406,7 @@ ReadCharacterAndAttributeAtCursorPosition PROC NEAR;Offset 0x15c4
     jbe        Label0x15d8              ;Offset 0x15d8
     cmp        al, BDA_DM_80x25_Monochrome_Text;0x7
     jne        Label0x1611              ;Offset 0x1611
-    mov        dh, 0b0h                 ;Segment 0xb0
+    mov        dh, 0b0h                 ;Segment 0xb000
 Label0x15d8:                            ;Offset 0x15d8
     push       dx
     mov        al, bh
@@ -2464,7 +2471,7 @@ Label0x1644:                            ;Offset 0x1644
     stosb
     add        si, 0050h
     loop       Label0x1644              ;Offset 0x1644
-Label0x1651:                            ;Offset 0x1651;
+Label0x1651:                            ;Offset 0x1651
     mov        ds, cx
     lds        si, ds:[INT_43_HandlerOfs];Offset 0x10c
     sub        di, 0008h
@@ -2506,7 +2513,7 @@ Label0x168b:                            ;Offset 0x168b
     mov        si, ax
     shl        di, 01h
     mov        ax, word ptr [di + DBA_CursorPositionPage0];Offset 0x450
-    call       Func0x266e               ;Offset 0x266e;
+    call       Func0x266e               ;Offset 0x266e
     add        si, ax
     mov        dx, VGA_GraphicsControllerIndex;Port 0x3ce
     mov        ax, (VGA_GCTL5_ReadColCmp SHL 8) OR VGA_GCTLIdx_GraphicMode;0x805
@@ -2526,7 +2533,7 @@ Label0x16bb:                            ;Offset 0x16bb
     add        si, dx
     loop       Label0x16bb              ;Offset 0x16bb
     mov        dx, VGA_GraphicsControllerIndex;Port 0x3ce
-    mov        ax, VGA_GCTLIdx_GraphicMode;0x5
+    mov        ax, (VGA_GCTL5_BLU SHL 8) OR VGA_GCTLIdx_GraphicMode;0x5
     out        dx, ax
 Label0x16cb:                            ;Offset 0x16cb
     mov        ds, cx
@@ -3527,7 +3534,7 @@ Func0x1d8b PROC NEAR                    ;Offset 0x1d8b
     xor       dl, dl
 Func0x1d8b ENDP
 ;continue!
-Func0x1d8d PROC NEAR                     ;Offset 0x1d8d
+Func0x1d8d PROC NEAR                    ;Offset 0x1d8d
     inc       dh
     cmp       dh, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
     jbe       Func0x1d5d                ;Offset 0x1d5d
@@ -3914,17 +3921,17 @@ Label0x1fb3:                            ;Offset 0x1fb3
 PerformGrayScaleSumming ENDP
 
 TextFunctions PROC NEAR                 ;Offset 0x1fbf
-    lea       si, [Func0x1fec]          ;Offset 0x1fec
+    lea       si, [TextFunctions0X]     ;Offset 0x1fec
     cmp       al, 10h
     jb        Label0x1fdd               ;Offset 0x1fdd
-    lea       si, [Func0x200d]          ;Offset 0x200d
+    lea       si, [TextFunctions1X]     ;Offset 0x200d
     cmp       al, 20h
     jb        Label0x1fdd               ;Offset 0x1fdd
-    lea       si, [Func0x2028]          ;Offset 0x2028
+    lea       si, [TextFunctions2X]     ;Offset 0x2028
     cmp       al, 30h
     jb        Label0x1fdd               ;Offset 0x1fdd
     jne       Label0x1feb               ;Offset 0x1feb
-    call      Func0x208c                ;Offset 0x208c
+    call      GetFontInformation        ;Offset 0x208c
     ret
 Label0x1fdd:                            ;Offset 0x1fdd
     push      bx
@@ -3943,27 +3950,27 @@ Label0x1feb:                            ;Offset 0x1feb
     ret
 TextFunctions ENDP
 
-Func0x1fec PROC NEAR                    ;Offset 0x1fec
+TextFunctions0X PROC NEAR               ;Offset 0x1fec
     cmp       al, 03h
-    je        Label0x2004               ;Offset 0x2004
+    je        SelectCharacterMap        ;Offset 0x2004
     cmp       al, 04h
-    ja        Label0x200c               ;Offset 0x200c
+    ja        Return                    ;Offset 0x200c
     and       bl, 7fh
     call      Func0x26e5                ;Offset 0x26e5
     call      Func0x2726                ;Offset 0x2726
     call      Func0x26eb                ;Offset 0x26eb
     call      Func0x2ad5                ;Offset 0x2ad5
     ret
-Label0x2004:                            ;Offset 0x2004
+SelectCharacterMap:                     ;Offset 0x2004
     mov       dx, VGA_SequenceIndex     ;Port 0x3c4
     mov       al, VGA_SEQIdx_CharacterMapSelect;0x3
     mov       ah, bl
     out       dx, ax
-Label0x200c:                            ;Offset 0x200c
+Return:                                 ;Offset 0x200c
     ret
-Func0x1fec ENDP
+TextFunctions0X ENDP
 
-Func0x200d PROC NEAR                    ;Offset 0x200d
+TextFunctions1X PROC NEAR               ;Offset 0x200d
     cmp       al, 03h
     je        Label0x2027               ;Offset 0x2027
     cmp       al, 04h
@@ -3976,9 +3983,9 @@ Func0x200d PROC NEAR                    ;Offset 0x200d
     call      Func0x2ad5                ;Offset 0x2ad5
 Label0x2027:                            ;Offset 0x2027
     ret
-Func0x200d ENDP
+TextFunctions1X ENDP
 
-Func0x2028 PROC NEAR                    ;Offset 0x2028
+TextFunctions2X PROC NEAR               ;Offset 0x2028
     cmp       al, 04h
     ja        Label0x208b               ;Offset 0x208b
     cbw
@@ -4027,9 +4034,9 @@ Label0x2087:                            ;Offset 0x2087
     mov       byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
 Label0x208b:                            ;Offset 0x208b
     ret
-Func0x2028 ENDP
+TextFunctions2X ENDP
 
-Func0x208c PROC NEAR                    ;Offset 0x208c
+GetFontInformation PROC NEAR            ;Offset 0x208c
     mov       cx, word ptr ds:[BDA_PointHeightOfCharacterMatrix];Offset 0x485
     mov       dl, byte ptr ds:[BDA_RowsOnScreen];Offset 0x484
     mov       al, bh
@@ -4059,11 +4066,11 @@ Label0x20be:                            ;Offset 0x20be
     les       bp, ds:[INT_1F_HandlerOfs];Offset 0x7c
 Label0x20c2:                            ;Offset 0x20c2
     ret
-Func0x208c ENDP
+GetFontInformation ENDP
 
 AlternateFunctions PROC NEAR            ;Offset 0x20c3
     cmp       bl, 20h
-    je        Label0x20ef               ;Offset 0x20ef
+    je        InstallAlternatePrintScreenHandler;Offset 0x20ef
     cmp       bl, 10h
     je        Label0x20cf               ;Offset 0x20cf
     jmp       Label0x20fc               ;Offset 0x20fc
@@ -4083,7 +4090,7 @@ Label0x20cf:                            ;Offset 0x20cf
     and       al, BDA_EFBS_AdapterTypeMask;0xf
     mov       cl, al
     ret
-Label0x20ef:                            ;Offset 0x20ef
+InstallAlternatePrintScreenHandler:     ;Offset 0x20ef
     cli
     mov       word ptr ds:[INT_5_HandlerOfs], offset PrintScreenHandler;Offset 0x14 Offset 0x2c50
     mov       word ptr ds:[INT_5_HandlerSeg], cs;Offset 0x16
@@ -4435,7 +4442,7 @@ Label0x2308:                            ;Offset 0x2308
     call      SetDisplayCombinationCodeIndex;Offset 0x2b2c
     jmp       Label0x2318               ;Offset 0x2318
 Label0x2315:                            ;Offset 0x2315
-    call      Func0x2b53                ;Offset 0x2b53
+    call      GetDisplayCombinationCode ;Offset 0x2b53
 Label0x2318:                            ;Offset 0x2318
     mov       al, 1ah
 Label0x231a:                            ;Offset 0x231a
@@ -4466,7 +4473,7 @@ Label0x2325:                            ;Offset 0x2325
     inc       ax
     stosb
     movsw
-    call      Func0x2b53                ;Offset 0x2b53
+    call      GetDisplayCombinationCode ;Offset 0x2b53
     xchg      ax, bx
     stosw
     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
@@ -5815,7 +5822,7 @@ Found:                                  ;Offset 0x2b4e
     ret
 SetDisplayCombinationCodeIndex ENDP
 
-Func0x2b53 PROC NEAR                    ;Offset 0x2b53
+GetDisplayCombinationCode PROC NEAR     ;Offset 0x2b53
     push  di
     push  es
     mov   bx, 0ffffh
@@ -5846,7 +5853,7 @@ Label0x2b86:                            ;Offset 0x2b86
     pop   es
     pop   di
     ret
-Func0x2b53 ENDP
+GetDisplayCombinationCode ENDP
 
 LookupVideoParameterControlBlockPointer PROC NEAR;Offset 0x2b89
     cbw  
@@ -9019,14 +9026,14 @@ Label0x5d6f:                            ;Offset 0x5d6f
     pop       eax
     shr       cx, 03h
     add       ax, cx
-    call      Func0x6466                ;Offset 0x6466
+    call      SetStartAddress           ;Offset 0x6466
     pop       dx
     pop       cx
     pop       di
     mov       ax, 004fh
     iret
 Label0x5d8d:                            ;Offset 0x5d8d
-    call      Func0x6433                ;Offset 0x6433
+    call      GetStartAddress           ;Offset 0x6433
     xor       cx, cx
     xor       dx, dx
     or        eax, eax
@@ -9625,8 +9632,8 @@ Label0x6183:                            ;Offset 0x6183
     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
     mov  ah, byte ptr cs:[Data0x7d17]   ;Offset 0x7d17
     shr  ah, 03h
-    and  ah, 07h
-    mov  al, 06h
+    and  ah, MGA_CRTCEXT6_HiPrioLevelMASK;0x7
+    mov  al, MGA_CRTCExt_PrioRequestControl;0x6
     out  dx, ax
     pop  cx
     or   cl, cl
@@ -9911,7 +9918,7 @@ Label0x63c2:                            ;Offset 0x63c2
     call      Func0x628a                ;Offset 0x628a
 Label0x63d7:                            ;Offset 0x63d7
     xor       eax, eax
-    call      Func0x6466                ;Offset 0x6466
+    call      SetStartAddress           ;Offset 0x6466
     call      Func0x686a                ;Offset 0x686a
     mov       ah, MGA_CRTCExt_MemoryPage;0x4
     mov       al, bl
@@ -9965,7 +9972,7 @@ Label0x6431:                            ;Offset 0x6431
     ret
 Func0x6410 ENDP
 
-Func0x6433 PROC NEAR                    ;Offset 0x6433
+GetStartAddress PROC NEAR               ;Offset 0x6433
     push      dx
     xor       eax, eax
     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
@@ -9995,9 +10002,9 @@ Func0x6433 PROC NEAR                    ;Offset 0x6433
     call      Func0x68df                ;Offset 0x68df
     pop       dx
     ret
-Func0x6433 ENDP
+GetStartAddress ENDP
 
-Func0x6466 PROC NEAR                    ;Offset 0x6466
+SetStartAddress PROC NEAR               ;Offset 0x6466
     push      cx
     push      dx
     mov       dl, 00h
@@ -10043,7 +10050,7 @@ Label0x6483:                            ;Offset 0x6483
     pop       dx
     pop       cx
     ret
-Func0x6466 ENDP
+SetStartAddress ENDP
 
 Func0x64b0 PROC NEAR                    ;Offset 0x64b0
     push      ebx
@@ -10051,7 +10058,7 @@ Func0x64b0 PROC NEAR                    ;Offset 0x64b0
     xor       ebx, ebx
     call      Func0x6523                ;Offset 0x6523
     shr       bx, 03h
-    call      Func0x6433                ;Offset 0x6433
+    call      GetStartAddress           ;Offset 0x6433
     xor       edx, edx
     div       ebx
     mov       cx, dx
@@ -10104,7 +10111,7 @@ Func0x64e5 PROC NEAR                    ;Offset 0x64e5
     xchg      ax, cx
     pop       ax
     add       eax, ecx
-    call      Func0x6466                ;Offset 0x6466
+    call      SetStartAddress           ;Offset 0x6466
     pop       edx
     pop       ecx
     pop       ebx
@@ -12905,7 +12912,7 @@ Label0x7a45:                            ;Offset 0x7a45
     ret
 SetMemoryTimingsAndRefresh ENDP
 
-PowerUpPLLsLUTSAndConfigure PROC NEAR   ;Offset 0x7b13
+PowerUpPLLsLUTsAndConfigure PROC NEAR   ;Offset 0x7b13
     push  ax
     push  bx
     push  ecx
@@ -13034,7 +13041,7 @@ Label0x7c19:                            ;Offset 0x7c19
     pop   bx
     pop   ax
     ret
-PowerUpPLLsLUTSAndConfigure ENDP
+PowerUpPLLsLUTsAndConfigure ENDP
 
 CacheMemorySize PROC NEAR               ;Offset 0x7c33
     call  GetMemorySize                 ;Offset 0x7c3e
@@ -13200,6 +13207,7 @@ Data0x7d16              DB 0FFh
 
 ;Offset 0x7d17
 Data0x7d17              DB 0FFh         ;bit 2-0 = hiprilvl in CRTCEXT3
+                                        ;bit 5-3 = hiprilvl in CRTCEXT3
 
 ;Offset 0x7d18
 MemoryClockBaseReadDelayDefault DB 088h ;bit 3-0 = mclkbrd0 in MEMRDBK

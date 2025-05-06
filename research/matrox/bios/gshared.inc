@@ -252,6 +252,7 @@ MGA_MemAddr_MemoryControlWaitState      EQU 1c08h;0x1c08
 MGA_MemAddr_ZDepthOrigin                EQU 1c0ch;0x1c0c
 MGA_MemAddr_PlaneWriteMask              EQU 1c1ch;0x1c1c
 MGA_MemAddr_Status                      EQU 1e14h;0x1e14
+MGA_MemAddr_SequencerIndex              EQU 1fc4h;0x1fc4
     MGA_MA_STAT_SoftwareFlag_MASK       EQU 0f0000000h;0xf0000000
 MGA_MemAddr_PaletteRamWriteAddress      EQU 3c00h;0x3c00
 MGA_MemAddr_IndexedData                 EQU 3c0ah;0x3c0a
