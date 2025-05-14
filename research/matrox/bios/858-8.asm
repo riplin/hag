@@ -1361,6 +1361,9 @@ Label0x12ee:                            ;Offset 0x12ee
     ret
 Func0x12c5 ENDP
 
+;inputs:
+;   al = video mode
+;
 SetVideoMode PROC NEAR                  ;Offset 0x12f0
     push ax
     mov  ah, al
@@ -1370,9 +1373,9 @@ SetVideoMode PROC NEAR                  ;Offset 0x12f0
     or   ah, BDA_DM_DONT_CLEAR_SCREEN   ;0x80
 Label0x12fd:                            ;Offset 0x12fd
     mov  al, byte ptr ds:[BDA_VideoModeOptions];Offset 0x487
-    shl  ax, 01h
-    xchg al, ah
-    rcr  ax, 01h
+    shl  ax, 01h                        ;Don't clear screen bit is now in carry flag
+    xchg al, ah                         ;al = mode, ah = video mode options
+    rcr  ax, 01h                        ;al no longer has clear screen bit, ah dont clear screen bit replaced.
     cmp  al, BDA_DM_320x200_256_Color_Graphics;0x13
     ja   Label0x136a                    ;Offset 0x136a
     push ax
@@ -9913,20 +9916,20 @@ LoopExtensionRegisters:                 ;Offset 0x64b3
 RestoreMGAState ENDP
 
 Func0x64cd PROC NEAR                    ;Offset 0x64cd
-    cmp  al, 20h
+    cmp  al, 20h                        ;Under VESA 0x100 640x400x256
     jb   Label0x64e5                    ;Offset 0x64e5
-    cmp  al, 22h
+    cmp  al, 22h                        ;VESA 0x102 VESA_MODE_800x600x16
     je   Label0x64df                    ;Offset 0x64df
-    cmp  al, 28h
+    cmp  al, 28h                        ;Under VESA 0x108 VESA_MODE_80x60xText
     jb   Label0x64e3                    ;Offset 0x64e3
-    cmp  al, 2dh
-    mov  al, 03h
+    cmp  al, 2dh                        ;Under VESA 0x10d (320x200x32K)
+    mov  al, 03h                        ;VGA 80x25 16 color text
     jb   Label0x64e5                    ;Offset 0x64e5
 Label0x64df:                            ;Offset 0x64df
-    mov  al, 12h
+    mov  al, 12h                        ;640x480   16 color
     jmp  Label0x64e5                    ;Offset 0x64e5
 Label0x64e3:                            ;Offset 0x64e3
-    mov  al, 13h
+    mov  al, 13h                        ;320x200 256 color
 Label0x64e5:                            ;Offset 0x64e5
     ret
 Func0x64cd ENDP
@@ -10120,7 +10123,7 @@ VBETextModeInfoTemplate DW VESA_MODE_ATTR_ModeText OR VESA_MODE_ATTR_Color OR VE
                         DD 000000000h   ;VESA_MODE_INFO_FARWindowPositioningFunc
 
 ;Offset 0x665d
-SupportedVESAVideoModes DW VESA_MODE_640x400x256    ;0x100      2MB
+SupportedVESAVideoModes DW VESA_MODE_640x400x256    ;0x100      1MB
                         DW VESA_MODE_640x480x256    ;0x101
                         DW VESA_MODE_800x600x16     ;0x102
                         DW VESA_MODE_800x600x256    ;0x103
@@ -10134,7 +10137,7 @@ SupportedVESAVideoModes DW VESA_MODE_640x400x256    ;0x100      2MB
                         DW 0FFFFh
 
 ;Offset 0x6675
-                        DW VESA_MODE_640x480x32K    ;0x110      4MB
+                        DW VESA_MODE_640x480x32K    ;0x110      2MB
                         DW VESA_MODE_640x480x64K    ;0x111
                         DW VESA_MODE_640x480x16M    ;0x112
                         DW VESA_MODE_800x600x32K    ;0x113
@@ -10146,7 +10149,7 @@ SupportedVESAVideoModes DW VESA_MODE_640x400x256    ;0x100      2MB
                         DW 0FFFFh
 
 ;Offset 0x6689
-                        DW VESA_MODE_1024x768x16M   ;0x118      8MB
+                        DW VESA_MODE_1024x768x16M   ;0x118      4MB
                         DW VESA_MODE_1280x1024x32K  ;0x119
                         DW VESA_MODE_1280x1024x64K  ;0x11a
                         DW VESA_MODE_1600x1200x32K  ;0x11d
@@ -12491,7 +12494,10 @@ DB 000h
 DB 6cdh dup (0FFh)
 
 ;Offset 0x7ff8
-DB 000h, 000h, 000h, 000h
+DB 000h, 000h                           ;Subsystem Vendor ID
+
+;Offset 0x7ffa
+DB 000h, 000h                           ;Subsystem ID
 
 ;Offset 0x7ffc
 PINSPointer             DW offset PINS  ;Offset 0x7520

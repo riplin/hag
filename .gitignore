@@ -44,6 +44,9 @@
 # VS Code junk
 **/.vscode
 
+# abandoned code
+**/old
+
 # Build folder
 *.bin
 *.zip

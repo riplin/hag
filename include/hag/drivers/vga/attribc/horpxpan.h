@@ -21,8 +21,7 @@ enum
 typedef uint8_t HorizontalPixelPanning_t;
 
 //This register specifies the number of pixels to shift the display data horizontally
-//to the left. Pixel panning is available in both text and graphics modes. It is not
-//available with Enhanced mode memroy mappings (CR31_3 = 1).
+//to the left. Pixel panning is available in both text and graphics modes. 
 
 namespace HorizontalPixelPanning
 {

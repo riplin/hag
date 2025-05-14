@@ -28,8 +28,9 @@ namespace MiscellaneousOutput
     {
         IOAddressSelect = 0x1,                              //IOA SEL 0 = Monochrome, 1 = Color
         EnableCPUDisplayMemoryAccess = 0x02,                //ENB RAM 0 = Disable, 1 = Enable
-        ClockSelect = 0x0C,                                 //00 = 25.175MHz DCLK for 640 horizontal pixels
-                                                            //11 = 28.322MHz DCLK for 720 horizontal pixels
+        ClockSelect = 0x0C,                                 //Select clock frequency
+        ClockSelect25p175MHz = 0x00,                        //00 = 25.175MHz DCLK for 640 horizontal pixels
+        ClockSelect28p322MHz = 0x04,                        //01 = 28.322MHz DCLK for 720 horizontal pixels
                                                             //10 = Reserved
                                                             //11 = Enables loading of DCLK PLL parameters in SR12 and SR13.
         PageSelect = 0x20,                                  //PGSL Select High 64K Page, 0 = low 64k page, 1 = high 64k page

@@ -7,6 +7,7 @@
 
 struct FARPointer
 {
+    inline FARPointer() : Offset(0), Segment(0) {}
     inline FARPointer(uint16_t seg, uint16_t offs) : Offset(offs), Segment(seg){}
     inline bool IsNull() { return (Offset == 0x0000) && (Segment == 0x0000);}
 

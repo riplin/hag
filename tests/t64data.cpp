@@ -170,6 +170,7 @@ uint8_t SetTextModeBiosDataTest_read0[] =
     Hag::System::BDA::Offset::CGAColorPaletteMaskSetting,
     Hag::System::BDA::Offset::RowsOnScreen,
     Hag::System::BDA::Offset::PointHeightOfCharacterMatrix,
+    Hag::System::BDA::Offset::PointHeightOfCharacterMatrix + 1,
     Hag::System::BDA::Offset::VideoModeOptions
 };
 
@@ -199,6 +200,7 @@ uint8_t SetTextModeBiosDataTest_read1[] =
     Hag::System::BDA::Offset::CGAColorPaletteMaskSetting,
     Hag::System::BDA::Offset::RowsOnScreen,
     Hag::System::BDA::Offset::PointHeightOfCharacterMatrix,
+    Hag::System::BDA::Offset::PointHeightOfCharacterMatrix + 1,
     Hag::System::BDA::Offset::VideoModeOptions
 };
 
@@ -222,6 +224,7 @@ uint8_t SetTextModeBiosDataTest_read2[] =
     Hag::System::BDA::Offset::CGAColorPaletteMaskSetting,
     Hag::System::BDA::Offset::RowsOnScreen,
     Hag::System::BDA::Offset::PointHeightOfCharacterMatrix,
+    Hag::System::BDA::Offset::PointHeightOfCharacterMatrix + 1,
     Hag::System::BDA::Offset::VideoModeOptions
 };
 
@@ -256,6 +259,7 @@ uint8_t SetTextModeBiosDataTest_read3[] =
     0x4C,
     0x66,
     0x84,
+    0x86,
     0x87
 };
 
@@ -275,6 +279,7 @@ uint8_t SetTextModeBiosDataTest_read4[] =
     0x4C,
     0x66,
     0x84,
+    0x86,
     0x87
 };
 
@@ -294,6 +299,7 @@ uint8_t SetTextModeBiosDataTest_read5[] =
     0x4A,
     0x4C,
     0x84,
+    0x86,
     0x87
 };
 
@@ -313,7 +319,8 @@ uint8_t SetTextModeBiosDataTest_read6[] =
     0x65,
     0x66,
     0x84,
-    0x85
+    0x85,
+    0x86
 };
 
 Hag::Testing::Mock::BDAFieldsAndValues SetTextModeBiosDataTest_modified7[] =
@@ -330,6 +337,7 @@ uint8_t SetTextModeBiosDataTest_read7[] =
     0x4C,
     0x84,
     0x85,
+    0x86,
     0x87
 };
 
@@ -348,6 +356,7 @@ uint8_t SetTextModeBiosDataTest_read8[] =
 {
     0x10,
     0x4C,
+    0x86,
     0x87
 };
 
@@ -365,6 +374,7 @@ uint8_t SetTextModeBiosDataTest_read9[] =
     0x10,
     0x4C,
     0x84,
+    0x86,
     0x87
 };
 
@@ -382,6 +392,7 @@ uint8_t SetTextModeBiosDataTest_read10[] =
     0x10,
     0x4A,
     0x4C,
+    0x86,
     0x87
 };
 
@@ -399,6 +410,7 @@ uint8_t SetTextModeBiosDataTest_read11[] =
     0x10,
     0x4C,
     0x84,
+    0x86,
     0x87
 };
 
@@ -416,6 +428,7 @@ uint8_t SetTextModeBiosDataTest_read12[] =
     0x4A,
     0x4C,
     0x84,
+    0x86,
     0x87
 };
 
@@ -433,7 +446,8 @@ uint8_t SetTextModeBiosDataTest_read13[] =
 {
     0x4A,
     0x4C,
-    0x84
+    0x84,
+    0x86
 };
 
 Hag::Testing::Mock::BDAFieldsAndValues SetTextModeBiosDataTest_modified14[] =
@@ -450,6 +464,7 @@ uint8_t SetTextModeBiosDataTest_read14[] =
     0x4A,
     0x4C,
     0x84,
+    0x86,
     0x87
 };
 
@@ -467,6 +482,7 @@ uint8_t SetTextModeBiosDataTest_read15[] =
     0x4A,
     0x4C,
     0x85,
+    0x86,
     0x87
 };
 
@@ -484,6 +500,7 @@ uint8_t SetTextModeBiosDataTest_read16[] =
     0x4C,
     0x4D,
     0x85,
+    0x86,
     0x87
 };
 
@@ -501,6 +518,7 @@ uint8_t SetTextModeBiosDataTest_read17[] =
 {
     0x10,
     0x4C,
+    0x86,
     0x87
 };
 
@@ -518,6 +536,7 @@ uint8_t SetTextModeBiosDataTest_read18[] =
 {
     0x10,
     0x85,
+    0x86,
     0x87
 };
 
@@ -535,6 +554,7 @@ uint8_t SetTextModeBiosDataTest_read19[] =
 {
     0x10,
     0x85,
+    0x87,
     0x87
 };
 
@@ -552,6 +572,7 @@ uint8_t SetTextModeBiosDataTest_read20[] =
     0x10,
     0x4C,
     0x85,
+    0x86,
     0x87
 };
 
@@ -569,6 +590,7 @@ uint8_t SetTextModeBiosDataTest_read21[] =
     0x4D,
     0x84,
     0x85,
+    0x86,
     0x87
 };
 
@@ -586,6 +608,7 @@ uint8_t SetTextModeBiosDataTest_read22[] =
 {
     0x10,
     0x4C,
+    0x86,
     0x87
 };
 
@@ -603,6 +626,7 @@ uint8_t SetTextModeBiosDataTest_read23[] =
     0x4C,
     0x84,
     0x85,
+    0x86,
     0x87
 };
 
@@ -620,6 +644,7 @@ uint8_t SetTextModeBiosDataTest_read24[] =
 {
     0x10,
     0x85,
+    0x86,
     0x87
 };
 
@@ -799,6 +824,7 @@ uint8_t SetTextModeBiosDataTest_ignore[] =
     Hag::System::BDA::Offset::NumberOfScreenColumns +1,
     Hag::System::BDA::Offset::VideoBufferOffset,
     Hag::System::BDA::Offset::VideoBufferOffset + 1,
+    Hag::System::BDA::Offset::PointHeightOfCharacterMatrix + 1,
     Hag::System::BDA::Offset::CursorPositionPage0,
     Hag::System::BDA::Offset::CursorPositionPage0 + 1,
     Hag::System::BDA::Offset::CursorPositionPage1,

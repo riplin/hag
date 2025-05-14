@@ -2,9 +2,11 @@
 
 #pragma once
 
+#include <hag/drivers/imports.h>
+
 #include <hag/drivers/vga/attribc/attrmode.h>
 #include <hag/drivers/vga/attribc/bordcol.h>
-#include <hag/drivers/s3/shared/attribc/colplnen.h>
+#include <hag/drivers/vga/attribc/colplnen.h>
 #include <hag/drivers/vga/attribc/data.h>
 #include <hag/drivers/vga/attribc/horpxpan.h>
 #include <hag/drivers/vga/attribc/index.h>
@@ -125,7 +127,7 @@
 #include <hag/drivers/vga/sqrc/index.h>
 #include <hag/drivers/s3/shared/sqrc/mclkvhi.h>
 #include <hag/drivers/s3/shared/sqrc/mclkvlow.h>
-#include <hag/drivers/vga/sqrc/memodctl.h>
+#include <hag/drivers/s3/shared/sqrc/memodctl.h>
 #include <hag/drivers/s3/shared/sqrc/mscextsq.h>
 #include <hag/drivers/s3/shared/sqrc/rclksync.h>
 #include <hag/drivers/s3/shared/sqrc/regs.h>
@@ -152,7 +154,7 @@
 #include <hag/drivers/s3/shared/drawcmd2.h>
 #include <hag/drivers/s3/shared/dxpdsc.h>
 #include <hag/drivers/s3/shared/dypasc.h>
-#include <hag/drivers/vga/featctl.h>
+#include <hag/drivers/s3/shared/featctl.h>
 #include <hag/drivers/s3/shared/fgcolor.h>
 #include <hag/drivers/s3/shared/fgmix.h>
 #include <hag/drivers/s3/shared/gfxprocs.h>
@@ -162,7 +164,7 @@
 #include <hag/drivers/s3/shared/linerrtr.h>
 #include <hag/drivers/s3/shared/majapcn2.h>
 #include <hag/drivers/s3/shared/majapcnt.h>
-#include <hag/drivers/vga/miscout.h>
+#include <hag/drivers/s3/shared/miscout.h>
 #include <hag/drivers/s3/shared/patx.h>
 #include <hag/drivers/s3/shared/paty.h>
 #include <hag/drivers/s3/shared/pixdtrf.h>
@@ -202,30 +204,6 @@
 #include <hag/drivers/s3/shared/ddchw.h>
 #include <hag/drivers/s3/shared/pmhw.h>
 
-#define IMPORTNAMESPACEANDTYPE(N, R)        \
-typedef N::R ## _t R ## _t;                 \
-namespace R                                 \
-{                                           \
-    using namespace N::R;                   \
-}
-
-#define IMPORTNAMESPACEANDTYPEANDSHIFT(N, R)\
-typedef N::R ## _t R ## _t;                 \
-namespace R                                 \
-{                                           \
-    using namespace N::R;                   \
-    namespace Shift                         \
-    {                                       \
-        using namespace N::R::Shift;        \
-    }                                       \
-}
-
-#define IMPORTNAMESPACE(N, n)               \
-namespace n                                 \
-{                                           \
-    using namespace N::n;                   \
-}
-
 namespace Hag { namespace S3 { namespace Trio64
 {
 
@@ -243,12 +221,12 @@ IMPORTNAMESPACE(VGA, AttributeControllerIndex);
 namespace AttributeController
 {
 
-    IMPORTNAMESPACEANDTYPE(Shared::AttributeController, Register);
+    //IMPORTNAMESPACEANDTYPE(Shared::AttributeController, Register);
     IMPORTNAMESPACE(VGA::AttributeController, Register);
 
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, AttributeMode);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, BorderColor);
-    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::AttributeController, ColorPlane);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, ColorPlane);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, HorizontalPixelPanning);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, Palette);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, PixelPadding);
@@ -387,7 +365,7 @@ namespace Sequencer
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, ClockingMode);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, EnableWritePlane);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, CharacterFontSelect);
-    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, MemoryModeControl);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Sequencer, MemoryModeControl);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Sequencer, UnlockExtendedSequencer);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Sequencer, ExtendedSequencer9);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Sequencer, ExternalBusRequestControl);
@@ -405,8 +383,8 @@ namespace Sequencer
 }
 
 IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, InputStatus1);
-IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, FeatureControl);
-IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, MiscellaneousOutput);
+IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, FeatureControl);
+IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, MiscellaneousOutput);
 IMPORTNAMESPACEANDTYPE(VGA, DACMask);
 IMPORTNAMESPACEANDTYPE(VGA, DACReadIndex);
 IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, DACStatus);

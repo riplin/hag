@@ -2,6 +2,8 @@
 
 ;Resources:
 ;
+;DOS video card tests: https://gona.mactar.hu/DOS_TESTS/
+;
 ;Original BIOS file was downloaded from here: http://chukaev.ru54.com/video_en.htm - 86c764x1.zip
 ;
 ;Interrupt list: http://www.ctyme.com/intr/int.htm
@@ -22,7 +24,7 @@
 ;VESA EDID:https://en.wikipedia.org/wiki/Extended_Display_Identification_Data
 ;VESA VDIF: ???? need help here!
 ;
-;Hex editor: https://hexed.it/
+;Hex editor: https://hexed.it/ https://web.imhex.werwolv.net/
 ;Disassembler: https://shell-storm.org/online/Online-Assembler-and-Disassembler/ (allowed me to disassemble specific sections manually)
 ;
 ;I use MASM 6.11 (DOS)
@@ -139,6 +141,7 @@ DBA_CursorPositionPage4                 EQU 0458h;Word 0x458
 DBA_CursorPositionPage5                 EQU 045Ah;Word 0x45a
 DBA_CursorPositionPage6                 EQU 045Ch;Word 0x45c
 DBA_CursorPositionPage7                 EQU 045Eh;Word 0x45e
+BDA_CursorEndStartScanLine              EQU 0460h;Word 0x460
 BDA_CursorEndScanLine                   EQU 0460h;Byte 0x460
 BDA_CursorStartScanLine                 EQU 0461h;Byte 0x461
 BDA_ActiveDisplayNumber                 EQU 0462h;Byte 0x462
@@ -151,6 +154,8 @@ BDA_CRTModeControlRegValue              EQU 0465h;Byte 0x465
     BDA_CMCRV_GraphicsOperation         EQU 10h
     BDA_CMCRV_Blinking                  EQU 20h
 BDA_CGAColorPaletteMaskSetting          EQU 0466h;Byte 0x466
+BDA_SoftResetFlag                       EQU 0472h;Word 0x472
+BDA_SoftResetFlagHighByte               EQU 0473h;Byte 0x473
 BDA_RowsOnScreen                        EQU 0484h;Byte 0x484
 BDA_PointHeightOfCharacterMatrix        EQU 0485h;Word 0x485
 BDA_VideoModeOptions                    EQU 0487h;Byte 0x487
@@ -178,21 +183,31 @@ BDA_EGAFeatureBitSwitches               EQU 0488h;Byte 0x488
     BDA_EFBS_CGAMono40x25_2             EQU 0Ah
     BDA_EFBS_CGAMono80x25_2             EQU 0Bh
     BDA_EFBS_AdapterTypeMask            EQU 0Fh
-    BDA_EFBS_FeatureConnector0          EQU 40h
-    BDA_EFBS_FeatureConnector1          EQU 80h
+    BDA_EFBS_FeatureConnector0_0        EQU 10h
+    BDA_EFBS_FeatureConnector0_1        EQU 20h
+    BDA_EFBS_FeatureConnector1_0        EQU 40h
+    BDA_EFBS_FeatureConnector1_1        EQU 80h
     BDA_EFBS_FeatureConnectorMask       EQU 0F0h
 BDA_VideoDisplayDataArea                EQU 0489h;Byte 0x489
     BDA_VDDA_VGA                        EQU 01h
     BDA_VDDA_GrayScale                  EQU 02h
     BDA_VDDA_MonochromeMonitor          EQU 04h
     BDA_VDDA_PaletteLoadingEnabled      EQU 08h
+    BDA_VDDA_SettingLowerMask           EQU 0Fh
     BDA_VDDA_DisplaySwitchingEnabled    EQU 40h
     BDA_VDDA_LineMode350                EQU 00h
     BDA_VDDA_LineMode400                EQU 10h
+    BDA_VDDA_Reserved                   EQU 20h
     BDA_VDDA_LineMode200                EQU 80h
     BDA_VDDA_LineModeMask               EQU 90h
 BDA_DisplayCombinationCodeTableIndex    EQU 048ah;Byte 0x48a
 BDA_VideoParameterControlBlockPointer   EQU 04a8h;Dword 0x4a8
+BDA_VideoParameterControlBlockPtrOfs    EQU 04a8h;Word 0x4a8
+BDA_VideoParameterControlBlockPtrSeg    EQU 04aah;Word 0x4aa
+BDA_PrintScreenStatus                   EQU 0500h;Byte 0x500
+    BDA_PSS_NotActive                   EQU 00h
+    BDA_PSS_InProgress                  EQU 01h
+    BDA_PSS_Error                       EQU 0FFh
 
 INT10_00_SetVideoMode                   EQU 00h;mode in al
 ;These are currently a best guess based on information from http://www.ctyme.com/intr/rb-0069.htm
@@ -2876,10 +2891,10 @@ MonochromeMode:                         ;Offset 0x1923
 Exit:                                   ;Offset 0x1944
     ret
 Label0x1945:                            ;Offset 0x1945
-    mov  bl, BDA_EFBS_FeatureConnector0 OR BDA_EFBS_MDAHiRes80x25_2;0x48
+    mov  bl, BDA_EFBS_FeatureConnector1_0 OR BDA_EFBS_MDAHiRes80x25_2;0x48
     jmp  Label0x1950                    ;Offset 0x1950
 Label0x1949:                            ;Offset 0x1949
-    mov  bl, BDA_EFBS_FeatureConnector1 OR BDA_EFBS_CGAMono80x25_2;0x8b
+    mov  bl, BDA_EFBS_FeatureConnector1_1 OR BDA_EFBS_CGAMono80x25_2;0x8b
     jmp  Label0x1950                    ;Offset 0x1950
     nop
 Label0x194e:                            ;Offset 0x194e

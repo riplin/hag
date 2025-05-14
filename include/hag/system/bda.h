@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <string.h>
 #include <hag/types.h>
 #include <hag/farptr.h>
 #include <hag/drivers/vga/vidmodes.h>
@@ -13,112 +14,16 @@
 
 namespace Hag { namespace System { namespace BDA
 {
-    namespace Offset
-    {
-        enum
-        {
-            DetectedHardware                    = 0x10, //Word 0x410
-            DisplayMode                         = 0x49, //Byte 0x449
-            NumberOfScreenColumns               = 0x4A, //Word 0x44a
-            VideoBufferSize                     = 0x4C, //Word 0x44c
-            VideoBufferOffset                   = 0x4E, //Word 0x44e
-            CursorPositionPage0                 = 0x50, //Word 0x450
-            CursorPositionPage1                 = 0x52, //Word 0x452
-            CursorPositionPage2                 = 0x54, //Word 0x454
-            CursorPositionPage3                 = 0x56, //Word 0x456
-            CursorPositionPage4                 = 0x58, //Word 0x458
-            CursorPositionPage5                 = 0x5A, //Word 0x45a
-            CursorPositionPage6                 = 0x5C, //Word 0x45c
-            CursorPositionPage7                 = 0x5E, //Word 0x45e
-            CursorEndScanLine                   = 0x60, //Byte 0x460
-            CursorStartScanLine                 = 0x61, //Byte 0x461
-            ActiveDisplayNumber                 = 0x62, //Byte 0x462
-            VideoBaseIOPort                     = 0x63, //Word 0x463
-            CRTModeControlRegValue              = 0x65, //Byte 0x465
-            CGAColorPaletteMaskSetting          = 0x66, //Byte 0x466
-            RowsOnScreen                        = 0x84, //Byte 0x484
-            PointHeightOfCharacterMatrix        = 0x85, //Word 0x485
-            VideoModeOptions                    = 0x87, //Byte 0x487
-            EGAFeatureBitSwitches               = 0x88, //Byte 0x488
-            VideoDisplayDataArea                = 0x89, //Byte 0x489
-            DisplayCombinationCodeTableIndex    = 0x8a, //Byte 0x48a
-            VideoParameterControlBlockPointer   = 0xa8 //Dword 0x4a8
-        };
-    }
-
-#ifndef MOCK
-    template<typename T, uint16_t Offs> T& GetVariable(uint16_t count = 1) { (void)count; return *(T*)(0x400 + Offs); }
-#else
-    template<typename T, uint16_t Offs> T& GetVariable(uint16_t count = 1) { return Testing::Mock::BDA::RefAs<T, Offs>(count); }
-#endif
-    
-    typedef uint8_t DetectedHardware_t;
-    namespace DetectedHardware
-    {
-        enum
-        {
-            InitialVideoModeMask         = 0x30,
-            Color40x25                   = 0x10,
-            Color80x25                   = 0x20,
-            Monochrome80x25              = 0x30
-        };
-
-        inline DetectedHardware_t& Get()
-        {
-            return GetVariable<DetectedHardware_t, Offset::DetectedHardware>();
-        }
-    }
-
-    namespace DisplayMode
-    {
-        inline VGA::VideoMode_t& Get()
-        {
-            return GetVariable<VGA::VideoMode_t, Offset::DisplayMode>();
-        }
-    }
-
-    typedef uint16_t NumberOfScreenColumns_t;
-    namespace NumberOfScreenColumns
-    {
-        inline NumberOfScreenColumns_t& Get()
-        {
-            return GetVariable<NumberOfScreenColumns_t, Offset::NumberOfScreenColumns>();
-        }
-    }
-
-    typedef uint16_t VideoBufferSize_t;
-    namespace VideoBufferSize
-    {
-        inline VideoBufferSize_t& Get()
-        {
-            return GetVariable<VideoBufferSize_t, Offset::VideoBufferSize>();
-        }
-    }
-
-    typedef uint16_t VideoBufferOffset_t;
-    namespace VideoBufferOffset
-    {
-        inline VideoBufferOffset_t& Get()
-        {
-            return GetVariable<VideoBufferOffset_t, Offset::VideoBufferOffset>();
-        }
-    }
+    #pragma pack(push, 1);
 
     struct Position
     {
+        inline Position() : Column(0), Row(0) {}
+        inline Position(uint8_t column, uint8_t row) : Column(column), Row(row) {}
+        
         uint8_t Column;
         uint8_t Row;
     };
-
-    typedef Position CursorPosition_t;
-    namespace CursorPositions
-    {
-        //There are 8 cursor positions.
-        inline CursorPosition_t* Get()
-        {
-            return &GetVariable<CursorPosition_t, Offset::CursorPositionPage0>(8);
-        }
-    }
 
     struct EndStart
     {
@@ -129,172 +34,6 @@ namespace Hag { namespace System { namespace BDA
         uint8_t Start;
     };
 
-    typedef EndStart CursorScanLines_t;
-    namespace CursorScanLines
-    {
-        inline CursorScanLines_t& Get()
-        {
-            return GetVariable<CursorScanLines_t, Offset::CursorEndScanLine>();
-        }
-    }
-
-    typedef uint8_t ActiveDisplayNumber_t;
-    namespace ActiveDisplayNumber
-    {
-        inline ActiveDisplayNumber_t& Get()
-        {
-            return GetVariable<ActiveDisplayNumber_t, Offset::ActiveDisplayNumber>();
-        }
-    }
-    
-    typedef uint16_t VideoBaseIOPort_t;
-    namespace VideoBaseIOPort
-    {
-        inline VideoBaseIOPort_t& Get()
-        {
-            return GetVariable<VideoBaseIOPort_t, Offset::VideoBaseIOPort>();
-        }
-    }
-
-    typedef uint8_t CRTModeControlRegValue_t;
-    namespace CRTModeControlRegValue
-    {
-        enum
-        {
-            Mode2Or3Text              = 0x01,
-            Mode4Or5Graphics          = 0x02,
-            Monochrome                = 0x04,
-            VideoEnabled              = 0x08,
-            GraphicsOperation         = 0x10,
-            Blinking                  = 0x20 //Off = Intensity
-        };
-
-        inline CRTModeControlRegValue_t& Get()
-        {
-            return GetVariable<CRTModeControlRegValue_t, Offset::CRTModeControlRegValue>();
-        }
-    }
-    
-    typedef uint8_t CGAColorPaletteMaskSetting_t;
-    namespace CGAColorPaletteMaskSetting
-    {
-        enum
-        {
-            Blue = 0x01,
-            Green = 0x02,
-            Red = 0x04,
-            BorderAndBackgroundColorIntensity = 0x08, //intensified border color (mode 2) and background color (mode 5)
-            BackgroundColor = 0x10, //0 = normal bg color, 1 = intensified bg color
-            ForgroundColorSelect = 0x20, //0 = Green/Red/Yellow, 1 = Cyan/Magenta/White
-        };
-
-        inline CGAColorPaletteMaskSetting_t& Get()
-        {
-            return GetVariable<CGAColorPaletteMaskSetting_t, Offset::CGAColorPaletteMaskSetting>();
-        }
-    }
-
-    typedef uint8_t RowsOnScreen_t;
-    namespace RowsOnScreen
-    {
-        inline RowsOnScreen_t& Get()
-        {
-            return GetVariable<RowsOnScreen_t, Offset::RowsOnScreen>();
-        }
-    }
-
-    typedef uint8_t PointHeightOfCharacterMatrix_t;
-    namespace PointHeightOfCharacterMatrix
-    {
-        inline PointHeightOfCharacterMatrix_t& Get()
-        {
-            return GetVariable<PointHeightOfCharacterMatrix_t, Offset::PointHeightOfCharacterMatrix>();
-        }
-    }
-
-    typedef uint8_t VideoModeOptions_t;
-    namespace VideoModeOptions
-    {
-        enum
-        {
-            CursorEmulationEnabled      = 0x01,
-            Monochrome                  = 0x02,
-            Unknown                     = 0x04,
-            Inactive                    = 0x08,
-            Memory64k                   = 0x00,
-            Memory128k                  = 0x20,
-            Memory192k                  = 0x40,
-            Memory256k                  = 0x60,
-            MemoryMask                  = 0x60,
-            DontClearDisplay            = 0x80
-        };
-
-        inline VideoModeOptions_t& Get()
-        {
-            return GetVariable<VideoModeOptions_t, Offset::VideoModeOptions>();
-        }
-    }
-
-    typedef uint8_t EGAFeatureBitSwitches_t;
-    namespace EGAFeatureBitSwitches
-    {
-        enum
-        {
-            MDAColor40x25              = 0x00,
-            MDAColor80x25              = 0x01,
-            MDAHiRes80x25              = 0x02,
-            MDAHiResEnhanced           = 0x03,
-            CGAMono40x25               = 0x04,
-            CGAMono80x25               = 0x05,
-            MDAColor40x25_2            = 0x06,
-            MDAColor80x25_2            = 0x07,
-            MDAHiRes80x25_2            = 0x08,
-            MDAHiResEnhanced_2         = 0x09,
-            CGAMono40x25_2             = 0x0A,
-            CGAMono80x25_2             = 0x0B,
-            AdapterTypeMask            = 0x0F,
-            FeatureConnector0          = 0x40,
-            FeatureConnector1          = 0x80,
-            FeatureConnectorMask       = 0xF0
-        };
-
-        inline EGAFeatureBitSwitches_t& Get()
-        {
-            return GetVariable<EGAFeatureBitSwitches_t, Offset::EGAFeatureBitSwitches>();
-        }
-    }
-
-    typedef uint8_t VideoDisplayDataArea_t;
-    namespace VideoDisplayDataArea
-    {
-        enum
-        {
-            VGA                        = 0x01,
-            GrayScale                  = 0x02,
-            MonochromeMonitor          = 0x04,
-            PaletteLoadingDisabled     = 0x08,
-            DisplaySwitchingEnabled    = 0x40,
-            LineMode350                = 0x00,
-            LineMode400                = 0x10,
-            LineMode200                = 0x80,
-            LineModeMask               = 0x90
-        };
-
-        inline VideoDisplayDataArea_t& Get()
-        {
-            return GetVariable<VideoDisplayDataArea_t, Offset::VideoDisplayDataArea>();
-        }
-    }
-
-    typedef uint8_t DisplayCombinationCodeTableIndex_t;
-    namespace DisplayCombinationCodeTableIndex
-    {
-        inline DisplayCombinationCodeTableIndex_t& Get()
-        {
-            return GetVariable<DisplayCombinationCodeTableIndex_t, Offset::DisplayCombinationCodeTableIndex>();
-        }
-    }
-    
     struct VideoParameterTable
     {
         uint8_t NumCharacterColumns;
@@ -411,29 +150,469 @@ namespace Hag { namespace System { namespace BDA
                                                 //14+n byte   FFh end of video mode list marker
     };
 
-    bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer));
-    bool CheckValidInCurrentMode(uint8_t* ptr);
-    void SetGraphicsCharacterFont(GraphicsCharacterSetOverride* graphicsCharacterFontDefinition);
-    void ModeSetBDA(VGA::VideoMode_t& mode, bool colorHardware, bool vesaModeNotColor);
-    bool VerifyBDAOrDeactivate(VGA::VideoMode_t& mode, bool isVesa, bool isVesaColor);
+    typedef uint8_t DetectedHardware_t;
+    typedef uint16_t NumberOfScreenColumns_t;
+    typedef uint16_t VideoBufferSize_t;
+    typedef uint16_t VideoBufferOffset_t;
+    typedef Position CursorPosition_t;
+    typedef EndStart CursorScanLines_t;
+    typedef uint8_t ActiveDisplayNumber_t;
+    typedef uint16_t VideoBaseIOPort_t;
+    typedef uint8_t CRTModeControlRegValue_t;
+    typedef uint8_t CGAColorPaletteMaskSetting_t;
+    typedef uint8_t RowsOnScreen_t;
+    typedef uint16_t PointHeightOfCharacterMatrix_t;
+    typedef uint8_t VideoModeOptions_t;
+    typedef uint8_t EGAFeatureBitSwitches_t;
+    typedef uint8_t VideoDisplayDataArea_t;
+    typedef uint8_t DisplayCombinationCodeTableIndex_t;
+    typedef FARPointer VideoParameterControlBlockPointer_t;
 
-    template<typename T>
-    bool GetVideoParameterBlockElementAs(uint16_t index, T*& returnPointer, uint16_t size = sizeof(FARPointer))
+
+    namespace DetectedHardware
     {
-        uint8_t* ptr = NULL;
-        bool ret = GetVideoParameterBlockElement(index, ptr, size);
-        returnPointer = (T*)ptr;
-        return ret;
+        enum
+        {
+            InitialVideoModeMask         = 0x30,
+            Color40x25                   = 0x10,
+            Color80x25                   = 0x20,
+            Monochrome80x25              = 0x30
+        };
     }
 
-    typedef FARPointer VideoParameterControlBlockPointer_t;
+    namespace CRTModeControlRegValue
+    {
+        enum
+        {
+            Mode2Or3Text              = 0x01,
+            Mode4Or5Graphics          = 0x02,
+            Monochrome                = 0x04,
+            VideoEnabled              = 0x08,
+            GraphicsOperation         = 0x10,
+            Blinking                  = 0x20 //Off = Intensity
+        };
+    }
+    
+    namespace CGAColorPaletteMaskSetting
+    {
+        enum
+        {
+            Blue = 0x01,
+            Green = 0x02,
+            Red = 0x04,
+            BorderAndBackgroundColorIntensity = 0x08, //intensified border color (mode 2) and background color (mode 5)
+            BackgroundColor = 0x10, //0 = normal bg color, 1 = intensified bg color
+            ForgroundColorSelect = 0x20, //0 = Green/Red/Yellow, 1 = Cyan/Magenta/White
+        };
+    }
+
+    namespace VideoModeOptions
+    {
+        enum
+        {
+            CursorEmulationEnabled      = 0x01,
+            Monochrome                  = 0x02,
+            Unknown                     = 0x04,
+            Inactive                    = 0x08,
+            Memory64k                   = 0x00,
+            Memory128k                  = 0x20,
+            Memory192k                  = 0x40,
+            Memory256k                  = 0x60,
+            MemoryMask                  = 0x60,
+            DontClearDisplay            = 0x80
+        };
+    }
+
+    namespace EGAFeatureBitSwitches
+    {
+        enum
+        {
+            MDAColor40x25              = 0x00,
+            MDAColor80x25              = 0x01,
+            MDAHiRes80x25              = 0x02,
+            MDAHiResEnhanced           = 0x03,
+            CGAMono40x25               = 0x04,
+            CGAMono80x25               = 0x05,
+            MDAColor40x25_2            = 0x06,
+            MDAColor80x25_2            = 0x07,
+            MDAHiRes80x25_2            = 0x08,
+            MDAHiResEnhanced_2         = 0x09,
+            CGAMono40x25_2             = 0x0A,
+            CGAMono80x25_2             = 0x0B,
+            AdapterTypeMask            = 0x0F,
+            FeatureConnector0          = 0x40,
+            FeatureConnector1          = 0x80,
+            FeatureConnectorMask       = 0xF0
+        };
+    }
+
+    namespace VideoDisplayDataArea
+    {
+        enum
+        {
+            VGA                        = 0x01,
+            GrayScale                  = 0x02,
+            MonochromeMonitor          = 0x04,
+            PaletteLoadingDisabled     = 0x08,
+            Reserved                   = 0x20,
+            DisplaySwitchingEnabled    = 0x40,
+            LineMode350                = 0x00,
+            LineMode400                = 0x10,
+            LineMode200                = 0x80,
+            LineModeMask               = 0x90
+        };
+    }
+
+    struct Instance
+    {
+        uint16_t Com1PortAddress;                                                   // 40:00
+        uint16_t Com2PortAddress;                                                   // 40:02
+        uint16_t Com3PortAddress;                                                   // 40:04
+        uint16_t Com4PortAddress;                                                   // 40:06
+        uint16_t Lpt1PortAddress;                                                   // 40:08
+        uint16_t Lpt2PortAddress;                                                   // 40:0a
+        uint16_t Lpt3PortAddress;                                                   // 40:0c
+        uint16_t Lpt4PortAddress;                                                   // 40:0e
+        DetectedHardware_t DetectedHardware;                                        // 40:10
+        uint8_t MoreDetectedHardware;                                               // 40:11
+        uint8_t  PcJrInfraKeyboardLinkRedErrorCount;                                // 40:12
+        uint16_t MemorySizeInKiloByte;                                              // 40:13
+        uint8_t  Reserved15;                                                        // 40:15
+        uint8_t  Ps2BIOSControlFlags;                                               // 40:16
+        uint8_t  KeyboardFlagByte0;                                                 // 40:17
+        uint8_t  KeyboardFlagByte1;                                                 // 40:18
+        uint8_t  AlternateKeypadEntry;                                              // 40:19
+        uint16_t KeyboardBufferOffsetHead;                                          // 40:1a
+        uint16_t KeyboardBufferOffsetTail;                                          // 40:1c
+        uint8_t  KeyboardBuffer[32];                                                // 40:1e
+        uint8_t  DriveRecalibrationStatus;                                          // 40:3e
+        uint8_t  DisketteMotorStatus;                                               // 40:3f
+        uint8_t  MotorShutoffCounter;                                               // 40:40
+        uint8_t  LastDisketteOperationStatus;                                       // 40:41
+        uint8_t  NECDisketteControllerStatus[7];                                    // 40:42
+        VGA::VideoMode_t DisplayMode;                                               // 40:49
+        NumberOfScreenColumns_t NumberOfScreenColumns;                              // 40:4a
+        VideoBufferSize_t VideoBufferSize;                                          // 40:4c
+        VideoBufferOffset_t VideoBufferOffset;                                      // 40:4e
+        CursorPosition_t CursorPositions[8];                                        // 40:50
+        CursorScanLines_t CursorScanLines;                                          // 40:60
+        ActiveDisplayNumber_t ActiveDisplayNumber;                                  // 40:62
+        VideoBaseIOPort_t VideoBaseIOPort;                                          // 40:63
+        CRTModeControlRegValue_t CRTModeControlRegValue;                            // 40:65
+        CGAColorPaletteMaskSetting_t CGAColorPaletteMaskSetting;                    // 40:66
+        uint32_t DayCounter;                                                        // 40:67
+        uint8_t  Reserved6b;                                                        // 40:6b
+        uint32_t DailyTimer;                                                        // 40:6c
+        uint8_t  ClockRolloverFlag;                                                 // 40:70
+        uint8_t  BreakFlag;                                                         // 40:71
+        uint16_t SoftResetFlag;                                                     // 40:72
+        uint8_t  HardDiskLastOperationStatus;                                       // 40:74
+        uint8_t  AttachedHarddiskCount;                                             // 40:75
+        uint8_t  XTFixedDriveControl;                                               // 40:76
+        uint8_t  PortOffsetToCurrentFixedDiskAdapter;                               // 40:77
+        uint8_t  LptTimeOutValue[4];                                                // 40:78
+        uint8_t  ComTimeOutValue[4];                                                // 40:7c
+        uint16_t KeyboardBufferStartOffset;                                         // 40:80
+        uint16_t KeyboardBufferEndOffset;                                           // 40:82
+        RowsOnScreen_t RowsOnScreen;                                                // 40:84
+        PointHeightOfCharacterMatrix_t PointHeightOfCharacterMatrix;                // 40:85
+        VideoModeOptions_t VideoModeOptions;                                        // 40:87
+        EGAFeatureBitSwitches_t EGAFeatureBitSwitches;                              // 40:88
+        VideoDisplayDataArea_t VideoDisplayDataArea;                                // 40:89
+        DisplayCombinationCodeTableIndex_t DisplayCombinationCodeTableIndex;        // 40:8a
+        uint8_t  LastDisketteDataRateSelected;                                      // 40:8b
+        uint8_t  HardDiskStatusFromController;                                      // 40:8c
+        uint8_t  HardDiskErrorFromController;                                       // 40:8d
+        uint8_t  HardDiskInterruptControlFlag;                                      // 40:8e
+        uint8_t  HardAndFLoppyComboCard;                                            // 40:8f
+        uint8_t  DriveMediaState[4];                                                // 40:90
+        uint8_t  DriveCurrentTrack[2];                                              // 40:94
+        uint8_t  KeyboardModeAndType;                                               // 40:96
+        uint8_t  KeyboardLedFlags;                                                  // 40:97
+        uint32_t UserWaitCompleteFlagPointer;                                       // 40:98
+        uint32_t UserWaitTimeOutInMicroSeconds;                                     // 40:9c
+        uint8_t  RTCWaitFunctionFlag;                                               // 40:a0
+        uint8_t  LANADMAChannelFlags;                                               // 40:a1
+        uint8_t  LanaStatus[2];                                                     // 40:a2
+        uint32_t SavedHardDiskInterruptVector;                                      // 40:a4
+        VideoParameterControlBlockPointer_t VideoParameterControlBlockPointer;      // 40:a8
+    };
+    
+    #pragma pack(pop);
+
+    inline Instance& SystemBDA()
+    {
+        return *((Instance*)0x400);
+    }
+
+    Instance& CurrentInstance();
+
+    void SetInstance(Instance& instance);
+
+    inline void CloneSystemBDA(Instance& instance)
+    {
+        memcpy(&instance, &SystemBDA(), sizeof(Instance));
+    }
+
+    namespace Offset
+    {
+        enum
+        {
+            DetectedHardware                    = 0x10, //Word 0x410
+            DisplayMode                         = 0x49, //Byte 0x449
+            NumberOfScreenColumns               = 0x4A, //Word 0x44a
+            VideoBufferSize                     = 0x4C, //Word 0x44c
+            VideoBufferOffset                   = 0x4E, //Word 0x44e
+            CursorPositionPage0                 = 0x50, //Word 0x450
+            CursorPositionPage1                 = 0x52, //Word 0x452
+            CursorPositionPage2                 = 0x54, //Word 0x454
+            CursorPositionPage3                 = 0x56, //Word 0x456
+            CursorPositionPage4                 = 0x58, //Word 0x458
+            CursorPositionPage5                 = 0x5A, //Word 0x45a
+            CursorPositionPage6                 = 0x5C, //Word 0x45c
+            CursorPositionPage7                 = 0x5E, //Word 0x45e
+            CursorEndScanLine                   = 0x60, //Byte 0x460
+            CursorStartScanLine                 = 0x61, //Byte 0x461
+            ActiveDisplayNumber                 = 0x62, //Byte 0x462
+            VideoBaseIOPort                     = 0x63, //Word 0x463
+            CRTModeControlRegValue              = 0x65, //Byte 0x465
+            CGAColorPaletteMaskSetting          = 0x66, //Byte 0x466
+            RowsOnScreen                        = 0x84, //Byte 0x484
+            PointHeightOfCharacterMatrix        = 0x85, //Word 0x485
+            VideoModeOptions                    = 0x87, //Byte 0x487
+            EGAFeatureBitSwitches               = 0x88, //Byte 0x488
+            VideoDisplayDataArea                = 0x89, //Byte 0x489
+            DisplayCombinationCodeTableIndex    = 0x8a, //Byte 0x48a
+            VideoParameterControlBlockPointer   = 0xa8 //Dword 0x4a8
+        };
+    }
+    
+    namespace DetectedHardware
+    {
+        inline DetectedHardware_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().DetectedHardware;
+            #else
+            return Testing::Mock::BDA::RefAs<DetectedHardware_t, Offset::DetectedHardware>();
+            #endif
+        }
+    }
+
+    namespace DisplayMode
+    {
+        inline VGA::VideoMode_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().DisplayMode;
+            #else
+            return Testing::Mock::BDA::RefAs<VGA::VideoMode_t, Offset::DisplayMode>();
+            #endif
+        }
+    }
+
+    namespace NumberOfScreenColumns
+    {
+        inline NumberOfScreenColumns_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().NumberOfScreenColumns;
+            #else
+            return Testing::Mock::BDA::RefAs<NumberOfScreenColumns_t, Offset::NumberOfScreenColumns>();
+            #endif
+        }
+    }
+
+    namespace VideoBufferSize
+    {
+        inline VideoBufferSize_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().VideoBufferSize;
+            #else
+            return Testing::Mock::BDA::RefAs<VideoBufferSize_t, Offset::VideoBufferSize>();
+            #endif
+        }
+    }
+
+    namespace VideoBufferOffset
+    {
+        inline VideoBufferOffset_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().VideoBufferOffset;
+            #else
+            return Testing::Mock::BDA::RefAs<VideoBufferOffset_t, Offset::VideoBufferOffset>();
+            #endif
+        }
+    }
+
+    namespace CursorPositions
+    {
+        //There are 8 cursor positions.
+        inline CursorPosition_t* Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().CursorPositions;
+            #else
+            return &Testing::Mock::BDA::RefAs<CursorPosition_t, Offset::CursorPositionPage0>(8);
+            #endif
+        }
+        inline void Clear()
+        {
+            Get()[0] = 
+            Get()[1] = 
+            Get()[2] = 
+            Get()[3] = 
+            Get()[4] = 
+            Get()[5] = 
+            Get()[6] = 
+            Get()[7] = Position();
+        }
+    }
+
+    namespace CursorScanLines
+    {
+        inline CursorScanLines_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().CursorScanLines;
+            #else
+            return Testing::Mock::BDA::RefAs<CursorScanLines_t, Offset::CursorEndScanLine>();
+            #endif
+        }
+    }
+
+    namespace ActiveDisplayNumber
+    {
+        inline ActiveDisplayNumber_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().ActiveDisplayNumber;
+            #else
+            return Testing::Mock::BDA::RefAs<ActiveDisplayNumber_t, Offset::ActiveDisplayNumber>();
+            #endif
+        }
+    }
+    
+    namespace VideoBaseIOPort
+    {
+        inline VideoBaseIOPort_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().VideoBaseIOPort;
+            #else
+            return Testing::Mock::BDA::RefAs<VideoBaseIOPort_t, Offset::VideoBaseIOPort>();
+            #endif
+        }
+    }
+
+    namespace CRTModeControlRegValue
+    {
+        inline CRTModeControlRegValue_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().CRTModeControlRegValue;
+            #else
+            return Testing::Mock::BDA::RefAs<CRTModeControlRegValue_t, Offset::CRTModeControlRegValue>();
+            #endif
+        }
+    }
+    
+    namespace CGAColorPaletteMaskSetting
+    {
+        inline CGAColorPaletteMaskSetting_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().CGAColorPaletteMaskSetting;
+            #else
+            return Testing::Mock::BDA::RefAs<CGAColorPaletteMaskSetting_t, Offset::CGAColorPaletteMaskSetting>();
+            #endif
+        }
+    }
+
+    namespace RowsOnScreen
+    {
+        inline RowsOnScreen_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().RowsOnScreen;
+            #else
+            return Testing::Mock::BDA::RefAs<RowsOnScreen_t, Offset::RowsOnScreen>();
+            #endif
+        }
+    }
+
+    namespace PointHeightOfCharacterMatrix
+    {
+        inline PointHeightOfCharacterMatrix_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().PointHeightOfCharacterMatrix;
+            #else
+            return Testing::Mock::BDA::RefAs<PointHeightOfCharacterMatrix_t, Offset::PointHeightOfCharacterMatrix>();
+            #endif
+        }
+    }
+
+    namespace VideoModeOptions
+    {
+        inline VideoModeOptions_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().VideoModeOptions;
+            #else
+            return Testing::Mock::BDA::RefAs<VideoModeOptions_t, Offset::VideoModeOptions>();
+            #endif
+        }
+    }
+
+    namespace EGAFeatureBitSwitches
+    {
+        inline EGAFeatureBitSwitches_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().EGAFeatureBitSwitches;
+            #else
+            return Testing::Mock::BDA::RefAs<EGAFeatureBitSwitches_t, Offset::EGAFeatureBitSwitches>();
+            #endif
+        }
+    }
+
+    namespace VideoDisplayDataArea
+    {
+        inline VideoDisplayDataArea_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().VideoDisplayDataArea;
+            #else
+            return Testing::Mock::BDA::RefAs<VideoDisplayDataArea_t, Offset::VideoDisplayDataArea>();
+            #endif
+        }
+    }
+
+    namespace DisplayCombinationCodeTableIndex
+    {
+        inline DisplayCombinationCodeTableIndex_t& Get()
+        {
+            #ifndef MOCK
+            return CurrentInstance().DisplayCombinationCodeTableIndex;
+            #else
+            return Testing::Mock::BDA::RefAs<DisplayCombinationCodeTableIndex_t, Offset::DisplayCombinationCodeTableIndex>();
+            #endif
+        }
+    }
+
     namespace VideoParameterControlBlockPointer
     {
         inline VideoParameterControlBlockPointer_t& Get()
         {
-            return GetVariable<VideoParameterControlBlockPointer_t, Offset::VideoParameterControlBlockPointer>();
+            #ifndef MOCK
+            return CurrentInstance().VideoParameterControlBlockPointer;
+            #else
+            return Testing::Mock::BDA::RefAs<VideoParameterControlBlockPointer_t, Offset::VideoParameterControlBlockPointer>();
+            #endif
         }
-
     }
 
 }}}

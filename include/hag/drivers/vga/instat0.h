@@ -26,14 +26,21 @@ namespace InputStatus0
 
     enum //Mask
     {
-        MonitorSenseStatus = 0x10       //MON SENS 0 = internal ~SENSE signal is logical 0, 1 = internal ~SENSE signal is logical 1
+        MonitorSenseStatus = 0x10,      //MON SENS 0 = internal ~SENSE signal is logical 0, 1 = internal ~SENSE signal is logical 1
+        FeatureInput0 = 0x20,           //Always reads as 1. Writing has no effect
+        FeatureInput1 = 0x40,           //Always reads as 1. Writing has no effect
+        CRTInterrupt = 0x80,            //0 = Vertical retrace interrupt is cleared
+                                        //1 = Vertical retrace interrupt is pending
     };
 
     namespace Shift
     {
         enum
         {
-            MonitorSenseStatus = 0x04
+            MonitorSenseStatus = 0x04,
+            FeatureInput0 = 0x05,
+            FeatureInput1 = 0x06,
+            CRTInterrupt = 0x07,
         };
     };
 

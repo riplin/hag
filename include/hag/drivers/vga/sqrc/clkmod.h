@@ -28,6 +28,7 @@ namespace ClockingMode
         LoadSerializersEverySecondCharacterClock = 0x04,    //SHF LD 0 = Load the video serializer every character clock, 1 = every other character clock
         InternalCharacterClock = 0x08,                      //DCK 1/2 0 = Internal character clock = DCLK, 1 = internal character clock is 1/2 DCLK
         LoadSerializersEveryFourthCaracterClock = 0x10,     //SHF 4 0 = Load serializers every character clock cycle, 1 = Load serializers every fourth character clock cycle
+        ScreenOn = 0x00,
         ScreenOff = 0x20                                    //SCRN OFF 0 = Screen on, 1 = Screen off
     };
 

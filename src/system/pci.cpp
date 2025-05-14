@@ -5,6 +5,30 @@
 namespace Hag { namespace System { namespace PCI
 {
 
+static bool ScanBusInternal(uint8_t bus, ScanBusCallback_t callback, void* context);
+
+static bool HandleDevice(uint8_t bus, uint8_t slot, uint8_t function, ScanBusCallback_t callback, void* context)
+{
+    if (!callback(bus, slot, function, context))
+        return false;
+
+    uint8_t pciClass = GetClass(bus, slot, function);
+    uint8_t subClass = GetSubClass(bus, slot, function);
+    if (pciClass == Class::BridgeDevice &&
+        subClass == BridgeDevice::PCItoPCIBridgeA)
+    {
+        uint8_t headerType = GetHeaderType(bus, slot, function);
+        if ((headerType & HeaderType::MultiFunctionMask) ==
+            HeaderType::PCItoPCI)
+        {
+            uint8_t secondaryBus = GetHeader1SecondaryBus(bus, slot, function);
+            if (!ScanBusInternal(secondaryBus, callback, context))
+                return false;
+        }
+    }
+    return true;
+}
+
 static bool ScanBusInternal(uint8_t bus, ScanBusCallback_t callback, void* context)
 {
     for (uint8_t slot = 0; slot < 32; ++slot)
@@ -12,7 +36,7 @@ static bool ScanBusInternal(uint8_t bus, ScanBusCallback_t callback, void* conte
         if (GetVendorId(bus, slot, 0) == Vendor::Invalid)
             continue;
 
-        if (!callback(bus, slot, 0, context))
+        if (!HandleDevice(bus, slot, 0, callback, context))
             return false;
 
         uint8_t functionCount = 1;
@@ -21,26 +45,11 @@ static bool ScanBusInternal(uint8_t bus, ScanBusCallback_t callback, void* conte
 
         for (uint8_t function = 1; function < functionCount; ++function)
         {
-            if (GetVendorId(bus, slot, 0) == Vendor::Invalid)
+            if (GetVendorId(bus, slot, function) == Vendor::Invalid)
                 continue;
-            
-            if (!callback(bus, slot, function, context))
-                return false;
 
-            uint8_t pciClass = GetClass(bus, slot, function);
-            uint8_t subClass = GetSubClass(bus, slot, function);
-            if (pciClass == Class::BridgeDevice &&
-                subClass == BridgeDevice::PCItoPCIBridgeA)
-            {
-                uint8_t headerType = GetHeaderType(bus, slot, function);
-                if ((headerType & HeaderType::MultiFunctionMask) ==
-                    HeaderType::PCItoPCI)
-                {
-                    uint8_t secondaryBus = GetHeader1SecondaryBus(bus, slot, function);
-                    if (!ScanBusInternal(secondaryBus, callback, context))
-                        return false;
-                }
-            }
+            if (!HandleDevice(bus, slot, function, callback, context))
+                return false;
         }
     }
     return true;

@@ -41,8 +41,8 @@ namespace CharacterFontSelect
         {
             SelectFontB1 = 0x00,
             SelectFontA1 = 0x02,
-            SelectFontB2 = 0x02,
-            SelectFontA2 = 0x03,
+            SelectFontB2 = 0x04,
+            SelectFontA2 = 0x05,
         };
     }
 

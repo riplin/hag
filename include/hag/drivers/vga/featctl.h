@@ -28,14 +28,16 @@ namespace FeatureControl
     
     enum //Mask
     {
-        VerticalSyncTypeSelect = 0x08 //VSSL 0 = normal vsync, 1 = vsync ORed with vertical active display enable
+        FeatureControlBit0 = 0x01,              //Feature control bit 0. VGA. General read/write bit.
+        FeatureControlBit1 = 0x02               //Feature control bit 1. VGA. General read/write bit.
     };
 
     namespace Shift
     {
         enum
         {
-            VerticalSyncTypeSelect = 0x03
+            FeatureControlBit0 = 0x00,
+            FeatureControlBit1 = 0x01
         };
     }
 

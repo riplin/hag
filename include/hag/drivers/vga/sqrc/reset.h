@@ -24,8 +24,8 @@ namespace Reset
 {
     enum //Mask
     {
-        AsynchronousReset = 0x01,       //~ASY RST This bit is for VGA software compatibility only. It has no function for the Trio32/Trio64.
-        SynchronousReset = 0x02         //~SYN RST This bit is for VGA software compatibility only. It has no funciton for the Trio32/Trio64.
+        AsynchronousReset = 0x01,       //~ASY RST This bit is for VGA software compatibility only.
+        SynchronousReset = 0x02         //~SYN RST This bit is for VGA software compatibility only.
     };
 
     namespace Shift

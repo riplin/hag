@@ -7,6 +7,11 @@
 
 namespace Hag { namespace System { namespace PCI
 {
+    typedef uint16_t Device_t;
+
+    typedef uint8_t Register8_t;
+    typedef uint16_t Register16_t;
+    typedef uint32_t Register_t;
 
 namespace Config
 {
@@ -314,11 +319,26 @@ namespace AGPCommand
     };
 }
 
+//Device_t bsf = Bus, Slot, Function
+
+inline Register_t Read32(Device_t bsf, uint8_t offset)
+{
+    uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
+    SYS_WritePortDouble(Config::Address, address);
+    return SYS_ReadPortDouble(Config::Data);
+}
+
 inline uint32_t Read32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {
     uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
     SYS_WritePortDouble(Config::Address, address);
     return SYS_ReadPortDouble(Config::Data);
+}
+
+inline Register16_t Read16(Device_t bsf, uint8_t offset)
+{
+    uint32_t ret = Read32(bsf, offset);
+    return uint16_t(ret >> ((offset & 2) << 3));
 }
 
 inline uint16_t Read16(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
@@ -327,10 +347,23 @@ inline uint16_t Read16(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
     return uint16_t(ret >> ((offset & 2) << 3));
 }
 
+inline Register8_t Read8(Device_t bsf, uint8_t offset)
+{
+    uint32_t ret = Read32(bsf, offset);
+    return uint8_t(ret >> ((offset & 3) << 3));
+}
+
 inline uint8_t Read8(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {
     uint32_t ret = Read32(bus, slot, func, offset);
     return uint8_t(ret >> ((offset & 3) << 3));
+}
+
+inline void Write32(Device_t bsf, uint8_t offset, uint32_t value)
+{
+    uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
+    SYS_WritePortDouble(Config::Address, address);
+    SYS_WritePortDouble(Config::Data, value);
 }
 
 inline void Write32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t value)
@@ -338,6 +371,34 @@ inline void Write32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uin
     uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
     SYS_WritePortDouble(Config::Address, address);
     SYS_WritePortDouble(Config::Data, value);
+}
+
+inline void Write16(Device_t bsf, uint8_t offset, uint16_t value)
+{
+    uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
+    SYS_WritePortDouble(Config::Address, address);
+    SYS_WritePortShort(Config::Data + (offset & 0x02), value);
+}
+
+inline void Write16(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint16_t value)
+{
+    uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
+    SYS_WritePortDouble(Config::Address, address);
+    SYS_WritePortShort(Config::Data + (offset & 0x02), value);
+}
+
+inline void Write8(Device_t bsf, uint8_t offset, uint8_t value)
+{
+    uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
+    SYS_WritePortDouble(Config::Address, address);
+    SYS_WritePortByte(Config::Data + (offset & 0x03), value);
+}
+
+inline void Write8(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint8_t value)
+{
+    uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
+    SYS_WritePortDouble(Config::Address, address);
+    SYS_WritePortByte(Config::Data + (offset & 0x03), value);
 }
 
 inline uint16_t GetVendorId(uint8_t bus, uint8_t slot, uint8_t function)
@@ -363,6 +424,16 @@ inline uint8_t GetSubClass(uint8_t bus, uint8_t device, uint8_t function)
 inline uint8_t GetHeaderType(uint8_t bus, uint8_t device, uint8_t function)
 {
     return Read8(bus, device, function, PreHeader::HeaderType);
+}
+
+inline uint16_t GetHeader0SubsystemVendorId(uint8_t bus, uint8_t device, uint8_t function)
+{
+    return Read16(bus, device, function, Header0::SubsystemVendorId);
+}
+
+inline uint16_t GetHeader0SubsystemId(uint8_t bus, uint8_t device, uint8_t function)
+{
+    return Read16(bus, device, function, Header0::SubsystemId);
 }
 
 inline uint8_t GetHeader1SecondaryBus(uint8_t bus, uint8_t device, uint8_t function)
