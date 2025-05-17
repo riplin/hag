@@ -6,6 +6,7 @@
 #include <hag/types.h>
 #include <hag/farptr.h>
 #include <hag/drivers/vga/vidmodes.h>
+#include <hag/drivers/vga/regtype.h>
 #include <hag/testing/mock.h>
 
 //This API handles the BIOS Data Area
@@ -157,7 +158,6 @@ namespace Hag { namespace System { namespace BDA
     typedef Position CursorPosition_t;
     typedef EndStart CursorScanLines_t;
     typedef uint8_t ActiveDisplayNumber_t;
-    typedef uint16_t VideoBaseIOPort_t;
     typedef uint8_t CRTModeControlRegValue_t;
     typedef uint8_t CGAColorPaletteMaskSetting_t;
     typedef uint8_t RowsOnScreen_t;
@@ -212,6 +212,7 @@ namespace Hag { namespace System { namespace BDA
         {
             CursorEmulationEnabled      = 0x01,
             Monochrome                  = 0x02,
+            Color                       = 0x00,
             Unknown                     = 0x04,
             Inactive                    = 0x08,
             Memory64k                   = 0x00,
@@ -297,7 +298,7 @@ namespace Hag { namespace System { namespace BDA
         CursorPosition_t CursorPositions[8];                                        // 40:50
         CursorScanLines_t CursorScanLines;                                          // 40:60
         ActiveDisplayNumber_t ActiveDisplayNumber;                                  // 40:62
-        VideoBaseIOPort_t VideoBaseIOPort;                                          // 40:63
+        VGA::Register_t VideoBaseIOPort;                                            // 40:63
         CRTModeControlRegValue_t CRTModeControlRegValue;                            // 40:65
         CGAColorPaletteMaskSetting_t CGAColorPaletteMaskSetting;                    // 40:66
         uint32_t DayCounter;                                                        // 40:67
@@ -497,12 +498,12 @@ namespace Hag { namespace System { namespace BDA
     
     namespace VideoBaseIOPort
     {
-        inline VideoBaseIOPort_t& Get()
+        inline VGA::Register_t& Get()
         {
             #ifndef MOCK
             return CurrentInstance().VideoBaseIOPort;
             #else
-            return Testing::Mock::BDA::RefAs<VideoBaseIOPort_t, Offset::VideoBaseIOPort>();
+            return Testing::Mock::BDA::RefAs<VGA::Register_t, Offset::VideoBaseIOPort>();
             #endif
         }
     }

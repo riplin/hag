@@ -54,6 +54,7 @@ int SetVideoModeInternalsCompareTest();
 
 int main(void)
 {
+    printf("Test suite start...\n");
     int ret = 0;
     TESTFUNCTION(MockSetupTeardownTest);
     TESTFUNCTION(SquenceRegisterLockingTest);
@@ -79,5 +80,6 @@ int main(void)
     TESTFUNCTION(SetVideoModeInternalsCompareTest);
     TESTFUNCTION(SetVideoModeTest);
 
+    printf("Test suite end...\n");
     return ret;
 }

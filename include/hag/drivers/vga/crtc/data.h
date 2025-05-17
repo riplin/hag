@@ -38,6 +38,15 @@ namespace CRTControllerData
         SYS_WritePortBytes(controllerIndexRegister, crtIndex, value);
     }
     
+    inline void Write(VGA::Register_t controllerIndexRegister, CRTController::Register_t startIndex, CRTControllerData_t* values, uint8_t count)
+    {
+        CRTController::Register_t index = startIndex;
+        for (uint8_t i = 0; i < count; ++i, ++index)
+        {
+            Write(controllerIndexRegister, index, values[i]);
+        }
+    }
+
 }
 
 }}

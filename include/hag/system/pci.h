@@ -5,6 +5,8 @@
 #include <hag/types.h>
 #include <hag/system/sysasm.h>
 
+#include <hag/testing/mock.h>
+
 namespace Hag { namespace System { namespace PCI
 {
     typedef uint16_t Device_t;
@@ -323,82 +325,94 @@ namespace AGPCommand
 
 inline Register_t Read32(Device_t bsf, uint8_t offset)
 {
+    #ifndef MOCK
     uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
     SYS_WritePortDouble(Config::Address, address);
     return SYS_ReadPortDouble(Config::Data);
+    #else
+    return Testing::Mock::PCI::Read32(bsf, offset);
+    #endif
 }
 
-inline uint32_t Read32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
+inline Register_t Read32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {
-    uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
-    SYS_WritePortDouble(Config::Address, address);
-    return SYS_ReadPortDouble(Config::Data);
+    Device_t bsf = (Device_t(bus) << 8) | (Device_t(slot) << 3) | Device_t(func);
+    return Read32(bsf, offset);
 }
 
 inline Register16_t Read16(Device_t bsf, uint8_t offset)
 {
     uint32_t ret = Read32(bsf, offset);
-    return uint16_t(ret >> ((offset & 2) << 3));
+    return Register16_t(ret >> ((offset & 2) << 3));
 }
 
-inline uint16_t Read16(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
+inline Register16_t Read16(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {
     uint32_t ret = Read32(bus, slot, func, offset);
-    return uint16_t(ret >> ((offset & 2) << 3));
+    return Register16_t(ret >> ((offset & 2) << 3));
 }
 
 inline Register8_t Read8(Device_t bsf, uint8_t offset)
 {
     uint32_t ret = Read32(bsf, offset);
-    return uint8_t(ret >> ((offset & 3) << 3));
+    return Register8_t(ret >> ((offset & 3) << 3));
 }
 
-inline uint8_t Read8(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
+inline Register8_t Read8(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset)
 {
     uint32_t ret = Read32(bus, slot, func, offset);
-    return uint8_t(ret >> ((offset & 3) << 3));
+    return Register8_t(ret >> ((offset & 3) << 3));
 }
 
-inline void Write32(Device_t bsf, uint8_t offset, uint32_t value)
+inline void Write32(Device_t bsf, uint8_t offset, Register_t value)
 {
+    #ifndef MOCK
     uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
     SYS_WritePortDouble(Config::Address, address);
     SYS_WritePortDouble(Config::Data, value);
+    #else
+    Testing::Mock::PCI::Write32(bsf, offset, value);
+    #endif
 }
 
-inline void Write32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint32_t value)
+inline void Write32(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, Register_t value)
 {
-    uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
-    SYS_WritePortDouble(Config::Address, address);
-    SYS_WritePortDouble(Config::Data, value);
+    Device_t bsf = (Device_t(bus) << 8) | (Device_t(slot) << 3) | Device_t(func);
+    Write32(bsf, offset, value);
 }
 
-inline void Write16(Device_t bsf, uint8_t offset, uint16_t value)
+inline void Write16(Device_t bsf, uint8_t offset, Register16_t value)
 {
+    #ifndef MOCK
     uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
     SYS_WritePortDouble(Config::Address, address);
     SYS_WritePortShort(Config::Data + (offset & 0x02), value);
+    #else
+    Testing::Mock::PCI::Write16(bsf, offset, value);
+    #endif
 }
 
-inline void Write16(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint16_t value)
+inline void Write16(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, Register16_t value)
 {
-    uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
-    SYS_WritePortDouble(Config::Address, address);
-    SYS_WritePortShort(Config::Data + (offset & 0x02), value);
+    Device_t bsf = (Device_t(bus) << 8) | (Device_t(slot) << 3) | Device_t(func);
+    Write16(bsf, offset, value);
 }
 
-inline void Write8(Device_t bsf, uint8_t offset, uint8_t value)
+inline void Write8(Device_t bsf, uint8_t offset, Register8_t value)
 {
+    #ifndef MOCK
     uint32_t address = (uint32_t(bsf) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
     SYS_WritePortDouble(Config::Address, address);
     SYS_WritePortByte(Config::Data + (offset & 0x03), value);
+    #else
+    Testing::Mock::PCI::Write8(bsf, offset, value);
+    #endif
 }
 
-inline void Write8(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, uint8_t value)
+inline void Write8(uint8_t bus, uint8_t slot, uint8_t func, uint8_t offset, Register8_t value)
 {
-    uint32_t address = (uint32_t(bus) << 16) | (uint32_t(slot) << 11) | (uint32_t(func) << 8) | uint32_t(offset & 0xFC) | uint32_t(0x80000000);
-    SYS_WritePortDouble(Config::Address, address);
-    SYS_WritePortByte(Config::Data + (offset & 0x03), value);
+    Device_t bsf = (Device_t(bus) << 8) | (Device_t(slot) << 3) | Device_t(func);
+    Write8(bsf, offset, value);
 }
 
 inline uint16_t GetVendorId(uint8_t bus, uint8_t slot, uint8_t function)
@@ -446,5 +460,20 @@ typedef bool (*ScanBusCallback_t)(uint8_t bus, uint8_t slot, uint8_t function, v
 void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context);
 
 bool FindDevice(uint16_t vendorId, uint16_t deviceId, uint8_t& bus, uint8_t& slot, uint8_t& function);
+
+inline bool FindDevice(uint16_t vendorId, uint16_t deviceId, Device_t& bsf)
+{
+    bool ret = false;
+    uint8_t bus = 0;
+    uint8_t slot = 0;
+    uint8_t function = 0;
+    if (FindDevice(vendorId, deviceId, bus, slot, function))
+    {
+        bsf = (Device_t(bus) << 8) | (Device_t(slot) << 3) | Device_t(function);
+        ret = true; 
+    }
+
+    return ret;
+}
 
 }}}

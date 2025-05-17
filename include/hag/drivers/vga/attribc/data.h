@@ -36,6 +36,16 @@ namespace AttributeControllerData
         SYS_WritePortByte(Register::AttributeControllerIndex, attrIndex);
         SYS_WritePortByte(Register::AttributeControllerDataW, value);
     }
+
+    inline void Write(AttributeController::Register_t startIndex, AttributeControllerData_t* values, uint8_t count)
+    {
+        AttributeController::Register_t index = startIndex;
+        for (uint8_t i = 0; i < count; ++i, ++index)
+        {
+            Write(index, values[i]);
+        }
+    }
+
 }
 
 }}

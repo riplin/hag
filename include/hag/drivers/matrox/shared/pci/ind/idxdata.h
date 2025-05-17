@@ -19,7 +19,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t IndexedData_t;
+typedef uint8_t IndexedData_t;
 
 namespace IndexedData
 {

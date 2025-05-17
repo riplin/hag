@@ -59,6 +59,7 @@ struct Instance
 {
     inline Instance()
         : Allocator(NULL)
+        , PCIDevices(NULL)
         , PortHandlers(NULL)
         , PortMap(NULL)
         , Ports(NULL)
@@ -90,6 +91,7 @@ struct Instance
     uint8_t& CacheMemory(uint32_t offset, uint32_t size, uint32_t count);
 
     IAllocator* Allocator;
+    PCI::Device* PCIDevices;
     CustomPortHandler* PortHandlers;
     uint8_t* PortMap; //1 bit for every port in a 64k address range.
     uint8_t* Ports;
@@ -177,6 +179,13 @@ void Instance::Snapshot()
         ptr->Snapshot();
         ptr = ptr->GetNext();
     }
+
+    PCI::Device* dev = PCIDevices;
+    while (dev != NULL)
+    {
+        dev->Snapshot();
+        dev = dev->GetNext();
+    }
 }
 
 void Instance::Rollback()
@@ -196,6 +205,13 @@ void Instance::Rollback()
     {
         ptr->Rollback();
         ptr = ptr->GetNext();
+    }
+
+    PCI::Device* dev = PCIDevices;
+    while (dev != NULL)
+    {
+        dev->Rollback();
+        dev = dev->GetNext();
     }
 }
 
@@ -228,6 +244,13 @@ void Instance::Reset()
         ptr->Reset();
         ptr = ptr->GetNext();
     }
+
+    PCI::Device* dev = PCIDevices;
+    while (dev != NULL)
+    {
+        dev->Reset();
+        dev = dev->GetNext();
+    }
 }
 
 void Instance::Shutdown()
@@ -241,6 +264,15 @@ void Instance::Shutdown()
         PortHandlers->~CustomPortHandler();
         Allocator->Free(PortHandlers);
         PortHandlers = tmp;
+    }
+
+    while (PCIDevices != NULL)
+    {
+        using namespace PCI;
+        Device* tmp = PCIDevices->GetNext();
+        PCIDevices->~Device();
+        Allocator->Free(PCIDevices);
+        PCIDevices = tmp;
     }
 
     Allocator->Free(Ports);
@@ -1879,6 +1911,16 @@ void Report()
         ptr1 = ptr1->GetNext();
     }
 
+    PCI::Device* dev0 = s_Instance0.PCIDevices;
+    PCI::Device* dev1 = s_Instance1.PCIDevices;
+    while (dev0 != NULL && dev1 != NULL)
+    {
+        if (dev0->HasDifferences(dev1))
+            dev0->Report(dev1);
+        dev0 = dev0->GetNext();
+        dev1 = dev1->GetNext();
+    }
+
     bool memoryHasDifferences = false;
     memoryHasDifferences |= memcmp(s_Instance0.MemoryMap, s_Instance1.MemoryMap, (1024*1024)>>3) != 0;
     memoryHasDifferences |= memcmp(s_Instance0.Memory, s_Instance1.Memory, 1024*1024) != 0;
@@ -2032,6 +2074,13 @@ void Write8(uint16_t port, uint8_t value)
     if (s_Instance0.Allocator == NULL)
         return;
 
+    PCI::Device* dev = s_CurrentInstance->PCIDevices;
+    while (dev != NULL)
+    {
+        dev->Snoop8(port, value);
+        dev = dev->GetNext();
+    }
+
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     bool handled = false;
     while (handler != NULL)
@@ -2058,6 +2107,13 @@ void Write16(uint16_t port, uint16_t value)
 {
     if (s_Instance0.Allocator == NULL)
         return;
+
+    PCI::Device* dev = s_CurrentInstance->PCIDevices;
+    while (dev != NULL)
+    {
+        dev->Snoop16(port, value);
+        dev = dev->GetNext();
+    }
 
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     bool handled = false;
@@ -2115,6 +2171,115 @@ namespace BDA
         VERBOSE(printf("BDA access 0x%04X, size %i\n", 0x400 + offset, size * count));
         return s_CurrentInstance->CacheMemory(0x400 + offset, size, count);
     }
+}
+
+namespace PCI
+{
+    const uint32_t Device::s_ID = 0x42397409;
+
+    Device::~Device()
+    {
+        
+    }
+
+    Device* Device::CheckTypeId(uint32_t id)
+    {
+        return id == s_ID ? this : NULL;
+    }
+
+    void RegisterDevice(uint32_t instance, Device* ptr)
+    {
+        Instance* inst = &s_Instance0;
+        if (instance != 0)
+            inst = &s_Instance1;
+        
+        uint8_t deviceID = 1;
+
+        Device* dev = inst->PCIDevices;
+        while (dev != NULL)
+        {
+            ++deviceID;
+            dev = dev->GetNext();
+        }
+
+        ptr->SetBSF(0, deviceID, 0);
+
+        ptr->SetNext(inst->PCIDevices);
+        inst->PCIDevices = ptr;
+    }
+
+    uint32_t Read32(uint16_t bsf, uint8_t offset)
+    {
+        Device* dev = s_CurrentInstance->PCIDevices;
+        while (dev != NULL)
+        {
+            if (dev->GetBSF() == bsf)
+            {
+                return dev->Read32(offset & 0xFC);
+            }
+            dev = dev->GetNext();
+        }
+        return 0xFFFFFFFF;
+    }
+
+    void Write8(uint16_t bsf, uint8_t offset, uint8_t value)
+    {
+        Device* dev = s_CurrentInstance->PCIDevices;
+        while (dev != NULL)
+        {
+            if (dev->GetBSF() == bsf)
+            {
+                dev->Write8(offset, value);
+                break;
+            }
+            dev = dev->GetNext();
+        }
+    }
+
+    void Write16(uint16_t bsf, uint8_t offset, uint16_t value)
+    {
+        Device* dev = s_CurrentInstance->PCIDevices;
+        while (dev != NULL)
+        {
+            if (dev->GetBSF() == bsf)
+            {
+                dev->Write16(offset & 0xFE, value);
+                break;
+            }
+            dev = dev->GetNext();
+        }
+    }
+
+    void Write32(uint16_t bsf, uint8_t offset, uint32_t value)
+    {
+        Device* dev = s_CurrentInstance->PCIDevices;
+        while (dev != NULL)
+        {
+            if (dev->GetBSF() == bsf)
+            {
+                dev->Write32(offset & 0xFC, value);
+                break;
+            }
+            dev = dev->GetNext();
+        }
+    }
+
+    void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context)
+    {
+        Device* dev = s_CurrentInstance->PCIDevices;
+        while (dev != NULL)
+        {
+            uint16_t bsf = dev->GetBSF();
+            if (uint8_t(bsf >> 8) == bus)
+            {
+                if (!callback(uint8_t(bsf >> 8), (uint8_t(bsf) >> 3), uint8_t(bsf) & 0x7, context))
+                    return;
+            }
+            dev = dev->GetNext();
+        }
+
+    }
+
 }
 
 }}}

@@ -61,7 +61,7 @@
 #include <hag/drivers/vga/sqrc/clkmod.h>                    //SR1
 #include <hag/drivers/vga/sqrc/enwrtpl.h>                   //SR2
 #include <hag/drivers/vga/sqrc/chfntsel.h>                  //SR3
-#include <hag/drivers/vga/sqrc/memodctl.h>                  //SR4
+#include <hag/drivers/matrox/shared/sqrc/memodctl.h>        //SR4
 
 #include <hag/drivers/vga/dacmask.h>                        //0x3C6
 #include <hag/drivers/vga/dacrdidx.h>                       //0x3C7
@@ -313,6 +313,7 @@ namespace Hag { namespace Matrox { namespace Mystique
         IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, ClockingMode);
         IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, EnableWritePlane);
         IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, CharacterFontSelect);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Sequencer, MemoryModeControl);
     }
 
     IMPORTNAMESPACEANDTYPE(VGA, DACMask);

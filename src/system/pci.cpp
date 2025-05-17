@@ -57,7 +57,11 @@ static bool ScanBusInternal(uint8_t bus, ScanBusCallback_t callback, void* conte
 
 void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context)
 {
+    #ifndef MOCK
     ScanBusInternal(bus, callback, context);
+    #else
+    Testing::Mock::PCI::ScanBus(bus, callback, context);
+    #endif
 }
 
 struct FindDeviceContext

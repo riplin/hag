@@ -152,6 +152,81 @@ namespace BDA
     }
 }
 
+namespace PCI
+{
+    typedef bool (*ScanBusCallback_t)(uint8_t bus, uint8_t slot, uint8_t function, void* context);
+
+    class Device
+    {
+    public:
+        inline Device(const char* name)
+            : m_Name(name)
+            , m_Next(NULL)
+        {
+
+        }
+        
+        virtual ~Device();
+
+        virtual void Report(Device* instance1) = 0;
+        virtual bool HasDifferences(Device* instance1) = 0;
+
+        virtual void Reset() = 0;
+        virtual void Snapshot() = 0;
+        virtual void Rollback() = 0;
+    
+        virtual uint32_t Read32(uint8_t offset) = 0;
+        virtual void Write8(uint8_t offset, uint8_t value) = 0;
+        virtual void Write16(uint8_t offset, uint16_t value) = 0;
+        virtual void Write32(uint8_t offset, uint32_t value) = 0;
+
+        virtual void Snoop8(uint16_t port, uint8_t value) = 0;
+        virtual void Snoop16(uint16_t port, uint16_t value) = 0;
+
+        inline const char* GetName() { return m_Name; }
+        inline Device* GetNext() { return m_Next; }
+        inline void SetNext(Device* next) { m_Next = next; }
+    
+    protected:
+        template<typename T> friend T* device_cast(Device* ptr);
+        virtual Device* CheckTypeId(uint32_t id);
+        static const uint32_t s_ID;
+
+    private:
+        friend void RegisterDevice(uint32_t instance, Device* ptr);
+        friend void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context);
+        friend uint32_t Read32(uint16_t bsf, uint8_t offset);
+        friend void Write8(uint16_t bsf, uint8_t offset, uint8_t value);
+        friend void Write16(uint16_t bsf, uint8_t offset, uint16_t value);
+        friend void Write32(uint16_t bsf, uint8_t offset, uint32_t value);
+    
+        inline void SetBSF(uint8_t bus, uint8_t slot, uint8_t function)
+        {
+            m_BSF = (uint16_t(bus) << 8) | (uint16_t(slot) << 3) | uint16_t(function);
+        }
+
+        inline uint16_t GetBSF() { return m_BSF; }
+
+        const char* m_Name;
+        Device* m_Next;
+        uint16_t m_BSF;
+    };
+
+    template<typename T> T* device_cast(Device* ptr)
+    {
+        return (T*)(ptr != NULL ? ptr->CheckTypeId(T::s_ID) : NULL);
+    }
+    
+    void RegisterDevice(uint32_t instance, Device* ptr);
+
+    uint32_t Read32(uint16_t bsf, uint8_t offset);
+    void Write8(uint16_t bsf, uint8_t offset, uint8_t value);
+    void Write16(uint16_t bsf, uint8_t offset, uint16_t value);
+    void Write32(uint16_t bsf, uint8_t offset, uint32_t value);
+
+    void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context);
+}
+
 }}}
 
 #define VERIFYPORTCONTENT(Instance, ModifiedPorts, ReadPorts, ModifiedIndexedPorts, ReadIndexedPorts)                               \
