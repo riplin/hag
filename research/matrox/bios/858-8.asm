@@ -510,7 +510,7 @@ MGAWriteCRTCExtensionRegister ENDP
 VideoOverrideTable1 VideoOverridePointerTable < <offset VideoParameters, 0C000h>, <00000h, 00000h>, <00000h, 00000h>, <00000h, 00000h>, <offset SecondarySaveTable1, 0C000h>, <00000h, 00000h>, <00000h, 00000h> >
 
 ;Offset 0x3ec
-                        DW 00C20h, 0C000h
+                        DW offset Data0xc20, 0C000h
                         DW 00000h, 00000h
                         DW 00000h, 00000h
                         DW 00000h, 00000h
@@ -525,7 +525,7 @@ SecondarySaveTable1 SecondarySavePointerTable <SIZEOF SecondarySavePointerTable,
 VideoOverrideTable2 VideoOverridePointerTable < <offset VideoParameters, 0E000h>, <00000h, 00000h>, <00000h, 00000h>, <00000h, 00000h>, <offset SecondarySaveTable2, 0E000h>, <00000h, 00000h>, <00000h, 00000h> >
 
 ;Offset 0x43e
-                        DW 00C20h, 0E000h
+                        DW offset Data0xc20, 0E000h
                         DW 00000h, 00000h
                         DW 00000h, 00000h
                         DW 00000h, 00000h

@@ -66,7 +66,7 @@ namespace Hag { namespace System { namespace BDA
         uint8_t ApplicableVideoModes[];//Terminated by 0xFF
     };
 
-    struct GraphicsCharacterSetOverride
+    struct GraphicsCharacterSet
     {
         uint8_t NumberOfCharacterRowsDisplayed;
         uint16_t CharacterLength;
@@ -149,6 +149,17 @@ namespace Hag { namespace System { namespace BDA
         FARPointer DACRegisterTable;            //10   dword  video DAC color register table pointer
         VGA::VideoMode_t ApplicableModes[1];    //14   nbytes array of applicable video modes for this font
                                                 //14+n byte   FFh end of video mode list marker
+    };
+
+    struct VideoParameterControlBlock
+    {
+        FARPointer VideoParameters;                 //VideoParameterTable
+        FARPointer DynamicParamSaveArea;            //DynamicParameterSaveArea
+        FARPointer AlphanumericCharsetOverride;     //AlphanumericCharSet
+        FARPointer GraphicsCharacterSetOverride;    //GraphicsCharacterSet
+        FARPointer SecondarySavePointer;            //SecondarySavePointerTable
+        FARPointer Reserved1;
+        FARPointer Reserved2;
     };
 
     typedef uint8_t DetectedHardware_t;

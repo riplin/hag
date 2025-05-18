@@ -25,7 +25,7 @@ namespace VideoModeError
 
 bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer));
 bool CheckValidInCurrentMode(uint8_t* ptr);
-void SetGraphicsCharacterFont(System::BDA::GraphicsCharacterSetOverride* graphicsCharacterFontDefinition);
+void SetGraphicsCharacterFont(System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition);
 void ModeSetBDA(VGA::VideoMode_t& mode, bool colorHardware, bool vesaModeNotColor);
 bool VerifyBDAOrDeactivate(VGA::VideoMode_t& mode, bool isVesa, bool isVesaColor);
 

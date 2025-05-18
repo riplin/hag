@@ -20,6 +20,8 @@
 #include <hag/drivers/matrox/shared/crtcext/mempg.h>        //CER4
 #include <hag/drivers/matrox/shared/crtcext/hrhlfcnt.h>     //CER5
 
+#include <hag/drivers/matrox/shared/pci/ctrlap.h>
+
 #include <hag/drivers/matrox/shared/pci/idx/curbadl.h>      //IDX04
 #include <hag/drivers/matrox/shared/pci/idx/curbadh.h>      //IDX05
 #include <hag/drivers/matrox/shared/pci/idx/curctrl.h>      //IDX06
@@ -52,50 +54,131 @@
 void BDADump(FILE* fp, FILE* fpbin)
 {
     using namespace Hag::System::BDA;
+    fwrite(&SystemBDA(), 256, 1, fpbin);
     fprintf(fp, "BIOS Data Area:\n\n");
     fprintf(fp, "Display mode                  : 0x%02X\n", DisplayMode::Get());
-    fwrite(&DisplayMode::Get(), 1, 1, fpbin);
     fprintf(fp, "Detected hardware             : 0x%02X\n", DetectedHardware::Get());
-    fwrite(&DetectedHardware::Get(), 1, 1, fpbin);
     fprintf(fp, "Number of screen columns      : 0x%04X\n", NumberOfScreenColumns::Get());
-    fwrite(&NumberOfScreenColumns::Get(), 1, 1, fpbin);
     fprintf(fp, "Video buffer size             : 0x%04X\n", VideoBufferSize::Get());
-    fwrite(&VideoBufferSize::Get(), 2, 1, fpbin);
     fprintf(fp, "Video buffer offset           : 0x%04X\n", VideoBufferOffset::Get());
-    fwrite(&VideoBufferOffset::Get(), 2, 1, fpbin);
     
     for (uint8_t cursorPos = 0; cursorPos < 8; ++cursorPos)
     {
         fprintf(fp, "Cursor position %i             : 0x%02X, 0x%02X\n", cursorPos,
             CursorPositions::Get()[cursorPos].Column,
             CursorPositions::Get()[cursorPos].Row);
-        fwrite(&CursorPositions::Get()[cursorPos].Column, 1, 1, fpbin);
-        fwrite(&CursorPositions::Get()[cursorPos].Row, 1, 1, fpbin);
     }
     fprintf(fp, "Cursor start scanline         : 0x%02X\n", CursorScanLines::Get().Start);
-    fwrite(&CursorScanLines::Get().Start, 1, 1, fpbin);
     fprintf(fp, "Cursor end scanline           : 0x%02X\n", CursorScanLines::Get().End);
-    fwrite(&CursorScanLines::Get().End, 1, 1, fpbin);
     fprintf(fp, "Active display number         : 0x%02X\n", ActiveDisplayNumber::Get());
-    fwrite(&ActiveDisplayNumber::Get(), 1, 1, fpbin);
     fprintf(fp, "Video Base IO port            : 0x%04X\n", VideoBaseIOPort::Get());
-    fwrite(&VideoBaseIOPort::Get(), 2, 1, fpbin);
     fprintf(fp, "CRT mode control reg          : 0x%02X\n", CRTModeControlRegValue::Get());
-    fwrite(&CRTModeControlRegValue::Get(), 1, 1, fpbin);
     fprintf(fp, "CGA Color Palette mask        : 0x%02X\n", CGAColorPaletteMaskSetting::Get());
-    fwrite(&CGAColorPaletteMaskSetting::Get(), 1, 1, fpbin);
     fprintf(fp, "Rows on screen                : 0x%02X\n", RowsOnScreen::Get());
-    fwrite(&RowsOnScreen::Get(), 1, 1, fpbin);
     fprintf(fp, "Point height of Char Matrix   : 0x%02X\n", PointHeightOfCharacterMatrix::Get());
-    fwrite(&PointHeightOfCharacterMatrix::Get(), 1, 1, fpbin);
     fprintf(fp, "Video mode options            : 0x%02X\n", VideoModeOptions::Get());
-    fwrite(&VideoModeOptions::Get(), 1, 1, fpbin);
     fprintf(fp, "EGA feature bit switches      : 0x%02X\n", EGAFeatureBitSwitches::Get());
-    fwrite(&EGAFeatureBitSwitches::Get(), 1, 1, fpbin);
     fprintf(fp, "Video display data area       : 0x%02X\n", VideoDisplayDataArea::Get());
-    fwrite(&VideoDisplayDataArea::Get(), 1, 1, fpbin);
     fprintf(fp, "Display combination code index: 0x%02X\n", DisplayCombinationCodeTableIndex::Get());
-    fwrite(&DisplayCombinationCodeTableIndex::Get(), 1, 1, fpbin);
+    fprintf(fp, "Video parameter ctrl block ptr: %04X:%04X\n", VideoParameterControlBlockPointer::Get().Segment, VideoParameterControlBlockPointer::Get().Offset);
+    if (!VideoParameterControlBlockPointer::Get().IsNull())
+    {
+        VideoParameterControlBlock* videoParameterControlBlock = VideoParameterControlBlockPointer::Get().ToPointer<VideoParameterControlBlock>();
+        fprintf(fp, "\nVideo parameter control block:\n");
+        fprintf(fp, "Video parameters              : %04X:%04X\n", videoParameterControlBlock->VideoParameters.Segment, videoParameterControlBlock->VideoParameters.Offset);        
+        fprintf(fp, "Dynamic param save area       : %04X:%04X\n", videoParameterControlBlock->DynamicParamSaveArea.Segment, videoParameterControlBlock->DynamicParamSaveArea.Offset);
+        fprintf(fp, "Alphanumeric Charset override : %04X:%04X\n", videoParameterControlBlock->AlphanumericCharsetOverride.Segment, videoParameterControlBlock->AlphanumericCharsetOverride.Offset);
+        fprintf(fp, "Graphics charset override     : %04X:%04X\n", videoParameterControlBlock->GraphicsCharacterSetOverride.Segment, videoParameterControlBlock->GraphicsCharacterSetOverride.Offset);
+        fprintf(fp, "Secondary save pointer        : %04X:%04X\n", videoParameterControlBlock->SecondarySavePointer.Segment, videoParameterControlBlock->SecondarySavePointer.Offset);
+
+        if (!videoParameterControlBlock->DynamicParamSaveArea.IsNull())
+        {
+            DynamicParameterSaveArea* dynamicParameterSaveArea = videoParameterControlBlock->DynamicParamSaveArea.ToPointer<DynamicParameterSaveArea>();
+            fprintf(fp, "\nDynamic parameter save area:\n");
+            for (uint8_t i = 0; i < 16; ++i)
+            {
+                fprintf(fp, "Palette register %02i           : 0x%02X\n", i, dynamicParameterSaveArea->PaletteRegisters[i]);
+            }
+            fprintf(fp, "Border color                  : 0x%02X\n", dynamicParameterSaveArea->GraphicsControllerOverscanRegister);
+        }
+
+        if (!videoParameterControlBlock->AlphanumericCharsetOverride.IsNull())
+        {
+            AlphaNumericCharacterSetOverride* alphaNumericCharacterSetOverride = videoParameterControlBlock->AlphanumericCharsetOverride.ToPointer<AlphaNumericCharacterSetOverride>();
+            fprintf(fp, "\nAlphanumeric character set override:\n");
+            fprintf(fp, "Character length              : 0x%02X\n", alphaNumericCharacterSetOverride->CharacterLength);
+            fprintf(fp, "Character generator RAM bank  : 0x%02X\n", alphaNumericCharacterSetOverride->CharacterGeneratorRAMBank);
+            fprintf(fp, "Number of characters          : 0x%04X\n", alphaNumericCharacterSetOverride->NumberOfCharacters);
+            fprintf(fp, "First character code in table : 0x%04X\n", alphaNumericCharacterSetOverride->FirstCharacterCodeInTable);
+            fprintf(fp, "Character font definition tbl : %04X:%04X\n", alphaNumericCharacterSetOverride->CharacterFontDefinitionTable.Segment, alphaNumericCharacterSetOverride->CharacterFontDefinitionTable.Offset);
+            fprintf(fp, "Character rows                : 0x%02X\n", alphaNumericCharacterSetOverride->NumberOfCharacterRowsDisplayed);
+            int idx = 0;
+            while (alphaNumericCharacterSetOverride->ApplicableVideoModes[idx] != 0xFF)
+            {
+                fprintf(fp, "Applicable mode %02i            : 0x%02X\n", alphaNumericCharacterSetOverride->ApplicableVideoModes[idx]);
+                ++idx;
+            }
+        }
+        
+        if (!videoParameterControlBlock->GraphicsCharacterSetOverride.IsNull())
+        {
+            GraphicsCharacterSet* graphicsCharacterSet = videoParameterControlBlock->GraphicsCharacterSetOverride.ToPointer<GraphicsCharacterSet>();
+            fprintf(fp, "\nGraphics character set override:\n");
+            fprintf(fp, "Number of character rows      : 0x%02X\n", graphicsCharacterSet->NumberOfCharacterRowsDisplayed);
+            fprintf(fp, "Character length              : 0x%04X\n", graphicsCharacterSet->CharacterLength);
+            fprintf(fp, "Character font definition tbl : %04X:%04X\n", graphicsCharacterSet->CharacterFontDefinitionTable.Segment, graphicsCharacterSet->CharacterFontDefinitionTable.Offset);
+            int idx = 0;
+            while (graphicsCharacterSet->ApplicableVideoModes[idx] != 0xFF)
+            {
+                fprintf(fp, "Applicable mode %02i            : 0x%02X\n", graphicsCharacterSet->ApplicableVideoModes[idx]);
+                ++idx;
+            }
+        }
+
+        if (!videoParameterControlBlock->SecondarySavePointer.IsNull())
+        {
+            SecondarySavePointerTable* secondarySavePointerTable = videoParameterControlBlock->SecondarySavePointer.ToPointer<SecondarySavePointerTable>();
+            fprintf(fp, "\nSecondary save pointer table:\n");
+            fprintf(fp, "Length of table               : 0x%02X\n", secondarySavePointerTable->LengthOfTableInBytes);
+            fprintf(fp, "Display comination code talbe : %04X:%04X\n", secondarySavePointerTable->DisplayCombinationCodeTable.Segment, secondarySavePointerTable->DisplayCombinationCodeTable.Offset);
+            fprintf(fp, "Secondary Alpha charset ovr   : %04X:%04X\n", secondarySavePointerTable->SecondaryAlphanumericCharacterSetOverride.Segment, secondarySavePointerTable->SecondaryAlphanumericCharacterSetOverride.Offset);
+            fprintf(fp, "User palette profile table    : %04X:%04X\n", secondarySavePointerTable->UserPaletteProfileTable.Segment, secondarySavePointerTable->UserPaletteProfileTable.Offset);
+
+            if (!secondarySavePointerTable->SecondaryAlphanumericCharacterSetOverride.IsNull())
+            {
+                SecondaryAlphaModeAuxillaryCharacterGeneratorTable* secondaryAlpha = secondarySavePointerTable->SecondaryAlphanumericCharacterSetOverride.ToPointer<SecondaryAlphaModeAuxillaryCharacterGeneratorTable>();
+                fprintf(fp, "\nSecondary alpha charset override:\n");
+                fprintf(fp, "Character height              : 0x%02X\n", secondaryAlpha->CharacterHeight);
+                fprintf(fp, "RAM bank                      : 0x%02X\n", secondaryAlpha->RamBank);
+                fprintf(fp, "Font data                     : %04X:%04X\n", secondaryAlpha->FontData.Segment, secondaryAlpha->FontData.Offset);
+                int idx = 0;
+                while (secondaryAlpha->ApplicableModes[idx] != 0xFF)
+                {
+                    fprintf(fp, "Applicable mode %02i            : 0x%02X\n", secondaryAlpha->ApplicableModes[idx]);
+                    ++idx;
+                }
+            }
+
+            if (!secondarySavePointerTable->UserPaletteProfileTable.IsNull())
+            {
+                PaletteProfile* paletteProfile = secondarySavePointerTable->UserPaletteProfileTable.ToPointer<PaletteProfile>();
+                fprintf(fp, "\nUser palette profile table:\n");
+                fprintf(fp, "Underlining                   : 0x%02X\n", paletteProfile->Underlining);
+                fprintf(fp, "Attribute register count      : 0x%04X\n", paletteProfile->AttributeRegisterCount);
+                fprintf(fp, "Attribute start index         : 0x%04X\n", paletteProfile->AttributeRegisterStartIndex);
+                fprintf(fp, "Attribute register table      : %04X:%04X\n", paletteProfile->AttributeRegisterTable.Segment, paletteProfile->AttributeRegisterTable.Offset);
+                fprintf(fp, "DAC register count            : 0x%04X\n", paletteProfile->DACRegisterCount);
+                fprintf(fp, "DAC start index               : 0x%02X\n", paletteProfile->DACRegisterStartIndex);
+                fprintf(fp, "DAC register table            : %04X:%04X\n", paletteProfile->DACRegisterTable.Segment, paletteProfile->DACRegisterTable.Offset);
+                int idx = 0;
+                while (paletteProfile->ApplicableModes[idx] != 0xFF)
+                {
+                    fprintf(fp, "Applicable mode %02i            : 0x%02X\n", paletteProfile->ApplicableModes[idx]);
+                    ++idx;
+                }
+            }
+        }
+    }
     fprintf(fp, "\n");
 }
 
@@ -143,7 +226,7 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
         InputStatus1::Read(baseIOPort + 0x06);
         uint8_t idx = (origAttribIdx & 0xE0) | attribIdx;
         AttributeController::Palette_t palette = AttributeController::Palette::Read(idx);
-        fprintf(fp, "Palette entry %02i              : 0x%02X\n", idx, palette);
+        fprintf(fp, "Palette entry %02X              : 0x%02X\n", attribIdx, palette);
         fwrite(&palette, sizeof(palette), 1, fpbin);
     }
 
@@ -442,6 +525,10 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     System::PCI::Device_t device = (uint16_t(pciDeviceBus) << 8) | (pciDeviceSlot << 3) | pciDeviceFunction;
     fprintf(fp, "\nMatrox specific registers:\n");
 
+    //PCI::ControlAperture_t controlAperture = PCI::ControlAperture::Read(device) & PCI::ControlAperture::BaseAddress;
+
+    //fwrite((void*)controlAperture, 16 * 1024, 1, fpbin);
+
     fprintf(fp, "\nCRTC:\n");
     CRTController::CPUReadLatch_t cpuReadLatch = CRTController::CPUReadLatch::Read(baseIOPort);
     fprintf(fp, "CPU read latch                : 0x%02X\n", cpuReadLatch);
@@ -603,7 +690,7 @@ int main(int argc, char** argv)
     REGPACK r;
     memset(&r, 0, sizeof(r));
 
-    Device devices[] =
+    static Device devices[] =
     {
         { 0x0519, "Matrox Millennium 2064W PCI" },
         { 0x051A, "Matrox Mystique 1064SG PCI", },

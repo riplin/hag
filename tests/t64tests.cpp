@@ -1862,8 +1862,8 @@ int SetVideoModeInternalsTest()
             {
                 Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
                 
-                Hag::System::BDA::GraphicsCharacterSetOverride* graphicsCharacterFontDefinition = NULL;
-                if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::GraphicsCharacterSetOverride>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
+                Hag::System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition = NULL;
+                if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::GraphicsCharacterSet>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
                     Hag::S3::Trio64::CheckValidInCurrentMode(graphicsCharacterFontDefinition->ApplicableVideoModes))
                     Hag::S3::Trio64::SetGraphicsCharacterFont(graphicsCharacterFontDefinition);
             }
@@ -2126,8 +2126,8 @@ int SetVideoModeInternalsCompareTest()
 
             Hag::Testing::Mock::SelectInstance(1);
             Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
-            Hag::System::BDA::GraphicsCharacterSetOverride* graphicsCharacterFontDefinition2 = NULL;
-            if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::GraphicsCharacterSetOverride>(3, graphicsCharacterFontDefinition2, 0x07 + 0x14) &&
+            Hag::System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition2 = NULL;
+            if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::GraphicsCharacterSet>(3, graphicsCharacterFontDefinition2, 0x07 + 0x14) &&
                 Hag::S3::Trio64::CheckValidInCurrentMode(graphicsCharacterFontDefinition2->ApplicableVideoModes))
                 Hag::S3::Trio64::SetGraphicsCharacterFont(graphicsCharacterFontDefinition2);
 

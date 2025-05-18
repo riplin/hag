@@ -15,7 +15,7 @@
 #include <hag/drivers/vga/gfxc/data.h>
 #include <hag/drivers/vga/gfxc/index.h>
 
-#if 0
+#if 1
 #define VERBOSE(s)s;
 #else
 #define VERBOSE(s)
@@ -48,6 +48,11 @@ namespace Hag { namespace Testing { namespace Mock {
 CustomPortHandler::~CustomPortHandler()
 {
 
+}
+
+bool CustomPortHandler::CacheValue(uint16_t port)
+{
+    return true;
 }
 
 CustomPortHandler* CustomPortHandler::CheckTypeId(uint32_t id)
@@ -236,6 +241,7 @@ void Instance::Reset()
         uint8_t bit = 1 << (DefaultPortValues[i].Port & 0x0007);
         SnapshotPortMap[index] |= bit;
         SnapshotPorts[DefaultPortValues[i].Port] = DefaultPortValues[i].Value;
+        VERBOSE(printf("Default port 0x%04X = 0x%02X\n", DefaultPortValues[i].Port, DefaultPortValues[i].Value));
     }
 
     CustomPortHandler* ptr = PortHandlers;
@@ -484,7 +490,7 @@ struct ReadOnlyReg
 class IndexedPort : public CustomPortHandler
 {
 public:
-    inline IndexedPort(IAllocator& allocator, const char* name, uint16_t indexPort, uint16_t dataPort, uint16_t regCount, uint8_t indexMask, uint8_t* defaultValues)
+    inline IndexedPort(IAllocator& allocator, const char* name, uint16_t indexPort, uint16_t dataPort, uint16_t regCount, uint8_t indexMask, uint8_t* defaultValues, uint8_t* orMask, uint8_t* andMask)
         : CustomPortHandler(name)
         , m_Allocator(&allocator)
         , m_IndexPort(indexPort)
@@ -495,6 +501,8 @@ public:
         , m_DataMask(NULL)
         , m_SnapshotValues(NULL)
         , m_DefaultValues(defaultValues)
+        , m_OrMask(orMask)
+        , m_AndMask(andMask)
         , m_ReadOnlyRegisters(NULL)
     {
         m_Data = m_Allocator->AllocateAs<uint8_t>(regCount);
@@ -591,6 +599,17 @@ public:
                 m_Data[index] = m_SnapshotValues[index];
             }
             VERBOSE(printf("%s port read 0x%04X:0x%02X = 0x%02X\n", GetName(), port, index, m_Data[index]));
+
+            if (m_OrMask != NULL)
+            {
+                m_Data[index] |= m_OrMask[index];
+            }
+
+            if (m_AndMask != NULL)
+            {
+                m_Data[index] &= m_AndMask[index];
+            }
+
             return m_Data[index];
         }
         else if (port == m_IndexPort)
@@ -622,6 +641,16 @@ public:
                     return;
 
                 ptr = ptr->Next;
+            }
+
+            if (m_OrMask != NULL)
+            {
+                value |= m_OrMask[index];
+            }
+
+            if (m_AndMask != NULL)
+            {
+                value &= m_AndMask[index];
             }
 
             uint8_t blockIndex = index >> 3;
@@ -739,7 +768,9 @@ private:
     uint8_t* m_DataMask;
     uint8_t* m_SnapshotValues;
     uint8_t* m_DefaultValues;
-    ReadOnlyReg* m_ReadOnlyRegisters;
+    uint8_t* m_OrMask;
+    uint8_t* m_AndMask;
+ReadOnlyReg* m_ReadOnlyRegisters;
 
     uint8_t GetIndex()
     {
@@ -858,6 +889,7 @@ public:
 
         if (port == Hag::VGA::Register::AttributeControllerIndex)
         {
+            printf("Attribute reading index: 0x%02X\n", m_CurrentIndex);
             return m_CurrentIndex;
         }
 
@@ -865,6 +897,7 @@ public:
         {
             uint8_t index = m_CurrentIndex & 0x1f;
             CacheRegister(index);
+            printf("Attribute reading data: 0x%02X = 0x%02X\n", index, Data[index]);
             return Data[index];
         }
 
@@ -885,12 +918,14 @@ public:
             if (m_IsIndex)
             {
                 m_CurrentIndex = value;
+                printf("Attribute index: 0x%02X\n", value);
             }
             else
             {
                 uint8_t index = m_CurrentIndex & 0x1f;
                 MarkPort(index);
                 Data[index] = value;
+                printf("Attribute data: 0x%02X = 0x%02X\n", index, value);
             }
             m_IsIndex = !m_IsIndex;
         }
@@ -1272,18 +1307,18 @@ void AddReadOnlyPort(const char* name, uint16_t port)
     s_Instance1.PortHandlers = port1;
 }
 
-void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues)
+void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues, uint8_t* orMask, uint8_t* andMask)
 {
     if (s_Instance0.Allocator == NULL)
         return;
 
     IndexedPort* port0 = ::new(s_Instance0.Allocator->Allocate(sizeof(IndexedPort))) 
-        IndexedPort(*s_Instance0.Allocator, name, indexPort, dataPort, regCount, indexMask, defaultValues);
+        IndexedPort(*s_Instance0.Allocator, name, indexPort, dataPort, regCount, indexMask, defaultValues, orMask, andMask);
     port0->SetNext(s_Instance0.PortHandlers);
     s_Instance0.PortHandlers = port0;
 
     IndexedPort* port1 = ::new(s_Instance1.Allocator->Allocate(sizeof(IndexedPort))) 
-        IndexedPort(*s_Instance1.Allocator, name, indexPort, dataPort, regCount, indexMask, defaultValues);
+        IndexedPort(*s_Instance1.Allocator, name, indexPort, dataPort, regCount, indexMask, defaultValues, orMask, andMask);
     port1->SetNext(s_Instance1.PortHandlers);
     s_Instance1.PortHandlers = port1;
 }
@@ -1313,6 +1348,146 @@ void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg)
         }
         ptr = ptr->GetNext();
     }
+}
+
+class DualPort : public CustomPortHandler
+{
+public:
+    inline DualPort(const char* name, uint16_t readPort, uint16_t writePort, uint16_t writePort2)
+        : CustomPortHandler(name)
+        , m_ReadPort(readPort)
+        , m_WritePort(writePort)
+        , m_WritePort2(writePort2)
+        , m_WasHandled(false)
+        , m_Value(0)
+        , m_ResetValue(0xFF)
+        , m_SnapshotValue(0)
+    {
+    }
+
+    virtual ~DualPort()
+    {
+    }
+
+    virtual bool CanHandle(uint16_t port)
+    {
+        return (port == m_ReadPort) || (port == m_WritePort) || (port == m_WritePort2);
+    }
+
+    virtual bool HasHandled(uint16_t port)
+    {
+        return m_WasHandled;
+    }
+
+    virtual bool CacheValue(uint16_t port)
+    {
+        return !((m_WritePort == port) || (port == m_WritePort2));
+    }
+
+    virtual uint8_t Read8(uint16_t port)
+    {
+        m_WasHandled = port == m_ReadPort;
+        return m_Value;
+    }
+
+    virtual uint16_t Read16(uint16_t port)
+    {
+        uint16_t lo = Hag::Testing::Mock::Port::Read8(port);
+        uint16_t hi = Hag::Testing::Mock::Port::Read8(port + 1);
+        return lo | (hi << 8);
+    }
+
+    virtual void Write8(uint16_t port, uint8_t value)
+    {
+        m_WasHandled = false;
+        if (port == m_WritePort)
+        {
+            m_WasHandled = true;
+            m_Value = value;
+        }
+        if (port == m_WritePort2)
+        {
+            m_WasHandled = true;
+            m_Value = value;
+        }
+    }
+
+    virtual void Write8(uint16_t port, uint8_t valueLo, uint8_t valueHi)
+    {
+        //Split up for simplicity
+        Hag::Testing::Mock::Port::Write8(port, valueLo);
+        Hag::Testing::Mock::Port::Write8(port + 1, valueHi);
+    }
+
+    virtual void Write16(uint16_t port, uint16_t value)
+    {
+        //Split up for simplicity
+        Hag::Testing::Mock::Port::Write8(port, uint8_t(value));
+        Hag::Testing::Mock::Port::Write8(port + 1, uint8_t(value >> 8));
+    }
+
+    virtual void Report(CustomPortHandler* instance1)
+    {
+        printf("%s differs:\n", GetName());
+        printf("Instance 0: 0x%02X\n, Instance 1: 0x%02X\n", m_Value, ((DualPort*)instance1)->m_Value);
+    }
+
+    virtual bool HasDifferences(CustomPortHandler* instance1)
+    {
+        DualPort* other = (DualPort*)instance1;
+        return other->m_Value != m_Value;
+    }
+
+    virtual void Reset()
+    {
+        if (m_ResetValue == 0xFF)
+        {
+            s_CurrentInstance->CachePort8(m_ReadPort);
+            m_ResetValue = s_CurrentInstance->Ports[m_ReadPort];
+        }
+
+        m_Value = m_ResetValue;
+        m_SnapshotValue = m_ResetValue;
+    }
+
+    virtual void Snapshot()
+    {
+        m_SnapshotValue = m_Value;
+    }
+
+    virtual void Rollback()
+    {
+        m_Value = m_SnapshotValue;
+    }
+
+protected:
+    template<typename T> friend T* customporthandler_cast(CustomPortHandler* ptr);
+    virtual CustomPortHandler* CheckTypeId(uint32_t id)
+    {
+        return id == s_ID ? this : CustomPortHandler::CheckTypeId(id);
+    }
+    static const uint32_t s_ID = 0x2048633a;
+
+private:
+    uint16_t m_ReadPort;
+    uint16_t m_WritePort;
+    uint16_t m_WritePort2;
+    uint8_t m_Value;
+    uint8_t m_ResetValue;
+    uint8_t m_SnapshotValue;
+    bool m_WasHandled;
+};
+
+
+void AddDualPortRegister(const char* name, uint16_t readPort, uint16_t writePort, uint16_t writePort2)
+{
+    DualPort* ptr0 = ::new(s_Instance0.Allocator->Allocate(sizeof(DualPort))) DualPort(name, readPort, writePort, writePort2);
+    ptr0->SetNext(s_Instance0.PortHandlers);
+    s_Instance0.PortHandlers = ptr0;
+
+    DualPort* ptr1 = ::new(s_Instance1.Allocator->Allocate(sizeof(DualPort))) DualPort(name, readPort, writePort, writePort2);
+    ptr1->SetNext(s_Instance1.PortHandlers);
+    s_Instance1.PortHandlers = ptr1;
 }
 
 void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size)
@@ -2083,6 +2258,7 @@ void Write8(uint16_t port, uint8_t value)
 
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     bool handled = false;
+    bool cacheValue = true;
     while (handler != NULL)
     {
         if (handler->CanHandle(port))
@@ -2090,6 +2266,7 @@ void Write8(uint16_t port, uint8_t value)
             handler->Write8(port, value);
             if (handled = handler->HasHandled(port))
             {
+                cacheValue = handler->CacheValue(port);
                 break;
             }
         }
@@ -2099,8 +2276,11 @@ void Write8(uint16_t port, uint8_t value)
     {
         VERBOSE(printf("Port write 0x%04X = 0x%02X\n", port, value));
     }
-    s_CurrentInstance->MarkPort(port);
-    s_CurrentInstance->Ports[port] = value;
+    if (cacheValue)
+    {
+        s_CurrentInstance->MarkPort(port);
+        s_CurrentInstance->Ports[port] = value;
+    }
 }
 
 void Write16(uint16_t port, uint16_t value)

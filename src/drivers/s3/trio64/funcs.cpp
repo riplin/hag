@@ -45,7 +45,7 @@ bool CheckValidInCurrentMode(uint8_t* ptr)
     } while (true);
 }
 
-void SetGraphicsCharacterFont(System::BDA::GraphicsCharacterSetOverride* graphicsCharacterFontDefinition)
+void SetGraphicsCharacterFont(System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition)
 {
     using namespace System::BDA;
 
@@ -1602,8 +1602,8 @@ VideoModeError_t SetLegacyVideoModeInternal(VideoMode_t mode, Shared::VESAVideoM
             BDA::CursorScanLines::Get().End = 0;
             BDA::CursorScanLines::Get().Start = 0;
 
-            BDA::GraphicsCharacterSetOverride* graphicsCharacterFontDefinition = NULL;
-            if (GetVideoParameterBlockElementAs<BDA::GraphicsCharacterSetOverride>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
+            BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition = NULL;
+            if (GetVideoParameterBlockElementAs<BDA::GraphicsCharacterSet>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
                 CheckValidInCurrentMode(graphicsCharacterFontDefinition->ApplicableVideoModes))
                 SetGraphicsCharacterFont(graphicsCharacterFontDefinition);
         }

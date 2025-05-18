@@ -1,5 +1,9 @@
 //Copyright 2025-Present riplin
 
+#pragma once
+
+#include <hag/drivers/vga/vidmodes.h>
+
 #include <hag/drivers/vga/featctl.h>                        //0x3BA, 0x3CA, 0x3DA
 #include <hag/drivers/vga/instat1.h>                        //0x3BA, 0x3DA
 

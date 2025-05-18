@@ -21,6 +21,7 @@ public:
 
     virtual bool CanHandle(uint16_t port) = 0;
     virtual bool HasHandled(uint16_t port) = 0;
+    virtual bool CacheValue(uint16_t port);
     virtual uint8_t Read8(uint16_t port) = 0;
     virtual uint16_t Read16(uint16_t port) = 0;
     virtual void Write8(uint16_t port, uint8_t value) = 0;
@@ -64,8 +65,9 @@ void Snapshot();
 void Rollback();
 
 void AddReadOnlyPort(const char* name, uint16_t port);
-void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues);
+void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues, uint8_t* orMask = NULL, uint8_t* andMask = NULL);
 void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg);
+void AddDualPortRegister(const char* name, uint16_t readPort, uint16_t writePort, uint16_t writePort2 = 0xFFFF);
 void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size);
 
 typedef void (*IndexedRegisterCheckCallback_t)(uint16_t port, uint16_t index, uint8_t modifiedValue, uint8_t originalValue, void* context);
