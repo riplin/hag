@@ -352,7 +352,7 @@ uint8_t MockMystique::s_Indexed[80] =
 };
 
 
-#if 1
+#if 0
 
 #define RETURN(L)           \
     printf("%s\n", L);      \
@@ -432,8 +432,6 @@ bool IsMDAHiResEnhanced()//Offset 0x3094
     BDA::EGAFeatureBitSwitches_t adapterType = BDA::EGAFeatureBitSwitches::Get() & BDA::EGAFeatureBitSwitches::AdapterTypeMask;
     bool ret = (adapterType == BDA::EGAFeatureBitSwitches::MDAHiResEnhanced) ||
            (adapterType == BDA::EGAFeatureBitSwitches::MDAHiResEnhanced_2);
-    
-    printf("IsMDAHiResEnhanced: %s, AdapterType: 0x%02X\n", ret ? "Yes" : "No", adapterType);
     
     return ret;
 }
@@ -596,8 +594,6 @@ Hag::System::BDA::VideoParameterTable* GetVideoParameterTable()//Offset 0x2fe4
     // call      GetNumberOfActiveScanlines;Offset 0x3054
     r.h.al = GetNumberOfActiveScanlines();
 
-    printf("Video mode: 0x%02X, Offset 0x%02X, Scanlines: 0x%02X\n", BDA::DisplayMode::Get(), r.w.di, r.h.al);
-
     // add       di, ax
     r.w.di += r.w.ax;
 
@@ -609,7 +605,6 @@ Hag::System::BDA::VideoParameterTable* GetVideoParameterTable()//Offset 0x2fe4
     // mul       ah
     // add       si, ax
     // ret
-    printf("Video parameters index = %i, 0x%02X\n", r.h.al, r.h.al);
     return &VideoParameters[r.h.al];
 }
 
@@ -1184,9 +1179,7 @@ void InitializeAndSavePalettes(Hag::System::BDA::VideoParameterTable& videoParam
     //     xor   ax, ax
     //     mov   cx, 0010h
     //     call  Func0x2eb9                    ;Offset 0x2eb9
-    printf("Attribute palette load start...\n");
     VGA::AttributeControllerData::Write(VGA::AttributeController::Register::Palette0, videoParameterTable.AttributeControllerRegisters, 0x10);
-    printf("Attribute palette load end...\n");
 
     //     inc   ax                            ;Skip 0x10
     //     inc   si
@@ -2016,7 +2009,6 @@ void Func0x13cf(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOpt
         CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff);
 
     //     call      Func0x1499                ;Offset 0x1499
-    printf("Calling Func0x1499\n");
     Func0x1499(r.h.al, r.h.ah);
 
     //     xor       ax, ax
@@ -2294,7 +2286,7 @@ void ConfigureEGAFeatureBitSwitchesAdapter(Hag::VGA::VideoMode_t& videoMode, Hag
     static uint8_t Data0x1520[] = 
     {
         0x80,
-        (uint8_t)VGA::CRTControllerIndex::CRTCRegisterIndex,
+        (uint8_t)VGA::Register::CRTControllerIndexB,
         0xFF,
         BDA::DetectedHardware::Monochrome80x25,
         BDA::VideoModeOptions::Monochrome
@@ -2303,7 +2295,7 @@ void ConfigureEGAFeatureBitSwitchesAdapter(Hag::VGA::VideoMode_t& videoMode, Hag
     static uint8_t Data0x1525[] =
     {
         0x01,
-        (uint8_t)VGA::CRTControllerIndex::CRTCRegisterIndex,
+        (uint8_t)VGA::Register::CRTControllerIndexD,
         BDA::DetectedHardware::Monochrome80x25,
         0x00,
         BDA::VideoModeOptions::Color
@@ -2312,18 +2304,12 @@ void ConfigureEGAFeatureBitSwitchesAdapter(Hag::VGA::VideoMode_t& videoMode, Hag
     //     test      byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489 0x1
     //     je        Label0x151f               ;Offset 0x151f
     if ((BDA::VideoDisplayDataArea::Get() & BDA::VideoDisplayDataArea::VGA) == 0)
-    {
-        printf("ConfigureEGAFeatureBitSwitchesAdapter not VGA\n");
         goto Label0x151f;
-    }
 
     //     cmp       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     //     je        Label0x151f               ;Offset 0x151f
     if (r.h.al == BDA::DisplayMode::Get())
-    {
-        printf("ConfigureEGAFeatureBitSwitchesAdapter Display mode already set\n");
         goto Label0x151f;
-    }
 
     //     push      bx
     //     push      dx
@@ -2399,7 +2385,6 @@ LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14bb);
 
     //     mov       al, byte ptr ds:[BDA_EGAFeatureBitSwitches];Offset 0x488
     r.h.al = BDA::EGAFeatureBitSwitches::Get();
-    printf("Feature bit switches: 0x%02X\n", r.h.al);
 
     //     and       al, BDA_EFBS_AdapterTypeMask;0xf
     r.h.al &= BDA::EGAFeatureBitSwitches::AdapterTypeMask;
@@ -2421,7 +2406,6 @@ LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14bb);
 
     //     mov       al, BDA_EFBS_CGAMono80x25_2;0xb
     r.h.al = BDA::EGAFeatureBitSwitches::CGAMono80x25_2;
-    printf("al set to 0x0B\n");
 
     //     jbe       Label0x14f9               ;Offset 0x14f9
     if (isLower)
@@ -2429,14 +2413,12 @@ LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14bb);
 
     //     mov       al, BDA_EFBS_MDAHiResEnhanced_2;0x9
     r.h.al = BDA::EGAFeatureBitSwitches::MDAHiResEnhanced_2;
-    printf("al set to 0x09\n");
 
     // Label0x14f9:                            ;Offset 0x14f9
 LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14f9);
 
     //     mov       dl, byte ptr ds:[BDA_VideoDisplayDataArea];Offset 0x489
     r.h.dl = BDA::VideoDisplayDataArea::Get();
-    printf("Video display data area: 0x%02X\n", r.h.dl);
 
     //     mov       dh, dl
     r.h.dh = r.h.dl;
@@ -2452,7 +2434,6 @@ LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14f9);
     r.h.dh &= siPointer[0];
 
     //     sub       al, dh
-    printf("al(0x%02X) - dh(0x%02X) = 0x%02X\n", r.h.al, r.h.dh, r.h.al - r.h.dh);
     r.h.al -= r.h.dh;
 
     //     and       ah, byte ptr cs:[si]
@@ -2466,7 +2447,6 @@ LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14f9);
 
     //     or        byte ptr ds:[BDA_EGAFeatureBitSwitches], al;Offset 0x488
     BDA::EGAFeatureBitSwitches::Get() |= r.h.al;
-    printf("new adapter: 0x%02X\n", r.h.al);
 
     //     mov       byte ptr ds:[BDA_VideoDisplayDataArea], dl;Offset 0x489
     BDA::VideoDisplayDataArea::Get() = r.h.dl;
@@ -2515,7 +2495,6 @@ bool IsExtensionReg7Writeable()//Offset 0x5606
     // out  dx, ax
     Shared::CRTCExtensionData::Write(0x07, save);
 
-    printf("IsExtensionReg7Writeable : %s\n", save ? "Yes" : "No");
     // pop  dx
     // ret
     return equal;
@@ -2776,7 +2755,6 @@ LABEL(SetVideoMode, Label0x1323);
     r.w.ax = saveAX;
 
     //     call ConfigureEGAFeatureBitSwitchesAdapter                     ;Offset 0x149c
-    printf("Calling ConfigureEGAFeatureBitSwitchesAdapter\n");
     ConfigureEGAFeatureBitSwitchesAdapter(r.h.al, r.h.ah);
 
     //Don't set this pointer.
@@ -3423,9 +3401,29 @@ void MatroxMystiqueMockConfigSetup(Hag::IAllocator& allocator)
 
 uint8_t modes[] = 
 {
-    0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-    0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
-    0x10, 0x11, 0x12, 0x13
+            //          text/   text    pixel   pixel       colors  display screen
+            //          grph    resol   box     resolution          pages    addr
+    0x00,   // 00h =    T       40x25   9x16    360x400      16       8     B800
+    0x01,   // 01h =    T       40x25   9x16    360x400      16       8     B800
+    0x02,   // 02h =    T       80x25   9x16    720x400      16       8     B800
+    0x03,   // 03h =    T       80x25   9x16    720x400      16       8     B800
+            //     =    T       80x50   8x8     640x400      16       4     B800
+    0x04,   // 04h =    G       40x25   8x8     320x200       4       .     B800
+    0x05,   // 05h =    G       40x25   8x8     320x200       4       .     B800
+    0x06,   // 06h =    G       80x25   8x8     640x200       2       .     B800
+    0x07,   // 07h =    T       80x25   9x16    720x400     mono      .     B000
+            // 08h =    ?
+            // 09h =    ?
+            // 0Ah =    ?
+            // 0Bh =    Reserved
+            // 0Ch =    Reserved
+    0x0D,   // 0Dh =    G       40x25   8x8     320x200      16       8     A000
+    0x0E,   // 0Eh =    G       80x25   8x8     640x200      16       4     A000
+    0x0F,   // 0Fh =    G       80x25   8x14    640x350     mono      2     A000
+    0x10,   // 10h =    G         .      .      640x350      16       .     A000
+    0x11,   // 11h =    G       80x30   8x16    640x480     mono      .     A000
+    0x12,   // 12h =    G       80x30   8x16    640x480      16/256K  .     A000
+    0x13    // 13h =    G       40x25   8x8     320x200     256/256K  .     A000
 };
 
 uint16_t modesCount = sizeof(modes);

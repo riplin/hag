@@ -224,11 +224,12 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
     for (uint8_t attribIdx = 0; attribIdx < 0x10; ++attribIdx)
     {
         InputStatus1::Read(baseIOPort + 0x06);
-        uint8_t idx = (origAttribIdx & 0xE0) | attribIdx;
-        AttributeController::Palette_t palette = AttributeController::Palette::Read(idx);
+        AttributeController::Palette_t palette = AttributeController::Palette::Read(attribIdx);
         fprintf(fp, "Palette entry %02X              : 0x%02X\n", attribIdx, palette);
         fwrite(&palette, sizeof(palette), 1, fpbin);
     }
+    InputStatus1::Read(baseIOPort + 0x06);
+    AttributeControllerIndex::Write(origAttribIdx);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::AttributeMode_t attributeMode = AttributeController::AttributeMode::Read();
@@ -684,6 +685,36 @@ void BIOSDump()
     fclose(fp);
 }
 
+
+uint8_t modes[] = 
+{
+            //          text/   text    pixel   pixel       colors  display screen
+            //          grph    resol   box     resolution          pages    addr
+    0x00,   // 00h =    T       40x25   9x16    360x400      16       8     B800
+    0x01,   // 01h =    T       40x25   9x16    360x400      16       8     B800
+    0x02,   // 02h =    T       80x25   9x16    720x400      16       8     B800
+    0x03,   // 03h =    T       80x25   9x16    720x400      16       8     B800
+            //     =    T       80x50   8x8     640x400      16       4     B800
+    0x04,   // 04h =    G       40x25   8x8     320x200       4       .     B800
+    0x05,   // 05h =    G       40x25   8x8     320x200       4       .     B800
+    0x06,   // 06h =    G       80x25   8x8     640x200       2       .     B800
+    0x07,   // 07h =    T       80x25   9x16    720x400     mono      .     B000
+            // 08h =    ?
+            // 09h =    ?
+            // 0Ah =    ?
+            // 0Bh =    Reserved
+            // 0Ch =    Reserved
+    0x0D,   // 0Dh =    G       40x25   8x8     320x200      16       8     A000
+    0x0E,   // 0Eh =    G       80x25   8x8     640x200      16       4     A000
+    0x0F,   // 0Fh =    G       80x25   8x14    640x350     mono      2     A000
+    0x10,   // 10h =    G         .      .      640x350      16       .     A000
+    0x11,   // 11h =    G       80x30   8x16    640x480     mono      .     A000
+    0x12,   // 12h =    G       80x30   8x16    640x480      16/256K  .     A000
+    0x13    // 13h =    G       40x25   8x8     320x200     256/256K  .     A000
+};
+
+uint16_t modesCount = sizeof(modes);
+
 int main(int argc, char** argv)
 {
     using namespace Hag::System;
@@ -704,8 +735,10 @@ int main(int argc, char** argv)
         { 0x1000, "Matrox Productiva G100 PCI" }
     };
 
-    for (uint8_t mode = 0; mode <= 0x13; ++mode)
+    for (uint16_t modesIdx = 0; modesIdx < modesCount; ++modesIdx)
     {
+        uint8_t mode = modes[modesIdx];
+
         memset(&r, 0, sizeof(r));
         r.h.ah = 0x00;
         r.h.al = 0x03;

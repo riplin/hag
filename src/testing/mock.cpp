@@ -15,7 +15,7 @@
 #include <hag/drivers/vga/gfxc/data.h>
 #include <hag/drivers/vga/gfxc/index.h>
 
-#if 1
+#if 0
 #define VERBOSE(s)s;
 #else
 #define VERBOSE(s)
@@ -335,7 +335,7 @@ void Instance::CachePort8(uint16_t port)
         else
         {
             Ports[port] = Internal_ReadPortByte(port);
-            printf("Port 0x%04X not in default list.\n", port);
+            VERBOSE(printf("Port 0x%04X not in default list.\n", port));
         }
     }
 }
@@ -889,7 +889,7 @@ public:
 
         if (port == Hag::VGA::Register::AttributeControllerIndex)
         {
-            printf("Attribute reading index: 0x%02X\n", m_CurrentIndex);
+            VERBOSE(printf("Attribute reading index: 0x%02X\n", m_CurrentIndex));
             return m_CurrentIndex;
         }
 
@@ -897,7 +897,7 @@ public:
         {
             uint8_t index = m_CurrentIndex & 0x1f;
             CacheRegister(index);
-            printf("Attribute reading data: 0x%02X = 0x%02X\n", index, Data[index]);
+            VERBOSE(printf("Attribute reading data: 0x%02X = 0x%02X\n", index, Data[index]));
             return Data[index];
         }
 
@@ -918,14 +918,14 @@ public:
             if (m_IsIndex)
             {
                 m_CurrentIndex = value;
-                printf("Attribute index: 0x%02X\n", value);
+                VERBOSE(printf("Attribute index: 0x%02X\n", value));
             }
             else
             {
                 uint8_t index = m_CurrentIndex & 0x1f;
                 MarkPort(index);
                 Data[index] = value;
-                printf("Attribute data: 0x%02X = 0x%02X\n", index, value);
+                VERBOSE(printf("Attribute data: 0x%02X = 0x%02X\n", index, value));
             }
             m_IsIndex = !m_IsIndex;
         }
