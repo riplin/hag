@@ -778,10 +778,10 @@ void Func0x2e39(Hag::System::BDA::VideoParameterTable& videoParameterTable)//Off
     // push      dx
     // call      Func0x2fe4                ;Offset 0x2fe4
     //Func0x2fe4();
-    Hag::System::BDA::VideoParameterTable& otherVideoParameterTable = *GetVideoParameterTable();
+    //Hag::System::BDA::VideoParameterTable& otherVideoParameterTable = *GetVideoParameterTable();
     // add       si, 0005h
     // mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
-    Func0x2e45(otherVideoParameterTable, Hag::System::BDA::VideoBaseIOPort::Get());
+    Func0x2e45(videoParameterTable, Hag::System::BDA::VideoBaseIOPort::Get());
 }
 
 void SavePaletteToDynamicParams()//Offset 0x2eff
@@ -1711,7 +1711,7 @@ void Func0x2d24(uint16_t val1, uint16_t val2, uint8_t* ptr, uint16_t count)//Off
     --r.w.ax;
 
     // js        Func0x2d47                ;Offset 0x2d47
-    if (r.w.ax < 0x0000)
+    if ((r.w.ax & 0x8000) != 0)
     {
         Func0x2d47(bpPointer, r.w.cx, r.w.dx, r.w.bx);
         return;
@@ -1940,7 +1940,7 @@ void ActivateAttributeController()
 
 void Func0x1499(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions);
 
-void Func0x13cf(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions, Hag::VGA::Register_t& videoBaseIOPort)//Offset 0x13cf
+void Func0x13cf(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions, Hag::VGA::Register_t& videoBaseIOPort, Hag::System::BDA::VideoParameterTable* videoParameterTableOverride)//Offset 0x13cf
 {
     using namespace Hag;
     using namespace Hag::System;
@@ -2029,7 +2029,7 @@ void Func0x13cf(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOpt
     BDA::CursorPositions::Clear();
 
     //     call      GetVideoParameterTable                ;Offset 0x2fe4
-    BDA::VideoParameterTable& videoParameterTable = *GetVideoParameterTable();
+    BDA::VideoParameterTable& videoParameterTable = videoParameterTableOverride != NULL ? *videoParameterTableOverride : *GetVideoParameterTable();
 
     //     xor       ax, ax
     r.w.ax = 0;
@@ -2180,7 +2180,7 @@ void Func0x13cf(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOpt
     //     ret
 }
 
-void Func0x13cc(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions, Hag::VGA::Register_t& videoBaseIOPort)//Offset 0x13cc
+void Func0x13cc(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions, Hag::VGA::Register_t& videoBaseIOPort, Hag::System::BDA::VideoParameterTable* videoParameterTableOverride)//Offset 0x13cc
 {
     //;
     //;inputs:
@@ -2191,7 +2191,7 @@ void Func0x13cc(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOpt
     //;
     //and       ah, NOT BDA_VMO_DontClearDisplay;0x7f
     videoModeOptions &= ~Hag::System::BDA::VideoModeOptions::DontClearDisplay;
-    Func0x13cf(videoMode, videoModeOptions, videoBaseIOPort);
+    Func0x13cf(videoMode, videoModeOptions, videoBaseIOPort, videoParameterTableOverride);
 }
 
 void DeactivateAndInvokeSystemHandler(Hag::VGA::VideoMode_t videoMode, Hag::System::BDA::VideoModeOptions_t videoModeOptions)//Offset 0x13aa
@@ -2230,7 +2230,7 @@ void DeactivateAndForward(Hag::VGA::VideoMode_t videoMode, Hag::System::BDA::Vid
     // ret
 }
 
-void Func0x13ba(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions)//Offset 0x13ba
+void Func0x13ba(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions, Hag::System::BDA::VideoParameterTable* videoParameterTableOverride)//Offset 0x13ba
 {
     //;
     //;inputs:
@@ -2252,19 +2252,19 @@ void Func0x13ba(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOpt
     //    je        Func0x13cf                ;Offset 0x13cf
     if (videoMode == Hag::VGA::VideoMode::T80x25x1bppM)
     {
-        Func0x13cf(videoMode, videoModeOptions, videoBaseIOPort);
+        Func0x13cf(videoMode, videoModeOptions, videoBaseIOPort, videoParameterTableOverride);
         RETURN("Func0x13ba.Return 2");
     }
     //    cmp       al, BDA_DM_640x350_Monochrome_Graphics;0xf
     //    je        Func0x13cf                ;Offset 0x13cf
     if (videoMode == Hag::VGA::VideoMode::G640x350x1bppM)
     {
-        Func0x13cf(videoMode, videoModeOptions, videoBaseIOPort);
+        Func0x13cf(videoMode, videoModeOptions, videoBaseIOPort, videoParameterTableOverride);
         RETURN("Func0x13ba.Return 3");
     }
     //    mov       al, BDA_DM_80x25_Monochrome_Text;0x7
     videoMode = Hag::VGA::VideoMode::T80x25x1bppM;
-    Func0x13cc(videoMode, videoModeOptions, videoBaseIOPort);
+    Func0x13cc(videoMode, videoModeOptions, videoBaseIOPort, videoParameterTableOverride);
 
     RETURN("Func0x13ba.Return 4");
 }
@@ -2653,12 +2653,2871 @@ void Func0x1499(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOpt
     ConfigureEGAFeatureBitSwitchesAdapter(videoMode, videoModeOptions);
 }
 
-bool SetVESAMode(Hag::Vesa::VideoMode_t videoMode)
+Hag::Vesa::VideoMode_t TranslateSpecialModes(Hag::Vesa::VideoMode_t videoMode)//Offset 0x70a8
 {
-    return true;
+    //     push cx
+    //     cmp  bx, 81ffh                      ;full memory access mode.
+    //     jne  Label0x70b5                    ;Offset 0x70b5
+    if (videoMode != 0x81FF)
+        goto Label0x70b5;
+
+    //     mov  bx, 011fh                      ;replace with 0x11f
+    //     jmp  Label0x70ca                    ;Offset 0x70ca
+    goto Label0x70ca;
+    //     nop
+    // Label0x70b5:                            ;Offset 0x70b5
+LABEL(TranslateSpecialModes, Label0x70b5);
+
+    //     mov  cx, bx
+    //     and  cx, 01ffh
+    //     cmp  cx, 006ah                      ;0x6a is also 0x102
+    //     jne  Label0x70ca                    ;Offset 0x70ca
+    if ((videoMode & Hag::Vesa::VideoMode::ModeMask) != 0x6A)
+        goto Label0x70ca;
+
+    //     and  bx, 0fe00h                     ;preserve flags
+    //     or   bx, 0102h                      ;replace video mode
+    videoMode = (videoMode & ~Hag::Vesa::VideoMode::ModeMask) | Hag::Vesa::VideoMode::G800x600x4bpp;
+
+    // Label0x70ca:                            ;Offset 0x70ca
+    LABEL(TranslateSpecialModes, Label0x70ca);
+
+    //     pop  cx
+    //     ret
+    return videoMode;
 }
 
-bool SetVideoMode(Hag::VGA::VideoMode_t videoMode)//Offset 0x12f0
+//Offset 0x665d
+Hag::Vesa::VideoMode_t SupportedVESAVideoModes[] =
+{
+    Hag::Vesa::VideoMode::G640x400x8bpp,        //0x100      //1MB
+    Hag::Vesa::VideoMode::G640x480x8bpp,        //0x101
+    Hag::Vesa::VideoMode::G800x600x4bpp,        //0x102
+    Hag::Vesa::VideoMode::G800x600x8bpp,        //0x103
+    Hag::Vesa::VideoMode::G1024x768x8bpp,       //0x105
+    Hag::Vesa::VideoMode::G1280x1024x8bpp,      //0x107
+    Hag::Vesa::VideoMode::T80x60x4bpp,          //0x108
+    Hag::Vesa::VideoMode::T132x25x4bpp,         //0x109
+    Hag::Vesa::VideoMode::T132x43x4bpp,         //0x10a
+    Hag::Vesa::VideoMode::T132x50x4bpp,         //0x10b
+    Hag::Vesa::VideoMode::T132x60x4bpp,         //0x10c
+    0xFFFF,
+    Hag::Vesa::VideoMode::G640x480x15bpp,       //0x110      //2MB
+    Hag::Vesa::VideoMode::G640x480x16bpp,       //0x111
+    Hag::Vesa::VideoMode::G640x480x32bpp,       //0x112
+    Hag::Vesa::VideoMode::G800x600x15bpp,       //0x113
+    Hag::Vesa::VideoMode::G800x600x16bpp,       //0x114
+    Hag::Vesa::VideoMode::G800x600x32bpp,       //0x115
+    Hag::Vesa::VideoMode::G1024x768x15bpp,      //0x116
+    Hag::Vesa::VideoMode::G1024x768x16bpp,      //0x117
+    Hag::Vesa::VideoMode::G1600x1200x8bpp2,     //0x11c
+    0xFFFF,
+    Hag::Vesa::VideoMode::G1024x768x32bpp,      //0x118      //4MB
+    Hag::Vesa::VideoMode::G1280x1024x15bpp,     //0x119
+    Hag::Vesa::VideoMode::G1280x1024x16bpp,     //0x11a
+    Hag::Vesa::VideoMode::G1600x1200x15bpp2,    //0x11d
+    Hag::Vesa::VideoMode::G1600x1200x16bpp2,    //0x11e
+    0xFFFF
+};
+
+//;inputs:
+//;   -
+//;
+//;outputs:
+//;   ah = Size of memory in 64KB blocks
+//;
+uint8_t GetMemorySize()//Offset 0x5866
+{
+    using namespace Hag;
+    using namespace Hag::Matrox;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+
+    uint16_t saveAX1 = 0;
+    uint16_t saveAX2 = 0;
+    uint16_t saveAX3 = 0;
+    uint16_t saveAX4 = 0;
+    uint16_t saveAX5 = 0;
+    uint16_t saveDI = 0;
+    uint16_t saveCX = 0;
+
+    FARPointer ptr;
+    uint8_t* siPointer = NULL;
+    uint8_t* diPointer = NULL;
+    bool valNotEqual = false;
+
+    //     push  bx
+    //     push  cx
+    //     push  dx
+    //     push  ds
+    //     push  di
+    //     push  si
+
+    //     mov   dx, VGA_SequenceIndex         ;Port 0x3c4
+    //     in    al, dx
+    r.h.al = VGA::SequencerIndex::Read();
+    
+    //     push  ax
+    saveAX1 = r.w.ax;
+
+    //     mov   al, VGA_SEQIdx_ClockingMode   ;0x1
+    //     out   dx, al
+    //     in    ax, dx
+    r.h.ah = VGA::Sequencer::ClockingMode::Read();
+    r.h.al = VGA::Sequencer::Register::ClockingMode;
+
+    //     push  ax
+    saveAX2 = r.w.ax;
+
+    //     or    ah, VGA_SEQ1_ScreenOff        ;0x20
+    //     out   dx, ax
+    VGA::Sequencer::ClockingMode::Write(r.h.ah | VGA::Sequencer::ClockingMode::ScreenOff);
+
+    //     mov   cx, 04b0h
+    // Label0x587d:                            ;Offset 0x587d
+    //     loop  Label0x587d                   ;Offset 0x587d Speed sensitive!
+    for (r.w.cx = 0x4b0; r.w.cx != 0x0000; --r.w.cx);
+
+    //     mov   dx, VGA_GraphicsControllerIndex;Port 0x3ce
+    //     mov   al, VGA_GCTLIdx_Miscellaneous ;0x6
+    //     out   dx, al
+    //     in    ax, dx
+    r.h.ah = VGA::GraphicsController::MemoryMapModeControl::Read();
+    r.h.al = VGA::GraphicsController::Register::MemoryMapModeControl;
+
+    //     push  ax
+    saveAX3 = r.w.ax;
+
+    //     and   ah, VGA_GCTL6_GfxMode OR VGA_GCTL6_ChainEven;0x3
+    r.h.ah &= VGA::GraphicsController::MemoryMapModeControl::SelectTextGraphicsMode | 
+              VGA::GraphicsController::MemoryMapModeControl::ChainOddEvenPlanes;
+
+    //     or    ah, VGA_GCTL6_Mem_A0000_AFFFF ;0x4h
+    r.h.ah |= VGA::GraphicsController::MemoryMapModeControl::A0000HtoAFFFFH;
+
+    //     out   dx, ax
+    VGA::GraphicsController::MemoryMapModeControl::Write(r.h.ah);
+
+    //     mov   dx, VGA_InputStatus1D         ;Port 0x3da
+    //     xor   cx, cx
+    r.w.cx = 0x0000;
+
+    // Label0x5893:                            ;Offset 0x5893
+LABEL(GetMemorySize, Label0x5893);
+
+    //     dec   cx
+    --r.w.cx;
+
+    //     je    Label0x58a3                   ;Offset 0x58a3
+    if (r.w.cx == 0x0000)
+        goto Label0x58a3;
+
+    //     in    al, dx
+    r.h.al = VGA::InputStatus1::Read(VGA::Register::InputStatus1D);
+
+    //     and   al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
+    r.h.al &= VGA::InputStatus1::VerticalSyncActive;
+
+    //     je    Label0x5893                   ;Offset 0x5893
+    if (r.h.al == 0x00)
+        goto Label0x5893;
+
+    // Label0x589b:                            ;Offset 0x589b
+LABEL(GetMemorySize, Label0x589b);
+    //     dec   cx
+    --r.w.cx;
+
+    //     je    Label0x58a3                   ;Offset 0x58a3
+    if (r.w.cx == 0x0000)
+        goto Label0x58a3;
+
+    //     in    al, dx
+    r.h.al = VGA::InputStatus1::Read(VGA::Register::InputStatus1D);
+
+    //     and   al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
+    r.h.al &= VGA::InputStatus1::VerticalSyncActive;
+
+    //     je    Label0x589b                   ;Offset 0x589b
+    if (r.h.al == 0x00)
+        goto Label0x589b;
+
+    // Label0x58a3:                            ;Offset 0x58a3
+LABEL(GetMemorySize, Label0x58a3);
+
+    //     mov   dx, MGA_CRTCExtensionIndex    ;Port 0x3de
+    //     mov   al, MGA_CRTCExt_Misc          ;0x3
+    //     out   dx, al
+    //     in    ax, dx
+    r.h.ah = Shared::CRTCExtension::Miscellaneous::Read();
+    r.h.al = Shared::CRTCExtension::Register::Miscellaneous;
+
+    //     push  ax
+    saveAX4 = r.w.ax;
+
+    //     mov   ax, ((MGA_CRTCEXT3_ScaleDiv2 OR MGA_CRTCEXT3_MGAModeEnable) SHL 8) OR MGA_CRTCExt_Misc;0x8103
+    //     out   dx, ax
+    Shared::CRTCExtension::Miscellaneous::Write(Shared::CRTCExtension::Miscellaneous::ScaleDiv2 |
+                                                Shared::CRTCExtension::Miscellaneous::MGAModeEnable);
+
+    //     mov   al, MGA_CRTCExt_MemoryPage    ;0x4
+    //     out   dx, al
+    //     in    ax, dx
+    r.h.ah = Shared::CRTCExtension::MemoryPage::Read();
+    r.h.al = Shared::CRTCExtension::Register::MemoryPage;
+
+    //     push  ax
+    saveAX5 = r.w.ax;
+
+    //     mov   bx, 0a000h                    ;Segment 0xa000
+    r.w.bx = 0xA000;
+
+    //     mov   ds, bx
+    ptr.Segment = r.w.bx;
+    
+    //     xor   si, si
+    r.w.si = 0x0000;
+    
+    //     dec   si
+    --r.w.si;
+
+    //     dec   si
+    --r.w.si;
+    ptr.Offset = r.w.si;
+    siPointer = ptr.ToPointer<uint8_t>();//No size, we only poke one byte.
+
+    //     call  FindMystique                  ;Offset 0x57c6
+    //     call  ReadPCIDeviceID               ;Offset 0x5823
+
+    //     mov   di, 2000h
+    r.w.di = 0x2000;
+
+    //     mov   bx, 8000h                     ;8MB max
+    r.w.bx = 0x8000;
+
+    //     cmp   ax, PCI_DEVICE_MillenniumIIPCI;0x051b
+    //     jb    Label0x58d2                   ;Offset 0x58d2
+    //     xor   bx, bx
+    // Label0x58d2:                            ;Offset 0x58d2
+    //The whole PCI device ID testing is irrelevant.
+
+    //     mov   ax, (20h SHL 8)OR MGA_CRTCExt_MemoryPage;0x2004 Start at 2MB
+    r.h.ah = 0x20;
+
+    // Label0x58d5:                            ;Offset 0x58d5
+LABEL(GetMemorySize, Label0x58d5);
+
+    //     out   dx, ax
+    Shared::CRTCExtension::MemoryPage::Write(r.h.ah);
+
+    //     mov   ch, byte ptr [si]
+    r.h.ch = *siPointer;
+
+    //     mov   cl, 0a5h
+    r.h.cl = 0xa5;
+
+    //     mov   byte ptr [si], cl
+    *siPointer = r.h.cl;
+
+    //     push  di
+    saveDI = r.w.di;
+
+    //     push  cx
+    saveCX = r.w.cx;
+
+    //     not   cx
+    r.w.cx = ~r.w.cx;
+
+    //     mov   di, 0000h
+    r.w.di = 0x0000;
+    ptr.Offset = r.w.di;
+    diPointer = ptr.ToPointer<uint8_t>();//No size, we only poke one byte.
+
+    //     mov   ch, byte ptr [di]
+    r.h.ch = *diPointer;
+
+    //     mov   byte ptr [di], cl
+    *diPointer = r.h.cl;
+
+    //     mov   byte ptr [di], ch
+    *diPointer = r.h.ch;
+
+    //     pop   cx
+    r.w.cx = saveCX;
+
+    //     pop   di
+    r.w.di = saveDI;
+
+    //     cmp   cl, byte ptr [si]
+    valNotEqual = r.h.cl != *siPointer;
+
+    //     mov   byte ptr [si], ch
+    *siPointer = r.h.ch;
+
+    //     jne   Label0x58fc                   ;Offset 0x58fc
+    if (valNotEqual)
+        goto Label0x58fc;
+
+    //     add   di, 1000h
+    r.w.di += 0x1000;
+
+    //     add   ah, 10h
+    r.h.ah += 0x10;
+
+    //     cmp   bx, di
+    //     jne   Label0x58d5                   ;Offset 0x58d5
+    if (r.w.bx != r.w.di)
+        goto Label0x58d5;
+
+    // Label0x58fc:                            ;Offset 0x58fc
+LABEL(GetMemorySize, Label0x58fc);
+
+    //     pop   ax
+    r.w.ax = saveAX5;
+
+    //     out   dx, ax
+    Shared::CRTCExtension::MemoryPage::Write(r.h.ah);
+
+    //     pop   ax
+    r.w.ax = saveAX4;
+
+    //     out   dx, ax
+    Shared::CRTCExtension::Miscellaneous::Write(r.h.ah);
+
+    //     pop   ax
+    r.w.ax = saveAX3;
+
+    //     mov   dl, VGA_GraphicsControllerIndex_lowbyte;Port 0x3ce
+    //     out   dx, ax
+    VGA::GraphicsController::MemoryMapModeControl::Write(r.h.ah);
+
+    //     pop   ax
+    r.w.ax = saveAX2;
+
+    //     mov   dl, VGA_SequenceIndex_lowbyte ;Port 0x3c4
+    //     out   dx, ax
+    VGA::Sequencer::ClockingMode::Write(r.h.ah);
+
+    //     pop   ax
+    r.w.ax = saveAX1;
+
+    //     out   dx, al
+    VGA::SequencerIndex::Write(r.h.al);
+
+    //     or    di, di
+    //     jne   Label0x5913                   ;Offset 0x5913
+    if (r.w.di != 0x0000)
+        goto Label0x5913;
+
+    //     mov   di, 0001h
+    r.w.di = 0x0001;
+
+    // Label0x5913:                            ;Offset 0x5913
+LABEL(GetMemorySize, Label0x5913);
+    //     mov   ax, di
+    r.w.ax = r.w.di;
+
+    //     pop   si
+    //     pop   di
+    //     pop   ds
+    //     pop   dx
+    //     pop   cx
+    //     pop   bx
+    //     ret
+    return r.h.ah;
+}
+
+uint8_t GetMemoryExternal()//Offset 0x5855
+{
+    // push  dx
+    // mov   ax, 0bd50h
+    // xor   dx, dx
+    // int   6dh
+    // shl   dx, 0ch
+    // mov   di, dx
+    // pop   dx
+    // or    ah, ah
+    // ret
+    return 0;
+}
+
+uint8_t GetMemoryIn64KBlocks()//Offset 0x5846
+{
+    //     push  di
+    //     call  GetMemoryExternal             ;Offset 0x5855
+    //     mov   ax, di
+    //     je    Label0x5853                   ;Offset 0x5853
+    //     call  GetMemorySize                 ;Offset 0x5866
+    // Label0x5853:                            ;Offset 0x5853
+    //     pop   di
+    return GetMemorySize();
+}
+
+uint8_t CapAXTo0x40(uint8_t value)//Offset 0x5832
+{
+    return value > 0x40 ? 0x40 : value;
+    //     cmp   ax, 40h
+    //     jbe   IsLess                        ;Offset 0x583b
+    //     mov  ah, 40h
+    // IsLess:                                 ;Offset 0x583b
+    //     cmp  ah, 00h
+    //     jne  NotZero                        ;Offset 0x5845
+    //     mov  ax, 4000h
+    // NotZero:                                ;Offset 0x5845
+    //     ret
+}
+
+bool ValidateVesaMode(Hag::Vesa::VideoMode_t videoMode)//Offset 0x70cc
+{
+    using namespace Hag;
+    using namespace Hag::System;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint16_t saveBX = 0;
+    r.w.bx = videoMode;
+    uint16_t* siPointer = NULL;
+    bool ret = false;
+
+    //     push  ax
+    //     push  bx
+    //     push  si
+    //     push  ds
+
+    //     push  cs
+    //     pop   ds
+
+    //     and   bx, 01ffh
+    r.w.bx &= Vesa::VideoMode::ModeMask;
+
+    //     mov   si, offset SupportedVESAVideoModes;Offset 0x665d
+    siPointer = SupportedVESAVideoModes;
+
+    // Label0x70d9:                            ;Offset 0x70d9
+LABEL(ValidateVesaMode, Label0x70d9);
+
+    //     lodsw
+    r.w.ax = *siPointer;
+    ++siPointer;
+
+    //     cmp   ax, 0ffffh
+    //     je    Label0x70e9                   ;Offset 0x70e9
+    if (r.w.ax == 0xFFFF)
+        goto Label0x70e9;
+
+    //     cmp   bx, ax
+    //     je    Label0x7124                   ;Offset 0x7124
+    if (r.w.bx == r.w.ax)
+        goto Label0x7124;
+
+    //     jmp   Label0x70d9                   ;Offset 0x70d9
+    goto Label0x70d9;
+
+    // Label0x70e9:                            ;Offset 0x70e9
+LABEL(ValidateVesaMode, Label0x70e9);
+
+    //     lodsw
+    r.w.ax = *siPointer;
+    ++siPointer;
+
+    //     cmp   ax, 0ffffh
+    //     je    Label0x70f9                   ;Offset 0x70f9
+    if (r.w.ax == 0xFFFF)
+        goto Label0x70f9;
+
+    //     cmp   bx, ax
+    //     je    Label0x7124                   ;Offset 0x7124
+    if (r.w.bx == r.w.ax)
+        goto Label0x7124;
+
+    //     jmp   Label0x70e9                   ;Offset 0x70e9
+    goto Label0x70e9;
+
+    // Label0x70f9:                            ;Offset 0x70f9
+LABEL(ValidateVesaMode, Label0x70f9);
+
+    //     call  GetMemoryIn64KBlocks          ;Offset 0x5846
+    r.h.al = GetMemoryIn64KBlocks();
+
+    //     call  CapAXTo0x40                   ;Offset 0x5832
+    r.h.al = CapAXTo0x40(r.h.al);
+
+    //     xchg  al, ah//ignore
+    //     cmp   ax, 0020h
+    //     jne   Label0x710e                   ;Offset 0x710e
+    if (r.w.ax != 0x0020)
+        goto Label0x710e;
+
+    //     or    ax, 0001h
+    ret = false;
+
+    //     jmp   Label0x7126                   ;Offset 0x7126
+    goto Label0x7126;
+
+    //     nop
+    // Label0x710e:                            ;Offset 0x710e
+LABEL(ValidateVesaMode, Label0x710e);
+
+    //     lodsw
+    r.w.ax = *siPointer;
+
+    //     cmp   ax, 0ffffh
+    //     je    Label0x711e                   ;Offset 0x711e
+    if (r.w.ax == 0xFFFF)
+        goto Label0x711e;
+
+    //     cmp   bx, ax
+    //     je    Label0x7124                   ;Offset 0x7124
+    if (r.w.bx == r.w.ax)
+        goto Label0x7124;
+
+    //     jmp   Label0x710e                   ;Offset 0x710e
+    goto Label0x710e;
+
+    // Label0x711e:                            ;Offset 0x711e
+LABEL(ValidateVesaMode, Label0x711e);
+
+    //     or    ax, 0001h
+    ret = false;
+
+    //     jmp   Label0x7126                   ;Offset 0x7126
+    goto Label0x7126;
+
+    //     nop
+    // Label0x7124:                            ;Offset 0x7124
+LABEL(ValidateVesaMode, Label0x7124);
+
+    //     xor   ax, ax
+        ret = true;
+
+    // Label0x7126:                            ;Offset 0x7126
+LABEL(ValidateVesaMode, Label0x7126);
+    //     pop   ds
+    //     pop   si
+    //     pop   bx
+    //     pop   ax
+    //     ret
+    return ret;
+}
+
+//Offset 0x6ae5
+uint8_t Data0x6ae5[] =
+{
+    0x50, 0x0B, 0x08, 0x00, 0x20, 0x01, 0x0F, 0x00, 0x0E, 0x6F, 0x67, 0x4F, 0x4F, 0x0B, 0x53, 0x9F,
+    0xC0, 0x1F, 0x00, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x97, 0x8D, 0x8F, 0x50, 0x00, 0x8F,
+    0xC1, 0xC3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+    0x0D, 0x0E, 0x0F, 0x41, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF
+};
+
+//Offset 0x6b25
+uint8_t Data0x6b25[] =
+{
+    0x50, 0x0B, 0x08, 0x00, 0x20, 0x01, 0x0F, 0x00, 0x0E, 0xEF, 0x5F, 0x4F, 0x4F, 0x03, 0x51, 0x9D,
+    0x0B, 0x3E, 0x00, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE9, 0x2B, 0xDF, 0x50, 0x00, 0xDF,
+    0x0C, 0xC3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+    0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF
+};
+
+//Offset 0x6c63
+uint8_t Data0x6c63[] =
+{
+    0x64, 0x24, 0x10, 0x00, 0xF0, 0x01, 0x0F, 0x00, 0x06, 0x2F, 0x7F, 0x63, 0x63, 0x82, 0x6B, 0x1B,
+    0x72, 0xF0, 0x00, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58, 0x8C, 0x57, 0x32, 0x00, 0x57,
+    0x73, 0xE3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C,
+    0x3D, 0x3E, 0x3F, 0x01, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x0F, 0xFF
+};
+
+//Offset 0x6b65
+uint8_t Data0x6b65[] =
+{
+    0x50, 0x0B, 0x08, 0x00, 0x20, 0x01, 0x0F, 0x00, 0x0E, 0x2F, 0x7F, 0x63, 0x63, 0x03, 0x68, 0x18,
+    0x72, 0xF0, 0x00, 0x60, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x58, 0x2C, 0x57, 0x64, 0x00, 0x57,
+    0x73, 0xC3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+    0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF
+};
+
+//Offset 0x6ba5
+uint8_t Data0x6ba5[] =
+{
+    0x50, 0x0B, 0x08, 0x00, 0x20, 0x01, 0x0F, 0x00, 0x0E, 0xEF, 0xA3, 0x7F, 0x7F, 0x07, 0x82, 0x93,
+    0x24, 0xF5, 0x00, 0x60, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x28, 0xFF, 0x80, 0x00, 0xFF,
+    0x25, 0xC3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+    0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF
+};
+
+//Offset 0x6be5
+uint8_t Data0x6be5[] =
+{
+    0x50, 0x0B, 0x08, 0x00, 0x20, 0x01, 0x0F, 0x00, 0x0E, 0x2F, 0xCE, 0x9F, 0x9F, 0x12, 0xA5, 0x13,
+    0x28, 0x5A, 0x00, 0x60, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x23, 0xFF, 0xA0, 0x00, 0xFF,
+    0x29, 0xC3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+    0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F
+};
+
+//Offset 0x6c24
+uint8_t Data0x6c24[] =
+{
+    0x50, 0x0B, 0x08, 0x00, 0x20, 0x01, 0x0F, 0x00, 0x0E, 0x2F, 0x09, 0xC7, 0xC7, 0x0D, 0xCF, 0x07,
+    0xE0, 0x00, 0x00, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x23, 0xAF, 0xC8, 0x00, 0xAF,
+    0xE1, 0xC3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C,
+    0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F
+};
+
+//Offset 0x6ca3
+uint8_t Data0x6ca3[] =
+{
+    0x50, 0x3B, 0x08, 0x80, 0x25, 0x01, 0x03, 0x00, 0x02, 0xEF, 0x60, 0x4F, 0x50, 0x83, 0x52, 0x9E,
+    0x0B, 0x3E, 0x00, 0x47, 0x06, 0x07, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x8C, 0xDF, 0x28, 0x1F, 0xE6,
+    0x06, 0xA3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C,
+    0x3D, 0x3E, 0x3F, 0x0C, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF
+};
+
+//Offset 0x6ce3
+uint8_t Data0x6ce3[] =
+{
+    0x84, 0x18, 0x10, 0xD0, 0x19, 0x01, 0x03, 0x00, 0x02, 0x6F, 0x9E, 0x83, 0x84, 0x01, 0x87, 0x8D,
+    0xC0, 0x1F, 0x00, 0x4F, 0x0D, 0x0E, 0x00, 0x00, 0x00, 0x00, 0x9E, 0x86, 0x8F, 0x42, 0x1F, 0x96,
+    0xBB, 0xA3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C,
+    0x3D, 0x3E, 0x3F, 0x0C, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF
+};
+
+//Offset 0x6d23
+uint8_t Data0x6d23[] =
+{
+    0x84, 0x2A, 0x08, 0x58, 0x2C, 0x01, 0x03, 0x00, 0x02, 0x6F, 0x9E, 0x83, 0x84, 0x01, 0x87, 0x8D,
+    0x88, 0x1F, 0x00, 0x47, 0x06, 0x07, 0x00, 0x00, 0x00, 0x00, 0x66, 0x84, 0x57, 0x42, 0x1F, 0x5E,
+    0x83, 0xA3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C,
+    0x3D, 0x3E, 0x3F, 0x0C, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF
+};
+
+//Offset 0x6d63
+uint8_t Data0x6d63[] =
+{
+    0x84, 0x31, 0x08, 0x00, 0x34, 0x01, 0x03, 0x00, 0x02, 0x6F, 0x9E, 0x83, 0x84, 0x01, 0x87, 0x8D,
+    0xC0, 0x1F, 0x00, 0x47, 0x06, 0x07, 0x00, 0x00, 0x00, 0x00, 0x9E, 0x86, 0x8F, 0x42, 0x1F, 0x96,
+    0xBB, 0xA3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C,
+    0x3D, 0x3E, 0x3F, 0x0C, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF
+};
+
+//Offset 0x6da3
+uint8_t Data0x6da3[] =
+{
+    0x84, 0x3B, 0x08, 0x00, 0x3E, 0x01, 0x03, 0x00, 0x02, 0xEF, 0x9E, 0x83, 0x84, 0x01, 0x87, 0x8D,
+    0x11, 0x3E, 0x00, 0x47, 0x06, 0x07, 0x00, 0x00, 0x00, 0x00, 0xEB, 0x8E, 0xDF, 0x42, 0x1F, 0xE6,
+    0x0C, 0xA3, 0xFF, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C,
+    0x3D, 0x3E, 0x3F, 0x0C, 0x00, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF
+};
+
+struct VesaDataStruct1
+{
+    uint32_t FrequencyKHz;
+    uint16_t Width;
+    uint16_t Height;
+    uint8_t Data2[4];
+    uint8_t* Data3;
+    uint8_t Data4[];
+};
+
+//Offset 0x6de3      ;VESA_MODE_640x400x256
+VesaDataStruct1 Data0x6de3 =
+{
+    0x00006A86,
+    0x0280,
+    0x0190,
+    { 0x00, 0x01, 0x08, 0x00 },
+    Data0x6ae5,
+    { 0x00, 0x00, 0x40, 0x00, 0x1C, 0x13, 0x04, 0x00 }
+};
+
+//Offset 0x6df9      ;VESA_MODE_640x480x256
+VesaDataStruct1 Data0x6df9 =
+{
+    0x00006257,
+    0x0280,
+    0x01E0,
+    { 0x00, 0x01, 0x08, 0x00 },
+    Data0x6b25,
+    { 0x00, 0x00, 0x40, 0x00, 0x1C, 0x13, 0x04, 0x2E }
+};
+
+//Offset 0x6e0f      ;VESA_MODE_640x480x32K
+VesaDataStruct1 Data0x6e0f =
+{
+    0x00006257,
+    0x0280,
+    0x01E0,
+    { 0x00, 0x01, 0x0F, 0x50 },
+    Data0x6b25,
+    { 0x00, 0x00, 0x40, 0x00, 0x1C, 0x13, 0x04, 0x2E }
+};
+
+//Offset 0x6e25      ;VESA_MODE_640x480x64K
+VesaDataStruct1 Data0x6e25 =
+{
+    0x00006257,
+    0x0280,
+    0x01E0,
+    { 0x00, 0x01, 0x10, 0x10 },
+    Data0x6b25,
+    { 0x00, 0x00, 0x40, 0x00, 0x1C, 0x13, 0x04, 0x2E }
+};
+
+//Offset 0x6e3b      ;VESA_MODE_640x480x16M
+VesaDataStruct1 Data0x6e3b =
+{
+    0x00006257,
+    0x0280,
+    0x01E0,
+    { 0x00, 0x01, 0x20, 0x30 },
+    Data0x6b25,
+    { 0x00, 0x00, 0x40, 0x00, 0x1C, 0x13, 0x04, 0x2E }
+};
+
+//Offset 0x6e51      ;VESA_MODE_800x600x16
+VesaDataStruct1 Data0x6e51 =
+{
+    0x00009C40,
+    0x0320,
+    0x0258,
+    { 0x10, 0x00, 0x01, 0x09 },
+    Data0x6c63,
+    { 0x00, 0x00, 0x00, 0x00, 0x1B, 0x12, 0x00, 0x00, 0x07, 0x16 }
+};
+
+//Offset 0x6e69      ;VESA_MODE_800x600x256
+VesaDataStruct1 Data0x6e69 =
+{
+    0x00009C40,
+    0x0320,
+    0x0258,
+    { 0x00, 0x01, 0x08, 0x00 },
+    Data0x6b65,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x07, 0x16 } 
+};
+
+//Offset 0x6e7f      ;VESA_MODE_800x600x32K
+VesaDataStruct1 Data0x6e7f =
+{
+    0x00009C40,
+    0x0320,
+    0x0258,
+    { 0xFF, 0x7F, 0x08, 0x50 },
+    Data0x6b65,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6e95      ;VESA_MODE_800x600x64K
+VesaDataStruct1 Data0x6e95 =
+{
+    0x00009C40,
+    0x0320,
+    0x0258,
+    { 0xFF, 0xFF, 0x08, 0x10 },
+    Data0x6b65,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6eab      ;VESA_MODE_800x600x16M
+VesaDataStruct1 Data0x6eab =
+{
+    0x00009C40,
+    0x0320,
+    0x0258,
+    { 0x00, 0x01, 0x08, 0x30 },
+    Data0x6b65,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6ec1      ;VESA_MODE_1024x768x256
+VesaDataStruct1 Data0x6ec1 =
+{
+    0x0000FDE8,
+    0x0400,
+    0x0300,
+    { 0x00, 0x01, 0x08, 0x00 },
+    Data0x6ba5,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6ed7      ;VESA_MODE_1024x768x32K
+VesaDataStruct1 Data0x6ed7 =
+{
+    0x0000FDE8,
+    0x0400,
+    0x0300,
+    { 0xFF, 0x7F, 0x08, 0x50 },
+    Data0x6ba5,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6eed      ;VESA_MODE_1024x768x64K
+VesaDataStruct1 Data0x6eed =
+{
+    0x0000FDE8,
+    0x0400,
+    0x0300,
+    { 0xFF, 0xFF, 0x08, 0x10 },
+    Data0x6ba5,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f03      ;VESA_MODE_1024x768x16M
+VesaDataStruct1 Data0x6f03 =
+{
+    0x0000FDE8,
+    0x0400,
+    0x0300,
+    { 0x00, 0x01, 0x08, 0x30 },
+    Data0x6ba5,
+    { 0x00, 0x00, 0x00, 0x00, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f19      ;VESA_MODE_1280x1024x256
+VesaDataStruct1 Data0x6f19 =
+{
+    0x0001A5E0,
+    0x0500,
+    0x0400,
+    { 0x00, 0x01, 0x08, 0x00 },
+    Data0x6be5,
+    { 0x00, 0x00, 0x40, 0x21, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f2f      ;VESA_MODE_1280x1024x32K
+VesaDataStruct1 Data0x6f2f =
+{
+    0x0001A5E0,
+    0x0500,
+    0x0400,
+    { 0xFF, 0x7F, 0x08, 0x50 },
+    Data0x6be5,
+    { 0x00, 0x00, 0x40, 0x21, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f45      ;VESA_MODE_1280x1024x64K
+VesaDataStruct1 Data0x6f45 =
+{
+    0x0001A5E0,
+    0x0500,
+    0x0400,
+    { 0xFF, 0xFF, 0x08, 0x10 },
+    Data0x6be5,
+    { 0x00, 0x00, 0x40, 0x21, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f5b      ;VESA_MODE_1280x1024x16M
+VesaDataStruct1 Data0x6f5b =
+{
+    0x0001A5E0,
+    0x0500,
+    0x0400,
+    { 0x00, 0x01, 0x08, 0x30 },
+    Data0x6be5,
+    { 0x00, 0x00, 0x40, 0x21, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f71      ;VESA_MODE_1600x1200x256
+VesaDataStruct1 Data0x6f71 =
+{
+    0x000278D0,
+    0x0640,
+    0x04B0,
+    { 0x00, 0x01, 0x08, 0x00 },
+    Data0x6c24,
+    { 0x00, 0x00, 0x01, 0x2D, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f87      ;VESA_MODE_1600x1200x32K
+VesaDataStruct1 Data0x6f87 =
+{
+    0x000278D0,
+    0x0640,
+    0x04B0,
+    { 0xFF, 0x7F, 0x08, 0x50 },
+    Data0x6c24,
+    { 0x00, 0x00, 0x01, 0x2D, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6f9d      ;VESA_MODE_1600x1200x64K
+VesaDataStruct1 Data0x6f9d =
+{
+    0x000278D0,
+    0x0640,
+    0x04B0,
+    { 0xFF, 0xFF, 0x08, 0x10 },
+    Data0x6c24,
+    { 0x00, 0x00, 0x01, 0x2D, 0x1C, 0x13, 0x0C, 0x00 }
+};
+
+//Offset 0x6fc9      ;VESA_MODE_80x60xText
+VesaDataStruct1 Data0x6fc9 =
+{
+    0x00006270,
+    0x0280,
+    0x01E0,
+    { 0x10, 0x00, 0x01, 0x82 },
+    Data0x6ca3,
+    { 0x00, 0x00, 0x00, 0x00, 0x18, 0x03, 0x00, 0x00 }
+};
+
+//Offset 0x6fdf      ;VESA_MODE_132x25xText
+VesaDataStruct1 Data0x6fdf =
+{
+    0x0000A078,
+    0x0420,
+    0x0190,
+    { 0x10, 0x00, 0x01, 0x02 },
+    Data0x6ce3,
+    { 0x00, 0x00, 0x00, 0x00, 0x18, 0x03, 0x00, 0x00 }
+};
+
+//Offset 0x6ff5      ;VESA_MODE_132x43xText
+VesaDataStruct1 Data0x6ff5 =
+{
+    0x0000A078,
+    0x0420,
+    0x0158,
+    { 0x10, 0x00, 0x01, 0x82 },
+    Data0x6d23,
+    { 0x00, 0x00, 0x00, 0x00, 0x18, 0x03, 0x00, 0x00 }
+};
+
+//Offset 0x700b      ;VESA_MODE_132x50xText
+VesaDataStruct1 Data0x700b =
+{
+    0x0000A078,
+    0x0420,
+    0x0190,
+    { 0x10, 0x00, 0x01, 0x82 },
+    Data0x6d63,
+    { 0x00, 0x00, 0x00, 0x00, 0x18, 0x03, 0x00, 0x00 }
+};
+
+//Offset 0x7021      ;VESA_MODE_132x60xText
+VesaDataStruct1 Data0x7021 =
+{
+    0x0000A078,
+    0x0420,
+    0x01E0,
+    { 0x10, 0x00, 0x01, 0x82 },
+    Data0x6da3,
+    { 0x00, 0x00, 0x00, 0x00, 0x18, 0x03, 0x00, 0x00 }
+};
+
+
+VesaDataStruct1* Data0x6aa7[] =
+{
+    &Data0x6de3,   //Offset 0x6de3 VESA_MODE_640x400x256
+    &Data0x6df9,   //Offset 0x6df9 VESA_MODE_640x480x256
+    &Data0x6e51,   //Offset 0x6e51 VESA_MODE_800x600x16
+    &Data0x6e69,   //Offset 0x6e69 VESA_MODE_800x600x256
+    NULL,
+    &Data0x6ec1,   //Offset 0x6ec1 VESA_MODE_1024x768x256
+    NULL,
+    &Data0x6f19,   //Offset 0x6f19 VESA_MODE_1280x1024x256
+    &Data0x6fc9,   //Offset 0x6fc9 VESA_MODE_80x60xText
+    &Data0x6fdf,   //Offset 0x6fdf VESA_MODE_132x25xText
+    &Data0x6ff5,   //Offset 0x6ff5 VESA_MODE_132x43xText
+    &Data0x700b,   //Offset 0x700b VESA_MODE_132x50xText
+    &Data0x7021,   //Offset 0x7021 VESA_MODE_132x60xText
+    NULL,
+    NULL,
+    NULL,
+    &Data0x6e0f,   //Offset 0x6e0f VESA_MODE_640x480x32K
+    &Data0x6e25,   //Offset 0x6e25 VESA_MODE_640x480x64K
+    &Data0x6e3b,   //Offset 0x6e3b VESA_MODE_640x480x16M
+    &Data0x6e7f,   //Offset 0x6e7f VESA_MODE_800x600x32K
+    &Data0x6e95,   //Offset 0x6e95 VESA_MODE_800x600x64K
+    &Data0x6eab,   //Offset 0x6eab VESA_MODE_800x600x16M
+    &Data0x6ed7,   //Offset 0x6ed7 VESA_MODE_1024x768x32K
+    &Data0x6eed,   //Offset 0x6eed VESA_MODE_1024x768x64K
+    &Data0x6f03,   //Offset 0x6f03 VESA_MODE_1024x768x16M
+    &Data0x6f2f,   //Offset 0x6f2f VESA_MODE_1280x1024x32K
+    &Data0x6f45,   //Offset 0x6f45 VESA_MODE_1280x1024x64K
+    &Data0x6f5b,   //Offset 0x6f5b VESA_MODE_1280x1024x16M
+    &Data0x6f71,   //Offset 0x6f71 VESA_MODE_1600x1200x256
+    &Data0x6f87,   //Offset 0x6f87 VESA_MODE_1600x1200x32K
+    &Data0x6f9d,   //Offset 0x6f9d VESA_MODE_1600x1200x64K
+};
+
+
+//
+//Calculate the M, N, P and S values for the PLL's given an input frequency in KHz
+//
+//inputs:
+//   eax = requested frequency in KHz
+//
+//outputs:
+//   ebx = M,N,P and S values
+//         bl holds N in lower 7 bits
+//         bh holds M in lower 5 bits
+//         bh holds P in upper 3 bits
+//         S 2 bits sit above bh
+//         00000000 000000SS PPPMMMMM xNNNNNNN
+//
+uint32_t CalculatePLL_MNPS(uint32_t frequencyKHz)//Offset 0x5e4b
+{
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    r.x.eax = frequencyKHz;
+    bool notEquals = false;
+    uint32_t saveEAX = 0;
+    uint32_t saveEBX = 0;
+    uint32_t saveEDX = 0;
+
+    //     push   eax
+    //     push   ecx
+    //     push   edx
+    //     push   esi
+    //     push   edi
+
+    //     cmp    eax, 00001876h               ;6,262
+    //     jge    Label0x5e63                  ;Offset 0x5e63
+    if (r.x.eax >= 6262)
+        goto Label0x5e63;
+
+    //     mov    eax, 00001876h               ;6,262
+    r.x.eax = 6262;
+
+    // Label0x5e63:                            ;Offset 0x5e63
+LABEL(CalculatePLL_MNPS, Label0x5e63);
+
+    //     cmp    eax, 000356f0h               ;218,864
+    //     jle    Label0x5e71                  ;Offset 0x5e71
+    if (r.x.eax <= 218864)
+        goto Label0x5e71;
+
+    //     mov    eax, 000356f0h               ;218,864
+    r.x.eax = 218864;
+
+    // Label0x5e71:                            ;Offset 0x5e71
+LABEL(CalculatePLL_MNPS, Label0x5e71);
+
+    //     mov    esi, eax
+    r.x.esi = r.x.eax;
+
+    //     mov    edi, 000356f0h               ;218,864
+    r.x.edi = 218864;
+
+    //     mov    edx, 00035b60h               ;220,000
+    r.x.edx = 220000;
+
+    //     mov    cl, 64h                      ;100
+    r.h.cl = 64;
+
+    //     xor    ebx, ebx
+    r.x.ebx = 0;
+
+    // Label0x5e85:                            ;Offset 0x5e85
+LABEL(CalculatePLL_MNPS, Label0x5e85);
+
+    //     cmp    cl, 80h                      ;128
+    //     je     Label0x5f86                  ;Offset 0x5f86
+    if (r.h.cl == 0x80)
+        goto Label0x5f86;
+
+    //     mov    ch, 00h
+    r.h.ch = 0x00;
+
+    // Label0x5e8e:                            ;Offset 0x5e8e
+LABEL(CalculatePLL_MNPS, Label0x5e8e);
+
+    //     cmp    ch, 20h                      ;32
+    //     je     Label0x5f81                  ;Offset 0x5f81
+    if (r.h.ch == 0x20)
+        goto Label0x5f81;
+
+    //     push   ebx
+    saveEBX = r.x.ebx;
+
+    //     push   edx
+    saveEDX = r.x.edx;
+
+    //     xor    edx, edx
+    r.x.edx = 0;
+
+    //     mov    eax, 000037eeh               ;14,318
+    r.x.eax = 14318;
+
+    //     xor    ebx, ebx
+    r.x.ebx = 0;
+
+    //     mov    bl, cl
+    r.h.bl = r.h.cl;
+
+    //     inc    ebx
+    ++r.x.ebx;
+
+    //     mul    ebx
+    r.x.eax = uint32_t(r.x.eax * r.x.ebx);
+
+    //     xor    ebx, ebx
+    r.x.ebx = 0;
+
+    //     mov    bl, ch
+    r.h.bl = r.h.ch;
+
+    //     inc    ebx
+    ++r.x.ebx;
+    //     div    ebx
+    r.x.eax /= r.x.ebx;
+
+    //     pop    edx
+    r.x.edx = saveEDX;
+
+    //     pop    ebx
+    r.x.ebx = saveEBX;
+
+    //     cmp    eax, 0000c350h               ;50,000
+    //     jl     Label0x5f7c                  ;Offset 0x5f7c
+    if (r.x.eax < 50000)
+        goto Label0x5f7c;
+
+    //     cmp    eax, 00035b60h               ;220,000
+    //     jg     Label0x5f7c                  ;Offset 0x5f7c
+    if (r.x.eax > 220000)
+        goto Label0x5f7c;
+
+    //     shl    ecx, 10h
+    r.x.ecx <<= 0x10;
+
+    //     mov    cl, 00h
+    r.h.cl = 0x00;
+
+    // Label0x5ed4:                            ;Offset 0x5ed4
+LABEL(CalculatePLL_MNPS, Label0x5ed4);
+
+    //     cmp    cl, 04h
+    //     jne    Label0x5ee0                  ;Offset 0x5ee0
+    if (r.h.cl != 0x04)
+        goto Label0x5ee0;
+
+    //     shr    ecx, 10h
+    r.x.ecx >>= 0x10;
+
+    //     jmp    Label0x5f7c                  ;Offset 0x5f7c
+    goto Label0x5f7c;
+
+    // Label0x5ee0:                            ;Offset 0x5ee0
+LABEL(CalculatePLL_MNPS, Label0x5ee0);
+
+    //     push   eax
+    saveEAX = r.x.eax;
+
+    //     push   ebx
+    saveEBX = r.x.ebx;
+
+    //     push   edx
+    saveEDX = r.x.edx;
+
+    //     xor    edx, edx
+    r.x.edx = 0;
+
+    //     mov    ebx, 00000001h
+    r.x.ebx = 1;
+
+    //     shl    ebx, cl
+    r.x.ebx <<= r.h.cl;
+
+    //     div    ebx
+    r.x.eax /= r.x.ebx;
+
+    //     mov    edx, esi
+    r.x.edx = r.x.esi;
+
+    //     cmp    eax, edx
+    //     jge    Label0x5eff                  ;Offset 0x5eff
+    if (r.x.eax >= r.x.edx)
+        goto Label0x5eff;
+    //     xchg   eax, edx
+    {
+        uint32_t tmp = r.x.eax;
+        r.x.eax = r.x.edx;
+        r.x.edx = tmp;
+    }
+
+    // Label0x5eff:                            ;Offset 0x5eff
+LABEL(CalculatePLL_MNPS, Label0x5eff);
+
+    //     sub    eax, edx
+    r.x.eax -= r.x.edx;
+
+    //     pop    edx
+    r.x.edx = saveEDX;
+
+    //     pop    ebx
+    r.x.ebx = saveEBX;
+
+    //     cmp    eax, edi
+    //     jg     Label0x5f75                  ;Offset 0x5f75
+    if (r.x.eax > r.x.edi)
+        goto Label0x5f75;
+
+    //     cmp    eax, edi
+    notEquals = r.x.eax != r.x.edi;
+
+    //     mov    edi, eax
+    r.x.edi = r.x.eax;
+
+    //     jne    Label0x5f1c                  ;Offset 0x5f1c
+    if (notEquals)
+        goto Label0x5f1c;
+
+    //     pop    eax
+    //     push   eax
+    r.x.eax = saveEAX;
+    
+    //     cmp    eax, edx
+    //     jge    Label0x5f75                  ;Offset 0x5f75
+    if (r.x.eax >= r.x.edx)
+        goto Label0x5f75;
+
+    // Label0x5f1c:                            ;Offset 0x5f1c
+LABEL(CalculatePLL_MNPS, Label0x5f1c);
+
+    //     pop    eax
+    //     push   eax
+    r.x.eax = saveEAX;
+
+    //     mov    edx, eax
+    r.x.edx = r.x.eax;
+
+    //     xor    ebx, ebx
+    r.x.ebx = 0;
+
+    //     mov    eax, ecx
+    r.x.eax = r.x.ecx;
+
+    //     shr    eax, 10h
+    r.x.eax >>= 1;
+
+    //     mov    bx, ax
+    r.w.bx = r.w.ax;
+
+    //     and    bx, 1fffh
+    r.w.bx &= 0x1FFF;
+
+    //     mov    ax, 0001h
+    r.w.ax = 1;
+
+    //     shl    ax, cl
+    r.w.ax <<= r.h.cl;
+
+    //     dec    ax
+    --r.w.ax;
+
+    //     shl    ax, 0dh
+    r.w.ax <<= 0x0D;
+
+    //     or     bx, ax
+    r.w.bx |= r.w.ax;
+
+    //     xor    eax, eax
+    r.x.eax = 0;
+
+    //     cmp    edx, 000186a0h               ;100,000
+    //     jg     Label0x5f4f                  ;Offset 0x5f4f
+    if (r.x.edx > 100000)
+        goto Label0x5f4f;
+
+    //     mov    ax, 0000h
+    r.w.ax = 0;
+
+    //     jmp    Label0x5f6e                  ;Offset 0x5f6e
+    goto Label0x5f6e;
+
+    // Label0x5f4f:                            ;Offset 0x5f4f
+LABEL(CalculatePLL_MNPS, Label0x5f4f);
+
+    //     cmp    edx, 000222e0h               ;140,000
+    //     jg     Label0x5f5d                  ;Offset 0x5f5d
+    if (r.x.edx > 140000)
+        goto Label0x5f5d;
+
+    //     mov    ax, 0001h
+    r.w.ax = 1;
+
+    //     jmp    Label0x5f6e                  ;Offset 0x5f6e
+    goto Label0x5f6e;
+
+    // Label0x5f5d:                            ;Offset 0x5f5d
+LABEL(CalculatePLL_MNPS, Label0x5f5d);
+
+    //     cmp    edx, 0002bf20h               ;180,000
+    //     jg     Label0x5f6b                  ;Offset 0x5f6b
+    if (r.x.edx > 180000)
+        goto Label0x5f6b;
+
+    //     mov    ax, 0002h
+    r.w.ax = 2;
+    //     jmp    Label0x5f6e                  ;Offset 0x5f6e
+        goto Label0x5f6e;
+
+    // Label0x5f6b:                            ;Offset 0x5f6b
+LABEL(CalculatePLL_MNPS, Label0x5f6b);
+    
+    //     mov    ax, 0003h
+    r.w.ax = 3;
+
+    // Label0x5f6e:                            ;Offset 0x5f6e
+LABEL(CalculatePLL_MNPS, Label0x5f6e);
+
+    //     shl    eax, 10h
+    r.x.eax <<= 0x10;
+
+    //     or     ebx, eax
+    r.x.ebx |= r.x.eax;
+
+    // Label0x5f75:                            ;Offset 0x5f75
+LABEL(CalculatePLL_MNPS, Label0x5f75);
+    //     pop    eax
+    r.x.eax = saveEAX;
+
+    //     inc    cl
+    ++r.h.cl;
+
+    //     jmp    Label0x5ed4                  ;Offset 0x5ed4
+    goto Label0x5ed4;
+
+    // Label0x5f7c:                            ;Offset 0x5f7c
+LABEL(CalculatePLL_MNPS, Label0x5f7c);
+
+    //     inc    ch
+    ++r.h.ch;
+
+    //     jmp    Label0x5e8e                  ;Offset 0x5e8e
+    goto Label0x5e8e;
+
+    // Label0x5f81:                            ;Offset 0x5f81
+LABEL(CalculatePLL_MNPS, Label0x5f81);
+
+    //     inc    cl
+    ++r.h.cl;
+
+    //     jmp    Label0x5e85                  ;Offset 0x5e85
+    goto Label0x5e85;
+
+    // Label0x5f86:                            ;Offset 0x5f86
+LABEL(CalculatePLL_MNPS, Label0x5f86);
+
+    //     pop    edi
+    //     pop    esi
+    //     pop    edx
+    //     pop    ecx
+    //     pop    eax
+    //     ret
+
+    return r.x.ebx;
+}
+
+//
+//inputs:
+//   ebx = M,N,P and S values
+//         bl holds N in lower 7 bits
+//         bh holds M in lower 5 bits
+//         bh holds P in upper 3 bits
+//         S 2 bits sit above bh
+//         00000000 000000SS PPPMMMMM xNNNNNNN
+//    cl = bits 1-0 = PLL Set A = 0, B = 1, C = 2
+//         bits 7-2 = Clock select: 0 = PCI, 1 = PLL, 2 = VDOCLK
+//
+
+typedef uint8_t PixelClocksSettings_t;
+namespace PixelClocksSettings
+{
+    enum
+    {
+        PLLSetA = 0x00,
+        PLLSetB = 0x01,
+        PLLSetC = 0x02,
+        ClockPCI = 0x00,
+        ClockPLL = 0x04,
+        ClockVDOCLK = 0x08
+    };
+}
+
+//TODO: Write proper API for this stuff.
+void SetupSquareWave()//Offset 0x3230
+{
+    // push ax
+    // mov  al, PIT_MC_OpMode_SquareWaveGenerator OR PIT_MC_AccMode_LoByteHiByte OR PIT_MC_ChanSel_2;0xb6
+    // out  PIT_ModeCommand, al            ;Port 0x43
+    SYS_WritePortByte(0x43, 0xB6);
+
+    // mov  ax, 04a9h                      ;1193 ticks
+    // out  PIT_Channel2Data, al           ;Port 0x42
+    SYS_WritePortByte(0x42, 0xA9);
+
+    // mov  al, ah
+    // out  PIT_Channel2Data, al           ;Port 0x42
+    SYS_WritePortByte(0x42, 0x04);
+
+    // pop  ax
+    // ret
+}
+
+//
+//inputs:
+//   al * 8 * 1193 ticks time
+//outputs:
+//   -
+//
+//TODO: Write proper API for this stuff.
+void Sleep2(uint8_t count)//Offset 0x31f0
+{
+    printf("Entering Sleep2...\n");
+    //     call  SetupSquareWave               ;Offset 0x3230
+    SetupSquareWave();
+
+    //     push  ax
+    //     push  cx
+    //     push  dx
+    //     push  ds
+
+    FARPointer sysPointer;
+    //     mov   dx, SYS_Segment               ;Segment 0xf000
+    sysPointer.Segment = 0xF000;
+
+    //     mov   ds, dx
+    //     mov   dx, KB_CommandPort_XT         ;0x62
+    uint16_t commandPort = 0x62;
+
+    sysPointer.Offset = 0xfffe;
+    //     cmp   byte ptr ds:[SYS_MachineID], SYS_MachineID_IBM_AT;Offset 0xfffe 0xfc
+    //     jne   NotAT                         ;Offset 0x3207
+    if (*sysPointer.ToPointer<uint8_t>() == 0xFC)
+    {
+        //     dec   dx
+        --commandPort;
+    }
+    printf("Machine ID = 0x%02X\n", *sysPointer.ToPointer<uint8_t>());
+    printf("Command port is 0x%02X\n", commandPort);
+
+    // NotAT:                                  ;Offset 0x3207
+    //     pop   ds
+
+    //     mov   cl, al
+    //     xor   ch, ch
+    //     shl   cx, 01h
+    //     shl   cx, 01h
+    //     shl   cx, 01h
+    count <<= 3;
+
+    //     jcxz  NoSleep                       ;Offset 0x322c
+    if (count != 0)
+    {
+        //     in    al, KB_PortB                  ;Port 0x61
+        uint8_t orgValue = SYS_ReadPortByte(0x61);
+
+        //     mov   ah, al                        ;store off original value
+        //     or    al, KB_PBW_Timer2GateSpeakerEnable;0x1
+        //     out   KB_PortB, al                  ;Port 0x61
+        SYS_WritePortByte(0x61, orgValue |= 0x01);
+
+        // WaitTimeExpired:                        ;Offset 0x321c
+        do
+        {
+            do
+            {
+            //     in    al, dx
+            //     and   al, KB_PBR_MirrorTimer2OutputCond;0x20
+            //     jne   WaitTimeExpired               ;Offset 0x321c
+            } while ((SYS_ReadPortByte(commandPort) & 0x20) != 0);
+
+            // WaitAgain:                              ;Offset 0x3221
+            do
+            {
+            //     in    al, dx
+            //     and   al, KB_PBR_MirrorTimer2OutputCond;0x20
+            //     je    WaitAgain                     ;Offset 0x3221
+            } while ((SYS_ReadPortByte(commandPort) & 0x20) != 0);
+
+            --count;
+        } while (count != 0);
+
+        //     loop  WaitTimeExpired               ;Offset 0x321c
+        //     mov   al, ah                        ;restore original value
+        //     out   KB_PortB, al                  ;Port 0x61
+        SYS_WritePortByte(0x61, orgValue);
+
+        // NoSleep:                                ;Offset 0x322c
+    }
+    //     pop   dx
+    //     pop   cx
+    //     pop   ax
+    //     ret
+    printf("Exiting Sleep2...\n");
+}
+
+void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)//Offset 0x6090
+{
+    using namespace Hag;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    PCI::Device_t mystique = 0;
+    uint32_t saveEDX = 0;
+    uint16_t saveCX = 0;
+    uint16_t saveAX = 0;
+
+    r.x.ebx = mnps;
+    r.h.cl = PllAndClock;
+    
+    //     push   eax
+    //     push   ebx
+    //     push   ecx
+    //     push   edx
+    
+    //     mov    edx, ebx
+    r.x.edx = r.x.ebx;
+
+    //     push   edx
+    saveEDX = r.x.edx;
+
+    //     push   cx
+    saveCX = r.w.cx;
+
+    //     call   FindMystique                 ;Offset 0x57c6
+    PCI::FindDevice(0x102B, 0x051A, mystique);
+
+    //     mov    dx, VGA_SequenceIndex        ;Port 0x3c4
+    //     mov    al, VGA_SEQIdx_ClockingMode  ;0x1
+    //     out    dx, al
+    //     inc    dx
+    //     in     al, dx
+    //     or     al, VGA_SEQ1_ScreenOff       ;0x20
+    //     out    dx, al
+    VGA::Sequencer::ClockingMode::Write(
+        VGA::Sequencer::ClockingMode::Read() |
+        VGA::Sequencer::ClockingMode::ScreenOff);
+
+    //     mov    cl, MGA_INDD_PixelClockControl;0x1a
+    //     call   ReadIndexedRegister          ;Offset 0x5bab
+    //     or     cl, MGA_PIXCLKCTRL_ClockDisable;0x4
+    //     xchg   ch, cl
+    //     mov    cl, MGA_INDD_PixelClockControl;0x1a
+    //     call   WriteIndexedRegister         ;Offset 0x5b90
+    Shared::PCI::Indexed::PixelClockControl::Write(mystique,
+        Shared::PCI::Indexed::PixelClockControl::Read(mystique) |
+        Shared::Indexed::PixelClockControl::ClockDisable);
+
+    //     pop    cx
+    r.w.cx = saveCX;
+
+    //     mov    al, cl
+    r.h.al = r.h.cl;
+
+    //     and    al, 03h
+    r.h.al &= 0x03; //PLL selection
+
+    //     cmp    al, 00h
+    //     jne    Label0x60c8                  ;Offset 0x60c8
+    if (r.h.al != 0x00)
+        goto Label0x60c8;
+
+    //     mov    al, MGA_INDD_PIXPLL_M_ValueSetA;0x44
+    r.h.al = Shared::Indexed::Register::PixelPLLMA;
+
+    //     jmp    Label0x60d2                  ;Offset 0x60d2
+    goto Label0x60d2;
+
+    // Label0x60c8:                            ;Offset 0x60c8
+LABEL(ConfigurePixelClocks, Label0x60c8);
+
+    //     cmp    al, 01h
+    //     jne    Label0x60d0                  ;Offset 0x60d0
+    if (r.h.al != 0x01)
+        goto Label0x60d0;
+
+    //     mov    al, MGA_INDD_PIXPLL_M_ValueSetB;0x48
+    r.h.al = Shared::Indexed::Register::PixelPLLMB;
+
+    //     jmp    Label0x60d2                  ;Offset 0x60d2
+    goto Label0x60d2;
+
+    // Label0x60d0:                            ;Offset 0x60d0
+LABEL(ConfigurePixelClocks, Label0x60d0);
+
+    //     mov    al, MGA_INDD_PIXPLL_M_ValueSetC;0x4c
+    r.h.al = Shared::Indexed::Register::PixelPLLMC;
+
+    // Label0x60d2:                            ;Offset 0x60d2
+LABEL(ConfigurePixelClocks, Label0x60d2);
+
+    //     mov    ah, cl
+    r.h.ah = r.h.cl;
+
+    //     shr    ah, 02h
+    r.h.ah >>= 2;
+
+    //     cmp    ah, 01h
+    //     jne    Label0x60e0                  ;Offset 0x60e0
+    if (r.h.ah != 0x01)
+        goto Label0x60e0;
+
+    //     mov    ah, MGA_PIXCLKCTRL_SelPLL    ;0x01
+    r.h.ah = Shared::Indexed::PixelClockControl::ClockPLL;
+
+    //     jmp    Label0x60eb                  ;Offset 0x60eb
+    goto Label0x60eb;
+
+    // Label0x60e0:                            ;Offset 0x60e0
+LABEL(ConfigurePixelClocks, Label0x60e0);
+
+    //     cmp    ah, 00h
+    //     jne    Label0x60e9                  ;Offset 0x60e9
+    if (r.h.ah != 0x00)
+        goto Label0x60e9;
+
+    //     mov    ah, MGA_PIXCLKCTRL_SelPCI    ;0x0
+    r.h.ah = Shared::Indexed::PixelClockControl::ClockPCI;
+
+    //     jmp    Label0x60eb                  ;Offset 0x60eb
+    goto Label0x60eb;
+
+    // Label0x60e9:                            ;Offset 0x60e9
+LABEL(ConfigurePixelClocks, Label0x60e9);
+
+    //     mov    ah, MGA_PIXCLKCTRL_SelVDOCLK ;0x2
+    r.h.ah = Shared::Indexed::PixelClockControl::ClockVDCLK;
+
+    // Label0x60eb:                            ;Offset 0x60eb
+LABEL(ConfigurePixelClocks, Label0x60eb);
+
+    //     pop    edx
+    r.x.edx = saveEDX;
+
+    //     push   ax
+    saveAX = r.w.ax;
+
+    //     mov    ch, dh
+    r.h.ch = r.h.dh;
+
+    //     and    ch, MGA_PIXPLL_M_MASK        ;0x1f
+    r.h.ch &= Shared::Indexed::PixelPLLM::MValue;
+
+    //     mov    cl, al
+    r.h.cl = r.h.al;
+
+    //     call   WriteIndexedRegister         ;Offset 0x5b90
+    Shared::PCI::IndexedData::Write(mystique, r.h.cl, r.h.ch);
+
+    //     mov    ch, dl
+    r.h.ch = r.h.dl;
+    
+    //     inc    cl                           ;MGA_INDD_PIXPLL_N_Value
+    ++r.h.cl;
+
+    //     call   WriteIndexedRegister         ;Offset 0x5b90
+    Shared::PCI::IndexedData::Write(mystique, r.h.cl, r.h.ch);
+
+    //     shr    edx, 0dh
+    r.x.edx >>= 0x0D;
+
+    //     mov    ch, dl
+    r.h.ch = r.h.dl;
+
+    //     inc    cl                           ;MGA_INDD_PIXPLL_P_Value
+    ++r.h.cl;
+
+    //     call   WriteIndexedRegister         ;Offset 0x5b90
+    Shared::PCI::IndexedData::Write(mystique, r.h.cl, r.h.ch);
+
+    //     mov    al, 01h
+    r.h.al = 0x01;
+
+    //     cli
+    SYS_ClearInterrupts();
+
+    //     call   Sleep2                       ;Offset 0x31f0
+    Sleep2(r.h.al);
+
+    //     sti
+    SYS_RestoreInterrupts();
+
+    //     xor    dx, dx
+    r.w.dx = 0;
+
+    printf("Entering PLL frequency lock wait...\n");
+    // Label0x6113:                            ;Offset 0x6113
+LABEL(ConfigurePixelClocks, Label0x6113);
+
+    //     dec    dx
+    --r.w.dx;
+
+    //     je     Label0x6120                  ;Offset 0x6120
+    if (r.w.dx == 0x0000)
+        goto Label0x6120;
+
+    //     mov    cl, MGA_INDD_PIXPLL_Status   ;0x4f
+    //     call   ReadIndexedRegister          ;Offset 0x5bab
+    //     and    cl, MGA_PIXPLLSTAT_FrequencyLock;0x40
+    //     je     Label0x6113                  ;Offset 0x6113
+    if ((Shared::PCI::Indexed::PixelPLLStatus::Read(mystique) &
+        Shared::Indexed::PixelPLLStatus::FrequencyStatus) ==
+        Shared::Indexed::PixelPLLStatus::FrequencyNotLocked)
+        goto Label0x6113;
+
+    // Label0x6120:                            ;Offset 0x6120
+LABEL(ConfigurePixelClocks, Label0x6120);
+
+printf("Leaving PLL frequency lock wait...\n");
+
+    //     pop    dx
+    r.w.dx = saveAX;
+
+    //     mov    cl, MGA_INDD_PixelClockControl;0x1a
+    //     call   ReadIndexedRegister          ;Offset 0x5bab
+    //     and    cl, NOT MGA_PIXCLKCTRL_SelMASK;0xfc
+    //     or     cl, dh
+    //     xchg   cl, ch
+    //     mov    cl, MGA_INDD_PixelClockControl;0x1a
+    //     call   WriteIndexedRegister         ;Offset 0x5b90
+    Shared::PCI::Indexed::PixelClockControl::Write(mystique,
+        (Shared::PCI::Indexed::PixelClockControl::Read(mystique) &
+         ~Shared::Indexed::PixelClockControl::ClockSelection) |
+         r.h.dh);
+
+    //     mov    cl, MGA_INDD_PixelClockControl;0x1a
+    //     call   ReadIndexedRegister          ;Offset 0x5bab
+    //     and    cl, NOT MGA_PIXCLKCTRL_ClockMASK;0xfb
+    //     xchg   ch, cl
+    //     mov    cl, MGA_INDD_PixelClockControl;0x1a
+    //     call   WriteIndexedRegister         ;Offset 0x5b90
+    Shared::PCI::Indexed::PixelClockControl::Write(mystique,
+        Shared::PCI::Indexed::PixelClockControl::Read(mystique) &
+        ~Shared::Indexed::PixelClockControl::Clock);
+
+    //     cmp    dh, MGA_PIXCLKCTRL_SelPCI    ;0x0
+    //     jne    Label0x614a                  ;Offset 0x614a
+    if (r.h.dh != Shared::Indexed::PixelClockControl::ClockPCI)
+        goto Label0x614a;
+
+    //     mov    bl, VGA_MISC_Clock25p175MHz SHR 2;0x0
+    r.h.bl = VGA::MiscellaneousOutput::ClockSelect25p175MHz;
+
+    //     jmp    Label0x6155                  ;Offset 0x6155
+    goto Label0x6155;
+
+    // Label0x614a:                            ;Offset 0x614a
+LABEL(ConfigurePixelClocks, Label0x614a);
+
+    //     cmp    dh, MGA_PIXCLKCTRL_SelPLL    ;0x1
+    //     jne    Label0x6153                  ;Offset 0x6153
+    if (r.h.dh != Shared::Indexed::PixelClockControl::ClockPLL)
+        goto Label0x6153;
+
+    //     mov    bl, VGA_MISC_Clock28p322MHz SHR 2;0x1
+    r.h.bl = VGA::MiscellaneousOutput::ClockSelect28p322MHz;
+
+    //     jmp    Label0x6155                  ;Offset 0x6155
+    goto Label0x6155;
+
+    // Label0x6153:                            ;Offset 0x6153
+LABEL(ConfigurePixelClocks, Label0x6153);
+
+    //     mov    bl, MGA_MISC_MGAPixelClock SHR 2;0x3
+    r.h.bl = Shared::MiscellaneousOutput::ClockSelectMGAPixelClock;
+
+    // Label0x6155:                            ;Offset 0x6155
+LABEL(ConfigurePixelClocks, Label0x6155);
+
+    //     mov    dx, VGA_MiscellaneousRead    ;Port 0x3cc
+    //     in     al, dx
+    //     shl    bl, 02h
+    //     and    al, NOT VGA_MISC_ClockSelectMask;0xf3
+    //     or     al, bl
+    //     mov    dx, VGA_MiscellaneousWrite   ;Port 0x3c2
+    //     out    dx, al
+    VGA::MiscellaneousOutput::Write((VGA::MiscellaneousOutput::Read() & ~VGA::MiscellaneousOutput::ClockSelect) | r.h.bl);
+
+    //     mov    dx, VGA_SequenceIndex        ;Port 0x3c4
+    //     mov    al, VGA_SEQIdx_ClockingMode  ;0x1
+    //     out    dx, al
+    //     inc    dx
+    //     in     al, dx
+    //     and    al, NOT VGA_SEQ1_ScreenOff   ;0xdf
+    //     out    dx, al
+    VGA::Sequencer::ClockingMode::Write(VGA::Sequencer::ClockingMode::Read() & ~VGA::Sequencer::ClockingMode::ScreenOff);
+
+    //     pop    edx
+    //     pop    ecx
+    //     pop    ebx
+    //     pop    eax
+    //     ret
+}
+
+//inputs:
+//   edx = requested frequency in KHz
+//
+//outputs:
+//   -
+//
+//destroys:
+//   -
+//
+
+void ConfigureAndSelectPLLSetC(uint32_t frequencyKHz)//Offset 0x6178
+{
+    // push eax
+    // push ebx
+    // push ecx
+    // mov  cl, MGA_CPC_PLLSetC OR MGA_CPC_ClockPLL;0x6
+    // mov  eax, edx
+    // call CalculatePLL_MNPS              ;Offset 0x5e4b
+    uint32_t mnps = CalculatePLL_MNPS(frequencyKHz);
+
+    // call ConfigurePixelClocks           ;Offset 0x6090
+    ConfigurePixelClocks(mnps, PixelClocksSettings::PLLSetC | PixelClocksSettings::ClockPLL);
+    // pop  ecx
+    // pop  ebx
+    // pop  eax
+    // ret
+}
+
+void Func0x61d7(Hag::System::PCI::Device_t device)//Offset 0x61d7
+{
+    using namespace Hag;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+
+    //     push dx
+    //     push cx
+
+    //     mov  cl, MGA_INDD_MultiplexControl  ;0x19
+    //     call ReadIndexedRegister            ;Offset 0x5bab
+    //     and  cl, MGA_MULCTRL_DepthMask      ;0x7
+    r.h.cl = Shared::PCI::Indexed::MultiplexControl::Read(device) &
+             Shared::Indexed::MultiplexControl::ColorDepth;
+
+    //     mov  dx, VGA_DACWriteIndex          ;Port 0x3c8
+    //     xor  al, al
+    r.h.al = 0;
+
+    //     cmp  cl, MGA_MULCTRL_Depth32Pal     ;0x7
+    //     je   Label0x61f2                    ;Offset 0x61f2
+    if (r.h.cl == Shared::Indexed::MultiplexControl::Bits24p8x)
+        goto Label0x61f2;
+
+    //     cmp  cl, MGA_MULCTRL_Depth16        ;0x2
+    //     je   Label0x61fe                    ;Offset 0x61fe
+    if (r.h.cl == Shared::Indexed::MultiplexControl::Bits16p)
+        goto Label0x61fe;
+
+    //     jmp  Label0x621b                    ;Offset 0x621b
+    goto Label0x621b;
+
+    // Label0x61f2:                            ;Offset 0x61f2
+LABEL(Func0x61d7, Label0x61f2);
+
+    //     out  dx, al
+    VGA::DACWriteIndex::Write(r.h.al);
+    
+    //     inc  dx
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+
+    //     dec  dx
+    //     inc  al
+    ++r.h.al;
+
+    //     jne  Label0x61f2                    ;Offset 0x61f2
+    if (r.h.al != 0x00)
+        goto Label0x61f2;
+
+    //     jmp  Label0x622c                    ;Offset 0x622c
+    goto Label0x622c;
+
+    // Label0x61fe:                            ;Offset 0x61fe
+LABEL(Func0x61d7, Label0x61fe);
+
+    //     out  dx, al
+    VGA::DACWriteIndex::Write(r.h.al);
+
+    //     inc  dx
+    //     mov  cl, al
+    r.h.cl = r.h.al;
+
+    //     shl  al, 03h
+    r.h.al <<= 3;
+
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+
+    //     mov  al, cl
+    r.h.al = r.h.cl;
+
+    //     shl  al, 02h
+    r.h.al <<= 2;
+
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+
+    //     mov  al, cl
+    r.h.al = r.h.cl;
+
+    //     shl  al, 03h
+    r.h.al <<= 3;
+
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+
+    //     dec  dx
+    //     mov  al, cl
+    r.h.al = r.h.cl;
+
+    //     inc  al
+    ++r.h.al;
+
+    //     jne  Label0x61fe                    ;Offset 0x61fe
+    if (r.h.al != 0x00)
+        goto Label0x61fe;
+
+    //     jmp  Label0x622c                    ;Offset 0x622c
+    goto Label0x622c;
+
+    // Label0x621b:                            ;Offset 0x621b
+LABEL(Func0x61d7, Label0x621b);
+
+    //     out  dx, al
+    VGA::DACWriteIndex::Write(r.h.al);
+
+    //     inc  dx
+    //     mov  cl, al
+    r.h.cl = r.h.al;
+
+    //     shl  al, 03h
+    r.h.al <<= 3;
+
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+    
+    //     out  dx, al
+    VGA::RAMDACData::Write(r.h.al);
+    
+    //     dec  dx
+    //     mov  al, cl
+    r.h.al = r.h.cl;
+
+    //     inc  al
+    ++r.h.al;
+
+    //     jne  Label0x621b                    ;Offset 0x621b
+    if (r.h.al != 0x00)
+        goto Label0x621b;
+
+    // Label0x622c:                            ;Offset 0x622c
+LABEL(Func0x61d7, Label0x622c);
+
+    //     pop  cx
+    //     pop  dx
+    //     ret
+    return;
+}
+
+void Func0x622f(uint8_t cl)//Offset 0x622f
+{
+    using namespace Hag;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    r.h.cl = cl;
+
+    //     push dx
+    //     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
+    //     xor  ax, ax                         ;MGA_CRTCExt_AddrGeneratorExt
+    r.w.ax = 0;
+
+    //     out  dx, al
+    //     inc  dx
+    //     in   al, dx
+    r.h.al = Shared::CRTCExtension::AddressGeneratorExtensions::Read();
+
+    //     shl  ax, 04h
+    r.w.ax <<= 4;
+
+    //     mov  dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
+    //     mov  al, VGA_CRTCIdx_Offset         ;0x13
+    //     out  dx, al
+    //     inc  dx
+    //     in   al, dx
+    r.h.al = VGA::CRTController::ScreenOffset::Read(VGA::Register::CRTControllerIndexD);
+
+    //     or   cl, cl
+    //     jne  Label0x624a                    ;Offset 0x624a
+    if (r.h.cl != 0x00)
+        goto Label0x624a;
+
+    //     shr  ax, 01h
+    r.w.ax >>= 1;
+
+    //     jmp  Label0x624c                    ;Offset 0x624c
+    goto Label0x624c;
+
+    // Label0x624a:                            ;Offset 0x624a
+LABEL(Func0x622f, Label0x624a);
+
+    //     shl  ax, cl
+    r.w.ax <<= r.h.cl;
+
+    // Label0x624c:                            ;Offset 0x624c
+LABEL(Func0x622f, Label0x624c);
+
+    //     out  dx, al
+    VGA::CRTController::ScreenOffset::Write(VGA::Register::CRTControllerIndexD, r.h.al);
+
+    //     mov  dl, MGA_CRTCExtensionData_lowbyte;Port 0x3df
+    //     mov  al, ah
+    r.h.al = r.h.ah;
+
+    //     shl  al, 04h
+    r.h.al <<= 4;
+    
+    //     out  dx, al
+    Shared::CRTCExtension::AddressGeneratorExtensions::Write(r.h.al);
+
+    //     pop  dx
+    //     ret
+}
+
+void Func0x6310(VesaDataStruct1* siPointer)//Offset 0x6310
+{
+    using namespace Hag;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    PCI::Device_t mystique = 0;
+
+    //     push ds
+    //     push es
+    //     push si
+    //     push cx
+    //     push bx
+    //     push dx
+
+    //     xor  ax, ax
+    //     mov  es, ax
+    //     call GetMemoryIn64KBlocks           ;Offset 0x5846
+    r.h.ah = GetMemoryIn64KBlocks();
+
+    //     call CapAXTo0x40                    ;Offset 0x5832
+    r.h.ah = CapAXTo0x40(r.h.ah);
+
+    //     mov  byte ptr es:[BDA_VideoBufferSize + 01h], ah;Offset 0x44d
+    //     mov  byte ptr es:[BDA_VideoBufferSize], 00h;Offset 0x44c
+    BDA::VideoBufferSize::Get() = uint16_t(r.h.ah) << 8;
+
+    //     mov  al, 03h
+    //     and  al, byte ptr [si + 0bh]
+    //     jne  Label0x6400                    ;Offset 0x6400
+    if ((siPointer->Data2[3] & 0x03) != 0x00)
+        goto Label0x6400;
+
+    //     call FindMystique                   ;Offset 0x57c6
+    PCI::FindDevice(0x102B, 0x051A, mystique);
+
+    //     mov  al, PCI_ACCESS_ReadByte        ;0x8
+    //     mov  di, PCI_MGA_Option + 01h       ;0x41
+    //     call AccessPCIRegister              ;Offset 0x5734
+    //     and  cl, NOT (PCI_MGA_Opt_SplitModeEnable SHR 8);0xdf
+    //     mov  al, PCI_ACCESS_WriteByte       ;0xb
+    //     call AccessPCIRegister              ;Offset 0x5734
+    Shared::PCI::Option::WriteByte1(mystique,
+        Shared::PCI::Option::Read(mystique) &
+        ~Shared::PCI::Option::SplitMode);
+
+    //     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
+    //     mov  ax, MGA_CRTCExt_MemoryPage     ;0x4
+    //     out  dx, ax
+    Shared::CRTCExtension::MemoryPage::Write(r.h.ah);
+
+    //     test byte ptr [si + 0bh], 10h
+    //     je   Label0x63b8                    ;Offset 0x63b8
+    if ((siPointer->Data2[3] & 0x10) == 0x00)
+        goto Label0x63b8;
+
+    //     test byte ptr [si + 0bh], 20h
+    //     je   Label0x6385                    ;Offset 0x6385
+    if ((siPointer->Data2[3] & 0x20) == 0x00)
+        goto Label0x6385;
+
+    //     mov  byte ptr es:[BDA_VideoBufferSize], 03h;Offset 0x44c
+    BDA::VideoBufferSize::Get() = (BDA::VideoBufferSize::Get() & 0xFF00) | 0x03;
+
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call ReadIndexedRegister            ;Offset 0x5bab
+    //     or   cl, MGA_MISCCTRL_DAC_8Bit      ;0x8
+    //     mov  ch, cl
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    Shared::PCI::Indexed::MiscellaneousControl::Write(mystique,
+        Shared::PCI::Indexed::MiscellaneousControl::Read(mystique) |
+        Shared::Indexed::MiscellaneousControl::VGADAC8Bit);
+
+    //     mov  cl, MGA_INDD_MultiplexControl  ;0x19
+    //     mov  ch, MGA_MULCTRL_Depth32Pal     ;0x7
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    Shared::PCI::Indexed::MultiplexControl::Write(mystique,
+        Shared::Indexed::MultiplexControl::Bits24p8x);
+
+    //     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
+    //     mov  ax, ((MGA_CRTCEXT3_MGAModeEnable OR MGA_CRTCEXT3_ScaleDiv4) SHL 8) OR MGA_CRTCExt_Misc;0x8303
+    //     out  dx, ax
+    Shared::CRTCExtension::Miscellaneous::Write(
+        Shared::CRTCExtension::Miscellaneous::ScaleDiv4 |
+        Shared::CRTCExtension::Miscellaneous::MGAModeEnable);
+
+    //     call Func0x61d7                     ;Offset 0x61d7
+    Func0x61d7(mystique);
+
+    //     mov  cx, 0002h
+    r.w.cx = 0x0002;
+
+    //     jmp  Label0x63de                    ;Offset 0x63de
+    goto Label0x63de;
+
+    // Label0x6385:                            ;Offset 0x6385
+LABEL(Func0x6310, Label0x6385);
+
+    //     mov  byte ptr es:[BDA_VideoBufferSize], 02h;Offset 0x44c
+    BDA::VideoBufferSize::Get() = (BDA::VideoBufferSize::Get() & 0xFF00) | 0x02;
+
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call ReadIndexedRegister            ;Offset 0x5bab
+    //     or   cl, MGA_MISCCTRL_DAC_8Bit      ;0x8
+    //     mov  ch, cl
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    Shared::PCI::Indexed::MiscellaneousControl::Write(mystique,
+        Shared::PCI::Indexed::MiscellaneousControl::Read(mystique) |
+        Shared::Indexed::MiscellaneousControl::VGADAC8Bit);
+
+    //     mov  cl, MGA_INDD_MultiplexControl  ;0x19
+    //     mov  ch, 02h                        ;Bits16p
+    r.h.ch = Shared::Indexed::MultiplexControl::Bits16p;
+
+    //     test byte ptr [si + 0bh], 40h
+    //     je   Label0x63a6                    ;Offset 0x63a6
+    if ((siPointer->Data2[3] & 0x40) == 0x00)
+    goto Label0x63a6;
+
+    //     mov  ch, 01h                        ;Bits15p
+    r.h.ch = Shared::Indexed::MultiplexControl::Bits15p;
+
+    // Label0x63a6:                            ;Offset 0x63a6
+LABEL(Func0x6310, Label0x63a6);
+
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    Shared::PCI::Indexed::MultiplexControl::Write(mystique, r.h.ch);
+
+    //     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
+    //     mov  ax, ((MGA_CRTCEXT3_MGAModeEnable OR MGA_CRTCEXT3_ScaleDiv2) SHL 8) OR MGA_CRTCExt_Misc;0x8103
+    //     out  dx, ax
+    Shared::CRTCExtension::Miscellaneous::Write(
+        Shared::CRTCExtension::Miscellaneous::ScaleDiv2 |
+        Shared::CRTCExtension::Miscellaneous::MGAModeEnable);
+
+    //     call Func0x61d7                     ;Offset 0x61d7
+    Func0x61d7(mystique);
+    
+    //     mov  cx, 0000h
+    r.w.cx = 0;
+    
+    //     jmp  Label0x63de                    ;Offset 0x63de
+    goto Label0x63de;
+
+    // Label0x63b8:                            ;Offset 0x63b8
+LABEL(Func0x6310, Label0x63b8);
+
+    //     mov  byte ptr es:[BDA_VideoBufferSize], 01h;Offset 0x44c
+    BDA::VideoBufferSize::Get() = (BDA::VideoBufferSize::Get() & 0xFF00) | 0x01;
+
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call ReadIndexedRegister            ;Offset 0x5bab
+    //     and  cl, NOT MGA_MISCCTRL_DAC_8Bit  ;0xf7
+    //     mov  ch, cl
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    Shared::PCI::Indexed::MiscellaneousControl::Write(mystique,
+        Shared::PCI::Indexed::MiscellaneousControl::Read(mystique) &
+        ~Shared::Indexed::MiscellaneousControl::VGADACBitDepth);
+
+    //     mov  cl, MGA_INDD_MultiplexControl  ;0x19
+    //     xor  ch, ch
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    Shared::PCI::Indexed::MultiplexControl::Write(mystique,
+        Shared::Indexed::MultiplexControl::Bits8p);
+
+    //     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
+    //     mov  ax, ((MGA_CRTCEXT3_MGAModeEnable OR MGA_CRTCEXT3_ScaleDiv1) SHL 8) OR MGA_CRTCExt_Misc;0x8003
+    //     out  dx, ax
+    Shared::CRTCExtension::Miscellaneous::Write(
+        Shared::CRTCExtension::Miscellaneous::ScaleDiv1 |
+        Shared::CRTCExtension::Miscellaneous::MGAModeEnable);
+
+    //     mov  cx, 0001h
+    r.w.cx = 0x0001;
+
+    // Label0x63de:                            ;Offset 0x63de
+LABEL(Func0x6310, Label0x63de);
+
+    //     push cx
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call ReadIndexedRegister            ;Offset 0x5bab
+    //     or   cl, MGA_MISCCTRL_MAFC_Disable  ;0x6
+    //     mov  ch, cl
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    //     pop  cx
+    Shared::PCI::Indexed::MiscellaneousControl::Write(mystique,
+        Shared::PCI::Indexed::MiscellaneousControl::Read(mystique) |
+        Shared::Indexed::MiscellaneousControl::MAFCDisable);
+
+    //     mov  ax, (MGA_CRTCExt_HorVidHalfCount SHL 8) OR 01h;0x501
+    //     call MGAWriteCRTCExtensionRegister  ;Offset 0x3c4
+    Shared::CRTCExtension::HorizontalHalfCount::Write(0x01);
+
+    //     or   cl, cl
+    //     je   Label0x640f                    ;Offset 0x640f
+    if (r.h.cl == 0x00)
+        goto Label0x640f;
+
+    //     dec  cl
+    --r.h.cl;
+
+    //     call Func0x622f                     ;Offset 0x622f
+    Func0x622f(r.h.cl);
+
+    //     jmp  Label0x640f                    ;Offset 0x640f
+    goto Label0x640f;
+
+    // Label0x6400:                            ;Offset 0x6400
+LABEL(Func0x6310, Label0x6400);
+
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call ReadIndexedRegister            ;Offset 0x5bab
+    //     and  cl, NOT MGA_MISCCTRL_MAFC_MASK;0xf9
+    //     mov  ch, cl
+    //     mov  cl, MGA_INDD_MiscellaneousControl;0x1e
+    //     call WriteIndexedRegister           ;Offset 0x5b90
+    Shared::PCI::Indexed::MiscellaneousControl::Write(mystique,
+        Shared::PCI::Indexed::MiscellaneousControl::Read(mystique) &
+        ~Shared::Indexed::MiscellaneousControl::MAFCFuncSelect);
+
+    // Label0x640f:                            ;Offset 0x640f
+LABEL(Func0x6310, Label0x640f);
+
+    //     pop  dx
+    //     pop  bx
+    //     pop  cx
+    //     pop  si
+    //     pop  es
+    //     pop  ds
+    //     ret
+    return;
+}
+
+uint16_t GetVideoMemorySize()//Offset 0x59c0
+{
+    uint16_t ret = 0;
+    //     push  ds
+    //     xor   ax, ax
+    //     mov   ds, ax
+    //     mov   ax, 01h
+    ret = 1;
+    //     cmp   byte ptr ds:[BDA_DisplayMode], BDA_DM_320x200_256_Color_Graphics;Offset 0x449 0x13
+    //     je    IsMode13                      ;Offset 0x59d2
+    if (Hag::System::BDA::DisplayMode::Get() != Hag::VGA::VideoMode::G320x200x8bppC)
+        ret = Hag::System::BDA::VideoBufferSize::Get();
+    //     mov   ax, word ptr ds:[BDA_VideoBufferSize];Offset 0x44c
+    // IsMode13:                               ;Offset 0x59d2
+    //     and   al, 0fh
+    ret &= 0xFF0F;
+    //     pop   ds
+    //     ret
+    return ret;
+}
+
+void ClearVideoMemory()//Offset 0x64e6
+{
+    using namespace Hag::Matrox;
+
+    //     push      es
+    //     push      di
+    //     push      dx
+    //     push      ecx
+
+    //     mov       ax, 0a000h                ;Segment 0xa000
+    FARPointer ptr;
+    ptr.Segment = 0xA000;
+    
+    //     mov       es, ax
+    //     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
+    //     call      GetVideoMemorySize                ;Offset 0x59c0
+    uint8_t ah = uint8_t(GetVideoMemorySize() >> 8);
+
+    //     mov       al, 04h                   ;MemoryPage
+    // Label0x64f8:                            ;Offset 0x64f8
+LABEL(ClearVideoMemory, Label0x64f8);
+
+    //     dec       ah
+    --ah;
+    
+    //     jb        Label0x6512               ;Offset 0x6512
+    if (ah == 0xFF)
+        goto Label0x6512;
+
+    //     out       dx, ax
+    Shared::CRTCExtension::MemoryPage::Write(ah);
+
+    //     push      ax
+    //     xor       eax, eax
+    //     mov       di, 0000h
+    ptr.Offset = 0x0000;
+    
+    //     mov       ecx, 00004000h
+    //     rep stosd
+    memset(ptr.ToPointer<uint8_t>(0x10000), 0, 0x10000);
+
+    //     pop       ax
+    //     or        ah, ah
+    //     jne       Label0x64f8               ;Offset 0x64f8
+    if (ah != 0x00)
+        goto Label0x64f8;
+
+    // Label0x6512:                            ;Offset 0x6512
+LABEL(ClearVideoMemory, Label0x6512);
+
+    //     pop       ecx
+    //     pop       dx
+    //     pop       di
+    //     pop       es
+    //     ret
+}
+
+void TextFunctions0X(uint8_t function, uint16_t bx)//Offset 0x2612
+{
+    //     cmp       al, 03h
+    //     je        SelectCharacterMap        ;Offset 0x262a
+    if (function == 0x03)
+    {
+        // SelectCharacterMap:                     ;Offset 0x262a
+        //     mov       dx, VGA_SequenceIndex     ;Port 0x3c4
+        //     mov       al, VGA_SEQIdx_CharacterMapSelect;0x3
+        //     mov       ah, bl
+        //     out       dx, ax
+        Hag::VGA::Sequencer::CharacterFontSelect::Write(uint8_t(bx));
+    }
+    //     cmp       al, 04h
+    //     ja        Return                    ;Offset 0x2632
+    else if (function < 0x04)
+    {
+        //     and       bl, 7fh
+        bx &= 0xFF7F;
+        
+        //     call      Func0x2ce3                ;Offset 0x2ce3
+        ConfigureFontLoadMemoryMapping();
+
+        //     call      Func0x2d24                ;Offset 0x2d24
+        Func0x2d24(function, bx, NULL, 0x0000);
+
+        //     call      Func0x2ce9                ;Offset 0x2ce9
+        ConfigureTextMemoryMapping();
+
+        //     call      Func0x30c9                ;Offset 0x30c9
+        ActivateAttributeController();
+
+        //     ret
+    }
+    // Return:                                 ;Offset 0x2632
+    //     ret
+}
+
+void SetStartAddress(uint32_t address)//Offset 0x5a28
+{
+    //     push  dx
+    //     push  ds
+    //     xor   dx, dx
+    //     mov   ds, dx
+    //     call  Func0x6416                    ;Offset 0x6416
+    //     je    Label0x5a36                   ;Offset 0x5a36
+    //     shr   eax, 01h
+    // Label0x5a36:                            ;Offset 0x5a36
+    //     pop   ds
+    //     push  eax
+    //     test  bl, 80h
+    //     je    Label0x5a48                   ;Offset 0x5a48
+    //     mov   dx, VGA_InputStatus1D         ;Port 0x3da
+    // Label0x5a43:                            ;Offset 0x5a43
+    //     in    al, dx
+    //     and   al, VGA_INSTS1_VerInactiveDisplayIntv;0x8
+    //     je    Label0x5a43                   ;Offset 0x5a43
+    // Label0x5a48:                            ;Offset 0x5a48
+    //     mov   dx, VGA_CRTControllerIndexD   ;Port 0x3d4
+    //     mov   al, VGA_CRTCIdx_StartAddrLow  ;0xd
+    //     out   dx, al
+    //     inc   dx
+    //     pop   ax
+    //     out   dx, al
+    //     dec   dx
+    //     mov   al, VGA_CRTCIdx_StartAddrHigh ;0xc
+    //     out   dx, al
+    //     inc   dx
+    //     xchg  al, ah
+    //     out   dx, al
+    //     mov   dl, MGA_CRTCExtensionIndex_lowbyte;Port 0x3de
+    //     xor   al, al                        ;MGA_CRTCExt_AddrGeneratorExt
+    //     out   dx, al
+    //     inc   dx
+    //     pop   ax
+    //     xchg  al, ah
+    //     in    al, dx
+    //     and   al, NOT MGA_CRTEXT0_StartAddress19_16;0xf0
+    //     or    al, ah
+    //     out   dx, al
+    //     pop   dx
+    //     ret
+}
+
+bool SetVideoModeInternal(Hag::VGA::VideoMode_t videoMode, Hag::System::BDA::VideoParameterTable* videoParameterTableOverride);
+
+void Func0x6518(VesaDataStruct1* vesaStruct)//Offset 0x6518
+{
+    using namespace Hag;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    VesaDataStruct1* siPointer = NULL;
+    uint8_t* axPointer = NULL;
+
+    //     push      bp
+    //     mov       bp, sp
+    //     push      es
+    //     push      ebx
+    //     sub       sp, 002ch
+
+    //     push      ss
+    //     pop       es
+    //     mov       di, sp
+    //     mov       bx, ax
+    //     shl       ebx, 01h
+    //     xor       dx, dx
+    //     mov       ds, dx
+    //     lds       si, ds:[BDA_VideoParameterControlBlockPtrOfs];Offset 0x4a8
+    //     push      ds
+    //     push      si
+    //     push      di
+    //     mov       cx, 000eh
+    //     rep movsw
+
+    //     pop       di
+    //     lds       si, [bp + 04h]
+    siPointer = vesaStruct;
+
+    //     push      ax
+    //     push      dx
+    //     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
+    //     mov       al, MGA_CRTCExt_HorCounterExt;0x1
+    //     out       dx, al
+    //     inc       dx
+    //     in        al, dx
+    //     or        al, MGA_CRTCEXT1_VerSyncOff OR MGA_CRTCEXT1_HorSyncOff;0x30
+    //     out       dx, al
+    //     pop       dx
+    //     pop       ax
+    Shared::CRTCExtension::HorizontalCounterExtensions::Write(
+        Shared::CRTCExtension::HorizontalCounterExtensions::Read() |
+        Shared::CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff |
+        Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalSyncOff);
+    
+    //     mov       dx, VGA_MiscellaneousWrite
+    //     mov       al, NOT VGA_MISC_VideoDisable;0xef
+    //     out       dx, al
+    VGA::MiscellaneousOutput::Write(~VGA::MiscellaneousOutput::VideoEnable);
+
+    //     mov       edx, dword ptr [si]
+    r.x.edx = siPointer->FrequencyKHz;
+    
+    //     mov       cl, 2dh
+    r.h.cl = 0x2D;  //Does nothing. stomped in function
+
+    //     call      ConfigureAndSelectPLLSetC ;Offset 0x6178
+    ConfigureAndSelectPLLSetC(r.x.edx);
+
+    //     xor       dx, dx
+    r.w.dx = 0;
+
+    //     xor       eax, eax
+    r.x.eax = 0;
+
+    //     mov       ax, word ptr [si + 0ch]
+    axPointer = siPointer->Data3;
+
+    //     mov       bx, ds                    ;bx = 0xC000
+    //     mov       cx, bx
+    //     or        cx, ax
+    //     je        Label0x6589               ;Offset 0x6589
+    //     push      ax
+    //     mov       cx, 0004h
+    //     shr       ax, cl
+    //     add       bx, ax
+    //     mov       al, byte ptr [si + 12h]
+    //     xor       ah, ah
+    //     shl       ax, 01h
+    //     shl       ax, 01h
+    //     sub       bx, ax
+    //     pop       ax
+    //     and       ax, 000fh
+    //     mov       word ptr es:[di], ax      ;VideoParameters
+    //     mov       word ptr es:[di + 02h], bx;
+    // Label0x6589:                            ;Offset 0x6589
+    //     mov       word ptr es:[di + 08h], dx;0 AlphanumericCharsetOverride
+    //     mov       word ptr es:[di + 0ah], dx;0
+    //     shr       ebx, 01h
+    //     and       bh, 80h
+    //     mov       dl, byte ptr [si + 13h]
+    //     or        dl, bh
+    //     shl       ebx, 01h
+    //     xor       ax, ax
+    //     mov       ds, ax
+    //     mov       word ptr ds:[BDA_VideoParameterControlBlockPtrOfs], di;Offset 0x4a8
+    //     mov       word ptr ds:[BDA_VideoParameterControlBlockPtrSeg], es;Offset 0x4aa
+
+    //All this chaos above is just to get the standard video mode code to apply our legacy mode settings
+
+    //     mov       ax, dx
+    //     int       6dh
+    SetVideoModeInternal(VGA::VideoMode::T40x25x4bppG, (BDA::VideoParameterTable*)axPointer);
+
+    //     call      TurnScreenOff             ;Offset 0x3109
+    TurnScreenOff();
+
+    //     pop       word ptr ds:[BDA_VideoParameterControlBlockPtrOfs];Offset 0x4a8
+    //     pop       word ptr ds:[BDA_VideoParameterControlBlockPtrSeg];Offset 0x4aa
+
+    //     lds       si, [bp + 04h]
+
+
+//Offset 0x7021      ;VESA_MODE_132x60xText
+// VesaDataStruct1 Data0x7021 =
+// {
+//     0x0000A078,                  // 00
+//     0x0420,                      // 04
+//     0x01E0,                      // 06
+//     { 0x10, 0x00, 0x01, 0x82 },  // 08
+//     Data0x6da3,                  // 0C
+//     { 
+//0x00,                             // 0E 0
+//0x00,                             // 0F 1
+//0x00,                             // 10 2 Shared::CRTCExtension::HorizontalCounterExtensions
+//0x00,                             // 11 3 Shared::CRTCExtension::VerticalCounterExtensions
+//0x18,                             // 12 4
+//0x03,                             // 13 5
+//0x00,                             // 14 6
+//0x00 }                            // 15 7
+// };
+
+// struct VesaDataStruct1
+// {
+//     uint32_t FrequencyKHz;
+//     uint16_t Width;
+//     uint16_t Height;
+//     uint8_t Data2[4];
+//     uint8_t* Data3;
+//     uint8_t Data4[];
+// };
+
+
+    //     test      byte ptr [si + 0bh], 80h
+    //     je        Label0x65cf               ;Offset 0x65cf
+    if ((siPointer->Data2[3] & 0x80) == 0x00)
+        goto Label0x65cf;
+
+    //     push      si
+    //     push      ds
+    //     mov       al, 02h
+    r.h.al = 0x02;
+
+    //     mov       bx, 0000h
+    r.w.bx = 0x0000;
+
+    //     call      TextFunctions             ;Offset 0x25e5
+    TextFunctions0X(r.h.al, r.w.bx);
+
+    //     pop       ds
+    //     pop       si
+
+    // Label0x65cf:                            ;Offset 0x65cf
+LABEL(Func0x6518, Label0x65cf);
+
+    //     mov       dx, MGA_CRTCExtensionIndex;Port 0x3de
+    //     mov       ah, byte ptr [si + 10h]
+    //     mov       al, MGA_CRTCExt_HorCounterExt;0x1
+    //     out       dx, ax
+    Shared::CRTCExtension::HorizontalCounterExtensions::Write(siPointer->Data4[2]);
+
+    //     mov       ah, byte ptr [si + 11h]
+    //     mov       al, MGA_CRTCExt_VertCounterExt;0x2
+    //     out       dx, ax
+    Shared::CRTCExtension::VerticalCounterExtensions::Write(siPointer->Data4[3]);
+
+    //     call      Func0x6310                ;Offset 0x6310
+    Func0x6310(siPointer);
+
+    //     shr       ebx, 01h
+    r.x.ebx >>= 1;
+
+    //     and       bh, 80h
+    r.h.bh &= 0x80;
+
+    //     jne       Label0x65f2               ;Offset 0x65f2
+    if (r.h.bh != 0x00)
+    goto Label0x65f2;
+
+    //     test      byte ptr [si + 0bh], 02h
+    //     jne       Label0x65f2               ;Offset 0x65f2
+    if ((siPointer->Data2[3] & 0x2) != 0)
+        goto Label0x65f2;
+
+    //     call      ClearVideoMemory                ;Offset 0x64e6
+    ClearVideoMemory();
+
+    // Label0x65f2:                            ;Offset 0x65f2
+LABEL(Func0x6518, Label0x65f2);
+
+    //     xor       eax, eax
+    r.x.eax = 0;
+    //     call      SetStartAddress           ;Offset 0x5a28
+    SetStartAddress(r.x.eax);
+
+    //     call      TurnScreenOn              ;Offset 0x3105
+    TurnScreenOn();
+
+    //     add       sp, 002ch
+    //     xor       ax, ax
+    //     pop       ebx
+    //     pop       es
+    //     pop       bp
+    //     ret
+}
+
+bool SetVideoMode(Hag::VGA::VideoMode_t videoMode);
+
+bool SetVESAMode(Hag::Vesa::VideoMode_t videoMode)//Offset 0x7356
+{
+    using namespace Hag;
+    using namespace Hag::System;
+
+    bool ret = false;
+
+    REGPACK r;
+    memset(&r, 0, sizeof(r));
+    uint16_t saveBX = 0;
+    r.w.ax = videoMode;
+    VesaDataStruct1* siStruct = NULL;
+
+    //     push  ax
+    //     push  ds
+    //     push  di
+    //     push  si
+    //     push  cx
+    //     push  dx
+    //     push  cs
+    //     pop   ds
+    //     mov   bx, ax
+    r.w.bx = r.w.ax;
+
+    //     call  IsExtensionReg7Writeable      ;Offset 0x5606
+    //     je    Label0x73e1                   ;Offset 0x73e1
+    if (IsExtensionReg7Writeable())
+        goto Label0x73e1;
+    
+    //     push  bx
+    saveBX = r.w.bx;
+    //     call  TranslateSpecialModes                    ;Offset 0x70a8
+    r.w.bx = TranslateSpecialModes(r.w.bx);
+
+    //     mov   ax, bx
+    r.w.ax = r.w.bx;
+
+    //     cmp   bl, 1fh                       ;Full memory access mode
+    //     jne   Label0x7375                   ;Offset 0x7375
+    if (r.h.bl != 0x1F)
+        goto Label0x7375;
+        
+    //     mov   bx, VESA_MODE_640x400x256     ;0x100
+        r.w.bx = Hag::Vesa::VideoMode::G640x400x8bpp;
+
+    // Label0x7375:                            ;Offset 0x7375
+LABEL(SetVESAMode, Label0x7375);
+
+    //     call  ValidateVesaMode                    ;Offset 0x70cc
+    //     jne   Label0x73a4                   ;Offset 0x73a4
+    if (!ValidateVesaMode(r.w.bx))
+        goto Label0x73a4;
+
+    //     and   bx, 00ffh
+    r.w.bx &= 0xFF;
+    
+    //     shl   bx, 01h
+    //     add   bx, Data0x6aa7                ;Offset 0x6aa7
+    //     mov   si, word ptr cs:[bx]
+    siStruct = Data0x6aa7[r.w.bx];
+
+    //     push  ax
+    //     mov   ax, 0bd60h
+    //     int   6dh
+    //     pop   ax
+    //Ignore.
+
+    //     push  ds
+    //     push  si
+    //     call  Func0x6518                    ;Offset 0x6518
+    Func0x6518(siStruct);
+
+    //     pop   ax
+    //     pop   ax
+
+    //     pop   bx
+    r.w.bx = saveBX;
+
+    //     cmp   bl, 1fh
+    //     jne   Label0x73a2                   ;Offset 0x73a2
+    if (r.h.bl != 0x1F)
+        goto Label0x73a2;
+
+    //     mov   dx, VGA_SequenceIndex         ;Port 0x3c4
+    //     mov   ax, (VGA_SEQ1_ScreenOff SHL 8) OR VGA_SEQIdx_ClockingMode;0x2001
+    //     out   dx, ax
+    VGA::Sequencer::ClockingMode::Write(VGA::Sequencer::ClockingMode::ScreenOff);
+
+    // Label0x73a2:                            ;Offset 0x73a2
+LABEL(SetVESAMode, Label0x73a2);
+
+    //     jmp   Label0x73bf                   ;Offset 0x73bf
+    goto Label0x73bf;
+
+    // Label0x73a4:                            ;Offset 0x73a4
+LABEL(SetVESAMode, Label0x73a4);
+
+    //     pop   bx
+    r.w.bx = saveBX;
+
+    //     mov   ax, bx
+    r.w.ax = r.w.bx;
+
+    //     cmp   ax, BDA_DM_320x200_256_Color_Graphics;0x13
+    //     jle   Label0x73b1                   ;Offset 0x73b1
+    if (r.w.ax <= VGA::VideoMode::G320x200x8bppC)
+        goto Label0x73b1;
+
+    //     mov   ax, 014fh
+    ret = false;
+
+    //     jmp   Label0x73e1                   ;Offset 0x73e1
+    goto Label0x73e1;
+
+    // Label0x73b1:                            ;Offset 0x73b1
+LABEL(SetVESAMode, Label0x73b1);
+
+    //     mov   ah, 00h
+    r.h.ah = 0x00;
+
+    //     mov   al, bl
+    r.h.al = r.h.bl;
+
+    //     int   10h                           ;Regular int 10h handler for standard modes
+    //     inc   ax
+    //     jne   Label0x73bf                   ;Offset 0x73bf
+    if (!SetVideoMode(r.h.al))
+        goto Label0x73bf;
+
+    //     mov   ax, 014fh
+    ret = false;
+
+    //     jmp   Label0x73e1                   ;Offset 0x73e1
+    goto Label0x73e1;
+
+    // Label0x73bf:                            ;Offset 0x73bf
+LABEL(SetVESAMode, Label0x73bf);
+    //     push  bx
+    saveBX = r.w.bx;
+
+    //     and   bx, 7f7fh
+    r.w.bx &= 0x7F7F;
+    //     cmp   bx, VESA_MODE_640x400x256     ;0x100
+    //     jl    Label0x73cd                   ;Offset 0x73cd
+    if (r.w.bx < Vesa::VideoMode::G640x400x8bpp)
+        goto    Label0x73cd;
+    
+    //     add   bl, 20h                       ;VESA mode is (mode & 0x7f) + 0x20
+    r.h.bl += 0x20;
+
+    // Label0x73cd:                            ;Offset 0x73cd
+LABEL(SetVESAMode, Label0x73cd);
+
+    //     xor   ax, ax
+    r.w.ax = 0;
+
+    //     mov   ds, ax
+    //     mov   al, bl
+    r.h.al = r.h.al;
+
+    //     pop   bx
+    r.w.bx = saveBX;
+
+    //     mov   ah, bh
+    r.h.ah = r.h.bh;
+
+    //     and   ah, 0c0h                      ;Top 2 bits are preserved
+    r.h.ah &= 0xC0;
+
+    //     or    al, ah                        ;And stored along with the mode
+    r.h.al |= r.h.ah;
+
+    //     mov   byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
+    BDA::DisplayMode::Get() = r.h.al;
+
+    //     mov   ax, 004fh
+    ret = true;
+
+    // Label0x73e1:                            ;Offset 0x73e1
+LABEL(SetVESAMode, Label0x73e1);
+    //     pop   dx
+    //     pop   cx
+    //     pop   si
+    //     pop   di
+    //     pop   ds
+    //     pop   bx
+    //     or    ah, ah
+    //     jne   Label0x73eb                   ;Offset 0x73eb   If not, then still.
+    // Label0x73eb:                            ;Offset 0x73eb
+    //     iret
+
+    return ret;
+}
+
+bool SetVideoModeInternal(Hag::VGA::VideoMode_t videoMode, Hag::System::BDA::VideoParameterTable* videoParameterTableOverride)
 {
     using namespace Hag;
     using namespace Hag::System;
@@ -2772,7 +5631,7 @@ LABEL(SetVideoMode, Label0x1323);
     //     jp   Func0x13ba                     ;Offset 0x13ba
     if ((BDA::DetectedHardware::Get() & BDA::DetectedHardware::InitialVideoModeMask) == BDA::DetectedHardware::Monochrome80x25)
     {
-        Func0x13ba(r.h.al, r.h.ah);
+        Func0x13ba(r.h.al, r.h.ah, videoParameterTableOverride);
         RETURN_ARG("SetVideoMode.Return 1", true);
     }
     // Label0x1340:                            ;Offset 0x1340
@@ -2794,7 +5653,7 @@ LABEL(SetVideoMode, Label0x1340);
     //     jne  Func0x13cf                     ;Offset 0x13cf
     if (r.h.al != 0x0F)
     {
-        Func0x13cf(r.h.al, r.h.ah, r.w.si);
+        Func0x13cf(r.h.al, r.h.ah, r.w.si, videoParameterTableOverride);
         RETURN_ARG("SetVideoMode.Return 2", true);
     }
     // Label0x1350:                            ;Offset 0x1350
@@ -2804,7 +5663,7 @@ LABEL(SetVideoMode, Label0x1350);
     r.h.al = 0x03;
 
     //     jmp  Func0x13cc                     ;Offset 0x13cc
-    Func0x13cc(r.h.al, r.h.ah, r.w.si);
+    Func0x13cc(r.h.al, r.h.ah, r.w.si, videoParameterTableOverride);
     RETURN_ARG("SetVideoMode.Return 3", true);
     return true;
     // Label0x1354:                            ;Offset 0x1354
@@ -2896,8 +5755,14 @@ LABEL(SetVideoMode, Label0x138d);
     RETURN_ARG("SetVideoMode.Return 6", SetVESAMode(0x102));
 }
 
+bool SetVideoMode(Hag::VGA::VideoMode_t videoMode)//Offset 0x12f0
+{
+    return SetVideoModeInternal(videoMode, NULL);
+}
+
 Hag::Testing::Mock::PortAndValue Matrox_Mystique_DefaultPortValues [] =
 {
+    { 0x0062, 0x00 },
     { 0x03C2, 0x70 },
     { 0x03C4, 0xFF },
     { 0x03C5, 0xFF },
@@ -4114,6 +6979,101 @@ int main(void)
         //TODO: we put our C++ version here.
 
         //Diff("SetMode");
+    }
+
+
+    uint16_t vesaModes[] =
+    {
+        0x100, //640x400x256
+        0x101, //640x480x256
+        0x102, //800x600x16
+        0x103, //800x600x256
+        0x104, //1024x768x16
+        0x105, //1024x768x256
+        0x106, //1280x1024x16
+        0x107, //1280x1024x256
+        0x108, //80x60 text
+        0x109, //132x25 text
+        0x10A, //132x43 text
+        0x10B, //132x50 text
+        0x10C, //132x60 text
+        0x10D, //320x200x32K
+        0x10E, //320x200x64K
+        0x10F, //320x200x16M
+        0x110, //640x480x32K
+        0x111, //640x480x64K
+        0x112, //640x480x16M
+        0x113, //800x600x32K
+        0x114, //800x600x64K
+        0x115, //800x600x16M
+        0x116, //1024x768x32K
+        0x117, //1024x768x64K
+        0x118, //1024x768x16M
+        0x119, //1280x1024x32K
+        0x11A, //1280x1024x64K
+        0x11B, //1280x1024x16M
+        0x11C, //1600x1200x256
+        0x11D, //1600x1200x32k
+        0x11E, //1600x1200x64k
+        0x120, //1600x1200x256 //Duplicates??
+        0x121, //1600x1200x32K
+        0x122, //1600x1200x64K
+    };
+
+    for (uint8_t modeIdx = 0; modeIdx < (sizeof(vesaModes) / sizeof(uint16_t)); ++modeIdx)
+    {
+        //printf("Resetting...\n");
+        Hag::Testing::Mock::Reset();
+
+        uint16_t vesaMode = vesaModes[modeIdx];
+
+        Hag::Testing::Mock::SelectInstance(0);
+        printf("Setting vesa mode 0x%04X...\n", vesaMode);
+        SetVESAMode(vesaMode);
+
+        char filename[50];
+        FILE* fp = NULL;
+        FILE* fpbin = NULL;
+
+        sprintf(filename, "bda%04X.txt", vesaMode);
+        fp = fopen(filename, "w");
+        sprintf(filename, "bda%04X.bin", vesaMode);
+        fpbin = fopen(filename, "wb");
+        BDADump(fp, fpbin);
+        fclose(fp);
+        fclose(fpbin);
+
+        sprintf(filename, "vesa%04X.txt", vesaMode);
+        fp = fopen(filename, "w");
+        sprintf(filename, "vesa%04X.bin", vesaMode);
+        fpbin = fopen(filename, "wb");
+        VGADump(fp, fpbin, BDA::VideoBaseIOPort::Get());
+        fclose(fp);
+        fclose(fpbin);
+
+        sprintf(filename, "pci%04X.txt", vesaMode);
+        fp = fopen(filename, "w");
+        sprintf(filename, "pci%04X.bin", vesaMode);
+        fpbin = fopen(filename, "wb");
+        PCIDump(fp, fpbin, 0x102B, devices, sizeof(devices) / sizeof(Device));
+        fclose(fp);
+        fclose(fpbin);
+
+        if (pciDeviceFound)
+        {
+            sprintf(filename, "mtx%04X.txt", vesaMode);
+            fp = fopen(filename, "w");
+            sprintf(filename, "mtx%04X.bin", vesaMode);
+            fpbin = fopen(filename, "wb");
+            MatroxDump(fp, fpbin, BDA::VideoBaseIOPort::Get());
+            fclose(fp);
+            fclose(fpbin);
+        }
+
+        //Hag::Testing::Mock::SelectInstance(1);
+        //TODO: we put our C++ version here.
+
+        //Diff("SetVesaMode");
     }
 
     Hag::Testing::Mock::Shutdown();

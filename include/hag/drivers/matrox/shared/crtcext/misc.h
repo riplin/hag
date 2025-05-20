@@ -26,14 +26,14 @@ namespace Miscellaneous
     enum //Mask
     {
         ClockScalingFactor = 0x07,      //Video clock scaling factor. Specifies the video clock division factor in MGA mode
-                                        // 000 = /1
-                                        // 001 = /2
-                                        // 010 = /3
-                                        // 011 = /4
+        ScaleDiv1 = 0x00,               // 000 = /1
+        ScaleDiv2 = 0x01,               // 001 = /2
+        ScaleDiv3 = 0x02,               // 010 = /3
+        ScaleDiv4 = 0x03,               // 011 = /4
                                         // 100 = Reserved
-                                        // 101 = /6
+        ScaleDiv6 = 0x05,               // 101 = /6
                                         // 110 = Reserved
-                                        // 111 = /8
+        ScaleDiv8 = 0x07,               // 111 = /8
         Slow256 = 0x02,                 // 0 = Direct frame buffer accesses in mode 13h are accelerated.
                                         // 1 = Mode 13h frame buffer accesses are not acclerated.
                                         //     Unless otherwise specified, this bit should always be 0.
