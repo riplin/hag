@@ -852,6 +852,15 @@ int main(int argc, char** argv)
         r.h.al = 0x03;
         intr(0x10, &r);
     
+        //Reset palette to prevent garbage from contaminating our dumps
+        Hag::VGA::DACWriteIndex::Write(0);
+        for (uint16_t i = 0; i < 256; ++i)
+        {
+            Hag::VGA::RAMDACData::Write(0);
+            Hag::VGA::RAMDACData::Write(0);
+            Hag::VGA::RAMDACData::Write(0);
+        }
+    
         memset(&r, 0, sizeof(r));
         r.w.ax = 0x4F02;
         r.w.bx = vesaMode;

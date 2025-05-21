@@ -498,7 +498,7 @@ uint8_t GetNumberOfActiveScanlines()//Offset 0x3054
 
     // Label0x3066:                            ;Offset 0x3066
 LABEL(GetNumberOfActiveScanlines, Label0x3066);
-
+    printf("GetNumberOfActiveScanlines display mode = 0x%02X\n", BDA::DisplayMode::Get());
     //     mov   al, 02h                       ;400 Scan lines
     r.h.al = 0x02;
 
@@ -524,6 +524,19 @@ LABEL(GetNumberOfActiveScanlines, Label0x3066);
 
     // Label0x307d:                            ;Offset 0x307d
 LABEL(GetNumberOfActiveScanlines, Label0x307d);
+
+    if (r.h.al == 3)
+        printf("GetNumberOfActiveScanlines(3): 480 Scan lines\n");
+
+    if (r.h.al == 2)
+        printf("GetNumberOfActiveScanlines(2): 400 Scan lines\n");
+
+    if (r.h.al == 1)
+        printf("GetNumberOfActiveScanlines(1): 350 Scan lines\n");
+
+    if (r.h.al == 0)
+        printf("GetNumberOfActiveScanlines(0): 200 Scan lines\n");
+
     //     pop   bx
     //     ret   
     return r.h.al;
