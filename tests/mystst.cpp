@@ -225,7 +225,7 @@ public:
                 *(uint32_t*)(m_ControlAperture + index) = *(uint32_t*)(m_Config + 0x48);
                 if (index == 0x3C08)
                 {
-                    m_Indexed[m_Config[0x3C00]] = m_Config[0x3C0A];
+                    m_Indexed[m_ControlAperture[0x3C00]] = m_ControlAperture[0x3C0A];
                 }
             }
         }
@@ -253,7 +253,7 @@ public:
                 *(uint32_t*)(m_ControlAperture + index) = *(uint32_t*)(m_Config + 0x48);
                 if (index == 0x3C08)
                 {
-                    m_Indexed[m_Config[0x3C00]] = m_Config[0x3C0A];
+                    m_Indexed[m_ControlAperture[0x3C00]] = m_ControlAperture[0x3C0A];
                 }
             }
         }
@@ -276,7 +276,7 @@ public:
                 *(uint32_t*)(m_ControlAperture + index) = *(uint32_t*)(m_Config + 0x48);
                 if (index == 0x3C08)
                 {
-                    m_Indexed[m_Config[0x3c00]] = m_Config[0x3C0A];
+                    m_Indexed[m_ControlAperture[0x3c00]] = m_ControlAperture[0x3C0A];
                 }
             }
         }
@@ -325,10 +325,10 @@ private:
 uint8_t MockMystique::s_Config[256] = 
 {
     0x2B, 0x10, 0x1A, 0x05, 0x87, 0x00, 0x80, 0x02, 0x02, 0x00, 0x00, 0x03, 0x00, 0x20, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0xE0, 0x08, 0x00, 0x80, 0xE1, 0x00, 0x00, 0x80, 0xDF, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
+    0x00, 0x00, 0x80, 0xE1, 0x08, 0x00, 0x00, 0xE3, 0x00, 0x00, 0x00, 0xE1, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x2B, 0x10, 0x00, 0x11,
     0x00, 0x00, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0B, 0x01, 0x00, 0x00,
-    0x21, 0x4F, 0x0F, 0x5F, 0x08, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x21, 0x4F, 0x0B, 0x5F, 0x08, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -344,13 +344,12 @@ uint8_t MockMystique::s_Config[256] =
 
 uint8_t MockMystique::s_Indexed[80] =
 {
-    0x00, 0x00, 0x00, 0x00, 0xAF, 0x0D, 0x00, 0x00, 0x1B, 0x99, 0xFB, 0x00, 0xE7, 0x8D, 0x9F, 0x00,
-    0x7D, 0x3F, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x09, 0x00, 0x00, 0x20, 0x11, 0x11,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1F, 0x08, 0x70, 0x10, 0x40,
+    0x00, 0x00, 0x00, 0x00, 0xBF, 0x0F, 0x00, 0x00, 0x1B, 0xBD, 0xFB, 0x00, 0xF7, 0x9D, 0x9F, 0x00,
+    0x7D, 0xBF, 0xE8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x09, 0x00, 0x00, 0x20, 0x11, 0x11,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1A, 0x08, 0x70, 0x10, 0x40,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x0D, 0x00,
-    0x14, 0xB2, 0xD1, 0xAA, 0x1E, 0x6C, 0x01, 0x00, 0x0C, 0x66, 0x0B, 0x00, 0x0A, 0x75, 0x1E, 0x40
+    0x16, 0xBA, 0xD3, 0xAA, 0x1E, 0x6C, 0x01, 0x00, 0x0C, 0x66, 0x0B, 0x00, 0x0E, 0x75, 0x1E, 0x40
 };
-
 
 #if 0
 
@@ -839,6 +838,7 @@ uint8_t Greyscale(uint8_t red, uint8_t green, uint8_t blue)//Offset 0x2fcc
 
 void LoadColorPalette(uint16_t count, uint16_t paletteIndex)//Offset 0x2f93
 {
+    printf("Load color palette count 0x%02X\n", count);
     using namespace Hag;
     using namespace Hag::System;
     uint8_t red = 0;
@@ -921,6 +921,7 @@ LABEL(LoadColorPalette, Label0x2fa6);
 
 void LoadCompressedPalette(uint16_t count, uint16_t paletteIndex)//Offset 0x319b
 {
+    printf("Load compressed palette count 0x%02X\n", count);
     using namespace Hag;
 
     REGPACK r;
@@ -992,6 +993,7 @@ void LoadCompressedPalette(uint16_t count, uint16_t paletteIndex)//Offset 0x319b
 
 void LoadPalette(Hag::VGA::DACWriteIndex_t startIndex, uint16_t paletteIndex)//Offset 0x2f5f
 {
+    printf("Load palette start index 0x%02X, paletteIndex %i\n", startIndex, paletteIndex);
     using namespace Hag;
     using namespace Hag::System;
 
@@ -1091,12 +1093,14 @@ void InitializePalette()//Offset 0x2f14
     //     pop       es
     //     call      GetNumberOfActiveScanlines;Offset 0x3054
     r.h.al = GetNumberOfActiveScanlines();
+    printf("Number of active scanlines: 0x%02X\n", r.h.al);
 
     //     mov       ah, al
     r.h.ah = r.h.al;
 
     //     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
     r.h.al = BDA::DisplayMode::Get();
+    printf("Display mode: 0x%02X\n", r.h.al);
 
     //     cmp       ax, BDA_DM_320x200_256_Color_Graphics;0x0013
     //     je        Label0x2f43               ;Offset 0x2f43
@@ -2055,6 +2059,8 @@ void Func0x13cf(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOpt
     //     mov       word ptr ds:[BDA_CursorEndStartScanLine], ax;Offset 0x460
     BDA::CursorScanLines::Get().Start = videoParameterTable.CRTCRegisters[VGA::CRTController::Register::CursorStartScanLine];
     BDA::CursorScanLines::Get().End = videoParameterTable.CRTCRegisters[VGA::CRTController::Register::CursorEndScanLine];
+    printf("Cursor start scanline: 0x%02X\n", BDA::CursorScanLines::Get().Start);
+    printf("Cursor end scanline  : 0x%02X\n", BDA::CursorScanLines::Get().End);
 
     //     call      Func0x2e39                ;Offset 0x2e39
     Func0x2e39(videoParameterTable);
@@ -2335,11 +2341,9 @@ void ConfigureEGAFeatureBitSwitchesAdapter(Hag::VGA::VideoMode_t& videoMode, Hag
 LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14bb);
 
     //     xchg      ax, bx
-    {
-        uint16_t tmp = r.w.ax;
-        r.w.ax = r.w.bx;
-        r.w.bx = tmp;
-    }
+    r.w.ax ^= r.w.bx;
+    r.w.bx ^= r.w.ax;
+    r.w.ax ^= r.w.bx;
 
     //     mov       al, byte ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     r.h.al = uint8_t(BDA::VideoBaseIOPort::Get());
@@ -2455,11 +2459,9 @@ LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x14f9);
 LABEL(ConfigureEGAFeatureBitSwitchesAdapter, Label0x151c);
 
     //     xchg      ax, bx
-    {
-        uint16_t tmp = r.w.ax;
-        r.w.ax = r.w.bx;
-        r.w.bx = tmp;
-    }
+    r.w.ax ^= r.w.bx;
+    r.w.bx ^= r.w.ax;
+    r.w.ax ^= r.w.bx;
 
     //     pop       dx
     //     pop       bx
@@ -3369,13 +3371,18 @@ Hag::System::BDA::VideoParameterTable Data0x6da3[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
 };
 
-struct VesaDataStruct1
+struct VesaMode
 {
     uint32_t FrequencyKHz;
     uint16_t Width;
     uint16_t Height;
     uint8_t Unknown1[3];
-    uint8_t Flags;
+    uint8_t Flags;      // bits 1-0 : Not 00 = Matrox Advanced Feature Connector is set to standard VGA
+                        //          :     0x = Clear memory
+                        //          :     1x = Don't clear memory
+                        // bit    4 :      0 = 8bit DAC, scale div 1
+                        // bit    5 :      0 = 8bit DAC, scale div 2
+                        // bit    6 :      0 = 16bpp, 1 = 15bpp
     Hag::System::BDA::VideoParameterTable* VideoParameters;
     uint8_t Unknown2;
     uint8_t Unknown3;
@@ -3387,7 +3394,7 @@ struct VesaDataStruct1
 };
 
 //Offset 0x6de3      ;VESA_MODE_640x400x256
-VesaDataStruct1 Data0x6de3 =
+VesaMode Data0x6de3 =
 {
     0x00006A86,
     0x0280,
@@ -3405,7 +3412,7 @@ VesaDataStruct1 Data0x6de3 =
 };
 
 //Offset 0x6df9      ;VESA_MODE_640x480x256
-VesaDataStruct1 Data0x6df9 =
+VesaMode Data0x6df9 =
 {
     0x00006257,
     0x0280,
@@ -3423,7 +3430,7 @@ VesaDataStruct1 Data0x6df9 =
 };
 
 //Offset 0x6e0f      ;VESA_MODE_640x480x32K
-VesaDataStruct1 Data0x6e0f =
+VesaMode Data0x6e0f =
 {
     0x00006257,
     0x0280,
@@ -3441,7 +3448,7 @@ VesaDataStruct1 Data0x6e0f =
 };
 
 //Offset 0x6e25      ;VESA_MODE_640x480x64K
-VesaDataStruct1 Data0x6e25 =
+VesaMode Data0x6e25 =
 {
     0x00006257,
     0x0280,
@@ -3459,7 +3466,7 @@ VesaDataStruct1 Data0x6e25 =
 };
 
 //Offset 0x6e3b      ;VESA_MODE_640x480x16M
-VesaDataStruct1 Data0x6e3b =
+VesaMode Data0x6e3b =
 {
     0x00006257,
     0x0280,
@@ -3477,7 +3484,7 @@ VesaDataStruct1 Data0x6e3b =
 };
 
 //Offset 0x6e51      ;VESA_MODE_800x600x16
-VesaDataStruct1 Data0x6e51 =
+VesaMode Data0x6e51 =
 {
     0x00009C40,
     0x0320,
@@ -3495,7 +3502,7 @@ VesaDataStruct1 Data0x6e51 =
 };
 
 //Offset 0x6e69      ;VESA_MODE_800x600x256
-VesaDataStruct1 Data0x6e69 =
+VesaMode Data0x6e69 =
 {
     0x00009C40,
     0x0320,
@@ -3513,7 +3520,7 @@ VesaDataStruct1 Data0x6e69 =
 };
 
 //Offset 0x6e7f      ;VESA_MODE_800x600x32K
-VesaDataStruct1 Data0x6e7f =
+VesaMode Data0x6e7f =
 {
     0x00009C40,
     0x0320,
@@ -3531,7 +3538,7 @@ VesaDataStruct1 Data0x6e7f =
 };
 
 //Offset 0x6e95      ;VESA_MODE_800x600x64K
-VesaDataStruct1 Data0x6e95 =
+VesaMode Data0x6e95 =
 {
     0x00009C40,
     0x0320,
@@ -3549,7 +3556,7 @@ VesaDataStruct1 Data0x6e95 =
 };
 
 //Offset 0x6eab      ;VESA_MODE_800x600x16M
-VesaDataStruct1 Data0x6eab =
+VesaMode Data0x6eab =
 {
     0x00009C40,
     0x0320,
@@ -3567,7 +3574,7 @@ VesaDataStruct1 Data0x6eab =
 };
 
 //Offset 0x6ec1      ;VESA_MODE_1024x768x256
-VesaDataStruct1 Data0x6ec1 =
+VesaMode Data0x6ec1 =
 {
     0x0000FDE8,
     0x0400,
@@ -3585,7 +3592,7 @@ VesaDataStruct1 Data0x6ec1 =
 };
 
 //Offset 0x6ed7      ;VESA_MODE_1024x768x32K
-VesaDataStruct1 Data0x6ed7 =
+VesaMode Data0x6ed7 =
 {
     0x0000FDE8,
     0x0400,
@@ -3603,7 +3610,7 @@ VesaDataStruct1 Data0x6ed7 =
 };
 
 //Offset 0x6eed      ;VESA_MODE_1024x768x64K
-VesaDataStruct1 Data0x6eed =
+VesaMode Data0x6eed =
 {
     0x0000FDE8,
     0x0400,
@@ -3621,7 +3628,7 @@ VesaDataStruct1 Data0x6eed =
 };
 
 //Offset 0x6f03      ;VESA_MODE_1024x768x16M
-VesaDataStruct1 Data0x6f03 =
+VesaMode Data0x6f03 =
 {
     0x0000FDE8,
     0x0400,
@@ -3639,7 +3646,7 @@ VesaDataStruct1 Data0x6f03 =
 };
 
 //Offset 0x6f19      ;VESA_MODE_1280x1024x256
-VesaDataStruct1 Data0x6f19 =
+VesaMode Data0x6f19 =
 {
     0x0001A5E0,
     0x0500,
@@ -3657,7 +3664,7 @@ VesaDataStruct1 Data0x6f19 =
 };
 
 //Offset 0x6f2f      ;VESA_MODE_1280x1024x32K
-VesaDataStruct1 Data0x6f2f =
+VesaMode Data0x6f2f =
 {
     0x0001A5E0,
     0x0500,
@@ -3675,7 +3682,7 @@ VesaDataStruct1 Data0x6f2f =
 };
 
 //Offset 0x6f45      ;VESA_MODE_1280x1024x64K
-VesaDataStruct1 Data0x6f45 =
+VesaMode Data0x6f45 =
 {
     0x0001A5E0,
     0x0500,
@@ -3693,7 +3700,7 @@ VesaDataStruct1 Data0x6f45 =
 };
 
 //Offset 0x6f5b      ;VESA_MODE_1280x1024x16M
-VesaDataStruct1 Data0x6f5b =
+VesaMode Data0x6f5b =
 {
     0x0001A5E0,
     0x0500,
@@ -3711,7 +3718,7 @@ VesaDataStruct1 Data0x6f5b =
 };
 
 //Offset 0x6f71      ;VESA_MODE_1600x1200x256
-VesaDataStruct1 Data0x6f71 =
+VesaMode Data0x6f71 =
 {
     0x000278D0,
     0x0640,
@@ -3729,7 +3736,7 @@ VesaDataStruct1 Data0x6f71 =
 };
 
 //Offset 0x6f87      ;VESA_MODE_1600x1200x32K
-VesaDataStruct1 Data0x6f87 =
+VesaMode Data0x6f87 =
 {
     0x000278D0,
     0x0640,
@@ -3747,7 +3754,7 @@ VesaDataStruct1 Data0x6f87 =
 };
 
 //Offset 0x6f9d      ;VESA_MODE_1600x1200x64K
-VesaDataStruct1 Data0x6f9d =
+VesaMode Data0x6f9d =
 {
     0x000278D0,
     0x0640,
@@ -3765,7 +3772,7 @@ VesaDataStruct1 Data0x6f9d =
 };
 
 //Offset 0x6fc9      ;VESA_MODE_80x60xText
-VesaDataStruct1 Data0x6fc9 =
+VesaMode Data0x6fc9 =
 {
     0x00006270,
     0x0280,
@@ -3783,7 +3790,7 @@ VesaDataStruct1 Data0x6fc9 =
 };
 
 //Offset 0x6fdf      ;VESA_MODE_132x25xText
-VesaDataStruct1 Data0x6fdf =
+VesaMode Data0x6fdf =
 {
     0x0000A078,
     0x0420,
@@ -3801,7 +3808,7 @@ VesaDataStruct1 Data0x6fdf =
 };
 
 //Offset 0x6ff5      ;VESA_MODE_132x43xText
-VesaDataStruct1 Data0x6ff5 =
+VesaMode Data0x6ff5 =
 {
     0x0000A078,
     0x0420,
@@ -3819,7 +3826,7 @@ VesaDataStruct1 Data0x6ff5 =
 };
 
 //Offset 0x700b      ;VESA_MODE_132x50xText
-VesaDataStruct1 Data0x700b =
+VesaMode Data0x700b =
 {
     0x0000A078,
     0x0420,
@@ -3837,7 +3844,7 @@ VesaDataStruct1 Data0x700b =
 };
 
 //Offset 0x7021      ;VESA_MODE_132x60xText
-VesaDataStruct1 Data0x7021 =
+VesaMode Data0x7021 =
 {
     0x0000A078,
     0x0420,
@@ -3854,7 +3861,7 @@ VesaDataStruct1 Data0x7021 =
     { 0x00, 0x00 }
 };
 
-VesaDataStruct1* Data0x6aa7[] =
+VesaMode* Data0x6aa7[] =
 {
     &Data0x6de3,   //Offset 0x6de3 VESA_MODE_640x400x256
     &Data0x6df9,   //Offset 0x6df9 VESA_MODE_640x480x256
@@ -3953,7 +3960,7 @@ LABEL(CalculatePLL_MNPS, Label0x5e71);
     r.x.edx = 220000;
 
     //     mov    cl, 64h                      ;100
-    r.h.cl = 64;
+    r.h.cl = 0x64;
 
     //     xor    ebx, ebx
     r.x.ebx = 0;
@@ -4079,12 +4086,11 @@ LABEL(CalculatePLL_MNPS, Label0x5ee0);
     //     jge    Label0x5eff                  ;Offset 0x5eff
     if (r.x.eax >= r.x.edx)
         goto Label0x5eff;
+
     //     xchg   eax, edx
-    {
-        uint32_t tmp = r.x.eax;
-        r.x.eax = r.x.edx;
-        r.x.edx = tmp;
-    }
+    r.x.eax ^= r.x.edx;
+    r.x.edx ^= r.x.eax;
+    r.x.eax ^= r.x.edx;
 
     // Label0x5eff:                            ;Offset 0x5eff
 LABEL(CalculatePLL_MNPS, Label0x5eff);
@@ -4713,10 +4719,6 @@ void ConfigureAndSelectPLLSetC(uint32_t frequencyKHz)//Offset 0x6178
     // mov  eax, edx
     // call CalculatePLL_MNPS              ;Offset 0x5e4b
     uint32_t mnps = CalculatePLL_MNPS(frequencyKHz);
-//         00000000 000000SS PPPMMMMM xNNNNNNN
-    printf("PLL N  = 0x%02X\n", uint8_t(mnps));
-    printf("PLL M  = 0x%02X\n", uint8_t(mnps >> 8) & 0x1F);
-    printf("PLL PS = 0x%02X\n", uint8_t(mnps >> 13) & 0x1F);
     
     // call ConfigurePixelClocks           ;Offset 0x6090
     ConfigurePixelClocks(mnps, PixelClocksSettings::PLLSetC | PixelClocksSettings::ClockPLL);
@@ -4726,8 +4728,9 @@ void ConfigureAndSelectPLLSetC(uint32_t frequencyKHz)//Offset 0x6178
     // ret
 }
 
-void Func0x61d7(Hag::System::PCI::Device_t device)//Offset 0x61d7
+void ConfigurePalette(Hag::System::PCI::Device_t device)//Offset 0x61d7
 {
+    printf("Configuring palette...\n");
     using namespace Hag;
     using namespace Hag::System;
     using namespace Hag::Matrox;
@@ -4762,7 +4765,7 @@ void Func0x61d7(Hag::System::PCI::Device_t device)//Offset 0x61d7
     goto Label0x621b;
 
     // Label0x61f2:                            ;Offset 0x61f2
-LABEL(Func0x61d7, Label0x61f2);
+LABEL(ConfigurePalette, Label0x61f2);
 
     //     out  dx, al
     VGA::DACWriteIndex::Write(r.h.al);
@@ -4789,7 +4792,7 @@ LABEL(Func0x61d7, Label0x61f2);
     goto Label0x622c;
 
     // Label0x61fe:                            ;Offset 0x61fe
-LABEL(Func0x61d7, Label0x61fe);
+LABEL(ConfigurePalette, Label0x61fe);
 
     //     out  dx, al
     VGA::DACWriteIndex::Write(r.h.al);
@@ -4837,7 +4840,7 @@ LABEL(Func0x61d7, Label0x61fe);
     goto Label0x622c;
 
     // Label0x621b:                            ;Offset 0x621b
-LABEL(Func0x61d7, Label0x621b);
+LABEL(ConfigurePalette, Label0x621b);
 
     //     out  dx, al
     VGA::DACWriteIndex::Write(r.h.al);
@@ -4870,7 +4873,7 @@ LABEL(Func0x61d7, Label0x621b);
         goto Label0x621b;
 
     // Label0x622c:                            ;Offset 0x622c
-LABEL(Func0x61d7, Label0x622c);
+LABEL(ConfigurePalette, Label0x622c);
 
     //     pop  cx
     //     pop  dx
@@ -4878,7 +4881,7 @@ LABEL(Func0x61d7, Label0x622c);
     return;
 }
 
-void Func0x622f(uint8_t cl)//Offset 0x622f
+void AdjustOffset(uint8_t cl)//Offset 0x622f
 {
     using namespace Hag;
     using namespace Hag::System;
@@ -4920,13 +4923,13 @@ void Func0x622f(uint8_t cl)//Offset 0x622f
     goto Label0x624c;
 
     // Label0x624a:                            ;Offset 0x624a
-LABEL(Func0x622f, Label0x624a);
+LABEL(AdjustOffset, Label0x624a);
 
     //     shl  ax, cl
     r.w.ax <<= r.h.cl;
 
     // Label0x624c:                            ;Offset 0x624c
-LABEL(Func0x622f, Label0x624c);
+LABEL(AdjustOffset, Label0x624c);
 
     //     out  dx, al
     VGA::CRTController::ScreenOffset::Write(VGA::Register::CRTControllerIndexD, r.h.al);
@@ -4945,7 +4948,7 @@ LABEL(Func0x622f, Label0x624c);
     //     ret
 }
 
-void Func0x6310(VesaDataStruct1* siPointer)//Offset 0x6310
+void Func0x6310(VesaMode* siPointer)//Offset 0x6310
 {
     using namespace Hag;
     using namespace Hag::System;
@@ -4990,7 +4993,7 @@ void Func0x6310(VesaDataStruct1* siPointer)//Offset 0x6310
     //     mov  al, PCI_ACCESS_WriteByte       ;0xb
     //     call AccessPCIRegister              ;Offset 0x5734
     Shared::PCI::Option::WriteByte1(mystique,
-        Shared::PCI::Option::Read(mystique) &
+        Shared::PCI::Option::ReadByte1(mystique) &
         ~Shared::PCI::Option::SplitMode);
 
     //     mov  dx, MGA_CRTCExtensionIndex     ;Port 0x3de
@@ -5034,8 +5037,8 @@ void Func0x6310(VesaDataStruct1* siPointer)//Offset 0x6310
         Shared::CRTCExtension::Miscellaneous::ScaleDiv4 |
         Shared::CRTCExtension::Miscellaneous::MGAModeEnable);
 
-    //     call Func0x61d7                     ;Offset 0x61d7
-    Func0x61d7(mystique);
+    //     call ConfigurePalette                     ;Offset 0x61d7
+    ConfigurePalette(mystique);
 
     //     mov  cx, 0002h
     r.w.cx = 0x0002;
@@ -5084,8 +5087,8 @@ LABEL(Func0x6310, Label0x63a6);
         Shared::CRTCExtension::Miscellaneous::ScaleDiv2 |
         Shared::CRTCExtension::Miscellaneous::MGAModeEnable);
 
-    //     call Func0x61d7                     ;Offset 0x61d7
-    Func0x61d7(mystique);
+    //     call ConfigurePalette                     ;Offset 0x61d7
+    ConfigurePalette(mystique);
     
     //     mov  cx, 0000h
     r.w.cx = 0;
@@ -5152,8 +5155,8 @@ LABEL(Func0x6310, Label0x63de);
     //     dec  cl
     --r.h.cl;
 
-    //     call Func0x622f                     ;Offset 0x622f
-    Func0x622f(r.h.cl);
+    //     call AdjustOffset                     ;Offset 0x622f
+    AdjustOffset(r.h.cl);
 
     //     jmp  Label0x640f                    ;Offset 0x640f
     goto Label0x640f;
@@ -5374,11 +5377,9 @@ LABEL(SetStartAddress, Label0x5a48);
     r.w.ax = uint16_t(saveEAX);
 
     //     xchg  al, ah
-    {
-        uint8_t tmp = r.h.al;
-        r.h.al = r.h.ah;
-        r.h.ah = tmp;
-    }
+    r.h.al ^= r.h.ah;
+    r.h.ah ^= r.h.al;
+    r.h.al ^= r.h.ah;
 
     //     in    al, dx
     r.h.al = Shared::CRTCExtension::AddressGeneratorExtensions::Read();
@@ -5398,7 +5399,7 @@ LABEL(SetStartAddress, Label0x5a48);
 
 bool SetVideoModeInternal(Hag::VGA::VideoMode_t videoMode, Hag::System::BDA::VideoParameterTable* videoParameterTableOverride);
 
-void Func0x6518(uint16_t videoMode, VesaDataStruct1* vesaStruct)//Offset 0x6518
+void Func0x6518(uint16_t videoMode, VesaMode* vesaStruct)//Offset 0x6518
 {
     using namespace Hag;
     using namespace Hag::System;
@@ -5406,7 +5407,7 @@ void Func0x6518(uint16_t videoMode, VesaDataStruct1* vesaStruct)//Offset 0x6518
 
     REGPACK r;
     memset(&r, 0, sizeof(r));
-    VesaDataStruct1* siPointer = NULL;
+    VesaMode* siPointer = NULL;
     Hag::System::BDA::VideoParameterTable* axPointer = NULL;
     r.w.ax = videoMode;
 
@@ -5521,6 +5522,7 @@ void Func0x6518(uint16_t videoMode, VesaDataStruct1* vesaStruct)//Offset 0x6518
     //     mov       ax, dx
     r.w.ax = r.w.dx;
     //     int       6dh
+    printf("Setting base legacy mode 0x%02X\n", r.h.al);
     SetVideoModeInternal(r.h.al, axPointer);
 
     //     call      TurnScreenOff             ;Offset 0x3109
@@ -5579,7 +5581,7 @@ LABEL(Func0x6518, Label0x65cf);
 
     //     test      byte ptr [si + 0bh], 02h
     //     jne       Label0x65f2               ;Offset 0x65f2
-    if ((siPointer->Flags & 0x2) != 0)
+    if ((siPointer->Flags & 0x02) != 0)
         goto Label0x65f2;
 
     //     call      ClearVideoMemory                ;Offset 0x64e6
@@ -5617,7 +5619,7 @@ bool SetVESAMode(Hag::Vesa::VideoMode_t videoMode)//Offset 0x7356
     memset(&r, 0, sizeof(r));
     uint16_t saveBX = 0;
     r.w.ax = videoMode;
-    VesaDataStruct1* siStruct = NULL;
+    VesaMode* siStruct = NULL;
 
     //     push  ax
     //     push  ds
@@ -6103,69 +6105,69 @@ uint8_t Matrox_Mystique_AttributeControllerRegisters[] =
 uint8_t Matrox_Mystique_RamdacControllerRegisters[] =
 {
     0x00, 0x00, 0x00, //0
-    0x00, 0x00, 0x2A, //1
-    0x00, 0x2A, 0x00, //2
-    0x00, 0x2A, 0x2A, //3
-    0x2A, 0x00, 0x00, //4
-    0x2A, 0x00, 0x2A, //5
-    0x2A, 0x2A, 0x00, //6
-    0x2A, 0x2A, 0x2A, //7
-    0x00, 0x00, 0x15, //8
-    0x00, 0x00, 0x3F, //9
-    0x00, 0x2A, 0x15, //10
-    0x00, 0x2A, 0x3F, //11
-    0x2A, 0x00, 0x15, //12
-    0x2A, 0x00, 0x3F, //13
-    0x2A, 0x2A, 0x15, //14
-    0x2A, 0x2A, 0x3F, //15
-    0x00, 0x15, 0x00, //16
-    0x00, 0x15, 0x2A, //17
-    0x00, 0x3F, 0x00, //18
-    0x00, 0x3F, 0x2A, //19
-    0x2A, 0x15, 0x00, //20
-    0x2A, 0x15, 0x2A, //21
-    0x2A, 0x3F, 0x00, //22
-    0x2A, 0x3F, 0x2A, //23
-    0x00, 0x15, 0x15, //24
-    0x00, 0x15, 0x3F, //25
-    0x00, 0x3F, 0x15, //26
-    0x00, 0x3F, 0x3F, //27
-    0x2A, 0x15, 0x15, //28
-    0x2A, 0x15, 0x3F, //29
-    0x2A, 0x3F, 0x15, //30
-    0x2A, 0x3F, 0x3F, //31
-    0x15, 0x00, 0x00, //32
-    0x15, 0x00, 0x2A, //33
-    0x15, 0x2A, 0x00, //34
-    0x15, 0x2A, 0x2A, //35
-    0x3F, 0x00, 0x00, //36
-    0x3F, 0x00, 0x2A, //37
-    0x3F, 0x2A, 0x00, //38
-    0x3F, 0x2A, 0x2A, //39
-    0x15, 0x00, 0x15, //40
-    0x15, 0x00, 0x3F, //41
-    0x15, 0x2A, 0x15, //42
-    0x15, 0x2A, 0x3F, //43
-    0x3F, 0x00, 0x15, //44
-    0x3F, 0x00, 0x3F, //45
-    0x3F, 0x2A, 0x15, //46
-    0x3F, 0x2A, 0x3F, //47
-    0x15, 0x15, 0x00, //48
-    0x15, 0x15, 0x2A, //49
-    0x15, 0x3F, 0x00, //50
-    0x15, 0x3F, 0x2A, //51
-    0x3F, 0x15, 0x00, //52
-    0x3F, 0x15, 0x2A, //53
-    0x3F, 0x3F, 0x00, //54
-    0x3F, 0x3F, 0x2A, //55
-    0x15, 0x15, 0x15, //56
-    0x15, 0x15, 0x3F, //57
-    0x15, 0x3F, 0x15, //58
-    0x15, 0x3F, 0x3F, //59
-    0x3F, 0x15, 0x15, //60
-    0x3F, 0x15, 0x3F, //61
-    0x3F, 0x3F, 0x15, //62
-    0x3F, 0x3F, 0x3F, //63
+    0x00, 0x00, 0x00, //1
+    0x00, 0x00, 0x00, //2
+    0x00, 0x00, 0x00, //3
+    0x00, 0x00, 0x00, //4
+    0x00, 0x00, 0x00, //5
+    0x00, 0x00, 0x00, //6
+    0x00, 0x00, 0x00, //7
+    0x00, 0x00, 0x00, //8
+    0x00, 0x00, 0x00, //9
+    0x00, 0x00, 0x00, //10
+    0x00, 0x00, 0x00, //11
+    0x00, 0x00, 0x00, //12
+    0x00, 0x00, 0x00, //13
+    0x00, 0x00, 0x00, //14
+    0x00, 0x00, 0x00, //15
+    0x00, 0x00, 0x00, //16
+    0x00, 0x00, 0x00, //17
+    0x00, 0x00, 0x00, //18
+    0x00, 0x00, 0x00, //19
+    0x00, 0x00, 0x00, //20
+    0x00, 0x00, 0x00, //21
+    0x00, 0x00, 0x00, //22
+    0x00, 0x00, 0x00, //23
+    0x00, 0x00, 0x00, //24
+    0x00, 0x00, 0x00, //25
+    0x00, 0x00, 0x00, //26
+    0x00, 0x00, 0x00, //27
+    0x00, 0x00, 0x00, //28
+    0x00, 0x00, 0x00, //29
+    0x00, 0x00, 0x00, //30
+    0x00, 0x00, 0x00, //31
+    0x00, 0x00, 0x00, //32
+    0x00, 0x00, 0x00, //33
+    0x00, 0x00, 0x00, //34
+    0x00, 0x00, 0x00, //35
+    0x00, 0x00, 0x00, //36
+    0x00, 0x00, 0x00, //37
+    0x00, 0x00, 0x00, //38
+    0x00, 0x00, 0x00, //39
+    0x00, 0x00, 0x00, //40
+    0x00, 0x00, 0x00, //41
+    0x00, 0x00, 0x00, //42
+    0x00, 0x00, 0x00, //43
+    0x00, 0x00, 0x00, //44
+    0x00, 0x00, 0x00, //45
+    0x00, 0x00, 0x00, //46
+    0x00, 0x00, 0x00, //47
+    0x00, 0x00, 0x00, //48
+    0x00, 0x00, 0x00, //49
+    0x00, 0x00, 0x00, //50
+    0x00, 0x00, 0x00, //51
+    0x00, 0x00, 0x00, //52
+    0x00, 0x00, 0x00, //53
+    0x00, 0x00, 0x00, //54
+    0x00, 0x00, 0x00, //55
+    0x00, 0x00, 0x00, //56
+    0x00, 0x00, 0x00, //57
+    0x00, 0x00, 0x00, //58
+    0x00, 0x00, 0x00, //59
+    0x00, 0x00, 0x00, //60
+    0x00, 0x00, 0x00, //61
+    0x00, 0x00, 0x00, //62
+    0x00, 0x00, 0x00, //63
     0x00, 0x00, 0x00, //64
     0x00, 0x00, 0x00, //65
     0x00, 0x00, 0x00, //66
@@ -6593,7 +6595,7 @@ int Diff(const char* name)
 void BDADump(FILE* fp, FILE* fpbin)
 {
     using namespace Hag::System::BDA;
-    fwrite(&SystemBDA(), 256, 1, fpbin);
+    if (fpbin != NULL) fwrite(&SystemBDA(), 256, 1, fpbin);
     fprintf(fp, "BIOS Data Area:\n\n");
     fprintf(fp, "Display mode                  : 0x%02X\n", DisplayMode::Get());
     fprintf(fp, "Detected hardware             : 0x%02X\n", DetectedHardware::Get());
@@ -6728,71 +6730,70 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
 
     FeatureControl_t featureControl = FeatureControl::Read();
     fprintf(fp, "Feature control               : 0x%02X\n", featureControl);
-    fwrite(&featureControl, sizeof(featureControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&featureControl, sizeof(featureControl), 1, fpbin);
 
-    InputStatus1_t inputStatus1 = InputStatus1::Read(baseIOPort + 0x06);
-    fprintf(fp, "Input status 1                : 0x%02X\n", inputStatus1);
-    fwrite(&inputStatus1, sizeof(inputStatus1), 1, fpbin);
+    //InputStatus1_t inputStatus1 = InputStatus1::Read(baseIOPort + 0x06);
+    //fprintf(fp, "Input status 1                : 0x%02X\n", inputStatus1);
+    //if (fpbin != NULL) fwrite(&inputStatus1, sizeof(inputStatus1), 1, fpbin);
 
     MiscellaneousOutput_t miscellaneousOutput = MiscellaneousOutput::Read();
     fprintf(fp, "Miscellaneous output          : 0x%02X\n", miscellaneousOutput);
     fwrite(&miscellaneousOutput, sizeof(miscellaneousOutput), 1, fpbin);
 
-    InputStatus0_t inputStatus0 = InputStatus0::Read();
-    fprintf(fp, "Input status 0                : 0x%02X\n", inputStatus0);
-    fwrite(&inputStatus0, sizeof(inputStatus0), 1, fpbin);
+    //InputStatus0_t inputStatus0 = InputStatus0::Read();
+    //fprintf(fp, "Input status 0                : 0x%02X\n", inputStatus0);
+    //if (fpbin != NULL) fwrite(&inputStatus0, sizeof(inputStatus0), 1, fpbin);
 
-    VideoSubsystemEnable_t videoSubsystemEnable = VideoSubsystemEnable::Read();
-    fprintf(fp, "Video subsystem enable        : 0x%02X\n", videoSubsystemEnable);
-    fwrite(&videoSubsystemEnable, sizeof(videoSubsystemEnable), 1, fpbin);
+    //VideoSubsystemEnable_t videoSubsystemEnable = VideoSubsystemEnable::Read();
+    //fprintf(fp, "Video subsystem enable        : 0x%02X\n", videoSubsystemEnable);
+    //if (fpbin != NULL) fwrite(&videoSubsystemEnable, sizeof(videoSubsystemEnable), 1, fpbin);
 
     DACMask_t dacMask = DACMask::Read();
     fprintf(fp, "DAC mask                      : 0x%02X\n", dacMask);
-    fwrite(&dacMask, sizeof(dacMask), 1, fpbin);
+    if (fpbin != NULL) fwrite(&dacMask, sizeof(dacMask), 1, fpbin);
 
     DACStatus_t dacStatus = DACStatus::Read();
     fprintf(fp, "DAC status                    : 0x%02X\n", dacStatus);
-    fwrite(&dacStatus, sizeof(dacStatus), 1, fpbin);
+    if (fpbin != NULL) fwrite(&dacStatus, sizeof(dacStatus), 1, fpbin);
 
     fprintf(fp, "\nAttributes:\n");
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::Register_t origAttribIdx = AttributeControllerIndex::Read();
     fprintf(fp, "Attribute Index:              : 0x%02X\n", origAttribIdx);
-    fwrite(&origAttribIdx, sizeof(origAttribIdx), 1, fpbin);
+    if (fpbin != NULL) fwrite(&origAttribIdx, sizeof(origAttribIdx), 1, fpbin);
 
     for (uint8_t attribIdx = 0; attribIdx < 0x10; ++attribIdx)
     {
         InputStatus1::Read(baseIOPort + 0x06);
-        uint8_t idx = (origAttribIdx & 0xE0) | attribIdx;
-        AttributeController::Palette_t palette = AttributeController::Palette::Read(idx);
+        AttributeController::Palette_t palette = AttributeController::Palette::Read(attribIdx);
         fprintf(fp, "Palette entry %02X              : 0x%02X\n", attribIdx, palette);
-        fwrite(&palette, sizeof(palette), 1, fpbin);
+        if (fpbin != NULL) fwrite(&palette, sizeof(palette), 1, fpbin);
     }
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::AttributeMode_t attributeMode = AttributeController::AttributeMode::Read();
     fprintf(fp, "Attribute mode control        : 0x%02X\n", attributeMode);
-    fwrite(&attributeMode, sizeof(attributeMode), 1, fpbin);
+    if (fpbin != NULL) fwrite(&attributeMode, sizeof(attributeMode), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::BorderColor_t borderColor = AttributeController::BorderColor::Read();
     fprintf(fp, "Overscan color                : 0x%02X\n", borderColor);
-    fwrite(&borderColor, sizeof(borderColor), 1, fpbin);
+    if (fpbin != NULL) fwrite(&borderColor, sizeof(borderColor), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::ColorPlane_t colorPlane = AttributeController::ColorPlane::Read();
     fprintf(fp, "Color palette enable          : 0x%02X\n", colorPlane);
-    fwrite(&colorPlane, sizeof(colorPlane), 1, fpbin);
+    if (fpbin != NULL) fwrite(&colorPlane, sizeof(colorPlane), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::HorizontalPixelPanning_t horizontalPixelPanning = AttributeController::HorizontalPixelPanning::Read();
     fprintf(fp, "Horizontal PEL panning        : 0x%02X\n", horizontalPixelPanning);
-    fwrite(&horizontalPixelPanning, sizeof(horizontalPixelPanning), 1, fpbin);
+    if (fpbin != NULL) fwrite(&horizontalPixelPanning, sizeof(horizontalPixelPanning), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::PixelPadding_t pixelPadding = AttributeController::PixelPadding::Read();
     fprintf(fp, "Color select                  : 0x%02X\n", pixelPadding);
-    fwrite(&pixelPadding, sizeof(pixelPadding), 1, fpbin);
+    if (fpbin != NULL) fwrite(&pixelPadding, sizeof(pixelPadding), 1, fpbin);
 
 
     InputStatus1::Read(baseIOPort + 0x06);
@@ -6801,163 +6802,163 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
     fprintf(fp, "\nCRTC:\n");
     CRTController::HorizontalTotal_t horizontalTotal = CRTController::HorizontalTotal::Read(baseIOPort);
     fprintf(fp, "Horizontal total              : 0x%02X\n", horizontalTotal);
-    fwrite(&horizontalTotal, sizeof(horizontalTotal), 1, fpbin);
+    if (fpbin != NULL) fwrite(&horizontalTotal, sizeof(horizontalTotal), 1, fpbin);
 
     CRTController::HorizontalDisplayEnd_t horizontalDisplayEnd = CRTController::HorizontalDisplayEnd::Read(baseIOPort);
     fprintf(fp, "Horizontal display enable end : 0x%02X\n", horizontalDisplayEnd);
-    fwrite(&horizontalDisplayEnd, sizeof(horizontalDisplayEnd), 1, fpbin);
+    if (fpbin != NULL) fwrite(&horizontalDisplayEnd, sizeof(horizontalDisplayEnd), 1, fpbin);
 
     CRTController::StartHorizontalBlank_t startHorizontalBlank = CRTController::StartHorizontalBlank::Read(baseIOPort);
     fprintf(fp, "Star horizontal blanking      : 0x%02X\n", startHorizontalBlank);
-    fwrite(&startHorizontalBlank, sizeof(startHorizontalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startHorizontalBlank, sizeof(startHorizontalBlank), 1, fpbin);
 
     CRTController::EndHorizontalBlank_t endHorizontalBlank = CRTController::EndHorizontalBlank::Read(baseIOPort);
     fprintf(fp, "End horizontal blanking       : 0x%02X\n", endHorizontalBlank);
-    fwrite(&endHorizontalBlank, sizeof(endHorizontalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&endHorizontalBlank, sizeof(endHorizontalBlank), 1, fpbin);
 
     CRTController::StartHorizontalSyncPosition_t startHorizontalSyncPosition = CRTController::StartHorizontalSyncPosition::Read(baseIOPort);
     fprintf(fp, "Start horizontal retrace pulse: 0x%02X\n", startHorizontalSyncPosition);
-    fwrite(&startHorizontalSyncPosition, sizeof(startHorizontalSyncPosition), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startHorizontalSyncPosition, sizeof(startHorizontalSyncPosition), 1, fpbin);
 
     CRTController::EndHorizontalSyncPosition_t endHorizontalSyncPosition = CRTController::EndHorizontalSyncPosition::Read(baseIOPort);
     fprintf(fp, "End horizontal retrace pulse  : 0x%02X\n", endHorizontalSyncPosition);
-    fwrite(&endHorizontalSyncPosition, sizeof(endHorizontalSyncPosition), 1, fpbin);
+    if (fpbin != NULL) fwrite(&endHorizontalSyncPosition, sizeof(endHorizontalSyncPosition), 1, fpbin);
 
     CRTController::VerticalTotal_t verticalTotal = CRTController::VerticalTotal::Read(baseIOPort);
     fprintf(fp, "Vertical total                : 0x%02X\n", verticalTotal);
-    fwrite(&verticalTotal, sizeof(verticalTotal), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalTotal, sizeof(verticalTotal), 1, fpbin);
 
     CRTController::CRTCOverflow_t crtcOverflow = CRTController::CRTCOverflow::Read(baseIOPort);
     fprintf(fp, "Overflow                      : 0x%02X\n", crtcOverflow);
-    fwrite(&crtcOverflow, sizeof(crtcOverflow), 1, fpbin);
+    if (fpbin != NULL) fwrite(&crtcOverflow, sizeof(crtcOverflow), 1, fpbin);
 
     CRTController::PresetRowScan_t presetRowScan = CRTController::PresetRowScan::Read(baseIOPort);
     fprintf(fp, "Preset row scan               : 0x%02X\n", presetRowScan);
-    fwrite(&presetRowScan, sizeof(presetRowScan), 1, fpbin);
+    if (fpbin != NULL) fwrite(&presetRowScan, sizeof(presetRowScan), 1, fpbin);
 
     CRTController::MaximumScanLine_t maximumScanLine = CRTController::MaximumScanLine::Read(baseIOPort);
     fprintf(fp, "Maximum scan line             : 0x%02X\n", maximumScanLine);
-    fwrite(&maximumScanLine, sizeof(maximumScanLine), 1, fpbin);
+    if (fpbin != NULL) fwrite(&maximumScanLine, sizeof(maximumScanLine), 1, fpbin);
 
     CRTController::CursorStartScanLine_t cursorStartScanLine = CRTController::CursorStartScanLine::Read(baseIOPort);
     fprintf(fp, "Cursor start                  : 0x%02X\n", cursorStartScanLine);
-    fwrite(&cursorStartScanLine, sizeof(cursorStartScanLine), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorStartScanLine, sizeof(cursorStartScanLine), 1, fpbin);
 
     CRTController::CursorEndScanLine_t cursorEndScanLine = CRTController::CursorEndScanLine::Read(baseIOPort);
     fprintf(fp, "Cursor end                    : 0x%02X\n", cursorEndScanLine);
-    fwrite(&cursorEndScanLine, sizeof(cursorEndScanLine), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorEndScanLine, sizeof(cursorEndScanLine), 1, fpbin);
 
     CRTController::StartAddressHigh_t startAddressHigh = CRTController::StartAddressHigh::Read(baseIOPort);
     fprintf(fp, "Start address high            : 0x%02X\n", startAddressHigh);
-    fwrite(&startAddressHigh, sizeof(startAddressHigh), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startAddressHigh, sizeof(startAddressHigh), 1, fpbin);
 
     CRTController::StartAddressLow_t startAddressLow = CRTController::StartAddressLow::Read(baseIOPort);
     fprintf(fp, "Start address low             : 0x%02X\n", startAddressLow);
-    fwrite(&startAddressLow, sizeof(startAddressLow), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startAddressLow, sizeof(startAddressLow), 1, fpbin);
 
     CRTController::CursorLocationAddressHigh_t cursorLocationAddressHigh = CRTController::CursorLocationAddressHigh::Read(baseIOPort);
     fprintf(fp, "Cursor location high          : 0x%02X\n", cursorLocationAddressHigh);
-    fwrite(&cursorLocationAddressHigh, sizeof(cursorLocationAddressHigh), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorLocationAddressHigh, sizeof(cursorLocationAddressHigh), 1, fpbin);
 
     CRTController::CursorLocationAddressLow_t cursorLocationAddressLow = CRTController::CursorLocationAddressLow::Read(baseIOPort);
     fprintf(fp, "Cursor location low           : 0x%02X\n", cursorLocationAddressLow);
-    fwrite(&cursorLocationAddressLow, sizeof(cursorLocationAddressLow), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorLocationAddressLow, sizeof(cursorLocationAddressLow), 1, fpbin);
 
     CRTController::VerticalRetraceStart_t verticalRetraceStart = CRTController::VerticalRetraceStart::Read(baseIOPort);
     fprintf(fp, "Vertical retrace start        : 0x%02X\n", verticalRetraceStart);
-    fwrite(&verticalRetraceStart, sizeof(verticalRetraceStart), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalRetraceStart, sizeof(verticalRetraceStart), 1, fpbin);
 
     CRTController::VerticalRetraceEnd_t verticalRetraceEnd = CRTController::VerticalRetraceEnd::Read(baseIOPort);
     fprintf(fp, "Vertical retrace end          : 0x%02X\n", verticalRetraceEnd);
-    fwrite(&verticalRetraceEnd, sizeof(verticalRetraceEnd), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalRetraceEnd, sizeof(verticalRetraceEnd), 1, fpbin);
 
     CRTController::VerticalDisplayEnd_t verticalDisplayEnd = CRTController::VerticalDisplayEnd::Read(baseIOPort);
     fprintf(fp, "Vertical display enable end   : 0x%02X\n", verticalDisplayEnd);
-    fwrite(&verticalDisplayEnd, sizeof(verticalDisplayEnd), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalDisplayEnd, sizeof(verticalDisplayEnd), 1, fpbin);
 
     CRTController::ScreenOffset_t screenOffset = CRTController::ScreenOffset::Read(baseIOPort);
     fprintf(fp, "Offset                        : 0x%02X\n", screenOffset);
-    fwrite(&screenOffset, sizeof(screenOffset), 1, fpbin);
+    if (fpbin != NULL) fwrite(&screenOffset, sizeof(screenOffset), 1, fpbin);
 
     CRTController::UnderlineLocation_t underlineLocation = CRTController::UnderlineLocation::Read(baseIOPort);
     fprintf(fp, "Underline location            : 0x%02X\n", underlineLocation);
-    fwrite(&underlineLocation, sizeof(underlineLocation), 1, fpbin);
+    if (fpbin != NULL) fwrite(&underlineLocation, sizeof(underlineLocation), 1, fpbin);
 
     CRTController::StartVerticalBlank_t startVerticalBlank = CRTController::StartVerticalBlank::Read(baseIOPort);
     fprintf(fp, "Start vertical blank          : 0x%02X\n", startVerticalBlank);
-    fwrite(&startVerticalBlank, sizeof(startVerticalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startVerticalBlank, sizeof(startVerticalBlank), 1, fpbin);
 
     CRTController::EndVerticalBlank_t endVerticalBlank = CRTController::EndVerticalBlank::Read(baseIOPort);
     fprintf(fp, "End vertical blank            : 0x%02X\n", endVerticalBlank);
-    fwrite(&endVerticalBlank, sizeof(endVerticalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&endVerticalBlank, sizeof(endVerticalBlank), 1, fpbin);
 
     CRTController::CRTCModeControl_t crtcModeControl = CRTController::CRTCModeControl::Read(baseIOPort);
     fprintf(fp, "CRTC mode control             : 0x%02X\n", crtcModeControl);
-    fwrite(&crtcModeControl, sizeof(crtcModeControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&crtcModeControl, sizeof(crtcModeControl), 1, fpbin);
 
     CRTController::LineCompare_t lineCompare = CRTController::LineCompare::Read(baseIOPort);
     fprintf(fp, "Line compare                  : 0x%02X\n", lineCompare);
-    fwrite(&lineCompare, sizeof(lineCompare), 1, fpbin);
+    if (fpbin != NULL) fwrite(&lineCompare, sizeof(lineCompare), 1, fpbin);
 
 
     fprintf(fp, "\nSequencer:\n");
     Sequencer::Reset_t reset = Sequencer::Reset::Read();
     fprintf(fp, "Reset                         : 0x%02X\n", reset);
-    fwrite(&reset, sizeof(reset), 1, fpbin);
+    if (fpbin != NULL) fwrite(&reset, sizeof(reset), 1, fpbin);
 
     Sequencer::ClockingMode_t clockingMode = Sequencer::ClockingMode::Read();
     fprintf(fp, "Clocking mode                 : 0x%02X\n", clockingMode);
-    fwrite(&clockingMode, sizeof(clockingMode), 1, fpbin);
+    if (fpbin != NULL) fwrite(&clockingMode, sizeof(clockingMode), 1, fpbin);
 
     Sequencer::EnableWritePlane_t enableWritePlane = Sequencer::EnableWritePlane::Read();
     fprintf(fp, "Map mask                      : 0x%02X\n", enableWritePlane);
-    fwrite(&enableWritePlane, sizeof(enableWritePlane), 1, fpbin);
+    if (fpbin != NULL) fwrite(&enableWritePlane, sizeof(enableWritePlane), 1, fpbin);
 
     Sequencer::CharacterFontSelect_t characterFontSelect = Sequencer::CharacterFontSelect::Read();
     fprintf(fp, "Character map select          : 0x%02X\n", characterFontSelect);
-    fwrite(&characterFontSelect, sizeof(characterFontSelect), 1, fpbin);
+    if (fpbin != NULL) fwrite(&characterFontSelect, sizeof(characterFontSelect), 1, fpbin);
 
     Sequencer::MemoryModeControl_t memoryModeControl = Sequencer::MemoryModeControl::Read();
     fprintf(fp, "Memory mode                   : 0x%02X\n", memoryModeControl);
-    fwrite(&memoryModeControl, sizeof(memoryModeControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&memoryModeControl, sizeof(memoryModeControl), 1, fpbin);
 
 
     fprintf(fp, "\nGraphics controller:\n");
     GraphicsController::SetResetData_t setResetData = GraphicsController::SetResetData::Read();
     fprintf(fp, "Set/Reset                     : 0x%02X\n", setResetData);
-    fwrite(&setResetData, sizeof(setResetData), 1, fpbin);
+    if (fpbin != NULL) fwrite(&setResetData, sizeof(setResetData), 1, fpbin);
 
     GraphicsController::EnableSetResetData_t enableSetResetData = GraphicsController::EnableSetResetData::Read();
     fprintf(fp, "Enable Set/Reset              : 0x%02X\n", enableSetResetData);
-    fwrite(&enableSetResetData, sizeof(enableSetResetData), 1, fpbin);
+    if (fpbin != NULL) fwrite(&enableSetResetData, sizeof(enableSetResetData), 1, fpbin);
 
     GraphicsController::ColorCompare_t colorCompare = GraphicsController::ColorCompare::Read();
     fprintf(fp, "Color compare                 : 0x%02X\n", colorCompare);
-    fwrite(&colorCompare, sizeof(colorCompare), 1, fpbin);
+    if (fpbin != NULL) fwrite(&colorCompare, sizeof(colorCompare), 1, fpbin);
 
     GraphicsController::RasterOperationRotateCount_t rasterOperationRotateCount = GraphicsController::RasterOperationRotateCount::Read();
     fprintf(fp, "Data rotate                   : 0x%02X\n", rasterOperationRotateCount);
-    fwrite(&rasterOperationRotateCount, sizeof(rasterOperationRotateCount), 1, fpbin);
+    if (fpbin != NULL) fwrite(&rasterOperationRotateCount, sizeof(rasterOperationRotateCount), 1, fpbin);
 
     GraphicsController::ReadPlaneSelect_t readPlaneSelect = GraphicsController::ReadPlaneSelect::Read();
     fprintf(fp, "Read map select               : 0x%02X\n", readPlaneSelect);
-    fwrite(&readPlaneSelect, sizeof(readPlaneSelect), 1, fpbin);
+    if (fpbin != NULL) fwrite(&readPlaneSelect, sizeof(readPlaneSelect), 1, fpbin);
 
     GraphicsController::GraphicsControllerMode_t graphicsControllerMode = GraphicsController::GraphicsControllerMode::Read();
     fprintf(fp, "Graphics mode                 : 0x%02X\n", graphicsControllerMode);
-    fwrite(&graphicsControllerMode, sizeof(graphicsControllerMode), 1, fpbin);
+    if (fpbin != NULL) fwrite(&graphicsControllerMode, sizeof(graphicsControllerMode), 1, fpbin);
 
     GraphicsController::MemoryMapModeControl_t memoryMapModeControl = GraphicsController::MemoryMapModeControl::Read();
     fprintf(fp, "Miscellaneous                 : 0x%02X\n", memoryMapModeControl);
-    fwrite(&memoryMapModeControl, sizeof(memoryMapModeControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&memoryMapModeControl, sizeof(memoryMapModeControl), 1, fpbin);
 
     GraphicsController::ColorDontCare_t colorDontCare = GraphicsController::ColorDontCare::Read();
     fprintf(fp, "Color don't care              : 0x%02X\n", colorDontCare);
-    fwrite(&colorDontCare, sizeof(colorDontCare), 1, fpbin);
+    if (fpbin != NULL) fwrite(&colorDontCare, sizeof(colorDontCare), 1, fpbin);
 
     GraphicsController::BitMask_t bitMask = GraphicsController::BitMask::Read();
     fprintf(fp, "Bit mask                      : 0x%02X\n", bitMask);
-    fwrite(&bitMask, sizeof(bitMask), 1, fpbin);
+    if (fpbin != NULL) fwrite(&bitMask, sizeof(bitMask), 1, fpbin);
 
 
     fprintf(fp, "\nRAMDAC registers:\n");
@@ -6968,9 +6969,12 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
         uint8_t green = RAMDACData::Read();
         uint8_t blue = RAMDACData::Read();
         fprintf(fp, "0x%02X: 0x%02X, 0x%02X, 0x%02X\n", color, red, green, blue);
-        fwrite(&red, 1, 1, fpbin);
-        fwrite(&green, 1, 1, fpbin);
-        fwrite(&blue, 1, 1, fpbin);
+        if (fpbin != NULL)
+        {
+            fwrite(&red, 1, 1, fpbin);
+            fwrite(&green, 1, 1, fpbin);
+            fwrite(&blue, 1, 1, fpbin);
+        }
     }
 
     fprintf(fp, "\n");
@@ -7037,7 +7041,10 @@ bool FindDevices(uint8_t bus, uint8_t slot, uint8_t function, void* context)
                     uint8_t(pciReg >> 16),
                     uint8_t(pciReg >> 24),
                     pciReg);
-            fwrite(&pciReg, sizeof(pciReg), 1, ctx->fpbin);
+            if (ctx->fpbin != NULL)
+            {
+                fwrite(&pciReg, sizeof(pciReg), 1, ctx->fpbin);
+            }
         }
         fprintf(ctx->fp, "\n");
     }
@@ -7064,10 +7071,7 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     System::PCI::Device_t device = (uint16_t(pciDeviceBus) << 8) | (pciDeviceSlot << 3) | pciDeviceFunction;
     fprintf(fp, "\nMatrox specific registers:\n");
 
-    //PCI::ControlAperture_t controlAperture = PCI::ControlAperture::Read(device) & PCI::ControlAperture::BaseAddress;
-
-    //fwrite((void*)controlAperture, 16 * 1024, 1, fpbin);
-
+    /*
     fprintf(fp, "\nCRTC:\n");
     CRTController::CPUReadLatch_t cpuReadLatch = CRTController::CPUReadLatch::Read(baseIOPort);
     fprintf(fp, "CPU read latch                : 0x%02X\n", cpuReadLatch);
@@ -7080,6 +7084,7 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     CRTController::AttributeAddress_t attributeAddress = CRTController::AttributeAddress::Read(baseIOPort);
     fprintf(fp, "Attributes address            : 0x%02X\n", attributeAddress);
     fwrite(&attributeAddress, sizeof(attributeAddress), 1, fpbin);
+    */
 
     fprintf(fp, "\nCRTC Extension:\n");
     fprintf(fp, "Address generator extensions  : 0x%02X\n", CRTCExtension::AddressGeneratorExtensions::Read());
@@ -7093,25 +7098,15 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "Requester control             : 0x%02X\n", CRTCExtensionData::Read());
     CRTCExtensionIndex::Write(0x08);
     fprintf(fp, "Address extension             : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x09);
-    fprintf(fp, "Unknown 0x09                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0A);
-    fprintf(fp, "Unknown 0x0A                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0B);
-    fprintf(fp, "Unknown 0x0B                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0C);
-    fprintf(fp, "Unknown 0x0C                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0D);
-    fprintf(fp, "Unknown 0x0D                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0E);
-    fprintf(fp, "Unknown 0x0E                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0F);
-    fprintf(fp, "Unknown 0x0F                  : 0x%02X\n", CRTCExtensionData::Read());
-    for (uint8_t idx = 0; idx < 0x10; ++idx)
+
+    if (fpbin != NULL)
     {
-        CRTCExtensionIndex::Write(0x0F);
-        CRTCExtensionData_t data = CRTCExtensionData::Read();
-        fwrite(&data, sizeof(data), 1, fpbin);
+        for (uint8_t idx = 0; idx < 0x08; ++idx)
+        {
+            CRTCExtensionIndex::Write(idx);
+            CRTCExtensionData_t data = CRTCExtensionData::Read();
+            fwrite(&data, sizeof(data), 1, fpbin);
+        }
     }
 
     fprintf(fp, "\nIndexed registers:\n");
@@ -7133,8 +7128,8 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "General control               : 0x%02X\n", PCI::Indexed::GeneralControl::Read(device));
     fprintf(fp, "Miscellaneous control         : 0x%02X\n", PCI::Indexed::MiscellaneousControl::Read(device));
     
-    fprintf(fp, "Panel mode                    : 0x%02X\n", PCI::IndexedData::Read(device, 0x1F));
-    fprintf(fp, "MAFC delay                    : 0x%02X\n", PCI::IndexedData::Read(device, 0x20));
+    fprintf(fp, "Panel mode (G400)             : 0x%02X\n", PCI::IndexedData::Read(device, 0x1F));
+    fprintf(fp, "MAFC delay (G400)             : 0x%02X\n", PCI::IndexedData::Read(device, 0x20));
     
     fprintf(fp, "General purpose IO control    : 0x%02X\n", PCI::Indexed::GeneralPurposeIOControl::Read(device));
     fprintf(fp, "General purpose data          : 0x%02X\n", PCI::Indexed::GeneralPurposeIOData::Read(device));
@@ -7148,9 +7143,9 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "CRC remainder high            : 0x%02X\n", PCI::Indexed::CRCRemainderHigh::Read(device));
     fprintf(fp, "CRC bit select                : 0x%02X\n", PCI::Indexed::CRCBitSelect::Read(device));
     fprintf(fp, "Color key mask low            : 0x%02X\n", PCI::Indexed::ColorKeyMaskLow::Read(device));
-    fprintf(fp, "Color key mask high           : 0x%02X\n", PCI::Indexed::ColorKeyMaskHigh::Read(device));
+    fprintf(fp, "Color key mask high (MYST)    : 0x%02X\n", PCI::Indexed::ColorKeyMaskHigh::Read(device));
     fprintf(fp, "Color key low                 : 0x%02X\n", PCI::Indexed::ColorKeyLow::Read(device));
-    fprintf(fp, "Color key high                : 0x%02X\n", PCI::Indexed::ColorKeyHigh::Read(device));
+    fprintf(fp, "Color key high (MYST)         : 0x%02X\n", PCI::Indexed::ColorKeyHigh::Read(device));
     fprintf(fp, "Pixel PLL A M value           : 0x%02X\n", PCI::Indexed::PixelPLLM::ReadA(device));
     fprintf(fp, "Pixel PLL A N value           : 0x%02X\n", PCI::Indexed::PixelPLLN::ReadA(device));
     fprintf(fp, "Pixel PLL A P value           : 0x%02X\n", PCI::Indexed::PixelPLLP::ReadA(device));
@@ -7162,23 +7157,28 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "Pixel PLL C P value           : 0x%02X\n", PCI::Indexed::PixelPLLP::ReadC(device));
     fprintf(fp, "Pixel PLL status              : 0x%02X\n", PCI::Indexed::PixelPLLStatus::Read(device));
 
-    fprintf(fp, "Keying operating mode         : 0x%02X\n", PCI::IndexedData::Read(device, 0x51));
-    fprintf(fp, "Color mask 0 red              : 0x%02X\n", PCI::IndexedData::Read(device, 0x52));
-    fprintf(fp, "Color mask 0 green            : 0x%02X\n", PCI::IndexedData::Read(device, 0x53));
-    fprintf(fp, "Color mask 0 blue             : 0x%02X\n", PCI::IndexedData::Read(device, 0x54));
-    fprintf(fp, "Color key 0 red               : 0x%02X\n", PCI::IndexedData::Read(device, 0x55));
-    fprintf(fp, "Color key 0 green             : 0x%02X\n", PCI::IndexedData::Read(device, 0x56));
-    fprintf(fp, "Color key 0 blue              : 0x%02X\n", PCI::IndexedData::Read(device, 0x57));
+    fprintf(fp, "Keying operating mode (G200)  : 0x%02X\n", PCI::IndexedData::Read(device, 0x51));
+    fprintf(fp, "Color mask 0 red (G200)       : 0x%02X\n", PCI::IndexedData::Read(device, 0x52));
+    fprintf(fp, "Color mask 0 green (G200)     : 0x%02X\n", PCI::IndexedData::Read(device, 0x53));
+    fprintf(fp, "Color mask 0 blue (G200)      : 0x%02X\n", PCI::IndexedData::Read(device, 0x54));
+    fprintf(fp, "Color key 0 red (G200)        : 0x%02X\n", PCI::IndexedData::Read(device, 0x55));
+    fprintf(fp, "Color key 0 green (G200)      : 0x%02X\n", PCI::IndexedData::Read(device, 0x56));
+    fprintf(fp, "Color key 0 blue (G200)       : 0x%02X\n", PCI::IndexedData::Read(device, 0x57));
 
-    for (uint16_t index = 0x58; index < 0x80; ++index)
+    for (uint16_t index = 0x00; index < 0x26; index += 3)
     {
-        fprintf(fp, "Unknown indexed register 0x%02X : 0x%02X\n", index, PCI::IndexedData::Read(device, index));
+        fprintf(fp, "Cursor color %02i red (G200)    : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 0));
+        fprintf(fp, "Cursor color %02i green (G200)  : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 1));
+        fprintf(fp, "Cursor color %02i blue (G200)   : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 2));
     }
 
-    for (uint16_t index = 0; index < 0x80; ++index)
+    if (fpbin != NULL)
     {
-        PCI::IndexedData_t data = PCI::IndexedData::Read(device, index);
-        fwrite(&data, sizeof(data), 1, fpbin);
+        for (uint16_t index = 0; index < 0x86; ++index)
+        {
+            PCI::IndexedData_t data = PCI::IndexedData::Read(device, index);
+            fwrite(&data, sizeof(data), 1, fpbin);
+        }
     }
 
     fprintf(fp, "\n");
@@ -7220,42 +7220,49 @@ int main(void)
         char filename[50];
         FILE* fp = NULL;
         FILE* fpbin = NULL;
+
+        sprintf(filename, "mode00%02X.txt", mode);
+        fp = fopen(filename, "w");
         
-        sprintf(filename, "bda00%02X.txt", mode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "bda00%02X.bin", mode);
-        fpbin = fopen(filename, "wb");
+
+        //sprintf(filename, "bda00%02X.txt", mode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "bda00%02X.bin", mode);
+        //fpbin = fopen(filename, "wb");
         BDADump(fp, fpbin);
-        fclose(fp);
-        fclose(fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
 
 
-        sprintf(filename, "vga00%02X.txt", mode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "vga00%02X.bin", mode);
-        fpbin = fopen(filename, "wb");
+        //sprintf(filename, "vga00%02X.txt", mode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "vga00%02X.bin", mode);
+        //fpbin = fopen(filename, "wb");
         VGADump(fp, fpbin, BDA::VideoBaseIOPort::Get());
-        fclose(fp);
-        fclose(fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
 
-        sprintf(filename, "pci00%02X.txt", mode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "pci00%02X.bin", mode);
-        fpbin = fopen(filename, "wb");
+        //sprintf(filename, "pci00%02X.txt", mode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "pci00%02X.bin", mode);
+        //fpbin = fopen(filename, "wb");
         PCIDump(fp, fpbin, 0x102B, devices, sizeof(devices) / sizeof(Device));
-        fclose(fp);
-        fclose(fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
 
         if (pciDeviceFound)
         {
-            sprintf(filename, "mtx00%02X.txt", mode);
-            fp = fopen(filename, "w");
-            sprintf(filename, "mtx00%02X.bin", mode);
-            fpbin = fopen(filename, "wb");
+            //sprintf(filename, "mtx00%02X.txt", mode);
+            //fp = fopen(filename, "w");
+            //sprintf(filename, "mtx00%02X.bin", mode);
+            //fpbin = fopen(filename, "wb");
             MatroxDump(fp, fpbin, BDA::VideoBaseIOPort::Get());
-            fclose(fp);
-            fclose(fpbin);
+            //fclose(fp);
+            //fclose(fpbin);
         }
+
+
+        fclose(fp);
 
 
         //Hag::Testing::Mock::SelectInstance(1);
@@ -7312,51 +7319,60 @@ int main(void)
 
         Hag::Testing::Mock::SelectInstance(0);
         printf("Setting vesa mode 0x%04X...\n", vesaMode);
-        SetVESAMode(vesaMode);
-
-        char filename[50];
-        FILE* fp = NULL;
-        FILE* fpbin = NULL;
-
-        sprintf(filename, "bda%04X.txt", vesaMode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "bda%04X.bin", vesaMode);
-        fpbin = fopen(filename, "wb");
-        BDADump(fp, fpbin);
-        fclose(fp);
-        fclose(fpbin);
-
-        sprintf(filename, "vesa%04X.txt", vesaMode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "vesa%04X.bin", vesaMode);
-        fpbin = fopen(filename, "wb");
-        VGADump(fp, fpbin, BDA::VideoBaseIOPort::Get());
-        fclose(fp);
-        fclose(fpbin);
-
-        sprintf(filename, "pci%04X.txt", vesaMode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "pci%04X.bin", vesaMode);
-        fpbin = fopen(filename, "wb");
-        PCIDump(fp, fpbin, 0x102B, devices, sizeof(devices) / sizeof(Device));
-        fclose(fp);
-        fclose(fpbin);
-
-        if (pciDeviceFound)
+        if (SetVESAMode(vesaMode))
         {
-            sprintf(filename, "mtx%04X.txt", vesaMode);
+            char filename[50];
+            FILE* fp = NULL;
+            FILE* fpbin = NULL;
+
+            sprintf(filename, "mode%04X.txt", vesaMode);
             fp = fopen(filename, "w");
-            sprintf(filename, "mtx%04X.bin", vesaMode);
-            fpbin = fopen(filename, "wb");
-            MatroxDump(fp, fpbin, BDA::VideoBaseIOPort::Get());
+
+
+            //sprintf(filename, "bda%04X.txt", vesaMode);
+            //fp = fopen(filename, "w");
+            //sprintf(filename, "bda%04X.bin", vesaMode);
+            //fpbin = fopen(filename, "wb");
+            BDADump(fp, fpbin);
+            //fclose(fp);
+            //fclose(fpbin);
+
+            //sprintf(filename, "vesa%04X.txt", vesaMode);
+            //fp = fopen(filename, "w");
+            //sprintf(filename, "vesa%04X.bin", vesaMode);
+            //fpbin = fopen(filename, "wb");
+            VGADump(fp, fpbin, BDA::VideoBaseIOPort::Get());
+            //fclose(fp);
+            //fclose(fpbin);
+
+            //sprintf(filename, "pci%04X.txt", vesaMode);
+            //fp = fopen(filename, "w");
+            //sprintf(filename, "pci%04X.bin", vesaMode);
+            //fpbin = fopen(filename, "wb");
+            PCIDump(fp, fpbin, 0x102B, devices, sizeof(devices) / sizeof(Device));
+            //fclose(fp);
+            //fclose(fpbin);
+
+            if (pciDeviceFound)
+            {
+                //sprintf(filename, "mtx%04X.txt", vesaMode);
+                //fp = fopen(filename, "w");
+                //sprintf(filename, "mtx%04X.bin", vesaMode);
+                //fpbin = fopen(filename, "wb");
+                MatroxDump(fp, fpbin, BDA::VideoBaseIOPort::Get());
+                //fclose(fp);
+                //fclose(fpbin);
+            }
+
+            
             fclose(fp);
-            fclose(fpbin);
+
+
+            //Hag::Testing::Mock::SelectInstance(1);
+            //TODO: we put our C++ version here.
+
+            //Diff("SetVesaMode");
         }
-
-        //Hag::Testing::Mock::SelectInstance(1);
-        //TODO: we put our C++ version here.
-
-        //Diff("SetVesaMode");
     }
 
     Hag::Testing::Mock::Shutdown();

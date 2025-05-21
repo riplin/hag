@@ -54,7 +54,7 @@
 void BDADump(FILE* fp, FILE* fpbin)
 {
     using namespace Hag::System::BDA;
-    fwrite(&SystemBDA(), 256, 1, fpbin);
+    if (fpbin != NULL) fwrite(&SystemBDA(), 256, 1, fpbin);
     fprintf(fp, "BIOS Data Area:\n\n");
     fprintf(fp, "Display mode                  : 0x%02X\n", DisplayMode::Get());
     fprintf(fp, "Detected hardware             : 0x%02X\n", DetectedHardware::Get());
@@ -189,72 +189,70 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
 
     FeatureControl_t featureControl = FeatureControl::Read();
     fprintf(fp, "Feature control               : 0x%02X\n", featureControl);
-    fwrite(&featureControl, sizeof(featureControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&featureControl, sizeof(featureControl), 1, fpbin);
 
-    InputStatus1_t inputStatus1 = InputStatus1::Read(baseIOPort + 0x06);
-    fprintf(fp, "Input status 1                : 0x%02X\n", inputStatus1);
-    fwrite(&inputStatus1, sizeof(inputStatus1), 1, fpbin);
+    //InputStatus1_t inputStatus1 = InputStatus1::Read(baseIOPort + 0x06);
+    //fprintf(fp, "Input status 1                : 0x%02X\n", inputStatus1);
+    //if (fpbin != NULL) fwrite(&inputStatus1, sizeof(inputStatus1), 1, fpbin);
 
     MiscellaneousOutput_t miscellaneousOutput = MiscellaneousOutput::Read();
     fprintf(fp, "Miscellaneous output          : 0x%02X\n", miscellaneousOutput);
     fwrite(&miscellaneousOutput, sizeof(miscellaneousOutput), 1, fpbin);
 
-    InputStatus0_t inputStatus0 = InputStatus0::Read();
-    fprintf(fp, "Input status 0                : 0x%02X\n", inputStatus0);
-    fwrite(&inputStatus0, sizeof(inputStatus0), 1, fpbin);
+    //InputStatus0_t inputStatus0 = InputStatus0::Read();
+    //fprintf(fp, "Input status 0                : 0x%02X\n", inputStatus0);
+    //if (fpbin != NULL) fwrite(&inputStatus0, sizeof(inputStatus0), 1, fpbin);
 
-    VideoSubsystemEnable_t videoSubsystemEnable = VideoSubsystemEnable::Read();
-    fprintf(fp, "Video subsystem enable        : 0x%02X\n", videoSubsystemEnable);
-    fwrite(&videoSubsystemEnable, sizeof(videoSubsystemEnable), 1, fpbin);
+    //VideoSubsystemEnable_t videoSubsystemEnable = VideoSubsystemEnable::Read();
+    //fprintf(fp, "Video subsystem enable        : 0x%02X\n", videoSubsystemEnable);
+    //if (fpbin != NULL) fwrite(&videoSubsystemEnable, sizeof(videoSubsystemEnable), 1, fpbin);
 
     DACMask_t dacMask = DACMask::Read();
     fprintf(fp, "DAC mask                      : 0x%02X\n", dacMask);
-    fwrite(&dacMask, sizeof(dacMask), 1, fpbin);
+    if (fpbin != NULL) fwrite(&dacMask, sizeof(dacMask), 1, fpbin);
 
     DACStatus_t dacStatus = DACStatus::Read();
     fprintf(fp, "DAC status                    : 0x%02X\n", dacStatus);
-    fwrite(&dacStatus, sizeof(dacStatus), 1, fpbin);
+    if (fpbin != NULL) fwrite(&dacStatus, sizeof(dacStatus), 1, fpbin);
 
     fprintf(fp, "\nAttributes:\n");
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::Register_t origAttribIdx = AttributeControllerIndex::Read();
     fprintf(fp, "Attribute Index:              : 0x%02X\n", origAttribIdx);
-    fwrite(&origAttribIdx, sizeof(origAttribIdx), 1, fpbin);
+    if (fpbin != NULL) fwrite(&origAttribIdx, sizeof(origAttribIdx), 1, fpbin);
 
     for (uint8_t attribIdx = 0; attribIdx < 0x10; ++attribIdx)
     {
         InputStatus1::Read(baseIOPort + 0x06);
         AttributeController::Palette_t palette = AttributeController::Palette::Read(attribIdx);
         fprintf(fp, "Palette entry %02X              : 0x%02X\n", attribIdx, palette);
-        fwrite(&palette, sizeof(palette), 1, fpbin);
+        if (fpbin != NULL) fwrite(&palette, sizeof(palette), 1, fpbin);
     }
-    InputStatus1::Read(baseIOPort + 0x06);
-    AttributeControllerIndex::Write(origAttribIdx);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::AttributeMode_t attributeMode = AttributeController::AttributeMode::Read();
     fprintf(fp, "Attribute mode control        : 0x%02X\n", attributeMode);
-    fwrite(&attributeMode, sizeof(attributeMode), 1, fpbin);
+    if (fpbin != NULL) fwrite(&attributeMode, sizeof(attributeMode), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::BorderColor_t borderColor = AttributeController::BorderColor::Read();
     fprintf(fp, "Overscan color                : 0x%02X\n", borderColor);
-    fwrite(&borderColor, sizeof(borderColor), 1, fpbin);
+    if (fpbin != NULL) fwrite(&borderColor, sizeof(borderColor), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::ColorPlane_t colorPlane = AttributeController::ColorPlane::Read();
     fprintf(fp, "Color palette enable          : 0x%02X\n", colorPlane);
-    fwrite(&colorPlane, sizeof(colorPlane), 1, fpbin);
+    if (fpbin != NULL) fwrite(&colorPlane, sizeof(colorPlane), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::HorizontalPixelPanning_t horizontalPixelPanning = AttributeController::HorizontalPixelPanning::Read();
     fprintf(fp, "Horizontal PEL panning        : 0x%02X\n", horizontalPixelPanning);
-    fwrite(&horizontalPixelPanning, sizeof(horizontalPixelPanning), 1, fpbin);
+    if (fpbin != NULL) fwrite(&horizontalPixelPanning, sizeof(horizontalPixelPanning), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::PixelPadding_t pixelPadding = AttributeController::PixelPadding::Read();
     fprintf(fp, "Color select                  : 0x%02X\n", pixelPadding);
-    fwrite(&pixelPadding, sizeof(pixelPadding), 1, fpbin);
+    if (fpbin != NULL) fwrite(&pixelPadding, sizeof(pixelPadding), 1, fpbin);
 
 
     InputStatus1::Read(baseIOPort + 0x06);
@@ -263,163 +261,163 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
     fprintf(fp, "\nCRTC:\n");
     CRTController::HorizontalTotal_t horizontalTotal = CRTController::HorizontalTotal::Read(baseIOPort);
     fprintf(fp, "Horizontal total              : 0x%02X\n", horizontalTotal);
-    fwrite(&horizontalTotal, sizeof(horizontalTotal), 1, fpbin);
+    if (fpbin != NULL) fwrite(&horizontalTotal, sizeof(horizontalTotal), 1, fpbin);
 
     CRTController::HorizontalDisplayEnd_t horizontalDisplayEnd = CRTController::HorizontalDisplayEnd::Read(baseIOPort);
     fprintf(fp, "Horizontal display enable end : 0x%02X\n", horizontalDisplayEnd);
-    fwrite(&horizontalDisplayEnd, sizeof(horizontalDisplayEnd), 1, fpbin);
+    if (fpbin != NULL) fwrite(&horizontalDisplayEnd, sizeof(horizontalDisplayEnd), 1, fpbin);
 
     CRTController::StartHorizontalBlank_t startHorizontalBlank = CRTController::StartHorizontalBlank::Read(baseIOPort);
     fprintf(fp, "Star horizontal blanking      : 0x%02X\n", startHorizontalBlank);
-    fwrite(&startHorizontalBlank, sizeof(startHorizontalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startHorizontalBlank, sizeof(startHorizontalBlank), 1, fpbin);
 
     CRTController::EndHorizontalBlank_t endHorizontalBlank = CRTController::EndHorizontalBlank::Read(baseIOPort);
     fprintf(fp, "End horizontal blanking       : 0x%02X\n", endHorizontalBlank);
-    fwrite(&endHorizontalBlank, sizeof(endHorizontalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&endHorizontalBlank, sizeof(endHorizontalBlank), 1, fpbin);
 
     CRTController::StartHorizontalSyncPosition_t startHorizontalSyncPosition = CRTController::StartHorizontalSyncPosition::Read(baseIOPort);
     fprintf(fp, "Start horizontal retrace pulse: 0x%02X\n", startHorizontalSyncPosition);
-    fwrite(&startHorizontalSyncPosition, sizeof(startHorizontalSyncPosition), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startHorizontalSyncPosition, sizeof(startHorizontalSyncPosition), 1, fpbin);
 
     CRTController::EndHorizontalSyncPosition_t endHorizontalSyncPosition = CRTController::EndHorizontalSyncPosition::Read(baseIOPort);
     fprintf(fp, "End horizontal retrace pulse  : 0x%02X\n", endHorizontalSyncPosition);
-    fwrite(&endHorizontalSyncPosition, sizeof(endHorizontalSyncPosition), 1, fpbin);
+    if (fpbin != NULL) fwrite(&endHorizontalSyncPosition, sizeof(endHorizontalSyncPosition), 1, fpbin);
 
     CRTController::VerticalTotal_t verticalTotal = CRTController::VerticalTotal::Read(baseIOPort);
     fprintf(fp, "Vertical total                : 0x%02X\n", verticalTotal);
-    fwrite(&verticalTotal, sizeof(verticalTotal), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalTotal, sizeof(verticalTotal), 1, fpbin);
 
     CRTController::CRTCOverflow_t crtcOverflow = CRTController::CRTCOverflow::Read(baseIOPort);
     fprintf(fp, "Overflow                      : 0x%02X\n", crtcOverflow);
-    fwrite(&crtcOverflow, sizeof(crtcOverflow), 1, fpbin);
+    if (fpbin != NULL) fwrite(&crtcOverflow, sizeof(crtcOverflow), 1, fpbin);
 
     CRTController::PresetRowScan_t presetRowScan = CRTController::PresetRowScan::Read(baseIOPort);
     fprintf(fp, "Preset row scan               : 0x%02X\n", presetRowScan);
-    fwrite(&presetRowScan, sizeof(presetRowScan), 1, fpbin);
+    if (fpbin != NULL) fwrite(&presetRowScan, sizeof(presetRowScan), 1, fpbin);
 
     CRTController::MaximumScanLine_t maximumScanLine = CRTController::MaximumScanLine::Read(baseIOPort);
     fprintf(fp, "Maximum scan line             : 0x%02X\n", maximumScanLine);
-    fwrite(&maximumScanLine, sizeof(maximumScanLine), 1, fpbin);
+    if (fpbin != NULL) fwrite(&maximumScanLine, sizeof(maximumScanLine), 1, fpbin);
 
     CRTController::CursorStartScanLine_t cursorStartScanLine = CRTController::CursorStartScanLine::Read(baseIOPort);
     fprintf(fp, "Cursor start                  : 0x%02X\n", cursorStartScanLine);
-    fwrite(&cursorStartScanLine, sizeof(cursorStartScanLine), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorStartScanLine, sizeof(cursorStartScanLine), 1, fpbin);
 
     CRTController::CursorEndScanLine_t cursorEndScanLine = CRTController::CursorEndScanLine::Read(baseIOPort);
     fprintf(fp, "Cursor end                    : 0x%02X\n", cursorEndScanLine);
-    fwrite(&cursorEndScanLine, sizeof(cursorEndScanLine), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorEndScanLine, sizeof(cursorEndScanLine), 1, fpbin);
 
     CRTController::StartAddressHigh_t startAddressHigh = CRTController::StartAddressHigh::Read(baseIOPort);
     fprintf(fp, "Start address high            : 0x%02X\n", startAddressHigh);
-    fwrite(&startAddressHigh, sizeof(startAddressHigh), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startAddressHigh, sizeof(startAddressHigh), 1, fpbin);
 
     CRTController::StartAddressLow_t startAddressLow = CRTController::StartAddressLow::Read(baseIOPort);
     fprintf(fp, "Start address low             : 0x%02X\n", startAddressLow);
-    fwrite(&startAddressLow, sizeof(startAddressLow), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startAddressLow, sizeof(startAddressLow), 1, fpbin);
 
     CRTController::CursorLocationAddressHigh_t cursorLocationAddressHigh = CRTController::CursorLocationAddressHigh::Read(baseIOPort);
     fprintf(fp, "Cursor location high          : 0x%02X\n", cursorLocationAddressHigh);
-    fwrite(&cursorLocationAddressHigh, sizeof(cursorLocationAddressHigh), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorLocationAddressHigh, sizeof(cursorLocationAddressHigh), 1, fpbin);
 
     CRTController::CursorLocationAddressLow_t cursorLocationAddressLow = CRTController::CursorLocationAddressLow::Read(baseIOPort);
     fprintf(fp, "Cursor location low           : 0x%02X\n", cursorLocationAddressLow);
-    fwrite(&cursorLocationAddressLow, sizeof(cursorLocationAddressLow), 1, fpbin);
+    if (fpbin != NULL) fwrite(&cursorLocationAddressLow, sizeof(cursorLocationAddressLow), 1, fpbin);
 
     CRTController::VerticalRetraceStart_t verticalRetraceStart = CRTController::VerticalRetraceStart::Read(baseIOPort);
     fprintf(fp, "Vertical retrace start        : 0x%02X\n", verticalRetraceStart);
-    fwrite(&verticalRetraceStart, sizeof(verticalRetraceStart), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalRetraceStart, sizeof(verticalRetraceStart), 1, fpbin);
 
     CRTController::VerticalRetraceEnd_t verticalRetraceEnd = CRTController::VerticalRetraceEnd::Read(baseIOPort);
     fprintf(fp, "Vertical retrace end          : 0x%02X\n", verticalRetraceEnd);
-    fwrite(&verticalRetraceEnd, sizeof(verticalRetraceEnd), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalRetraceEnd, sizeof(verticalRetraceEnd), 1, fpbin);
 
     CRTController::VerticalDisplayEnd_t verticalDisplayEnd = CRTController::VerticalDisplayEnd::Read(baseIOPort);
     fprintf(fp, "Vertical display enable end   : 0x%02X\n", verticalDisplayEnd);
-    fwrite(&verticalDisplayEnd, sizeof(verticalDisplayEnd), 1, fpbin);
+    if (fpbin != NULL) fwrite(&verticalDisplayEnd, sizeof(verticalDisplayEnd), 1, fpbin);
 
     CRTController::ScreenOffset_t screenOffset = CRTController::ScreenOffset::Read(baseIOPort);
     fprintf(fp, "Offset                        : 0x%02X\n", screenOffset);
-    fwrite(&screenOffset, sizeof(screenOffset), 1, fpbin);
+    if (fpbin != NULL) fwrite(&screenOffset, sizeof(screenOffset), 1, fpbin);
 
     CRTController::UnderlineLocation_t underlineLocation = CRTController::UnderlineLocation::Read(baseIOPort);
     fprintf(fp, "Underline location            : 0x%02X\n", underlineLocation);
-    fwrite(&underlineLocation, sizeof(underlineLocation), 1, fpbin);
+    if (fpbin != NULL) fwrite(&underlineLocation, sizeof(underlineLocation), 1, fpbin);
 
     CRTController::StartVerticalBlank_t startVerticalBlank = CRTController::StartVerticalBlank::Read(baseIOPort);
     fprintf(fp, "Start vertical blank          : 0x%02X\n", startVerticalBlank);
-    fwrite(&startVerticalBlank, sizeof(startVerticalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&startVerticalBlank, sizeof(startVerticalBlank), 1, fpbin);
 
     CRTController::EndVerticalBlank_t endVerticalBlank = CRTController::EndVerticalBlank::Read(baseIOPort);
     fprintf(fp, "End vertical blank            : 0x%02X\n", endVerticalBlank);
-    fwrite(&endVerticalBlank, sizeof(endVerticalBlank), 1, fpbin);
+    if (fpbin != NULL) fwrite(&endVerticalBlank, sizeof(endVerticalBlank), 1, fpbin);
 
     CRTController::CRTCModeControl_t crtcModeControl = CRTController::CRTCModeControl::Read(baseIOPort);
     fprintf(fp, "CRTC mode control             : 0x%02X\n", crtcModeControl);
-    fwrite(&crtcModeControl, sizeof(crtcModeControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&crtcModeControl, sizeof(crtcModeControl), 1, fpbin);
 
     CRTController::LineCompare_t lineCompare = CRTController::LineCompare::Read(baseIOPort);
     fprintf(fp, "Line compare                  : 0x%02X\n", lineCompare);
-    fwrite(&lineCompare, sizeof(lineCompare), 1, fpbin);
+    if (fpbin != NULL) fwrite(&lineCompare, sizeof(lineCompare), 1, fpbin);
 
 
     fprintf(fp, "\nSequencer:\n");
     Sequencer::Reset_t reset = Sequencer::Reset::Read();
     fprintf(fp, "Reset                         : 0x%02X\n", reset);
-    fwrite(&reset, sizeof(reset), 1, fpbin);
+    if (fpbin != NULL) fwrite(&reset, sizeof(reset), 1, fpbin);
 
     Sequencer::ClockingMode_t clockingMode = Sequencer::ClockingMode::Read();
     fprintf(fp, "Clocking mode                 : 0x%02X\n", clockingMode);
-    fwrite(&clockingMode, sizeof(clockingMode), 1, fpbin);
+    if (fpbin != NULL) fwrite(&clockingMode, sizeof(clockingMode), 1, fpbin);
 
     Sequencer::EnableWritePlane_t enableWritePlane = Sequencer::EnableWritePlane::Read();
     fprintf(fp, "Map mask                      : 0x%02X\n", enableWritePlane);
-    fwrite(&enableWritePlane, sizeof(enableWritePlane), 1, fpbin);
+    if (fpbin != NULL) fwrite(&enableWritePlane, sizeof(enableWritePlane), 1, fpbin);
 
     Sequencer::CharacterFontSelect_t characterFontSelect = Sequencer::CharacterFontSelect::Read();
     fprintf(fp, "Character map select          : 0x%02X\n", characterFontSelect);
-    fwrite(&characterFontSelect, sizeof(characterFontSelect), 1, fpbin);
+    if (fpbin != NULL) fwrite(&characterFontSelect, sizeof(characterFontSelect), 1, fpbin);
 
     Sequencer::MemoryModeControl_t memoryModeControl = Sequencer::MemoryModeControl::Read();
     fprintf(fp, "Memory mode                   : 0x%02X\n", memoryModeControl);
-    fwrite(&memoryModeControl, sizeof(memoryModeControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&memoryModeControl, sizeof(memoryModeControl), 1, fpbin);
 
 
     fprintf(fp, "\nGraphics controller:\n");
     GraphicsController::SetResetData_t setResetData = GraphicsController::SetResetData::Read();
     fprintf(fp, "Set/Reset                     : 0x%02X\n", setResetData);
-    fwrite(&setResetData, sizeof(setResetData), 1, fpbin);
+    if (fpbin != NULL) fwrite(&setResetData, sizeof(setResetData), 1, fpbin);
 
     GraphicsController::EnableSetResetData_t enableSetResetData = GraphicsController::EnableSetResetData::Read();
     fprintf(fp, "Enable Set/Reset              : 0x%02X\n", enableSetResetData);
-    fwrite(&enableSetResetData, sizeof(enableSetResetData), 1, fpbin);
+    if (fpbin != NULL) fwrite(&enableSetResetData, sizeof(enableSetResetData), 1, fpbin);
 
     GraphicsController::ColorCompare_t colorCompare = GraphicsController::ColorCompare::Read();
     fprintf(fp, "Color compare                 : 0x%02X\n", colorCompare);
-    fwrite(&colorCompare, sizeof(colorCompare), 1, fpbin);
+    if (fpbin != NULL) fwrite(&colorCompare, sizeof(colorCompare), 1, fpbin);
 
     GraphicsController::RasterOperationRotateCount_t rasterOperationRotateCount = GraphicsController::RasterOperationRotateCount::Read();
     fprintf(fp, "Data rotate                   : 0x%02X\n", rasterOperationRotateCount);
-    fwrite(&rasterOperationRotateCount, sizeof(rasterOperationRotateCount), 1, fpbin);
+    if (fpbin != NULL) fwrite(&rasterOperationRotateCount, sizeof(rasterOperationRotateCount), 1, fpbin);
 
     GraphicsController::ReadPlaneSelect_t readPlaneSelect = GraphicsController::ReadPlaneSelect::Read();
     fprintf(fp, "Read map select               : 0x%02X\n", readPlaneSelect);
-    fwrite(&readPlaneSelect, sizeof(readPlaneSelect), 1, fpbin);
+    if (fpbin != NULL) fwrite(&readPlaneSelect, sizeof(readPlaneSelect), 1, fpbin);
 
     GraphicsController::GraphicsControllerMode_t graphicsControllerMode = GraphicsController::GraphicsControllerMode::Read();
     fprintf(fp, "Graphics mode                 : 0x%02X\n", graphicsControllerMode);
-    fwrite(&graphicsControllerMode, sizeof(graphicsControllerMode), 1, fpbin);
+    if (fpbin != NULL) fwrite(&graphicsControllerMode, sizeof(graphicsControllerMode), 1, fpbin);
 
     GraphicsController::MemoryMapModeControl_t memoryMapModeControl = GraphicsController::MemoryMapModeControl::Read();
     fprintf(fp, "Miscellaneous                 : 0x%02X\n", memoryMapModeControl);
-    fwrite(&memoryMapModeControl, sizeof(memoryMapModeControl), 1, fpbin);
+    if (fpbin != NULL) fwrite(&memoryMapModeControl, sizeof(memoryMapModeControl), 1, fpbin);
 
     GraphicsController::ColorDontCare_t colorDontCare = GraphicsController::ColorDontCare::Read();
     fprintf(fp, "Color don't care              : 0x%02X\n", colorDontCare);
-    fwrite(&colorDontCare, sizeof(colorDontCare), 1, fpbin);
+    if (fpbin != NULL) fwrite(&colorDontCare, sizeof(colorDontCare), 1, fpbin);
 
     GraphicsController::BitMask_t bitMask = GraphicsController::BitMask::Read();
     fprintf(fp, "Bit mask                      : 0x%02X\n", bitMask);
-    fwrite(&bitMask, sizeof(bitMask), 1, fpbin);
+    if (fpbin != NULL) fwrite(&bitMask, sizeof(bitMask), 1, fpbin);
 
 
     fprintf(fp, "\nRAMDAC registers:\n");
@@ -430,9 +428,12 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
         uint8_t green = RAMDACData::Read();
         uint8_t blue = RAMDACData::Read();
         fprintf(fp, "0x%02X: 0x%02X, 0x%02X, 0x%02X\n", color, red, green, blue);
-        fwrite(&red, 1, 1, fpbin);
-        fwrite(&green, 1, 1, fpbin);
-        fwrite(&blue, 1, 1, fpbin);
+        if (fpbin != NULL)
+        {
+            fwrite(&red, 1, 1, fpbin);
+            fwrite(&green, 1, 1, fpbin);
+            fwrite(&blue, 1, 1, fpbin);
+        }
     }
 
     fprintf(fp, "\n");
@@ -499,7 +500,10 @@ bool FindDevices(uint8_t bus, uint8_t slot, uint8_t function, void* context)
                     uint8_t(pciReg >> 16),
                     uint8_t(pciReg >> 24),
                     pciReg);
-            fwrite(&pciReg, sizeof(pciReg), 1, ctx->fpbin);
+            if (ctx->fpbin != NULL)
+            {
+                fwrite(&pciReg, sizeof(pciReg), 1, ctx->fpbin);
+            }
         }
         fprintf(ctx->fp, "\n");
     }
@@ -526,10 +530,7 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     System::PCI::Device_t device = (uint16_t(pciDeviceBus) << 8) | (pciDeviceSlot << 3) | pciDeviceFunction;
     fprintf(fp, "\nMatrox specific registers:\n");
 
-    //PCI::ControlAperture_t controlAperture = PCI::ControlAperture::Read(device) & PCI::ControlAperture::BaseAddress;
-
-    //fwrite((void*)controlAperture, 16 * 1024, 1, fpbin);
-
+    /*
     fprintf(fp, "\nCRTC:\n");
     CRTController::CPUReadLatch_t cpuReadLatch = CRTController::CPUReadLatch::Read(baseIOPort);
     fprintf(fp, "CPU read latch                : 0x%02X\n", cpuReadLatch);
@@ -542,6 +543,7 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     CRTController::AttributeAddress_t attributeAddress = CRTController::AttributeAddress::Read(baseIOPort);
     fprintf(fp, "Attributes address            : 0x%02X\n", attributeAddress);
     fwrite(&attributeAddress, sizeof(attributeAddress), 1, fpbin);
+    */
 
     fprintf(fp, "\nCRTC Extension:\n");
     fprintf(fp, "Address generator extensions  : 0x%02X\n", CRTCExtension::AddressGeneratorExtensions::Read());
@@ -555,25 +557,15 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "Requester control             : 0x%02X\n", CRTCExtensionData::Read());
     CRTCExtensionIndex::Write(0x08);
     fprintf(fp, "Address extension             : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x09);
-    fprintf(fp, "Unknown 0x09                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0A);
-    fprintf(fp, "Unknown 0x0A                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0B);
-    fprintf(fp, "Unknown 0x0B                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0C);
-    fprintf(fp, "Unknown 0x0C                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0D);
-    fprintf(fp, "Unknown 0x0D                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0E);
-    fprintf(fp, "Unknown 0x0E                  : 0x%02X\n", CRTCExtensionData::Read());
-    CRTCExtensionIndex::Write(0x0F);
-    fprintf(fp, "Unknown 0x0F                  : 0x%02X\n", CRTCExtensionData::Read());
-    for (uint8_t idx = 0; idx < 0x10; ++idx)
+
+    if (fpbin != NULL)
     {
-        CRTCExtensionIndex::Write(0x0F);
-        CRTCExtensionData_t data = CRTCExtensionData::Read();
-        fwrite(&data, sizeof(data), 1, fpbin);
+        for (uint8_t idx = 0; idx < 0x08; ++idx)
+        {
+            CRTCExtensionIndex::Write(idx);
+            CRTCExtensionData_t data = CRTCExtensionData::Read();
+            fwrite(&data, sizeof(data), 1, fpbin);
+        }
     }
 
     fprintf(fp, "\nIndexed registers:\n");
@@ -595,8 +587,8 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "General control               : 0x%02X\n", PCI::Indexed::GeneralControl::Read(device));
     fprintf(fp, "Miscellaneous control         : 0x%02X\n", PCI::Indexed::MiscellaneousControl::Read(device));
     
-    fprintf(fp, "Panel mode                    : 0x%02X\n", PCI::IndexedData::Read(device, 0x1F));
-    fprintf(fp, "MAFC delay                    : 0x%02X\n", PCI::IndexedData::Read(device, 0x20));
+    fprintf(fp, "Panel mode (G400)             : 0x%02X\n", PCI::IndexedData::Read(device, 0x1F));
+    fprintf(fp, "MAFC delay (G400)             : 0x%02X\n", PCI::IndexedData::Read(device, 0x20));
     
     fprintf(fp, "General purpose IO control    : 0x%02X\n", PCI::Indexed::GeneralPurposeIOControl::Read(device));
     fprintf(fp, "General purpose data          : 0x%02X\n", PCI::Indexed::GeneralPurposeIOData::Read(device));
@@ -610,9 +602,9 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "CRC remainder high            : 0x%02X\n", PCI::Indexed::CRCRemainderHigh::Read(device));
     fprintf(fp, "CRC bit select                : 0x%02X\n", PCI::Indexed::CRCBitSelect::Read(device));
     fprintf(fp, "Color key mask low            : 0x%02X\n", PCI::Indexed::ColorKeyMaskLow::Read(device));
-    fprintf(fp, "Color key mask high           : 0x%02X\n", PCI::Indexed::ColorKeyMaskHigh::Read(device));
+    fprintf(fp, "Color key mask high (MYST)    : 0x%02X\n", PCI::Indexed::ColorKeyMaskHigh::Read(device));
     fprintf(fp, "Color key low                 : 0x%02X\n", PCI::Indexed::ColorKeyLow::Read(device));
-    fprintf(fp, "Color key high                : 0x%02X\n", PCI::Indexed::ColorKeyHigh::Read(device));
+    fprintf(fp, "Color key high (MYST)         : 0x%02X\n", PCI::Indexed::ColorKeyHigh::Read(device));
     fprintf(fp, "Pixel PLL A M value           : 0x%02X\n", PCI::Indexed::PixelPLLM::ReadA(device));
     fprintf(fp, "Pixel PLL A N value           : 0x%02X\n", PCI::Indexed::PixelPLLN::ReadA(device));
     fprintf(fp, "Pixel PLL A P value           : 0x%02X\n", PCI::Indexed::PixelPLLP::ReadA(device));
@@ -624,23 +616,28 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "Pixel PLL C P value           : 0x%02X\n", PCI::Indexed::PixelPLLP::ReadC(device));
     fprintf(fp, "Pixel PLL status              : 0x%02X\n", PCI::Indexed::PixelPLLStatus::Read(device));
 
-    fprintf(fp, "Keying operating mode         : 0x%02X\n", PCI::IndexedData::Read(device, 0x51));
-    fprintf(fp, "Color mask 0 red              : 0x%02X\n", PCI::IndexedData::Read(device, 0x52));
-    fprintf(fp, "Color mask 0 green            : 0x%02X\n", PCI::IndexedData::Read(device, 0x53));
-    fprintf(fp, "Color mask 0 blue             : 0x%02X\n", PCI::IndexedData::Read(device, 0x54));
-    fprintf(fp, "Color key 0 red               : 0x%02X\n", PCI::IndexedData::Read(device, 0x55));
-    fprintf(fp, "Color key 0 green             : 0x%02X\n", PCI::IndexedData::Read(device, 0x56));
-    fprintf(fp, "Color key 0 blue              : 0x%02X\n", PCI::IndexedData::Read(device, 0x57));
+    fprintf(fp, "Keying operating mode (G200)  : 0x%02X\n", PCI::IndexedData::Read(device, 0x51));
+    fprintf(fp, "Color mask 0 red (G200)       : 0x%02X\n", PCI::IndexedData::Read(device, 0x52));
+    fprintf(fp, "Color mask 0 green (G200)     : 0x%02X\n", PCI::IndexedData::Read(device, 0x53));
+    fprintf(fp, "Color mask 0 blue (G200)      : 0x%02X\n", PCI::IndexedData::Read(device, 0x54));
+    fprintf(fp, "Color key 0 red (G200)        : 0x%02X\n", PCI::IndexedData::Read(device, 0x55));
+    fprintf(fp, "Color key 0 green (G200)      : 0x%02X\n", PCI::IndexedData::Read(device, 0x56));
+    fprintf(fp, "Color key 0 blue (G200)       : 0x%02X\n", PCI::IndexedData::Read(device, 0x57));
 
-    for (uint16_t index = 0x58; index < 0x80; ++index)
+    for (uint16_t index = 0x00; index < 0x26; index += 3)
     {
-        fprintf(fp, "Unknown indexed register 0x%02X : 0x%02X\n", index, PCI::IndexedData::Read(device, index));
+        fprintf(fp, "Cursor color %02i red (G200)    : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 0));
+        fprintf(fp, "Cursor color %02i green (G200)  : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 1));
+        fprintf(fp, "Cursor color %02i blue (G200)   : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 2));
     }
 
-    for (uint16_t index = 0; index < 0x80; ++index)
+    if (fpbin != NULL)
     {
-        PCI::IndexedData_t data = PCI::IndexedData::Read(device, index);
-        fwrite(&data, sizeof(data), 1, fpbin);
+        for (uint16_t index = 0; index < 0x86; ++index)
+        {
+            PCI::IndexedData_t data = PCI::IndexedData::Read(device, index);
+            fwrite(&data, sizeof(data), 1, fpbin);
+        }
     }
 
     fprintf(fp, "\n");
@@ -743,6 +740,15 @@ int main(int argc, char** argv)
         r.h.ah = 0x00;
         r.h.al = 0x03;
         intr(0x10, &r);
+
+        //Reset palette to prevent garbage from contaminating our dumps
+        Hag::VGA::DACWriteIndex::Write(0);
+        for (uint16_t i = 0; i < 256; ++i)
+        {
+            Hag::VGA::RAMDACData::Write(0);
+            Hag::VGA::RAMDACData::Write(0);
+            Hag::VGA::RAMDACData::Write(0);
+        }
     
         memset(&r, 0, sizeof(r));
         r.h.ah = 0x00;
@@ -751,45 +757,52 @@ int main(int argc, char** argv)
         char filename[50];
         FILE* fp = NULL;
         FILE* fpbin = NULL;
-        
-        sprintf(filename, "bda00%02X.txt", mode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "bda00%02X.bin", mode);
-        fpbin = fopen(filename, "wb");
-        BDADump(fp, fpbin);
-        fclose(fp);
-        fclose(fpbin);
-        
-        sprintf(filename, "vga00%02X.txt", mode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "vga00%02X.bin", mode);
-        fpbin = fopen(filename, "wb");
-        VGADump(fp, fpbin, BDA::VideoBaseIOPort::Get());
-        fclose(fp);
-        fclose(fpbin);
 
-        sprintf(filename, "pci00%02X.txt", mode);
+        sprintf(filename, "mode00%02X.txt", mode);
         fp = fopen(filename, "w");
-        sprintf(filename, "pci00%02X.bin", mode);
-        fpbin = fopen(filename, "wb");
+        
+        //sprintf(filename, "bda00%02X.txt", mode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "bda00%02X.bin", mode);
+        //fpbin = fopen(filename, "wb");
+        BDADump(fp, fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
+        
+        //sprintf(filename, "vga00%02X.txt", mode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "vga00%02X.bin", mode);
+        //fpbin = fopen(filename, "wb");
+        VGADump(fp, fpbin, BDA::VideoBaseIOPort::Get());
+        //fclose(fp);
+        //fclose(fpbin);
+
+        //sprintf(filename, "pci00%02X.txt", mode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "pci00%02X.bin", mode);
+        //fpbin = fopen(filename, "wb");
         PCIDump(fp, fpbin, 0x102B, devices, sizeof(devices) / sizeof(Device));
-        fclose(fp);
-        fclose(fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
 
         if (pciDeviceFound)
         {
-            sprintf(filename, "mtx00%02X.txt", mode);
-            fp = fopen(filename, "w");
-            sprintf(filename, "mtx00%02X.bin", mode);
-            fpbin = fopen(filename, "wb");
+            //sprintf(filename, "mtx00%02X.txt", mode);
+            //fp = fopen(filename, "w");
+            //sprintf(filename, "mtx00%02X.bin", mode);
+            //fpbin = fopen(filename, "wb");
             MatroxDump(fp, fpbin, BDA::VideoBaseIOPort::Get());
-            fclose(fp);
-            fclose(fpbin);
+            //fclose(fp);
+            //fclose(fpbin);
         }
-        sprintf(filename, "mem00%02X.bin", mode);
-        fp = fopen(filename, "wb");
-        MemDump(fp);
+
+        //sprintf(filename, "mem00%02X.bin", mode);
+        //fp = fopen(filename, "wb");
+        //MemDump(fp);
+        //fclose(fp);
+
         fclose(fp);
+
     }
 
     uint16_t vesaModes[] =
@@ -848,52 +861,58 @@ int main(int argc, char** argv)
         FILE* fp = NULL;
         FILE* fpbin = NULL;
 
-        sprintf(filename, "bda%04X.txt", vesaMode);
+        sprintf(filename, "mode%04X.txt", vesaMode);
         fp = fopen(filename, "w");
-        sprintf(filename, "bda%04X.bin", vesaMode);
-        fpbin = fopen(filename, "wb");
+
+        //sprintf(filename, "bda%04X.txt", vesaMode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "bda%04X.bin", vesaMode);
+        //fpbin = fopen(filename, "wb");
         BDADump(fp, fpbin);
-        fclose(fp);
-        fclose(fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
 
-        sprintf(filename, "vesa%04X.txt", vesaMode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "vesa%04X.bin", vesaMode);
-        fpbin = fopen(filename, "wb");
+        //sprintf(filename, "vesa%04X.txt", vesaMode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "vesa%04X.bin", vesaMode);
+        //fpbin = fopen(filename, "wb");
         VGADump(fp, fpbin, BDA::VideoBaseIOPort::Get());
-        fclose(fp);
-        fclose(fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
 
-        sprintf(filename, "pci%04X.txt", vesaMode);
-        fp = fopen(filename, "w");
-        sprintf(filename, "pci%04X.bin", vesaMode);
-        fpbin = fopen(filename, "wb");
+        //sprintf(filename, "pci%04X.txt", vesaMode);
+        //fp = fopen(filename, "w");
+        //sprintf(filename, "pci%04X.bin", vesaMode);
+        //fpbin = fopen(filename, "wb");
         PCIDump(fp, fpbin, 0x102B, devices, sizeof(devices) / sizeof(Device));
-        fclose(fp);
-        fclose(fpbin);
+        //fclose(fp);
+        //fclose(fpbin);
 
         if (pciDeviceFound)
         {
-            sprintf(filename, "mtx%04X.txt", vesaMode);
-            fp = fopen(filename, "w");
-            sprintf(filename, "mtx%04X.bin", vesaMode);
-            fpbin = fopen(filename, "wb");
+            //sprintf(filename, "mtx%04X.txt", vesaMode);
+            //fp = fopen(filename, "w");
+            //sprintf(filename, "mtx%04X.bin", vesaMode);
+            //fpbin = fopen(filename, "wb");
             MatroxDump(fp, fpbin, BDA::VideoBaseIOPort::Get());
-            fclose(fp);
-            fclose(fpbin);
+            //fclose(fp);
+            //fclose(fpbin);
         }
 
-        sprintf(filename, "mem%04X.bin", vesaMode);
-        fp = fopen(filename, "wb");
-        MemDump(fp);
+        //sprintf(filename, "mem%04X.bin", vesaMode);
+        //fp = fopen(filename, "wb");
+        //MemDump(fp);
+        //fclose(fp);
+
         fclose(fp);
+
     }
 
     r.h.ah = 0x00;
     r.h.al = 0x03;
     intr(0x10, &r);
 
-    BIOSDump();
+    //BIOSDump();
 
     return 0;
 }
