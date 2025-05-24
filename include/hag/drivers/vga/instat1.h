@@ -26,8 +26,12 @@ namespace InputStatus1
 {
     enum //Mask
     {
+        DisplayMode = 0x01,                 //~DTM 0 = The display is in the display mode. 1 = Either horizontal or vertical retrace period is active
         DisplayModeInactive = 0x01,         //~DTM 0 = The display is in the display mode. 1 = Either horizontal or vertical retrace period is active
+        DisplayModeActive = 0x00,           //~DTM 0 = The display is in the display mode. 1 = Either horizontal or vertical retrace period is active
         VerticalSyncActive = 0x08,          //VSY 0 Display is in the display mode. 1 = Display is in the vertical retrace mode.
+        VerticalSyncInactive = 0x00,        //VSY 0 Display is in the display mode. 1 = Display is in the vertical retrace mode.
+        VerticalSync = 0x08,                //VSY 0 Display is in the display mode. 1 = Display is in the vertical retrace mode.
         VideoSignalTest = 0x30,             //TST-VDT Video Data feedback 1,0. 
     };
 
@@ -35,8 +39,8 @@ namespace InputStatus1
     {
         enum
         {
-            DisplayModeInactive = 0x00,
-            VerticalSyncActive = 0x03,
+            DisplayMode = 0x00,
+            VerticalSync = 0x03,
             VideoSignalTest = 0x04,
         };
     }

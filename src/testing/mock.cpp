@@ -1381,7 +1381,7 @@ public:
 
     virtual bool CacheValue(uint16_t port)
     {
-        return !((m_WritePort == port) || (port == m_WritePort2));
+        return false;
     }
 
     virtual uint8_t Read8(uint16_t port)
@@ -2000,7 +2000,10 @@ void Rollback()
 
 void Reset()
 {
+    SelectInstance(0);
     s_Instance0.Reset();
+
+    SelectInstance(1);
     s_Instance1.Reset();
 
     SelectInstance(0);
@@ -2026,6 +2029,17 @@ bool HasDifferences()
 
         ptr0 = ptr0->GetNext();
         ptr1 = ptr1->GetNext();
+    }
+
+    PCI::Device* dev0 = s_Instance0.PCIDevices;
+    PCI::Device* dev1 = s_Instance1.PCIDevices;
+    while (dev0 != NULL && dev1 != NULL)
+    {
+        if (dev0->HasDifferences(dev1))
+            return true;
+
+        dev0 = dev0->GetNext();
+        dev1 = dev1->GetNext();
     }
 
     if (memcmp(s_Instance0.MemoryMap, s_Instance1.MemoryMap, (1024 * 1024) >> 3) != 0)
@@ -2176,6 +2190,7 @@ uint8_t Read8(uint16_t port)
 
     uint8_t ret = 0;
     bool handled = false;
+    bool cacheValue = true;
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     
     while (handler != NULL)
@@ -2186,22 +2201,25 @@ uint8_t Read8(uint16_t port)
             if (handler->HasHandled(port))
             {
                 handled = true;
+                cacheValue = handler->CacheValue(port);
                 break;
             }
         }
         handler = handler->GetNext();
     }
-
-    if (handled)
+    if (cacheValue)
     {
-        s_CurrentInstance->MarkPort(port);
-        s_CurrentInstance->Ports[port] = ret;
-    }
-    else
-    {
-        s_CurrentInstance->CachePort8(port);
-        ret = s_CurrentInstance->Ports[port];
-        VERBOSE(printf("Port read 0x%04X = 0x%02X\n", port, ret));
+        if (handled)
+        {
+            s_CurrentInstance->MarkPort(port);
+            s_CurrentInstance->Ports[port] = ret;
+        }
+        else
+        {
+            s_CurrentInstance->CachePort8(port);
+            ret = s_CurrentInstance->Ports[port];
+            VERBOSE(printf("Port read 0x%04X = 0x%02X\n", port, ret));
+        }
     }
     return ret;
 }
