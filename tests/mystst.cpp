@@ -1,6 +1,7 @@
 //Copyright 2025-Present riplin
 
 #include <i86.h>
+#include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -14,6 +15,10 @@
 #include <hag/system/keyboard.h>
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
+
+//#include "mode.h"
+#include <hag/drivers/matrox/shared/funcs/system.h>
+#include <hag/drivers/matrox/shared/funcs/modeset.h>
 
 #include <hag/drivers/matrox/shared/crtc/cpudata.h>         //CR22
 #include <hag/drivers/matrox/shared/crtc/atadrdat.h>        //CR24
@@ -128,6 +133,7 @@ public:
         m_ConfigSnapshot = allocator.AllocateAs<uint8_t>(sizeof(s_Config));
         m_IndexedSnapshot = allocator.AllocateAs<uint8_t>(sizeof(s_Indexed));
         m_ControlApertureSnapshot = allocator.AllocateAs<uint8_t>(16 * 1024);
+        Reset();
     }
 
     virtual ~MockMystique()
@@ -158,16 +164,46 @@ public:
         if (memcmp(m_Config, myst1->m_Config, sizeof(s_Config)) != 0)
         {
             printf("PCI Config space differences:\n");
+            uint32_t* config0 = (uint32_t*)m_Config;
+            uint32_t* config1 = (uint32_t*)myst1->m_Config;
+            for (uint16_t idx = 0; idx < sizeof(s_Config) / sizeof(uint32_t); ++idx)
+            {
+                if (config0[idx] != config1[idx])
+                {
+                    printf("0x%02X : 0x%08X != 0x%08X\n", idx * 4, config0[idx], config1[idx]);
+                }
+            }
+            printf("\n");
         }
 
         if (memcmp(m_Indexed, myst1->m_Indexed, sizeof(s_Indexed)) != 0)
         {
             printf("Indexed register differences:\n");
+            uint8_t* indexed0 = m_Indexed;
+            uint8_t* indexed1 = myst1->m_Indexed;
+            for (uint16_t idx = 0; idx < sizeof(s_Indexed); ++idx)
+            {
+                if (indexed0[idx] != indexed1[idx])
+                {
+                    printf("0x%02X : 0x%02X != 0x%02X\n", idx, indexed0[idx], indexed1[idx]);
+                }
+            }
+            printf("\n");
         }
 
         if (memcmp(m_ControlAperture, myst1->m_ControlAperture, 16 * 1024) != 0)
         {
             printf("Control aperture differences:\n");
+            uint32_t* aperture0 = (uint32_t*)m_ControlAperture;
+            uint32_t* aperture1 = (uint32_t*)myst1->m_ControlAperture;
+            for (uint16_t idx = 0; idx < (16 * 1024) / sizeof(uint32_t); ++idx)
+            {
+                if (aperture0[idx] != aperture1[idx])
+                {
+                    printf("0x%04X : 0x%08X != 0x%08X\n", idx * 4, aperture0[idx], aperture1[idx]);
+                }
+            }
+            printf("\n");
         }
     }
 
@@ -1330,7 +1366,7 @@ namespace ASM
         //     mov       ax, dx
         //     xor       di, di
         //     rep stosw
-        uint16_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint16_t>(count);
+        uint16_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint16_t>(count << 1);
         for (uint16_t i = 0; i < count; ++i)
         {
             *ptr = value;
@@ -1862,6 +1898,10 @@ namespace ASM
 
     void ApplyGraphicsCharacterSetOverride()//Offset 0x15ee
     {
+        using namespace Hag::System;
+        BDA::VideoParameterControlBlock* videoParameterControlBlock = 
+            BDA::VideoParameterControlBlockPointer::Get().ToPointer<BDA::VideoParameterControlBlock>();
+
         //TODO
         //     mov   al, BDA_VPCB_GrahicsCharSetOverride;0xc
         //     call  LookupVideoParameterControlBlockPointer;Offset 0x317d
@@ -1898,7 +1938,10 @@ namespace ASM
         // Label0x158e:                            ;Offset 0x158e
         //     xor   ax, ax
         //     mov   word ptr ds:[BDA_CursorEndScanLine], ax;Offset 0x460
+        Hag::System::BDA::CursorScanLines::Get().End = 0;
+        Hag::System::BDA::CursorScanLines::Get().Start = 0;
         //     call  ApplyGraphicsCharacterSetOverride                    ;Offset 0x15ee
+        ApplyGraphicsCharacterSetOverride();
         //     ret
     }
 
@@ -2745,6 +2788,7 @@ namespace ASM
         Hag::Vesa::VideoMode::G1024x768x32bpp,      //0x118      //4MB
         Hag::Vesa::VideoMode::G1280x1024x15bpp,     //0x119
         Hag::Vesa::VideoMode::G1280x1024x16bpp,     //0x11a
+        Hag::Vesa::VideoMode::G1280x1024x32bpp,     //0x11b
         Hag::Vesa::VideoMode::G1600x1200x15bpp2,    //0x11d
         Hag::Vesa::VideoMode::G1600x1200x16bpp2,    //0x11e
         0xFFFF
@@ -3084,8 +3128,8 @@ namespace ASM
     }
 
     uint8_t CapAXTo0x40(uint8_t value)//Offset 0x5832
-    {
-        return value > 0x40 ? 0x40 : value;
+    {//WE don't cap our memory!!!
+        return value;// > 0x40 ? 0x40 : value;
         //     cmp   ax, 40h
         //     jbe   IsLess                        ;Offset 0x583b
         //     mov  ah, 40h
@@ -3312,7 +3356,7 @@ namespace ASM
         0x2F,
         { 0xCE, 0x9F, 0x9F, 0x12, 0xA5, 0x13, 0x28, 0x5A, 0x00, 0x60, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x23, 0xFF, 0xA0, 0x00, 0xFF, 0x29, 0xC3, 0xFF },
         { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0x50 } //This last byte is shared with the next table. stupid.
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF }
     };
 
     //Offset 0x6c24
@@ -3326,7 +3370,7 @@ namespace ASM
         0x2F,
         { 0x09, 0xC7, 0xC7, 0x0D, 0xCF, 0x07, 0xE0, 0x00, 0x00, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x23, 0xAF, 0xC8, 0x00, 0xAF, 0xE1, 0xC3, 0xFF },
         { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0x64 } //This last byte is shared with the next table. stupid.
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF }
     };
 
     //Offset 0x6ca3
@@ -7291,7 +7335,7 @@ namespace CPP
         using namespace Hag;
         using namespace Hag::System;
 
-        Scanlines_t scanlines;
+        Scanlines_t scanlines = Scanlines::S200;
 
         if ((BDA::DisplayMode::Get() > VGA::VideoMode::G320x200x8bppC) ||
             ((scanlines = Scanlines::PerMode[BDA::DisplayMode::Get()]) == Scanlines::Invalid))
@@ -7324,20 +7368,7 @@ namespace CPP
         { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
     };
 
-    Hag::System::BDA::VideoParameterTable Mode1SL200 =
-    {
-        0x28,
-        0x18,
-        0x08,
-        0x0800,
-        { 0x09, 0x03, 0x00, 0x02 },
-        0x63,
-        { 0x2D, 0x27, 0x28, 0x90, 0x2B, 0xA0, 0xBF, 0x1F, 0x00, 0xC7, 0x06, 0x07, 0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x14, 0x1F, 0x96, 0xB9, 0xA3, 0xFF },
-        { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x08, 0x00, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
-    };
-
-    Hag::System::BDA::VideoParameterTable Mode2SL200 =
+    Hag::System::BDA::VideoParameterTable Mode2And3SL200 =
     {
         0x50,
         0x18,
@@ -7350,33 +7381,7 @@ namespace CPP
         { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
     };
 
-    Hag::System::BDA::VideoParameterTable Mode3SL200 =
-    {
-        0x50,
-        0x18,
-        0x08,
-        0x1000,
-        { 0x01, 0x03, 0x00, 0x02 },
-        0x63,
-        { 0x5F, 0x4F, 0x50, 0x82, 0x55, 0x81, 0xBF, 0x1F, 0x00, 0xC7, 0x06, 0x07, 0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x28, 0x1F, 0x96, 0xB9, 0xA3, 0xFF },
-        { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x08, 0x00, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
-    };
-
-    Hag::System::BDA::VideoParameterTable Mode4SL200 =
-    {
-        0x28,
-        0x18,
-        0x08,
-        0x4000,
-        { 0x09, 0x03, 0x00, 0x02 },
-        0x63,
-        { 0x2D, 0x27, 0x28, 0x90, 0x2B, 0x80, 0xBF, 0x1F, 0x00, 0xC1, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x9C, 0x8E, 0x8F, 0x14, 0x00, 0x96, 0xB9, 0xA2, 0xFF },
-        { 0x00, 0x13, 0x15, 0x17, 0x02, 0x04, 0x06, 0x07, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x01, 0x00, 0x03, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x30, 0x0F, 0x00, 0xFF }
-    };
-
-    Hag::System::BDA::VideoParameterTable Mode5SL200 =
+    Hag::System::BDA::VideoParameterTable Mode4And5SL200 =
     {
         0x28,
         0x18,
@@ -7532,7 +7537,7 @@ namespace CPP
         { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x0F, 0xFF }
     };
 
-    Hag::System::BDA::VideoParameterTable Mode0SL350 =
+    Hag::System::BDA::VideoParameterTable Mode0And1SL350 =
     {
         0x28,
         0x18,
@@ -7545,33 +7550,7 @@ namespace CPP
         { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
     };
 
-    Hag::System::BDA::VideoParameterTable Mode1SL350 =
-    {
-        0x28,
-        0x18,
-        0x0E,
-        0x0800,
-        { 0x09, 0x03, 0x00, 0x02 },
-        0xA3,
-        { 0x2D, 0x27, 0x28, 0x90, 0x2B, 0xA0, 0xBF, 0x1F, 0x00, 0x4D, 0x0B, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x83, 0x85, 0x5D, 0x14, 0x1F, 0x63, 0xBA, 0xA3, 0xFF },
-        { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x08, 0x00, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
-    };
-
-    Hag::System::BDA::VideoParameterTable Mode2SL350 =
-    {
-        0x50,
-        0x18,
-        0x0E,
-        0x1000,
-        { 0x01, 0x03, 0x00, 0x02 },
-        0xA3,
-        { 0x5F, 0x4F, 0x50, 0x82, 0x55, 0x81, 0xBF, 0x1F, 0x00, 0x4D, 0x0B, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x83, 0x85, 0x5D, 0x28, 0x1F, 0x63, 0xBA, 0xA3, 0xFF },
-        { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x14, 0x07, 0x38, 0x39, 0x3A, 0x3B, 0x3C, 0x3D, 0x3E, 0x3F, 0x08, 0x00, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x0E, 0x00, 0xFF }
-    };
-
-    Hag::System::BDA::VideoParameterTable Mode3SL350 =
+    Hag::System::BDA::VideoParameterTable Mode2And3SL350 =
     {
         0x50,
         0x18,
@@ -7664,12 +7643,12 @@ namespace CPP
 
     Hag::System::BDA::VideoParameterTable* VideoParameterVariantsPerMode[20][4] =
     {
-        { &DefaultParameters, &Mode0SL350, &Mode0And1SL400, &DefaultParameters },       // 0x00
-        { &Mode1SL200, &Mode1SL350, &Mode0And1SL400, &DefaultParameters },              // 0x01
-        { &Mode2SL200, &Mode2SL350, &Mode2And3SL400, &DefaultParameters },              // 0x02
-        { &Mode3SL200, &Mode3SL350, &Mode2And3SL400, &DefaultParameters },              // 0x03
-        { &Mode4SL200, &DefaultParameters, &DefaultParameters, &DefaultParameters },    // 0x04
-        { &Mode5SL200, &DefaultParameters, &DefaultParameters, &DefaultParameters },    // 0x05
+        { &DefaultParameters, &Mode0And1SL350, &Mode0And1SL400, &DefaultParameters },   // 0x00
+        { &DefaultParameters, &Mode0And1SL350, &Mode0And1SL400, &DefaultParameters },   // 0x01
+        { &Mode2And3SL200, &Mode2And3SL350, &Mode2And3SL400, &DefaultParameters },      // 0x02
+        { &Mode2And3SL200, &Mode2And3SL350, &Mode2And3SL400, &DefaultParameters },      // 0x03
+        { &Mode4And5SL200, &DefaultParameters, &DefaultParameters, &DefaultParameters },// 0x04
+        { &Mode4And5SL200, &DefaultParameters, &DefaultParameters, &DefaultParameters },// 0x05
         { &Mode6SL200, &DefaultParameters, &DefaultParameters, &DefaultParameters },    // 0x06
         { &DefaultParameters, &Mode7SL350, &Mode7SL400, &DefaultParameters },           // 0x07
         { &DefaultParameters, &DefaultParameters, &Mode8SL400, &DefaultParameters },    // 0x08
@@ -7693,46 +7672,46 @@ namespace CPP
 
     void ApplyVideoParameters(Hag::System::BDA::VideoParameterTable& videoParameterTable, Hag::VGA::Register_t baseVideoIOPort)
     {
-        using namespace Hag;
+        using namespace Hag::VGA;
         using namespace Hag::System;
 
         SYS_ClearInterrupts();
         
-        VGA::Sequencer::Reset::Write(VGA::Sequencer::Reset::AsynchronousReset);
+        Sequencer::Reset::Write(Sequencer::Reset::AsynchronousReset);
             
-        VGA::SequencerData::Write(VGA::Sequencer::Register::ClockingMode,
+        SequencerData::Write(Sequencer::Register::ClockingMode,
                                 videoParameterTable.SequencerRegisters,
                                 sizeof(videoParameterTable.SequencerRegisters));
 
-        VGA::MiscellaneousOutput::Write(videoParameterTable.MiscellaneousOutputRegister);
+        MiscellaneousOutput::Write(videoParameterTable.MiscellaneousOutputRegister);
         
         for (int i = 0; i < 8000; ++i); //BOOOO
-        VGA::Sequencer::Reset::Write(VGA::Sequencer::Reset::AsynchronousReset |
-                                    VGA::Sequencer::Reset::SynchronousReset);
+
+        Sequencer::Reset::Write(Sequencer::Reset::AsynchronousReset | Sequencer::Reset::SynchronousReset);
+
         SYS_RestoreInterrupts();
 
-        Hag::VGA::Sequencer::ClockingMode_t previousScreenOffState = TurnScreenOff();
+        Sequencer::ClockingMode_t previousScreenOffState = TurnScreenOff();
 
-        VGA::CRTController::VerticalRetraceEnd::Write(baseVideoIOPort, 0x00);
+        CRTController::VerticalRetraceEnd::Write(baseVideoIOPort, 0x00);
 
-        VGA::CRTControllerData::Write(baseVideoIOPort,
-                                    VGA::CRTController::Register::HorizontalTotal,
+        CRTControllerData::Write(baseVideoIOPort,
+                                    CRTController::Register::HorizontalTotal,
                                     videoParameterTable.CRTCRegisters,
                                     sizeof(videoParameterTable.CRTCRegisters));
 
-        VGA::InputStatus1::Read(baseVideoIOPort + 0x06);
+        InputStatus1::Read(baseVideoIOPort + 0x06);
+        FeatureControl::Write(baseVideoIOPort + 0x06, 0x00);
 
-        VGA::FeatureControl::Write(baseVideoIOPort + 0x06, 0x00);
+        AttributeController::AttributeMode::Write(
+            videoParameterTable.AttributeControllerRegisters[AttributeController::Register::AttributeMode]);
 
-        VGA::AttributeController::AttributeMode::Write(
-            videoParameterTable.AttributeControllerRegisters[VGA::AttributeController::Register::AttributeMode]);
+            AttributeController::ColorPlane::Write(
+            videoParameterTable.AttributeControllerRegisters[AttributeController::Register::ColorPlane]);
+        AttributeController::HorizontalPixelPanning::Write(
+            videoParameterTable.AttributeControllerRegisters[AttributeController::Register::HorizontalPixelPanning]);
 
-            VGA::AttributeController::ColorPlane::Write(
-            videoParameterTable.AttributeControllerRegisters[VGA::AttributeController::Register::ColorPlane]);
-        VGA::AttributeController::HorizontalPixelPanning::Write(
-            videoParameterTable.AttributeControllerRegisters[VGA::AttributeController::Register::HorizontalPixelPanning]);
-
-        VGA::GraphicsControllerData::Write(VGA::GraphicsController::Register::SetResetData,
+        GraphicsControllerData::Write(GraphicsController::Register::SetResetData,
                                         videoParameterTable.GraphicsControllerRegisters,
                                         sizeof(videoParameterTable.GraphicsControllerRegisters));
 
@@ -7751,17 +7730,10 @@ namespace CPP
 
     extern PaletteData* Palettes[];
 
-    inline uint8_t Greyscale(uint8_t red, uint8_t green, uint8_t blue)
+    void LoadColorPalette(uint16_t paletteIndex)
     {
-        return ((0x4D * uint16_t(red)) +
-                (0x97 * uint16_t(green)) +
-                (0x1c * uint16_t(blue)) + 0x80) >> 8;
-    }
-
-    void LoadColorPalette(uint16_t count, uint16_t paletteIndex)
-    {
-        using namespace Hag;
-        using namespace Hag::System;
+        using namespace Hag::VGA;
+        using namespace Hag::System::BDA;
         uint8_t red = 0;
         uint8_t green = 0;
         uint8_t blue = 0;
@@ -7770,134 +7742,139 @@ namespace CPP
 
         uint8_t* colors = Palettes[paletteIndex]->Colors;
 
-        if ((BDA::VideoDisplayDataArea::Get() & 
-            (BDA::VideoDisplayDataArea::GrayScale | BDA::VideoDisplayDataArea::MonochromeMonitor)) == 0x00)
+        if ((VideoDisplayDataArea::Get() & 
+            (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0x00)
         {
-            uint16_t tripleCount = count * 3;
+            uint16_t tripleCount = Palettes[paletteIndex]->Count * 3;
             for (uint16_t idx = 0; idx < tripleCount; ++idx)
             {
-                VGA::RAMDACData::Write(*(colors++));
+                RAMDACData::Write(*(colors++));
             }
         }
         else
         {
-            for (uint16_t i = 0; i < count; ++i)
+            for (uint16_t i = 0; i < Palettes[paletteIndex]->Count; ++i)
             {
                 red = *(colors++);
                 green = *(colors++);
                 blue = *(colors++);
-                greyscale = Greyscale(red, green, blue);
-                VGA::RAMDACData::Write(greyscale);
-                VGA::RAMDACData::Write(greyscale);
-                VGA::RAMDACData::Write(greyscale);
+                greyscale = ((0x4D * uint16_t(red)) +
+                             (0x97 * uint16_t(green)) +
+                             (0x1c * uint16_t(blue)) + 0x80) >> 8;
+                RAMDACData::Write(greyscale);
+                RAMDACData::Write(greyscale);
+                RAMDACData::Write(greyscale);
             }
         }
     }
 
-    void LoadCompressedPalette(uint16_t count, uint16_t paletteIndex)
+    void LoadCompressedPalette(uint16_t paletteIndex)
     {
-        using namespace Hag;
+        using namespace Hag::VGA;
 
         uint8_t* colors = Palettes[paletteIndex]->Colors;
 
-        for (uint16_t i = 0; i < count; ++i)
+        for (uint16_t i = 0; i < Palettes[paletteIndex]->Count; ++i)
         {
             uint8_t packedValue = *(colors++) << 2;
-            VGA::RAMDACData::Write((packedValue >> 6) * 0x15);
+            RAMDACData::Write((packedValue >> 6) * 0x15);
             packedValue <<= 2;
-            VGA::RAMDACData::Write((packedValue >> 6) * 0x15);
+            RAMDACData::Write((packedValue >> 6) * 0x15);
             packedValue <<= 2;
-            VGA::RAMDACData::Write((packedValue >> 6) * 0x15);
+            RAMDACData::Write((packedValue >> 6) * 0x15);
+        }
+    }
+
+    void LoadMonochromePalette(uint16_t paletteIndex)
+    {
+        using namespace Hag::VGA;
+
+        uint8_t* colors = Palettes[paletteIndex]->Colors;
+        for (uint16_t idx = 0; idx < Palettes[paletteIndex]->Count; ++idx)
+        {
+            uint8_t color = *(colors++);
+            RAMDACData::Write(color);
+            RAMDACData::Write(color);
+            RAMDACData::Write(color);
         }
     }
 
     void LoadPalette(Hag::VGA::DACWriteIndex_t startIndex, uint16_t paletteIndex)
     {
-        using namespace Hag;
-        using namespace Hag::System;
+        using namespace Hag::VGA;
+        using namespace Hag::System::BDA;
+        DACWriteIndex::Write(startIndex);
 
-        VGA::DACWriteIndex::Write(startIndex);
-
-        if ((BDA::VideoDisplayDataArea::Get() & Palettes[paletteIndex]->Mask) != 0)
+        if ((VideoDisplayDataArea::Get() & Palettes[paletteIndex]->Mask) != 0)
         {
             ++paletteIndex;
         }
         
-        uint16_t count = Palettes[paletteIndex]->Count;
-        uint8_t flags = Palettes[paletteIndex]->Flags;
-
-        if (flags == 0x00)
+        if (Palettes[paletteIndex]->Flags == 0x00)
         {
-            LoadCompressedPalette(count, paletteIndex);
+            LoadCompressedPalette(paletteIndex);
         }
-        else if ((flags & 0x80) == 0x00)
+        else if ((Palettes[paletteIndex]->Flags & 0x80) == 0x00)
         {
-            LoadColorPalette(count, paletteIndex);
+            LoadColorPalette(paletteIndex);
         }
         else
         {
-            uint8_t* colors = Palettes[paletteIndex]->Colors;
-            for (uint16_t idx = 0; idx < count; ++idx)
-            {
-                uint8_t color = *(colors++);
-                VGA::RAMDACData::Write(color);
-                VGA::RAMDACData::Write(color);
-                VGA::RAMDACData::Write(color);
-            }
+            LoadMonochromePalette(paletteIndex);
         }
     }
 
-    void InitializePalette()
+    void InitializeRAMDACPalette()
     {
-        using namespace Hag;
-        using namespace Hag::System;
+        using namespace Hag::VGA;
+        using namespace Hag::System::BDA;
 
-        VGA::DACMask::Write(0xFF);
+        DACMask::Write(0xFF);
 
-        VGA::VideoMode_t videoMode = BDA::DisplayMode::Get();
+        VideoMode_t videoMode = DisplayMode::Get();
         uint16_t scanlinesAndVideoMode = (uint16_t(GetNumberOfActiveScanlines()) << 8) | videoMode;
-        uint16_t paletteIndex = 0;
 
-        if (scanlinesAndVideoMode == VGA::VideoMode::G320x200x8bppC)
+        if (scanlinesAndVideoMode == VideoMode::G320x200x8bppC)
         {
             LoadPalette(0x00, 5);
             LoadPalette(0x10, 7);
             LoadPalette(0x20, 8);
         }
-        else if (scanlinesAndVideoMode < VGA::VideoMode::G320x200x8bppC)
+        else if (scanlinesAndVideoMode < VideoMode::G320x200x8bppC)
             LoadPalette(0, 2);
-        else if ((videoMode == VGA::VideoMode::T80x25x1bppM) ||
-                    (videoMode == VGA::VideoMode::G640x350x1bppM))
+        else if ((videoMode == VideoMode::T80x25x1bppM) || (videoMode == VideoMode::G640x350x1bppM))
             LoadPalette(0, 4);
         else
             LoadPalette(0, 0);
     }
 
-    void InitializeAndSavePalettes(Hag::System::BDA::VideoParameterTable& videoParameterTable)
+    void InitializePalettes(Hag::System::BDA::VideoParameterTable& videoParameterTable)
     {
-        using namespace Hag;
-        using namespace Hag::System;
+        using namespace Hag::VGA;
+        using namespace Hag::System::BDA;
 
-        if ((BDA::VideoDisplayDataArea::Get() & BDA::VideoDisplayDataArea::PaletteLoadingDisabled) == 0)
+        if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) == 0)
         {
-            VGA::AttributeControllerData::Write(VGA::AttributeController::Register::Palette0, videoParameterTable.AttributeControllerRegisters, 0x10);
-            VGA::AttributeController::BorderColor::Write(
-                videoParameterTable.AttributeControllerRegisters[VGA::AttributeController::Register::BorderColor]);
-            InitializePalette();
+            AttributeControllerData::Write(AttributeController::Register::Palette0, videoParameterTable.AttributeControllerRegisters, 0x10);
+            AttributeController::BorderColor::Write(
+                videoParameterTable.AttributeControllerRegisters[AttributeController::Register::BorderColor]);
+            InitializeRAMDACPalette();
         }
     }
 
     Hag::VGA::VideoMode_t VesaToLegacyModeEquivalent(Hag::VGA::VideoMode_t videoMode)
     {
+        using namespace Hag::VGA;
+
         if (videoMode < 0x20)
             return videoMode;
         if (videoMode == 0x22)
-            return Hag::VGA::VideoMode::G640x480x4bppC;
+            return VideoMode::G640x480x4bppC;
         if (videoMode < 0x28)
-            return Hag::VGA::VideoMode::G320x200x8bppC;
+            return VideoMode::G320x200x8bppC;
         if (videoMode < 0x2d)
-            return Hag::VGA::VideoMode::T80x25x4bppC;
-        return Hag::VGA::VideoMode::G640x480x4bppC;
+            return VideoMode::T80x25x4bppC;
+        return VideoMode::G640x480x4bppC;
     }
 
     void ClearScreen()
@@ -7929,7 +7906,7 @@ namespace CPP
                 }
             }
 
-            uint16_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint16_t>(count);
+            uint16_t* ptr = FARPointer(segment, 0x0000).ToPointer<uint16_t>(count << 1);
             for (uint16_t i = 0; i < count; ++i)
             {
                 *ptr = value;
@@ -8014,10 +7991,8 @@ namespace CPP
                     font += 9;
 
                     memcpy(ptr.ToPointer<uint8_t>(7), font, 7);
-                    ptr.Offset += 7;
+                    ptr.Offset += 8;
                     font += 7;
-
-                    ++ptr.Offset;
                 }
                 else
                 {
@@ -8025,9 +8000,8 @@ namespace CPP
                     ptr.Offset += span;
                     font += span;
                 }
-                ptr.Offset -= span;
-                ptr.Offset += 0x0020;
 
+                ptr.Offset += 32 - span;
                 --count;
 
             } while (count != 0);
@@ -8039,7 +8013,6 @@ namespace CPP
             ++font;
             ++count;
         } while (offset != 0);
-
     }
 
     void SelectAndLoadFont()
@@ -8083,6 +8056,55 @@ namespace CPP
         VGA::AttributeControllerIndex::Write(VGA::AttributeControllerIndex::EnableVideoDisplay);
     }
     
+    void ApplyGraphicsCharacterSetOverride()//Offset 0x15ee
+    {
+        using namespace Hag::System;
+        BDA::VideoParameterControlBlock* videoParameterControlBlock = 
+            BDA::VideoParameterControlBlockPointer::Get().ToPointer<BDA::VideoParameterControlBlock>();
+
+        //TODO
+        //     mov   al, BDA_VPCB_GrahicsCharSetOverride;0xc
+        //     call  LookupVideoParameterControlBlockPointer;Offset 0x317d
+        //     je    Label0x1611                   ;Offset 0x1611
+        //     mov   al, 07h
+        //     call  AppliesToCurrentMode                    ;Offset 0x30b5
+        //     jne   Label0x1611                   ;Offset 0x1611
+        //     lodsb byte ptr es:[si]
+        //     dec   ax
+        //     mov   byte ptr ds:[BDA_RowsOnScreen], al;Offset 0x484
+        //     lodsw word ptr es:[si]
+        //     mov   word ptr ds:[BDA_PointHeightOfCharacterMatrix], ax;Offset 0x485
+        //     lodsw word ptr es:[si]
+        //     mov   word ptr ds:[INT_43_HandlerOfs], ax;Offset 0x10c
+        //     lodsw word ptr es:[si]
+        //     mov   word ptr ds:[INT_43_HandlerSeg], ax;Offset 0x10e
+        // Label0x1611:                            ;Offset 0x1611
+        //     ret
+    }
+
+    void Func0x1574()
+    {
+        //TODO
+        //     call  GetNumberOfActiveScanlines    ;Offset 0x3054
+        //     dec   al
+        //     js    Label0x158e                   ;Offset 0x158e
+        //     lea   ax, [Font8x16]                ;Offset 0x3f20
+        //     mov   word ptr ds:[INT_43_HandlerOfs], ax;Offset 0x10c
+        //     mov   ax, cs
+        //     mov   word ptr ds:[INT_43_HandlerSeg], ax;Offset 0x10e
+        //     jne   Label0x158e                   ;Offset 0x158e
+        //     mov   ax, 0bd70h
+        //     int   6dh
+        // Label0x158e:                            ;Offset 0x158e
+        //     xor   ax, ax
+        //     mov   word ptr ds:[BDA_CursorEndScanLine], ax;Offset 0x460
+        Hag::System::BDA::CursorScanLines::Get().End = 0;
+        Hag::System::BDA::CursorScanLines::Get().Start = 0;
+        //     call  ApplyGraphicsCharacterSetOverride                    ;Offset 0x15ee
+        ApplyGraphicsCharacterSetOverride();
+        //     ret
+    }
+
     void ResetCRTCExtensionRegisters();
     void ConfigureEGAFeatureBitSwitchesAdapter(Hag::VGA::VideoMode_t& videoMode, Hag::System::BDA::VideoModeOptions_t& modeOptions);
 
@@ -8126,12 +8148,14 @@ namespace CPP
             ~(CRTCExtension::HorizontalCounterExtensions::HorizontalSyncOff |
             CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff));
 
-        InitializeAndSavePalettes(videoParameterTable);
+        InitializePalettes(videoParameterTable);
 
         ClearScreen();
 
         if (ShouldLoadTextFont())
             SelectAndLoadFont();
+        else
+            Func0x1574();
 
         ActivateAttributeController();
         TurnScreenOn();
@@ -8188,8 +8212,6 @@ namespace CPP
             BDA::VideoModeOptions_t VideoModeOptions;
         };
 
-        TestValues* config = NULL;
-
         static TestValues Monochrome = 
         {
             0x80,
@@ -8211,24 +8233,24 @@ namespace CPP
         if (((BDA::VideoDisplayDataArea::Get() & BDA::VideoDisplayDataArea::VGA) != 0) &&
             (videoMode != BDA::DisplayMode::Get()))
         {
-            config = ((videoMode == VGA::VideoMode::T80x25x1bppM) ||
-                         (videoMode == VGA::VideoMode::G640x350x1bppM)) ? &Monochrome : &Color;
+            TestValues& config = ((videoMode == VGA::VideoMode::T80x25x1bppM) ||
+                         (videoMode == VGA::VideoMode::G640x350x1bppM)) ? Monochrome : Color;
 
             VGA::VideoMode_t originalVideoMode = videoMode;
 
-            if (BDA::VideoBaseIOPort::Get() != config->CRTControllerIndexPort)
+            if (BDA::VideoBaseIOPort::Get() != config.CRTControllerIndexPort)
             {
                 videoMode = VGA::VideoMode::T80x25x1bppM;
 
-                if ((BDA::DetectedHardware::Get() & BDA::DetectedHardware::InitialVideoModeMask) != config->DetectedHardware1)
+                if ((BDA::DetectedHardware::Get() & BDA::DetectedHardware::InitialVideoModeMask) != config.DetectedHardware1)
                 {
                     videoMode = VGA::VideoMode::T80x25x4bppC;
 
-                    if ((BDA::DetectedHardware::Get() & BDA::DetectedHardware::InitialVideoModeMask) >= config->DetectedHardware2)
+                    if ((BDA::DetectedHardware::Get() & BDA::DetectedHardware::InitialVideoModeMask) >= config.DetectedHardware2)
                     {
                         videoMode = originalVideoMode;
                         videoModeOptions &= ~BDA::VideoModeOptions::Monochrome;
-                        videoModeOptions |= config->VideoModeOptions;
+                        videoModeOptions |= config.VideoModeOptions;
 
                         BDA::EGAFeatureBitSwitches_t bitSwitches = BDA::EGAFeatureBitSwitches::Get();
                         bitSwitches &= BDA::EGAFeatureBitSwitches::AdapterTypeMask;
@@ -8251,10 +8273,10 @@ namespace CPP
                             lineMode200 &= BDA::VideoDisplayDataArea::LineMode200;
 
                             lineMode200 >>= 7;
-                            lineMode200 &= config->VideoDisplayDataArea;
+                            lineMode200 &= config.VideoDisplayDataArea;
 
                             adapter -= lineMode200;
-                            displayDataArea |= mask & config->VideoDisplayDataArea;
+                            displayDataArea |= mask & config.VideoDisplayDataArea;
 
                             BDA::EGAFeatureBitSwitches::Get() &= BDA::EGAFeatureBitSwitches::FeatureConnectorMask;
                             BDA::EGAFeatureBitSwitches::Get() |= adapter;
@@ -8377,6 +8399,7 @@ namespace CPP
         Hag::Vesa::VideoMode::G1024x768x32bpp,      //0x118      //4MB
         Hag::Vesa::VideoMode::G1280x1024x15bpp,     //0x119
         Hag::Vesa::VideoMode::G1280x1024x16bpp,     //0x11a
+        Hag::Vesa::VideoMode::G1280x1024x32bpp,     //0x11b
         Hag::Vesa::VideoMode::G1600x1200x15bpp2,    //0x11d
         Hag::Vesa::VideoMode::G1600x1200x16bpp2,    //0x11e
         0xFFFF
@@ -8474,8 +8497,8 @@ namespace CPP
     }
 
     uint8_t Max4MB(uint8_t value)
-    {
-        return value > 0x40 ? 0x40 : value;
+    {//We don't cap our memory!!!
+        return value;// > 0x40 ? 0x40 : value;
     }
 
     bool ValidateVesaMode(Hag::Vesa::VideoMode_t videoMode)
@@ -8595,7 +8618,7 @@ namespace CPP
         0x2F,
         { 0xCE, 0x9F, 0x9F, 0x12, 0xA5, 0x13, 0x28, 0x5A, 0x00, 0x60, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x23, 0xFF, 0xA0, 0x00, 0xFF, 0x29, 0xC3, 0xFF },
         { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0x50 } //This last byte is shared with the next table. stupid.
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF }
     };
 
     //Offset 0x6c24
@@ -8609,7 +8632,7 @@ namespace CPP
         0x2F,
         { 0x09, 0xC7, 0xC7, 0x0D, 0xCF, 0x07, 0xE0, 0x00, 0x00, 0x40, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x23, 0xAF, 0xC8, 0x00, 0xAF, 0xE1, 0xC3, 0xFF },
         { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x41, 0x02, 0x0F, 0x00 },
-        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0x64 } //This last byte is shared with the next table. stupid.
+        { 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x05, 0x0F, 0xFF }
     };
 
     //Offset 0x6ca3
@@ -8694,6 +8717,7 @@ namespace CPP
                             // bit    4 :      0 = 8bit DAC, scale div 1
                             // bit    5 :      0 = 8bit DAC, scale div 2
                             // bit    6 :      0 = 16bpp, 1 = 15bpp
+                            // bit    7 :      1 = font override
         Hag::System::BDA::VideoParameterTable* VideoParameters;
         uint8_t Unknown2;
         uint8_t Unknown3;
@@ -9778,6 +9802,7 @@ namespace CPP
                     }
                     else
                     {
+                        //We never get here.
                         ApplyMode(Hag::VGA::VideoMode::T80x25x1bppM, videoModeOptions & ~Hag::System::BDA::VideoModeOptions::DontClearDisplay, Hag::VGA::Register::CRTControllerIndexB, videoParameterTableOverride);
                     }
                     ret = true;
@@ -10888,34 +10913,10 @@ void MatroxMystiqueMockConfigSetup(Hag::IAllocator& allocator)
     //printf("Succes!\n");
 }
 
-uint8_t modes[] = 
+uint16_t ignorePorts[] = 
 {
-            //          text/   text    pixel   pixel       colors  display screen
-            //          grph    resol   box     resolution          pages    addr
-    0x00,   // 00h =    T       40x25   9x16    360x400      16       8     B800
-    0x01,   // 01h =    T       40x25   9x16    360x400      16       8     B800
-    0x02,   // 02h =    T       80x25   9x16    720x400      16       8     B800
-    0x03,   // 03h =    T       80x25   9x16    720x400      16       8     B800
-            //     =    T       80x50   8x8     640x400      16       4     B800
-    0x04,   // 04h =    G       40x25   8x8     320x200       4       .     B800
-    0x05,   // 05h =    G       40x25   8x8     320x200       4       .     B800
-    0x06,   // 06h =    G       80x25   8x8     640x200       2       .     B800
-    0x07,   // 07h =    T       80x25   9x16    720x400     mono      .     B000
-            // 08h =    ?
-            // 09h =    ?
-            // 0Ah =    ?
-            // 0Bh =    Reserved
-            // 0Ch =    Reserved
-    0x0D,   // 0Dh =    G       40x25   8x8     320x200      16       8     A000
-    0x0E,   // 0Eh =    G       80x25   8x8     640x200      16       4     A000
-    0x0F,   // 0Fh =    G       80x25   8x14    640x350     mono      2     A000
-    0x10,   // 10h =    G         .      .      640x350      16       .     A000
-    0x11,   // 11h =    G       80x30   8x16    640x480     mono      .     A000
-    0x12,   // 12h =    G       80x30   8x16    640x480      16/256K  .     A000
-    0x13    // 13h =    G       40x25   8x8     320x200     256/256K  .     A000
+    0x03DA
 };
-
-uint16_t modesCount = sizeof(modes);
 
 int Diff(const char* name)
 {
@@ -10923,7 +10924,8 @@ int Diff(const char* name)
     if (Hag::Testing::Mock::HasDifferences())
     {
         printf("\n%s >----------------\n", name);
-        Hag::Testing::Mock::Report();
+        Hag::Testing::Mock::Report(ignorePorts, sizeof(ignorePorts) / sizeof(uint16_t));
+        printf("\n\n\n");
         ret = 0;
     }
     Hag::Testing::Mock::Snapshot();
@@ -11524,11 +11526,1161 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
 }
 #endif
 
+uint8_t modes[] = 
+{
+            //          text/   text    pixel   pixel       colors  display screen
+            //          grph    resol   box     resolution          pages    addr
+    0x00,   // 00h =    T       40x25   9x16    360x400      16       8     B800
+    0x01,   // 01h =    T       40x25   9x16    360x400      16       8     B800
+    0x02,   // 02h =    T       80x25   9x16    720x400      16       8     B800
+    0x03,   // 03h =    T       80x25   9x16    720x400      16       8     B800
+            //     =    T       80x50   8x8     640x400      16       4     B800
+    0x04,   // 04h =    G       40x25   8x8     320x200       4       .     B800
+    0x05,   // 05h =    G       40x25   8x8     320x200       4       .     B800
+    0x06,   // 06h =    G       80x25   8x8     640x200       2       .     B800
+    0x07,   // 07h =    T       80x25   9x16    720x400     mono      .     B000
+            // 08h =    ?
+            // 09h =    ?
+            // 0Ah =    ?
+            // 0Bh =    Reserved
+            // 0Ch =    Reserved
+    0x0D,   // 0Dh =    G       40x25   8x8     320x200      16       8     A000
+    0x0E,   // 0Eh =    G       80x25   8x8     640x200      16       4     A000
+    0x0F,   // 0Fh =    G       80x25   8x14    640x350     mono      2     A000
+    0x10,   // 10h =    G         .      .      640x350      16       .     A000
+    0x11,   // 11h =    G       80x30   8x16    640x480     mono      .     A000
+    0x12,   // 12h =    G       80x30   8x16    640x480      16/256K  .     A000
+    0x13    // 13h =    G       40x25   8x8     320x200     256/256K  .     A000
+};
+
+uint16_t modesCount = sizeof(modes);
+
+struct TestMode
+{
+    uint16_t LegacyMode;
+    uint16_t Width;
+    uint16_t Height;
+    Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel_t Bpp;
+    Hag::Matrox::Shared::Function::ModeSetting::Flags_t Flags;
+    Hag::Matrox::Shared::Function::ModeSetting::RefreshRate_t RefreshRate;
+};
+
+TestMode TestModes[] =
+{
+    {//1
+        Hag::VGA::VideoMode::T40x25x4bppC,
+        40,
+        25,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//3
+        Hag::VGA::VideoMode::T80x25x4bppC,
+        80,
+        25,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//4
+        Hag::VGA::VideoMode::G320x200x2bppC,
+        320,
+        200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp2,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//6
+        Hag::VGA::VideoMode::G640x200x1bppM,
+        640,
+        200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//7
+        Hag::VGA::VideoMode::T80x25x1bppM,
+        80,
+        25,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//D
+        Hag::VGA::VideoMode::G320x200x4bppC,
+        320,
+        200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//E
+        Hag::VGA::VideoMode::G640x200x4bppC,
+        640,
+        200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//F
+        Hag::VGA::VideoMode::G640x350x1bppM,
+        640,
+        350,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//10
+        Hag::VGA::VideoMode::G640x350x4bppC,
+        640,
+        350,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//11
+        Hag::VGA::VideoMode::G640x480x1bppM,
+        640,
+        480,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz
+    },
+    {//12
+        Hag::VGA::VideoMode::G640x480x4bppC,
+        640,
+        480,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz
+    },
+    {//13
+        Hag::VGA::VideoMode::G320x200x8bppC,
+        320,
+        200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//100
+        Hag::Vesa::VideoMode::G640x400x8bpp,
+        640,
+        400,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//101
+        Hag::Vesa::VideoMode::G640x480x8bpp,
+        640,
+        480,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//102
+        Hag::Vesa::VideoMode::G800x600x4bpp,
+        800,
+        600,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//103
+        Hag::Vesa::VideoMode::G800x600x8bpp,
+        800,
+        600,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//105
+        Hag::Vesa::VideoMode::G1024x768x8bpp,
+        1024,
+        768,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//107
+        Hag::Vesa::VideoMode::G1280x1024x8bpp,
+        1280,
+        1024,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//108
+        Hag::Vesa::VideoMode::T80x60x4bpp,
+        80,
+        60,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz
+    },
+    {//109
+        Hag::Vesa::VideoMode::T132x25x4bpp,
+        132,
+        25,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//10A
+        Hag::Vesa::VideoMode::T132x43x4bpp,
+        132,
+        43,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//10B
+        Hag::Vesa::VideoMode::T132x50x4bpp,
+        132,
+        50,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//10C
+        Hag::Vesa::VideoMode::T132x60x4bpp,
+        132,
+        60,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//110
+        Hag::Vesa::VideoMode::G640x480x15bpp,
+        640,
+        480,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//111
+        Hag::Vesa::VideoMode::G640x480x16bpp,
+        640,
+        480,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//112
+        Hag::Vesa::VideoMode::G640x480x32bpp,
+        640,
+        480,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//113
+        Hag::Vesa::VideoMode::G800x600x15bpp,
+        800,
+        600,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//114
+        Hag::Vesa::VideoMode::G800x600x16bpp,
+        800,
+        600,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//115
+        Hag::Vesa::VideoMode::G800x600x32bpp,
+        800,
+        600,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//116
+        Hag::Vesa::VideoMode::G1024x768x15bpp,
+        1024,
+        768,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//117
+        Hag::Vesa::VideoMode::G1024x768x16bpp,
+        1024,
+        768,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//118
+        Hag::Vesa::VideoMode::G1024x768x32bpp,
+        1024,
+        768,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//119
+        Hag::Vesa::VideoMode::G1280x1024x15bpp,
+        1280,
+        1024,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//11A
+        Hag::Vesa::VideoMode::G1280x1024x16bpp,
+        1280,
+        1024,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//11B
+        Hag::Vesa::VideoMode::G1280x1024x32bpp,
+        1280,
+        1024,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//11C
+        Hag::Vesa::VideoMode::G1600x1200x8bpp2,
+        1600,
+        1200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//11D
+        Hag::Vesa::VideoMode::G1600x1200x15bpp2,
+        1600,
+        1200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//11E
+        Hag::Vesa::VideoMode::G1600x1200x16bpp2,
+        1600,
+        1200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },/* Not supported on 4MB Also matrox BIOS uses this mode ID for something else.
+    {//11F
+        Hag::Vesa::VideoMode::G1600x1200x32bpp2,
+        1600,
+        1200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+    },*/
+};
+
+//If you are wondering why the below code is so explicit, it's because it's super easy to mess up.
+
+bool IsExtendedMode(CPP::VesaMode& vesaMode)
+{
+    //Note to self, MGA mode and clock select are not the same thing...
+    return (vesaMode.Flags & 0x03) == 0x00;
+}
+
+uint8_t CharacterClockInPixels(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    //Dot clock select bit is in bit 0.
+    uint8_t dotClockSelect = table.SequencerRegisters[Sequencer::Register::ClockingMode] & Sequencer::ClockingMode::DotClockSelect;
+    //dotClockSelect == 0 -> 9 pixels, 1 -> 8 pixels.
+    uint8_t characterClockInPixels = dotClockSelect == 1 ? 8 : 9;
+
+    return characterClockInPixels;
+}
+
+uint8_t ScanlineDouble(CPP::VesaMode& vesaMode)//Returns 0 if no doubling, 1 if there is.
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    //Scan line bit is in bit 2.
+    uint8_t scanlineDouble = table.CRTCRegisters[CRTController::Register::CRTCModeControl] & CRTController::CRTCModeControl::VerticalTotalDouble;
+    //move to bit 0.
+    scanlineDouble >>= 2;
+
+    return scanlineDouble;
+}
+
+uint32_t HorizontalTotalChars(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t horizontalTotal = table.CRTCRegisters[CRTController::Register::HorizontalTotal];
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bit 8 is in bit 0.
+        uint32_t horizontalTotalBit8 = vesaMode.HorizontalCounterExtensions & Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalTotal8;
+        //Move to bit 8.
+        horizontalTotalBit8 <<= 8;
+        //Move bit in to place.
+        horizontalTotal |= horizontalTotalBit8;
+    }
+    return horizontalTotal + 5;
+}
+
+uint32_t HorizontalTotalPixels(CPP::VesaMode& vesaMode)
+{
+    return HorizontalTotalChars(vesaMode) * CharacterClockInPixels(vesaMode);
+}
+
+uint32_t HorizontalDisplayEnableEndChars(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t horizontalDisplay = table.CRTCRegisters[CRTController::Register::HorizontalDisplayEnd];
+
+    return horizontalDisplay + 1;
+}
+
+uint32_t HorizontalDisplayEnableEndPixels(CPP::VesaMode& vesaMode)
+{
+    return HorizontalDisplayEnableEndChars(vesaMode) * CharacterClockInPixels(vesaMode);
+}
+
+uint32_t HorizontalBlankStartChars(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t startHorizontalBlank = table.CRTCRegisters[CRTController::Register::StartHorizontalBlank];
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bit 8 is in bit 1.
+        uint32_t startHorizontalBlankBit8 = vesaMode.HorizontalCounterExtensions & Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalBlankingStart8;
+        //Move to bit 8.
+        startHorizontalBlankBit8 <<= 7;
+        //Move bit in to place.
+        startHorizontalBlank|= startHorizontalBlankBit8;
+    }
+    return startHorizontalBlank + 1;//+1 added by me.
+}
+
+uint32_t HorizontalBlankStartPixels(CPP::VesaMode& vesaMode)
+{
+    return HorizontalBlankStartChars(vesaMode) * CharacterClockInPixels(vesaMode);
+}
+
+uint32_t HorizontalBlankEndChars(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    //5 bits.
+    uint32_t endHorizontalBlank = table.CRTCRegisters[CRTController::Register::EndHorizontalBlank] & CRTController::EndHorizontalBlank::EndHorizontalBlankLow;
+    //Extension bit 5 is in bit 7.
+    uint32_t endHorizontalBlankBit5 = table.CRTCRegisters[CRTController::Register::EndHorizontalSyncPosition] & CRTController::EndHorizontalSyncPosition::EndHorizontalBlankHigh;
+    //Move to bit 5.
+    endHorizontalBlankBit5 >>= 2;
+    //Move bit in to place.
+    endHorizontalBlank |= endHorizontalBlankBit5;
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bit 6 is in bit 6.
+        uint32_t endHorizontalBlankBit6 = vesaMode.HorizontalCounterExtensions & Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalBlankingEnd6;
+        //Move bit in to place.
+        endHorizontalBlank |= endHorizontalBlankBit6;
+        //Fetch start horizontal blank.
+        uint32_t startHorizontalBlank = HorizontalBlankStartChars(vesaMode);
+        //Recover top bits from startHorizontal Blank.
+        uint32_t startHorizontalBlankTopBits = startHorizontalBlank & ~0x7F;//And off the irrelevant bits.
+        //Move bits in to place.
+        endHorizontalBlank |= startHorizontalBlankTopBits;
+        //If start is less than end, add an extra top bit to compensate.
+        if (startHorizontalBlank >= endHorizontalBlank) endHorizontalBlank += 0x80;
+    }
+    else
+    {
+        //Fetch start horizontal blank.
+        uint32_t startHorizontalBlank = HorizontalBlankStartChars(vesaMode);
+        //Recover top bits from startHorizontal Blank.
+        uint32_t startHorizontalBlankTopBits = startHorizontalBlank & ~0x3F;//And off the irrelevant bits.
+        //Move bits in to place.
+        endHorizontalBlank |= startHorizontalBlankTopBits;
+        //If start is less than end, add an extra top bit to compensate.
+        if (startHorizontalBlank >= endHorizontalBlank) endHorizontalBlank += 0x40;
+    }
+
+    return endHorizontalBlank + 1; //+1 added by me.
+}
+
+uint32_t HorizontalBlankEndPixels(CPP::VesaMode& vesaMode)
+{
+    return HorizontalBlankEndChars(vesaMode) * CharacterClockInPixels(vesaMode);
+}
+
+uint32_t HorizontalSyncStartChars(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint16_t startHorizontalSync = table.CRTCRegisters[CRTController::Register::StartHorizontalSyncPosition];
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bit 8 is in bit 2.
+        uint32_t startHorizontalSyncBit8 = vesaMode.HorizontalCounterExtensions & Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalRetraceStart8;
+        //Move to bit 8.
+        startHorizontalSyncBit8 <<= 6;
+        //Move bit in to place.
+        startHorizontalSync |= startHorizontalSyncBit8;
+    }
+
+    return startHorizontalSync;
+}
+
+uint32_t HorizontalSyncStartPixels(CPP::VesaMode& vesaMode)
+{
+    return HorizontalSyncStartChars(vesaMode) * CharacterClockInPixels(vesaMode);
+}
+
+uint32_t HorizontalSyncEndChars(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    //5 bits.
+    uint32_t endHorizontalSync = table.CRTCRegisters[CRTController::Register::EndHorizontalSyncPosition] & CRTController::EndHorizontalSyncPosition::EndHorizontalSyncPositionLow;
+    //Fetch start horizontal sync start.
+    uint32_t startHorizontalSync = HorizontalSyncStartChars(vesaMode);
+    //Recover top bits from start horizontal sync;
+    uint32_t startHorizontalSyncTopBits = startHorizontalSync & 0xFFFFFFE0;
+    //Move bits in to place.
+    endHorizontalSync |= startHorizontalSyncTopBits;
+    //If start is less than end, add an extra top bit to compensate.
+    if (startHorizontalSync >= endHorizontalSync) endHorizontalSync += 0x20;
+    
+    return endHorizontalSync;
+}
+
+uint32_t HorizontalSyncEndPixels(CPP::VesaMode& vesaMode)
+{
+    return HorizontalSyncEndChars(vesaMode) * CharacterClockInPixels(vesaMode);
+}
+
+uint32_t VerticalDisplayEnableEndLines(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t verticalDisplayEnd = table.CRTCRegisters[CRTController::Register::VerticalDisplayEnd];
+    //Extension bit 8 is in bit 1.
+    uint32_t verticalDisplayEndBit8 = table.CRTCRegisters[CRTController::Register::CRTCOverflow] & CRTController::CRTCOverflow::VerticalDisplayEndHigh1;
+    //Move to bit 8.
+    verticalDisplayEndBit8 <<= 7;
+    //Move bit in to place.
+    verticalDisplayEnd |= verticalDisplayEndBit8;
+    //Extension bit 9 is in bit 6.
+    uint32_t verticalDisplayEndBit9 = table.CRTCRegisters[CRTController::Register::CRTCOverflow] & CRTController::CRTCOverflow::VerticalDisplayEndHigh2;
+    //Move to bit 9.
+    verticalDisplayEndBit9 <<= 3;
+    //Move bit in to place.
+    verticalDisplayEnd |= verticalDisplayEndBit9;
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bit 10 is in bit 2.
+        uint32_t verticalDisplayEndBit10 = vesaMode.VerticalCounterExtensions & Shared::CRTCExtension::VerticalCounterExtensions::VeticalDisplayEnableEnd10;
+        //Move to bit 10.
+        verticalDisplayEndBit10 <<= 8;
+        //Move bit in to place.
+        verticalDisplayEnd |= verticalDisplayEndBit10;
+    }
+    return (verticalDisplayEnd + 1) << ScanlineDouble(vesaMode);
+}
+
+uint32_t VerticalTotalLines(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t verticalTotal = table.CRTCRegisters[CRTController::Register::VerticalTotal];
+    //Extension bit 8 is in bit 0.
+    uint32_t verticalTotalBit8 = table.CRTCRegisters[CRTController::Register::CRTCOverflow] & CRTController::CRTCOverflow::VerticalTotalHigh1;
+    //Move to bit 8.
+    verticalTotalBit8 <<= 8;
+    //Move bit in to place.
+    verticalTotal |= verticalTotalBit8;
+    //Extension bit 9 is in bit 5.
+    uint32_t verticalTotalBit9 = table.CRTCRegisters[CRTController::Register::CRTCOverflow] & CRTController::CRTCOverflow::VerticalTotalHigh2;
+    //Move to bit 9.
+    verticalTotalBit9 <<= 4;
+    //Move bit in to place.
+    verticalTotal |= verticalTotalBit9;
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bits 11 and 10 are in bits 1 and 0.
+        uint32_t verticalTotalBits11And10 = vesaMode.VerticalCounterExtensions & Shared::CRTCExtension::VerticalCounterExtensions::VerticalTotal11_10;
+        //Move to bits 11 and 10.
+        verticalTotalBits11And10 <<= 10;
+        //Move bits in to place.
+        verticalTotal |= verticalTotalBits11And10;
+    }
+    return (verticalTotal + 2) << ScanlineDouble(vesaMode);
+}
+
+uint32_t VerticalBlankStartLines(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t verticalBlankStart = table.CRTCRegisters[CRTController::Register::StartVerticalBlank];
+    //Extension bit 8 is in bit 3.
+    uint32_t verticalBlankStartBit8 = table.CRTCRegisters[CRTController::Register::CRTCOverflow] & CRTController::CRTCOverflow::StartVerticalBlankHigh;
+    //Move to bit 8.
+    verticalBlankStartBit8 <<= 5;
+    //Move bit in to place.
+    verticalBlankStart |= verticalBlankStartBit8;
+    //Extension bit 9 is in bit 5.
+    uint32_t verticalBlankStartBit9 = table.CRTCRegisters[CRTController::Register::MaximumScanLine] & CRTController::MaximumScanLine::StartVerticalBlankHigh;
+    //Move to bit 9.
+    verticalBlankStartBit9 <<= 4;
+    //Move bit in to place.
+    verticalBlankStart |= verticalBlankStartBit9;
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bits 11 and 10 are in bits 3 and 4.
+        uint32_t verticalBlankStartBits11And10 = vesaMode.VerticalCounterExtensions & Shared::CRTCExtension::VerticalCounterExtensions::VerticalBlankingStart11_10;
+        //Move to bit 11 and 10.
+        verticalBlankStartBits11And10 <<= 7;
+        //Move bits in to place.
+        verticalBlankStart |= verticalBlankStartBits11And10;
+    }
+    return (verticalBlankStart + 1) << ScanlineDouble(vesaMode);
+}
+
+uint32_t VerticalBlankEndLines(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t verticalBlankEnd = table.CRTCRegisters[CRTController::Register::EndVerticalBlank];
+    //Fetch vertical blank start lines.
+    uint32_t verticalBlankStart = VerticalBlankStartLines(vesaMode);
+    //Recover top bits from vertical blank start.
+    uint32_t verticalBlankStartTopBits = verticalBlankStart & 0xFFFFFF00;
+    //Move bits in to place.
+    verticalBlankEnd |= verticalBlankStartTopBits;
+    //If start is less than end, add an extra top bit to compensate.
+    if (verticalBlankStart >= verticalBlankEnd) verticalBlankEnd += 0x100;
+    
+    //+1 add by me
+    if (IsExtendedMode(vesaMode))
+    {
+        verticalBlankEnd += 1;
+    }
+
+    return verticalBlankEnd << ScanlineDouble(vesaMode);
+}
+
+uint32_t VerticalSyncStartLines(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t verticalSyncStart = table.CRTCRegisters[CRTController::Register::VerticalRetraceStart];
+    //Extension bit 8 is in bit 2.
+    uint32_t verticalSyncStartBit8 = table.CRTCRegisters[CRTController::Register::CRTCOverflow] & CRTController::CRTCOverflow::VerticalRetraceStartHigh1;
+    //Move to bit 8.
+    verticalSyncStartBit8 <<= 6;
+    //Move bit in to place.
+    verticalSyncStart |= verticalSyncStartBit8;
+    //Extension bit 8 is in bit 7.
+    uint32_t verticalSyncStartBit9 = table.CRTCRegisters[CRTController::Register::CRTCOverflow] & CRTController::CRTCOverflow::VerticalRetraceStartHigh2;
+    //Move to bit 9.
+    verticalSyncStartBit9 <<= 2;
+    //Move bit in to place.
+    verticalSyncStart |= verticalSyncStartBit9;
+    if (IsExtendedMode(vesaMode))
+    {
+        //Extension bits 11 and 10 are in bits 6 and 5.
+        uint32_t verticalSyncStartBits11And10 = vesaMode.VerticalCounterExtensions & Shared::CRTCExtension::VerticalCounterExtensions::VerticalRetraceStart11_10;
+        //Move to bits 11 and 10.
+        verticalSyncStartBits11And10 <<= 5;
+        //Move bits in to place.
+        verticalSyncStart |= verticalSyncStartBits11And10;
+    }
+
+    return verticalSyncStart << ScanlineDouble(vesaMode);
+}
+
+uint32_t VerticalSyncEndLines(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    //4 bits.
+    uint32_t verticalSyncEnd = table.CRTCRegisters[CRTController::Register::VerticalRetraceEnd] & CRTController::VerticalRetraceEnd::VerticalRetraceEndCount;
+    //Fetch vertical sync start lines.
+    uint32_t verticalSyncStart = VerticalSyncStartLines(vesaMode);
+    //Recover top bits from sync start lines.
+    uint32_t verticalSyncStartTopBits = verticalSyncStart & 0xFFFFFFF0;
+    //Move bits in to place.
+    verticalSyncEnd |= verticalSyncStartTopBits;
+    //If start is less than end, add an extra top bit to compensate.
+    if (verticalSyncStart >= verticalSyncEnd) verticalSyncEnd += 0x10;
+
+    return verticalSyncEnd << ScanlineDouble(vesaMode);
+}
+
+bool IsInterlaced(CPP::VesaMode& vesaMode)
+{
+    return false;//No way to even set this currently.
+}
+
+bool HorizontalSyncPolarityPositive(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint8_t horizontalSyncPolarity = table.MiscellaneousOutputRegister & MiscellaneousOutput::SelectNegativeHorizontalSyncPulse;
+
+    return horizontalSyncPolarity == 0;
+}
+
+bool VerticalSyncPolarityPositive(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint8_t verticalSyncPolarity = table.MiscellaneousOutputRegister & MiscellaneousOutput::SelectNegativeVerticalSyncPulse;
+
+    return verticalSyncPolarity == 0;
+}
+
+float RefreshRateHz(CPP::VesaMode& vesaMode)
+{
+    uint32_t horizontalTotalPixels = HorizontalTotalPixels(vesaMode);
+    uint32_t verticalTotalLines = VerticalTotalLines(vesaMode);
+
+    float refreshRate = (float(vesaMode.FrequencyKHz) / (horizontalTotalPixels * verticalTotalLines)) * 1000.0f;
+
+    return refreshRate;
+}
+
+uint32_t Offset(CPP::VesaMode& vesaMode)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::System;
+    using namespace Hag::Matrox;
+
+    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
+
+    uint32_t offset = table.CRTCRegisters[CRTController::Register::ScreenOffset];
+    //Extension bits 9 and 8 are in bits 5 and 4 of CREXT00. This register is not encoded in the settings.
+
+    return offset;
+}
+
+void VesaPrintTimings(CPP::VesaMode& vesaMode)
+{
+    uint32_t horizontalAddressPixels = HorizontalDisplayEnableEndPixels(vesaMode);
+    uint32_t verticalAddressLines = VerticalDisplayEnableEndLines(vesaMode);
+    float refreshRateHz = RefreshRateHz(vesaMode);
+
+    printf("\n\nTiming Name         = %i x %i @ %.fHz;\n\n",
+        horizontalAddressPixels, verticalAddressLines, refreshRateHz);
+
+    printf("Hor Pixels          = %4i;         // Pixels\n", horizontalAddressPixels);
+    printf("Ver Pixels          = %4i;         // Pixels\n\n", verticalAddressLines);
+
+    uint32_t horizontalTotalPixels = HorizontalTotalPixels(vesaMode);
+    float horizontalFrequencyKhz = float(vesaMode.FrequencyKHz) / horizontalTotalPixels;
+    float horizontalTotalTimeUsec = 1000.0f / horizontalFrequencyKhz;
+
+    printf("Hor Frequency       = %.3f;       // kHz      =    %.1f usec / line\n",
+        horizontalFrequencyKhz, horizontalTotalTimeUsec);
+
+    float verticalTotalTimeMsec = 1000.0f / refreshRateHz;
+    printf("Ver Frequency       = %.3f;       // Hz       =    %.1f msec / frame\n\n",
+        refreshRateHz, verticalTotalTimeMsec);
+
+    float pixelClockMHz = float(vesaMode.FrequencyKHz) / 1000.0f;
+    float pixelTime = 1000.0f / pixelClockMHz;
+
+    printf("Pixel Clock         = %.3f;       // MHz      =    %.1f nsec ± 0.5%\n",
+        pixelClockMHz, pixelTime);
+
+    uint32_t characterWidth = CharacterClockInPixels(vesaMode);
+    float characterTime = (characterWidth * 1000.0f) / pixelClockMHz;
+
+    printf("Character Width     = %i;            // Pixels   =   %.1f nsec\n",
+        characterWidth, characterTime);
+
+    printf("Scan Type           = %s;                // H Phase  =   ? %\n",
+        IsInterlaced(vesaMode) ? "INTERLACED" : "NONINTERLACED");
+
+    uint32_t horizontalBlankDurationPixels = HorizontalBlankEndPixels(vesaMode) - HorizontalBlankStartPixels(vesaMode);
+    float hblankPercentage = 100.0f * (float(horizontalBlankDurationPixels) / horizontalTotalPixels);
+
+    printf("Hor Sync Polarity   = %s;     // HBlank   =   %.1f%% of HTotal\n",
+        HorizontalSyncPolarityPositive(vesaMode) ? "POSITIVE" : "NEGATIVE", hblankPercentage);
+
+    uint32_t verticalBlankDurationLines = VerticalBlankEndLines(vesaMode) - VerticalBlankStartLines(vesaMode);
+    uint32_t verticalTotalLines = VerticalTotalLines(vesaMode);
+    float vblankPercentage = 100.0f * (float(verticalBlankDurationLines) / verticalTotalLines);
+
+    printf("Ver Sync Polarity   = %s;     // VBlank   =   %.1f%% of VTotal\n\n",
+        VerticalSyncPolarityPositive(vesaMode) ? "POSITIVE" : "NEGATIVE", vblankPercentage);
+
+    float horizontalTotalTime = float(horizontalTotalPixels) / pixelClockMHz;
+    uint32_t horizontalTotalChars = HorizontalTotalChars(vesaMode);
+
+    printf("Hor Total Time      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+        horizontalTotalTime, horizontalTotalChars, horizontalTotalPixels);
+
+    float horizontalAddressTime = float(horizontalAddressPixels) / pixelClockMHz;
+    uint32_t horizontalAddressChars = HorizontalDisplayEnableEndChars(vesaMode);
+
+    printf("Hor Addr Time       = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+        horizontalAddressTime, horizontalAddressChars, horizontalAddressPixels);
+
+    uint32_t horizontalBlankStartPixels = HorizontalBlankStartPixels(vesaMode);
+    uint32_t horizontalBlankStartChars = HorizontalBlankStartChars(vesaMode);
+    float horizontalBlankStartTime = float(horizontalBlankStartPixels) / pixelClockMHz;
+
+    printf("Hor Blank Start     = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+        horizontalBlankStartTime, horizontalBlankStartChars, horizontalBlankStartPixels);
+
+    uint32_t horizontalBlankDurationChars = HorizontalBlankEndChars(vesaMode) - HorizontalBlankStartChars(vesaMode);
+    float horizontalBlankDurationTime = float(horizontalBlankDurationPixels) / pixelClockMHz;
+
+    printf("Hor Blank Time      =  %1.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+        horizontalBlankDurationTime, horizontalBlankDurationChars, horizontalBlankDurationPixels);
+
+    uint32_t horizontalSyncStartChars = HorizontalSyncStartChars(vesaMode);
+    uint32_t horizontalSyncStartPixels = HorizontalSyncStartPixels(vesaMode);
+    float horizontalSyncStartTime = float(horizontalSyncStartPixels) / pixelClockMHz;
+
+    printf("Hor Sync Start      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n\n",
+        horizontalSyncStartTime, horizontalSyncStartChars, horizontalSyncStartPixels);
+
+    uint32_t horizontalRightBorderChars = HorizontalBlankStartChars(vesaMode) - HorizontalDisplayEnableEndChars(vesaMode);
+    uint32_t horizontalRightBorderPixels = HorizontalBlankStartPixels(vesaMode) - HorizontalDisplayEnableEndPixels(vesaMode);
+    float horizontalRightBorderTime = float(horizontalRightBorderPixels) / pixelClockMHz;
+
+    printf("// H Right Border   = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+        horizontalRightBorderTime, horizontalRightBorderChars, horizontalRightBorderPixels);
+
+    uint32_t horizontalFrontPorchChars = HorizontalSyncStartChars(vesaMode) - HorizontalBlankStartChars(vesaMode);
+    uint32_t horizontalFrontPorchPixels = HorizontalSyncStartPixels(vesaMode) - HorizontalBlankStartPixels(vesaMode);
+    float horizontalFrontPorchTime = float(horizontalFrontPorchPixels) / pixelClockMHz;
+
+    printf("// H Front Porch    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+        horizontalFrontPorchTime, horizontalFrontPorchChars, horizontalFrontPorchPixels);
+
+    uint32_t horizontalSyncDurationChars = HorizontalSyncEndChars(vesaMode) - HorizontalSyncStartChars(vesaMode);
+    uint32_t horizontalSyncDurationPixels = HorizontalSyncEndPixels(vesaMode) - HorizontalSyncStartPixels(vesaMode);
+    float horizontalSyncDurationTime = float(horizontalSyncDurationPixels) / pixelClockMHz;
+
+    printf("Hor Sync Time       = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    horizontalSyncDurationTime, horizontalSyncDurationChars, horizontalSyncDurationPixels);
+
+    uint32_t horizontalBackPorchChars = HorizontalBlankEndChars(vesaMode) - HorizontalSyncEndChars(vesaMode);
+    uint32_t horizontalBackPorchPixels = HorizontalBlankEndPixels(vesaMode) - HorizontalSyncEndPixels(vesaMode);
+    float horizontalBackPorchTime = float(horizontalBackPorchPixels) / pixelClockMHz;
+
+    printf("// H Back Porch     = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+        horizontalBackPorchTime, horizontalBackPorchChars, horizontalBackPorchPixels);
+
+    uint32_t horizontalLeftBorderChars = HorizontalTotalChars(vesaMode) - HorizontalBlankEndChars(vesaMode);
+    uint32_t horizontalLeftBorderPixels = HorizontalTotalPixels(vesaMode) - HorizontalBlankEndPixels(vesaMode);
+    float horizontalLeftBorderTime = float(horizontalLeftBorderPixels) / pixelClockMHz;
+
+    printf("// H Left Border    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n\n",
+        horizontalLeftBorderTime, horizontalLeftBorderChars, horizontalLeftBorderPixels);
+
+    float verticalTotalTime = 1000.0f / refreshRateHz;
+
+    printf("Ver Total Time      = %2.3f;       // (msec)   =  %4i lines     HT - (1.06xHA)\n",
+        verticalTotalTime, verticalTotalLines);
+
+    float verticalAddressTime = (1000.0f * (float(verticalAddressLines) / verticalTotalLines)) / refreshRateHz;
+    float extraCalculation = horizontalTotalTime - (1.06f * horizontalAddressTime);
+
+    printf("Ver Addr Time       = %2.3f;       // (msec)   =  %4i lines         = %1.2f\n",
+        verticalAddressTime, verticalAddressLines, extraCalculation);
+
+    uint32_t verticalBlankStartLines = VerticalBlankStartLines(vesaMode);
+    float verticalBlankStartTime = (1000.0f * (float(verticalBlankStartLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("Ver Blank Start     = %2.3f;       // (msec)   =  %4i lines\n",
+        verticalBlankStartTime, verticalBlankStartLines);
+
+    float verticalBlankDurationTime = (1000.0f * (float(verticalBlankDurationLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("Ver Blank Time      =  %1.3f;       // (msec)   =  %4i lines\n",
+        verticalBlankDurationTime, verticalBlankDurationLines);
+
+    uint32_t verticalSyncStartLines = VerticalSyncStartLines(vesaMode);
+    float verticalSyncStartTime = (1000.0f * (float(verticalSyncStartLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("Ver Sync Start      = %2.3f;       // (msec)   =  %4i lines\n\n",
+        verticalSyncStartTime, verticalSyncStartLines);
+
+    uint32_t verticalBottomBorderLines = VerticalBlankStartLines(vesaMode) - VerticalDisplayEnableEndLines(vesaMode);
+    float verticalBottomBorderTime = (1000.0f * (float(verticalBottomBorderLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("// V Bottom Border  = %1.3f;        // (msec)   =  %4i lines\n",
+        verticalBottomBorderTime, verticalBottomBorderLines);
+
+    uint32_t verticalFrontPorchLines = VerticalSyncStartLines(vesaMode) - VerticalBlankStartLines(vesaMode);
+    float verticalFrontPorchTime = (1000.0f * (float(verticalFrontPorchLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("// V Front Porch    = %1.3f;        // (msec)   =  %4i lines\n",
+        verticalFrontPorchTime, verticalFrontPorchLines);
+    
+    uint32_t verticalSyncDurationLines = VerticalSyncEndLines(vesaMode) - VerticalSyncStartLines(vesaMode);
+    float verticalSyncDurationTime = (1000.0f * (float(verticalSyncDurationLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("Ver Sync Time       = %1.3f;        // (msec)   =  %4i lines\n",
+        verticalSyncDurationTime, verticalSyncDurationLines);
+
+    uint32_t verticalBackPorchLines = VerticalBlankEndLines(vesaMode) - VerticalSyncEndLines(vesaMode);
+    float verticalBackPorchTime = (1000.0f * (float(verticalBackPorchLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("// V Back Porch     = %1.3f;        // (msec)   =  %4i lines\n",
+        verticalBackPorchTime, verticalBackPorchLines);
+
+    uint32_t verticalTopBorderLines = VerticalTotalLines(vesaMode) - VerticalBlankEndLines(vesaMode);
+    float verticalTopBorderTime = (1000.0f * (float(verticalTopBorderLines) / verticalTotalLines)) / refreshRateHz;
+
+    printf("// V Top Border     = %1.3f;        // (msec)   =  %4i lines\n\n",
+        verticalTopBorderTime, verticalTopBorderLines);
+}
+
 int main(void)
 {
+
+    using namespace Hag::Matrox::Shared::Function;
+
 #ifndef MOCK
-    CPP::SetLegacyMode(0);
-    CPP::SetLegacyMode(3);
+
+
+    //Mode::PrintNewModeSettings();
+
+
+    // VesaPrintTimings(CPP::Data0x6de3);   //Offset 0x6de3 VESA_MODE_640x400x256
+    // VesaPrintTimings(CPP::Data0x6df9);   //Offset 0x6df9 VESA_MODE_640x480x256
+    // VesaPrintTimings(CPP::Data0x6e51);   //Offset 0x6e51 VESA_MODE_800x600x16
+    // VesaPrintTimings(CPP::Data0x6e69);   //Offset 0x6e69 VESA_MODE_800x600x256
+    // VesaPrintTimings(CPP::Data0x6ec1);   //Offset 0x6ec1 VESA_MODE_1024x768x256
+    // VesaPrintTimings(CPP::Data0x6f19);   //Offset 0x6f19 VESA_MODE_1280x1024x256
+    // VesaPrintTimings(CPP::Data0x6fc9);   //Offset 0x6fc9 VESA_MODE_80x60xText
+    // VesaPrintTimings(CPP::Data0x6fdf);   //Offset 0x6fdf VESA_MODE_132x25xText
+    // VesaPrintTimings(CPP::Data0x6ff5);   //Offset 0x6ff5 VESA_MODE_132x43xText
+    // VesaPrintTimings(CPP::Data0x700b);   //Offset 0x700b VESA_MODE_132x50xText
+    // VesaPrintTimings(CPP::Data0x7021);   //Offset 0x7021 VESA_MODE_132x60xText
+    // VesaPrintTimings(CPP::Data0x6e0f);   //Offset 0x6e0f VESA_MODE_640x480x32K
+    // VesaPrintTimings(CPP::Data0x6e25);   //Offset 0x6e25 VESA_MODE_640x480x64K
+    // VesaPrintTimings(CPP::Data0x6e3b);   //Offset 0x6e3b VESA_MODE_640x480x16M
+    // VesaPrintTimings(CPP::Data0x6e7f);   //Offset 0x6e7f VESA_MODE_800x600x32K
+    // VesaPrintTimings(CPP::Data0x6e95);   //Offset 0x6e95 VESA_MODE_800x600x64K
+    // VesaPrintTimings(CPP::Data0x6eab);   //Offset 0x6eab VESA_MODE_800x600x16M
+    // VesaPrintTimings(CPP::Data0x6ed7);   //Offset 0x6ed7 VESA_MODE_1024x768x32K
+    // VesaPrintTimings(CPP::Data0x6eed);   //Offset 0x6eed VESA_MODE_1024x768x64K
+    // VesaPrintTimings(CPP::Data0x6f03);   //Offset 0x6f03 VESA_MODE_1024x768x16M
+    // VesaPrintTimings(CPP::Data0x6f2f);   //Offset 0x6f2f VESA_MODE_1280x1024x32K
+    // VesaPrintTimings(CPP::Data0x6f45);   //Offset 0x6f45 VESA_MODE_1280x1024x64K
+    // VesaPrintTimings(CPP::Data0x6f5b);   //Offset 0x6f5b VESA_MODE_1280x1024x16M
+    // VesaPrintTimings(CPP::Data0x6f71);   //Offset 0x6f71 VESA_MODE_1600x1200x256
+    // VesaPrintTimings(CPP::Data0x6f87);   //Offset 0x6f87 VESA_MODE_1600x1200x32K
+    // VesaPrintTimings(CPP::Data0x6f9d);   //Offset 0x6f9d VESA_MODE_1600x1200x64K
+
+/*
+    System::Initialize();
+
+    //Mode X test
+    Mode::Set(320, 240, Mode::BitsPerPixel::Bpp8, Mode::Flags::Planar);
+
+    uint8_t* ptr = FARPointer(0xA000, 0x0000).ToPointer<uint8_t>();
+
+    Hag::VGA::Sequencer::EnableWritePlane::Write(1);
+    memset(ptr, 0x0F, 80*240);
+    Hag::VGA::Sequencer::EnableWritePlane::Write(2);
+    memset(ptr, 0x09, 80*240);
+    Hag::VGA::Sequencer::EnableWritePlane::Write(4);
+    memset(ptr, 0x0A, 80*240);
+    Hag::VGA::Sequencer::EnableWritePlane::Write(8);
+    memset(ptr, 0x0C, 80*240);
+
+    getchar();
+
+    //Mode Q(ubed) test - 256x256x256
+    Mode::Set(256, 256, Mode::BitsPerPixel::Bpp8);
+
+    for (uint32_t i = 0; i < 256*256; ++i)
+        ptr[i] = Hag::max<uint8_t>(uint8_t(i), uint8_t(i >> 8));
+
+    getchar();
+
+    for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(TestMode); ++modesIdx)
+    {
+        TestMode& testMode = TestModes[modesIdx];
+        if (!Mode::Has(testMode.Width,
+            testMode.Height,
+            testMode.Bpp,
+            testMode.Flags,
+            testMode.RefreshRate))
+            continue;
+
+        Mode::Set(testMode.Width,
+            testMode.Height,
+            testMode.Bpp,
+            testMode.Flags,
+            testMode.RefreshRate);
+
+        printf("Mode           : 0x%02X\n", testMode.LegacyMode);
+        printf("Width          : %i\n", testMode.Width);
+        printf("Height         : %i\n", testMode.Height);
+        printf("Type           : %s\n", ((testMode.Flags & Mode::Flags::Mode) == Mode::Flags::Text) ? "Text" : "Graphics");
+        printf("Bits per pixel : %i\n", testMode.Bpp);
+
+        getchar();
+    }
+   
+    Mode::Set(80, 25, Mode::BitsPerPixel::Bpp4, Mode::Flags::Text);
+    System::Shutdown();
+    */
 #else
     using namespace Hag;
     using namespace Hag::System;
@@ -11550,78 +12702,90 @@ int main(void)
     Support::Allocator allocator;
     MatroxMystiqueMockConfigSetup(allocator);
 
-    for (uint16_t modesIdx = 0; modesIdx < modesCount; ++modesIdx)
+    Hag::Matrox::Shared::Function::System::Initialize();
+    for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(TestMode); ++modesIdx)
     {
         Hag::Testing::Mock::Reset();
         
-        uint8_t mode = modes[modesIdx];
-        printf("Setting video mode 0x%02X...\n", mode);
+        TestMode& testMode = TestModes[modesIdx];
+        if (testMode.LegacyMode == 0xFFFF)
+            continue;
 
+        ModeSetting::SetVideoError_t error = ModeSetting::HasVideoMode(testMode.Width,
+            testMode.Height,
+            testMode.Bpp,
+            testMode.Flags,
+            testMode.RefreshRate);
+
+        if (error != ModeSetting::SetVideoError::Success)
+        {
+            printf("Mode 0x%02X skipped, ", testMode.LegacyMode);
+            switch(error)
+            {
+            case ModeSetting::SetVideoError::SystemNotInitialized:
+                printf("system not initialized.\n");
+                break;
+            case ModeSetting::SetVideoError::UnknownMode:
+                printf("unknown mode.\n");
+                break;
+            case ModeSetting::SetVideoError::InsufficientVideoMemory:
+                printf("insufficient video memory.\n");
+                break;
+            case ModeSetting::SetVideoError::NotSupportedByRamdac:
+                printf("not supported by ramdac.\n");
+                break;
+            case ModeSetting::SetVideoError::NotSupportedByMonitor:
+                printf("not supported by monitor.\n");
+                break;
+            }
+            continue;
+        }
+
+        //printf("Instance 0---------------\n");
         Hag::Testing::Mock::SelectInstance(0);
-        ASM::SetVideoMode(mode);
+        if (testMode.LegacyMode < 0x100)
+        {
+            printf("Setting video mode 0x%02X...\n", testMode.LegacyMode);
+            CPP::SetLegacyMode(testMode.LegacyMode);
+        }
+        else
+        {
+            printf("Setting vesa mode 0x%04X...\n", testMode.LegacyMode);
+            CPP::SetVESAMode(testMode.LegacyMode);
+        }
+        CPP::Sleep2(1);
+        CPP::GetMemoryIn64KBlocks();
+        Hag::VGA::DACWriteIndex::Write(0);
+        Hag::VGA::GraphicsControllerIndex::Write(0);
+        Hag::VGA::GraphicsControllerData::Read();
+        Hag::Matrox::Shared::CRTCExtensionIndex::Write(0x00);
+        Hag::Matrox::Shared::CRTCExtensionData::Read();
 
+        //printf("Instance 1---------------\n");
         Hag::Testing::Mock::SelectInstance(1);
-        CPP::SetLegacyMode(mode);
+        if ((testMode.Flags & ModeSetting::Flags::Mode) == ModeSetting::Flags::Text)
+        {
+            CPP::UploadFont(CPP::Font8x16, 256, 16, 0, true);//Dirty memory because we are too efficient.
+        }
+        Hag::Matrox::Shared::Function::ModeSetting::SetVideoMode(
+            testMode.Width,
+            testMode.Height,
+            testMode.Bpp,
+            testMode.Flags,
+            testMode.RefreshRate);
+        CPP::GetMemoryIn64KBlocks();
+        Hag::VGA::DACWriteIndex::Write(0);
+        Hag::VGA::GraphicsControllerIndex::Write(0);
+        Hag::VGA::GraphicsControllerData::Read();
+        Hag::Matrox::Shared::CRTCExtensionIndex::Write(0x00);
+        Hag::Matrox::Shared::CRTCExtensionData::Read();
 
         Diff("SetMode");
     }
-
-    uint16_t vesaModes[] =
-    {
-        0x100, //640x400x256
-        0x101, //640x480x256
-        0x102, //800x600x16
-        0x103, //800x600x256
-        0x104, //1024x768x16
-        0x105, //1024x768x256
-        0x106, //1280x1024x16
-        0x107, //1280x1024x256
-        0x108, //80x60 text
-        0x109, //132x25 text
-        0x10A, //132x43 text
-        0x10B, //132x50 text
-        0x10C, //132x60 text
-        0x10D, //320x200x32K
-        0x10E, //320x200x64K
-        0x10F, //320x200x16M
-        0x110, //640x480x32K
-        0x111, //640x480x64K
-        0x112, //640x480x16M
-        0x113, //800x600x32K
-        0x114, //800x600x64K
-        0x115, //800x600x16M
-        0x116, //1024x768x32K
-        0x117, //1024x768x64K
-        0x118, //1024x768x16M
-        0x119, //1280x1024x32K
-        0x11A, //1280x1024x64K
-        0x11B, //1280x1024x16M
-        0x11C, //1600x1200x256
-        0x11D, //1600x1200x32k
-        0x11E, //1600x1200x64k
-        0x120, //1600x1200x256 //Duplicates??
-        0x121, //1600x1200x32K
-        0x122, //1600x1200x64K
-    };
-
-    for (uint8_t modeIdx = 0; modeIdx < (sizeof(vesaModes) / sizeof(uint16_t)); ++modeIdx)
-    {
-        Hag::Testing::Mock::Reset();
-
-        uint16_t vesaMode = vesaModes[modeIdx];
-        printf("Setting vesa mode 0x%04X...\n", vesaMode);
-
-        Hag::Testing::Mock::SelectInstance(0);
-        ASM::SetVESAMode(vesaMode);
-
-        Hag::Testing::Mock::SelectInstance(1);
-        CPP::SetVESAMode(vesaMode);
-
-        Diff("SetVESAMode");
-    }
+    Hag::Matrox::Shared::Function::System::Shutdown();
 
     Hag::Testing::Mock::Shutdown();
 #endif
+
     return 0;
 }
-

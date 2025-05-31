@@ -20,7 +20,7 @@ namespace Address
 typedef uint8_t MachineID_t;
 namespace MachineID
 {
-    MachineID_t Read() { return *FARPointer(Address::Segment, Address::MachineID).ToPointer<MachineID_t>(); }
+    inline MachineID_t Read() { return *FARPointer(Address::Segment, Address::MachineID).ToPointer<MachineID_t>(); }
 }
 
 

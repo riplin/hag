@@ -1,5 +1,7 @@
 //Copyright 2025-Present riplin
 
+//More documentation: http://www.osdever.net/FreeVGA/home.htm
+
 #pragma once
 
 #include <hag/drivers/vga/vidmodes.h>

@@ -465,7 +465,7 @@ void ConfigureCursorPropertiesAndVerticalDisplayEnd(VideoMode_t mode, uint8_t ch
         screenHeight = 200;
     }
     else if ((mode >= VideoMode::Unknown2) &&
-        (mode <= VideoMode::G640x350x2bppC))
+        (mode <= VideoMode::G640x350x4bppC))
     {
         screenHeight = 350;
     }

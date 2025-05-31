@@ -118,7 +118,7 @@ void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* con
 void SetMemoryAccessCallback(MemoryAccessCallback_t callback, void* context);
 void CompareMemoryRegions(MemoryAccess* memoryRegions, int count, int& matches);
 
-void Report();
+void Report(uint16_t* ignorePorts = NULL, uint16_t ignorePortsCount = 0);
 bool HasDifferences();
 void Reset();
 

@@ -59,9 +59,16 @@ namespace FrameBufferAperture
     {
         return FrameBufferAperture_t(System::PCI::Read32(device, Register::FrameBufferAperture));
     }
+
     inline void Write(System::PCI::Device_t device, FrameBufferAperture_t value)
     {
         System::PCI::Write32(device, Register::FrameBufferAperture, value);
+    }
+
+    template<typename T>
+    T* GetAddress(System::PCI::Device_t device)
+    {
+        return (T*)(Read(device) & BaseAddress);
     }
 }
 

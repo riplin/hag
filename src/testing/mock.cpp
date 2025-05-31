@@ -2051,7 +2051,7 @@ bool HasDifferences()
     return false;
 }
 
-void Report()
+void Report(uint16_t* ignorePorts, uint16_t ignorePortsCount)
 {
     if (s_Instance0.Allocator == NULL)
         return;
@@ -2070,6 +2070,18 @@ void Report()
             if ((s_Instance0.PortMap[blockIndex] & bits) !=
                 (s_Instance1.PortMap[blockIndex] & bits))
             {
+                bool found = false;
+                for (uint32_t ignoreIdx = 0; ignoreIdx < ignorePortsCount; ++ignoreIdx)
+                {
+                    if (ignorePorts[ignoreIdx] == i)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found)
+                    continue;
+
                 if (s_Instance0.PortMap[blockIndex] & bits)
                 {
                     printf("Only instance 0 has content in port 0x%04X = 0x%02X\n", i, s_Instance0.Ports[i]);
@@ -2082,6 +2094,18 @@ void Report()
             else if ((s_Instance0.PortMap[blockIndex] & bits) != 0 &&
                     (s_Instance1.PortMap[blockIndex] & bits) != 0)
             {
+                bool found = false;
+                for (uint32_t ignoreIdx = 0; ignoreIdx < ignorePortsCount; ++ignoreIdx)
+                {
+                    if (ignorePorts[ignoreIdx] == i)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found)
+                    continue;
+
                 if (s_Instance0.Ports[i] != s_Instance1.Ports[i])
                 {
                     printf("Content of register 0x%02X differs: 0x%02X != 0x%02X\n", i, s_Instance0.Ports[i], s_Instance1.Ports[i]);

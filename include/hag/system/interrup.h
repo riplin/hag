@@ -18,7 +18,7 @@ namespace Hag { namespace System { namespace InterruptTable
     };
 
     template <Interrupt_t intr>
-    inline static FARPointer& Pointers() { return *((FARPointer*)(intr * 4)); }
+    inline static FARPointer& Pointer() { return *((FARPointer*)(intr * 4)); }
 }}}
 
 #pragma pack(pop);
