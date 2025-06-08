@@ -58,6 +58,11 @@ namespace ControlAperture
     {
         System::PCI::Write32(device, Register::ControlAperture, value);
     }
+
+    inline ControlAperture_t GetAddress(System::PCI::Device_t device)
+    {
+        return Read(device) & BaseAddress;
+    }
 }
 
 }}}}

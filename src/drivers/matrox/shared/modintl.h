@@ -32,6 +32,7 @@ namespace Flags //Internal flags in addition to the public flags.
 {
     enum
     {
+        PublicFlags = 0x00FF,
         MAFCSelection = 0x4000,
         MAFCVGA = 0x0000,
         MAFCDisable = 0x4000,

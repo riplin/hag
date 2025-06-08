@@ -18,6 +18,38 @@ enum
 
 }
 
+// 3 3 2 2222 2 2222 1111 1 1 1 1 1 1
+// 1 0 9 8765 4 3210 9876 5 4 3 2 1 098 7 654 3210
+// |      |     |    |    |       |     |     |   |
+// 8 4 2 1842 1 8421 8421 8 4 2 1 8 421 8 421 8421
+// x 0 0 0000 x 0000 0000 x 0 0 0 0 000 0 000 0000
+//   | |    |      |    |   | | | |   | |   |    |
+//   | |    |      |    |   | | | |   | |   |    +--- opcod
+//   | |    |      |    |   | | | |   | |   |
+//   | |    |      |    |   | | | |   | |   +-------- atype
+//   | |    |      |    |   | | | |   | |
+//   | |    |      |    |   | | | |   | +------------ linear
+//   | |    |      |    |   | | | |   |
+//   | |    |      |    |   | | | |   +-------------- zmode
+//   | |    |      |    |   | | | |
+//   | |    |      |    |   | | | +------------------ solid
+//   | |    |      |    |   | | |
+//   | |    |      |    |   | | +-------------------- arzero
+//   | |    |      |    |   | |
+//   | |    |      |    |   | +---------------------- sgnzero
+//   | |    |      |    |   |
+//   | |    |      |    |   +------------------------ shftzero
+//   | |    |      |    |
+//   | |    |      |    +---------------------------- bop
+//   | |    |      |
+//   | |    |      +--------------------------------- trans
+//   | |    |
+//   | |    +---------------------------------------- bltmod
+//   | |
+//   | +--------------------------------------------- pattern
+//   |
+//   +----------------------------------------------- transc
+
 typedef uint32_t DrawingControl_t;
 
 namespace DrawingControl
@@ -32,6 +64,7 @@ namespace DrawingControl
         AutoLineClose =             0x00000003, // AUTO, WRITE LAST
         Trapezoid =                 0x00000004, //
         TrapezoidILoad =            0x00000005, // Data from host
+        //Texture =                  0x00000006, // Texture (undocumented)
         ILoadHiqh =                 0x00000007, // HOST -> RAM scale, high quality filter
         BitBlt =                    0x00000008, // RAM -> RAM
         ILoad =                     0x00000009, // HOST -> RAM
@@ -39,6 +72,7 @@ namespace DrawingControl
         ILoadScale =                0x0000000D, // HOST -> RAM scale
         ILoadHighv =                0x0000000E, // HOST -> RAM horizontal and vertical scale, high quality filter
         ILoadFilter =               0x0000000F, // HOST -> RAM scale, filter
+
         AccessType =                0x00000070, // Access type. The atype field is used to define the type of access performed to the RAM.
         AccessReplace =             0x00000000, // RPL, Write (replace)
         AccesRaster =               0x00000010, // RSTR, Read-modify-write (raster)
@@ -50,9 +84,11 @@ namespace DrawingControl
         Gouraud =                   0x00000070, // I, Gouraud (with depth compare)
                                                 //    Depth comparison works according to the zmode setting (same as ‘ZI’);
                                                 //    however, the depth is never updated.
+
         LinearMode =                0x00000080, // Linear mode. Specifies whether the blit is linear or xy.
         XYBlit =                    0x00000000, // 0 = xy blit
         LinearBlit =                0x00000080, // 1 = linear blit
+
         ZMode =                     0x00000700, // The z drawing mode. This field must be valid for drawing using depth. This field
                                                 // specifies the type of comparison to use.
         ZAlways =                   0x00000000, // 000 = NOZCMP
@@ -62,6 +98,7 @@ namespace DrawingControl
         ZLessThanEqual =            0x00000500, // 101 = ZLTE   When depth is <=
         ZGreaterThan =              0x00000600, // 110 = ZGT    When depth is >
         ZGreaterThanEqual =         0x00000700, // 111 = ZGTE   When depth is >=
+
         Solidity =                  0x00000800, // Solid line or constant trapezoid. The solid register is not a physical register. It provides
                                                 // an alternate way to load the SRC registers (see page 4-73).
                                                 // Setting solid is useful for line drawing with no linestyle, or for trapezoid drawing with
@@ -69,11 +106,12 @@ namespace DrawingControl
                                                 // during a line or a trapezoid drawing. Writing to any of the SRC0, SRC1, SRC2,
                                                 // SRC3 or PAT0, PAT1 registers while solid is ‘1’ may produce unpredicatable
                                                 // results.
-        Solid =                     0x00000000, // 0 = No effect
-        Patterned =                 0x00000800, // 1 = SRC0 <= FFFFFFFFh
+        Patterned =                 0x00000000, // 0 = No effect
+        Solid =                     0x00000800, // 1 = SRC0 <= FFFFFFFFh
                                                 //     SRC1 <= FFFFFFFFh
                                                 //     SRC2 <= FFFFFFFFh
                                                 //     SRC3 <= FFFFFFFFh
+
         ARZero =                    0x00001000, // AR register at zero. The ARSet field provides an alternate way to set certain AR
                                                 // registers (see descriptions starting on page 4-20).
                                                 // Setting ARSet is useful when drawing rectangles, and also for certain blit operations.
@@ -92,6 +130,7 @@ namespace DrawingControl
                                                 //     AR4 <= 0h
                                                 //     AR5 <= 0h
                                                 //     AR6 <= 0h
+
         SignZero =                  0x00002000, // Sign register at zero. The SignZero bit provides an alternate way to set all the fields in
                                                 // the Sign register.
                                                 // 0 = No effect
@@ -107,10 +146,12 @@ namespace DrawingControl
                                                 //              sdxr = 0 Right edge in increment mode
                                                 //              sdy = 0 iy is added to ydst
                                                 // Writing to the Sign register when SignZero = 1 will produce unpredictable results.
+
         ShiftZero =                 0x00004000, // Shift register at zero. The ShiftZero bit provides an alternate way to set all the fields of
                                                 // the FunnelShifterControl register.
                                                 // 0 = No effect
                                                 // 1 = SHIFT <= 0h
+
         BooleanOperation =          0x000F0000, // Boolean operation between a source and a destination slice. The table below shows
                                                 // the various functions performed by the Boolean ALU for 8, 16, 24 and, 32 bits/pixel.
                                                 // During block mode operations, bop must be set to BoolSrc (0xC).
@@ -131,6 +172,7 @@ namespace DrawingControl
         BoolNotDstOrSrc =           0x000D0000, //      1101               (~D) | S
         BoolDstOrSrc =              0x000E0000, //      1110                  D | S
         BoolOne =                   0x000F0000, //      1111                    1
+
         Translucidity =             0x00F00000, // Translucidity. Specify the percentage of opaqueness of the object. The opaqueness is
                                                 // realized by writing one of ‘n’ pixels. The trans field specifies the following transparency
                                                 // pattern (where 'X' squares are opaque and ' ' squares are transparent):
@@ -150,6 +192,7 @@ namespace DrawingControl
                                                 // |  X | |    | | X  | |    | |    | |   X| |    | |X   |
                                                 // |    | |   X| |    | |X   | |  X | |    | | X  | |    |
                                                 // +----+ +----+ +----+ +----+ +----+ +----+ +----+ +----+
+
         BlitMode =                  0x1E000000, // Blit mode selection. This field is defined as used during BLIT and ILOAD operations.
                                                 // For line drawing with line style, this field must have the value BlitFormattedColor
                                                 // in order to handle the line style properly.
@@ -176,8 +219,10 @@ namespace DrawingControl
                                                 //        For ILOAD, the source data is in 24 bpp, BGR format.
         Blit24RGB =                 0x1E000000, // 1111 = Source operand is color.
                                                 //        For ILOAD, the source data is in 24 bpp, RGB format.
+
         PatternEnable =             0x20000000, // Patterning enable. This bit specifies if the patterning is enabled when performing
                                                 // BITBLT operations.
+
         TransparencyEnable =        0x40000000  // Transparency color enabled. This field can be enabled for blits, vectors that have a
                                                 // linestyle, and trapezoids with patterning. For operations with color expansion, this bit
                                                 // specifies if the background color is used.

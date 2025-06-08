@@ -57,6 +57,11 @@ namespace ILOADAperture
     {
         System::PCI::Write32(device, Register::ILOADAperture, value);
     }
+
+    inline ILOADAperture_t GetAddress(System::PCI::Device_t device)
+    {
+        return Read(device) & BaseAddress;
+    }
 }
 
 }}}}

@@ -83,7 +83,7 @@ public:
     { return v3(m_x.Fraction(), m_y.Fraction(), m_z.Fraction()); }
 
     inline v3 Normalize() const
-    { fp invSqrt = 1 / Dot(*this); return v3(m_x * invSqrt, m_y * invSqrt, m_z * invSqrt); }
+    { fp invSqrt = 1 / Dot(*this).Sqrt(); return v3(m_x * invSqrt, m_y * invSqrt, m_z * invSqrt); }
 
     inline const v3& operator=(const v3& rhs)
     { m_x = rhs.m_x; m_y = rhs.m_y; m_z = rhs.m_z; return (*this); }

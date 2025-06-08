@@ -175,7 +175,7 @@
 #include <hag/drivers/matrox/shared/regs/fgcol.h>           //0x1C24
 #include <hag/drivers/matrox/shared/regs/blcolkey.h>        //0x1C24
 #include <hag/drivers/matrox/shared/regs/src.h>             //0x1C30, 0x1C34, 0x1C38, 0x1C3C
-#include <hag/drivers/matrox/shared/regs/xyaddr.h>          //0x1C40, 0x1C44
+#include <hag/drivers/matrox/shared/regs/xyaddr.h>          //0x1C40, 0x1C44, 0x1C84, 0x1CA8, 0x1CAC, 0x1CB0, 0x1C88, 0x1C90
 #include <hag/drivers/matrox/shared/regs/shift.h>           //0x1C50
 #include <hag/drivers/matrox/shared/regs/dmapad.h>          //0x1C54
 #include <hag/drivers/matrox/shared/regs/sign.h>            //0x1C58
@@ -192,6 +192,9 @@
 #include <hag/drivers/matrox/shared/regs/cybot.h>           //0x1C9C
 #include <hag/drivers/matrox/shared/regs/cxlft.h>           //0x1CA0
 #include <hag/drivers/matrox/shared/regs/cxrgt.h>           //0x1CA4
+#include <hag/drivers/matrox/shared/regs/memptch.h>         //0x1C8C
+#include <hag/drivers/matrox/shared/regs/memorg.h>          //0x1C94
+#include <hag/drivers/matrox/shared/regs/status.h>          //0x1E14
 
 #include <hag/drivers/matrox/shared/pci/ind/dwgctrl.h>      //0x1C00
 #include <hag/drivers/matrox/shared/pci/ind/memacc.h>       //0x1C04
@@ -204,13 +207,16 @@
 #include <hag/drivers/matrox/shared/pci/ind/fgcol.h>        //0x1C24
 #include <hag/drivers/matrox/shared/pci/ind/blcolkey.h>     //0x1C24
 #include <hag/drivers/matrox/shared/pci/ind/src.h>          //0x1C30, 0x1C34, 0x1C38, 0x1C3C
-#include <hag/drivers/matrox/shared/pci/ind/xyaddr.h>       //0x1C40, 0x1C44
+#include <hag/drivers/matrox/shared/pci/ind/xyaddr.h>       //0x1C40, 0x1C44, 0x1C84, 0x1CA8, 0x1CAC, 0x1CB0, 0x1C88, 0x1C90
 #include <hag/drivers/matrox/shared/pci/ind/shift.h>        //0x1C50
 #include <hag/drivers/matrox/shared/pci/ind/dmapad.h>       //0x1C54
 #include <hag/drivers/matrox/shared/pci/ind/sign.h>         //0x1C58
 #include <hag/drivers/matrox/shared/pci/ind/length.h>       //0x1C5C
 #include <hag/drivers/matrox/shared/pci/ind/mpaddr.h>       //0x1C60, 0x1C64, 0x1C68, 0x1C6C, 0x1C70, 0x1C74, 0x1C78
 #include <hag/drivers/matrox/shared/pci/ind/clipper.h>      //0x1C80, 0x1C98, 0x1CA0, 0x1CA4
+#include <hag/drivers/matrox/shared/pci/ind/memptch.h>      //0x1C8C
+#include <hag/drivers/matrox/shared/pci/ind/memorg.h>       //0x1C94
+#include <hag/drivers/matrox/shared/pci/ind/status.h>       //0x1E14
 
 #include <hag/drivers/matrox/shared/mmio/dwgctrl.h>         //0x1C00
 #include <hag/drivers/matrox/shared/mmio/memacc.h>          //0x1C04
@@ -223,16 +229,25 @@
 #include <hag/drivers/matrox/shared/mmio/fgcol.h>           //0x1C24
 #include <hag/drivers/matrox/shared/mmio/blcolkey.h>        //0x1C24
 #include <hag/drivers/matrox/shared/mmio/src.h>             //0x1C30, 0x1C34, 0x1C38, 0x1C3C
-#include <hag/drivers/matrox/shared/mmio/xyaddr.h>          //0x1C40, 0x1C44
+#include <hag/drivers/matrox/shared/mmio/xyaddr.h>          //0x1C40, 0x1C44, 0x1C84, 0x1CA8, 0x1CAC, 0x1CB0, 0x1C88, 0x1C90
 #include <hag/drivers/matrox/shared/mmio/shift.h>           //0x1C50
 #include <hag/drivers/matrox/shared/mmio/dmapad.h>          //0x1C54
 #include <hag/drivers/matrox/shared/mmio/sign.h>            //0x1C58
 #include <hag/drivers/matrox/shared/mmio/length.h>          //0x1C5C
 #include <hag/drivers/matrox/shared/mmio/mpaddr.h>          //0x1C60, 0x1C64, 0x1C68, 0x1C6C, 0x1C70, 0x1C74, 0x1C78
 #include <hag/drivers/matrox/shared/mmio/clipper.h>         //0x1C80, 0x1C98, 0x1CA0, 0x1CA4
+#include <hag/drivers/matrox/shared/mmio/memptch.h>         //0x1C8C
+#include <hag/drivers/matrox/shared/mmio/memorg.h>          //0x1C94
+#include <hag/drivers/matrox/shared/mmio/status.h>          //0x1E14
+
+//Functions
+#include <hag/drivers/matrox/shared/funcs/modeset.h>
+#include <hag/drivers/matrox/shared/funcs/system.h>
 
 namespace Hag { namespace Matrox { namespace Mystique
 {
+    HAG_IMPORT_SYSTEM;//Import initialization and shutdown.
+    HAG_IMPORT_MODESETTING;//Import SetVideoMode.
 
     typedef Shared::Register_t Register_t;
 
@@ -399,6 +414,12 @@ namespace Hag { namespace Matrox { namespace Mystique
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, BlitColorKey);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, Source);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, XYAddress);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, XLeftRight);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, XLeft);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, XRight);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, XDestination);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, YDestinationAndLength);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, YDestination);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, FunnelShifterControl);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, DMAPadding);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, Sign);
@@ -415,6 +436,10 @@ namespace Hag { namespace Matrox { namespace Mystique
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, ClipperYBottomBoundary);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, ClipperXLeftBoundary);
     IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, ClipperXRightBoundary);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, MemoryPitch);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, MemoryOrigin);
+
+    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, Status);
 
     namespace PCI
     {
@@ -485,7 +510,10 @@ namespace Hag { namespace Matrox { namespace Mystique
             IMPORTNAMESPACE(Shared::PCI::Indirect, Length);
             IMPORTNAMESPACE(Shared::PCI::Indirect, MultiPurposeAddress);
             IMPORTNAMESPACE(Shared::PCI::Indirect, Clipper);
+            IMPORTNAMESPACE(Shared::PCI::Indirect, MemoryPitch);
+            IMPORTNAMESPACE(Shared::PCI::Indirect, MemoryOrigin);
 
+            IMPORTNAMESPACE(Shared::PCI::Indirect, Status);
         }
     }
 
@@ -508,6 +536,12 @@ namespace Hag { namespace Matrox { namespace Mystique
                                                                                 // Source3                      WO 0x1C3C (4)   FIFO
         IMPORTNAMESPACE(Shared::MMIO, XYAddress);                               // XYStartAddress (5)           WO 0x1C40 (4)   FIFO
                                                                                 // XYEndAddress (5)             WO 0x1C44 (4)   FIFO
+                                                                                // XAddressBoundary (5)         WO 0x1C84 (4)   FIFO
+                                                                                // XAddressLeft (5)             WO 0x1CA8 (4)   FIFO
+                                                                                // XAddressRight (5)            WO 0x1CAC (4)   FIFO
+                                                                                // XDestinationAddress (5)      WO 0x1CB0 (4)   FIFO
+                                                                                // YDestinationAndLength (5)    WO 0x1C88 (4)   FIFO
+                                                                                // YAddress (5)                 WO 0x1C90 (4)   FIFO
         IMPORTNAMESPACE(Shared::MMIO, FunnelShifterControl);                    // FunnelShifterControl (5)     WO 0x1C50 (4)   FIFO
         IMPORTNAMESPACE(Shared::MMIO, DMAPadding);                              // DMAPadding (5)               WO 0x1C54 (4)   FIFO
         IMPORTNAMESPACE(Shared::MMIO, Sign);                                    // Sign (5)                     WO 0x1C58 (4)   FIFO
@@ -524,14 +558,11 @@ namespace Hag { namespace Matrox { namespace Mystique
                                                                                 // ClipperYBottomBoundary (5)   WO 0x1C9C (4)   FIFO
                                                                                 // ClipperXLeftBoundary (5)     WO 0x1CA0 (4)   FIFO
                                                                                 // ClipperXRightBoundary (5)    WO 0x1CA4 (4)   FIFO
-        // XAddressBoundary (5)         WO 0x1C84 (4)   FIFO
-        // YDestinationAndLength (5)    WO 0x1C88 (4)   FIFO
-        // MemoryPitch (5)              WO 0x1C8C (4)   FIFO
-        // YAddress (5)                 WO 0x1C90 (4)   FIFO
-        // MemoryOrigin (5)             WO 0x1C94 (4)   FIFO
-        // XAddressLeft (5)             WO 0x1CA8 (4)   FIFO
-        // XAddressRight (5)            WO 0x1CAC (4)   FIFO
-        // XDestinationAddress (5)      WO 0x1CB0 (4)   FIFO
+        IMPORTNAMESPACE(Shared::MMIO, MemoryPitch);                             // MemoryPitch (5)              WO 0x1C8C (4)   FIFO
+        IMPORTNAMESPACE(Shared::MMIO, MemoryOrigin);                            // MemoryOrigin (5)             WO 0x1C94 (4)   FIFO
+
+        IMPORTNAMESPACE(Shared::MMIO, Status);                                  // Status                       RO 0x1E14
+
         // DataALU0                     WO 0x1CC0 (4)   FIFO
         // DataALU1 (Reserved)          WO 0x1CC4 (4)   FIFO
         // DataALU2                     WO 0x1CC8 (4)   FIFO
@@ -550,7 +581,6 @@ namespace Hag { namespace Matrox { namespace Mystique
         // DataALU15                    WO 0x1CFC (4)   FIFO
 
         // BusFIFOStatus                RO 0x1E10
-        // Status                       RO 0x1E14
         // InterruptClear               WO 0x1E18
         // InterruptEnable              RW 0x1E1C
         // VerticalCount                RO 0x1E20

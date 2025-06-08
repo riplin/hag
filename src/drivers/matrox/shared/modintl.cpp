@@ -49,7 +49,7 @@ bool VideoParameters::IsExtendedMode()
 uint8_t VideoParameters::CharacterClockInPixels()
 {
     //Dot clock select bit is in bit 0.
-    uint8_t dotClockSelect = Config.Sequencer[VGA::Sequencer::Register::ClockingMode] & VGA::Sequencer::ClockingMode::DotClockSelect;
+    uint8_t dotClockSelect = Config.Sequencer[VGA::Sequencer::Register::ClockingMode - 1] & VGA::Sequencer::ClockingMode::DotClockSelect;
     //dotClockSelect == 0 -> 9 pixels, 1 -> 8 pixels.
     return dotClockSelect == 0 ? 9 : 8;
 }

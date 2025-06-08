@@ -172,6 +172,17 @@ void Shutdown()
     }
 }
 
+uint32_t GetMemorySize()
+{
+    uint32_t ret = 0;
+    if (s_Initialized)
+    {
+        ret = s_MemorySize << 10;
+    }
+    return ret;
+}
+
+
 }
 
 }}}}

@@ -4,6 +4,9 @@
 
 #include <hag/types.h>
 
+#define HAG_IMPORT_SYSTEM                        \
+    using namespace Shared::Function::System;
+
 namespace Hag { namespace Matrox { namespace Shared { namespace Function
 {
 
@@ -11,6 +14,7 @@ namespace System
 {
     bool Initialize();
     void Shutdown();
+    uint32_t GetMemorySize(); // Returns video memory size in bytes
 }
 
 }}}}

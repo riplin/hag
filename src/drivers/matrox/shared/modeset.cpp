@@ -37,6 +37,96 @@
 namespace Hag { namespace Matrox { namespace Shared { namespace Function { namespace ModeSetting
 {
 
+typedef bool (*DescriptorCallback_t)(ModeDescriptor* descriptor, void* context, SetVideoError_t error);
+
+void IterateModeDescriptors(DescriptorCallback_t callback, void* context)
+{
+    SetVideoError_t error = SetVideoError::Success;
+    for (uint32_t i = 0; i < Data::s_NumDescriptors; ++i)
+    {
+        error = SetVideoError::Success;
+
+        ModeDescriptor& mode = Data::s_Descriptors[i];
+
+        uint32_t requiredMemory = (mode.Width * mode.Height * mode.Bpp) >> 3;
+        if (requiredMemory > (System::s_MemorySize << 10))
+        {
+            error = SetVideoError::InsufficientVideoMemory;
+        }
+        else if (((mode.Flags & Flags::ParameterCount) == Flags::SingleParameter) &&//Only legacy modes are multi-parameter.
+            (mode.Parameters[0]->Timings.FrequencyKHz >= 220000))//TODO: we should have this number live somewhere.
+        {
+            error = SetVideoError::NotSupportedByRamdac;
+        }
+        //TODO monitor filter.
+
+        if (!callback(&Data::s_Descriptors[i], context, error))
+            break;
+    }
+}
+
+typedef bool (*VideoModeCallback_t)(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, void* context);//Return true to continue receiving modes.
+
+struct ModeEnumeratorContext
+{
+    VideoModeCallback_t userCallback;
+    void* userContext;
+};
+
+bool ModeEnumerator(ModeDescriptor* descriptor, void* context, SetVideoError_t error)
+{
+    ModeEnumeratorContext& ctx = *((ModeEnumeratorContext*)context);
+    if (error != SetVideoError::Success)
+        return true;
+
+    return ctx.userCallback(descriptor->Width, descriptor->Height, descriptor->Bpp, descriptor->Flags & Flags::PublicFlags, descriptor->RefreshRate, ctx.userContext);
+}
+
+void EnumerateVideoModes(VideoModeCallback_t callback, void* context)
+{
+    ModeEnumeratorContext ctx =
+    {
+        callback,
+        context
+    };
+    IterateModeDescriptors(ModeEnumerator, &ctx);
+}
+
+struct GetModeDescriptorCallbackContext
+{
+    uint16_t width;
+    uint16_t height;
+    BitsPerPixel_t bpp;
+    Flags_t flags;
+    RefreshRate_t refreshRate;
+    SetVideoError_t& error;
+    ModeDescriptor* result;
+};
+
+bool GetModeDescriptorCallback(ModeDescriptor* descriptor, void* context, SetVideoError_t error)
+{
+    GetModeDescriptorCallbackContext& ctx = *((GetModeDescriptorCallbackContext*)context);
+    
+    if (descriptor->Width == ctx.width &&
+        descriptor->Height == ctx.height &&
+        descriptor->Bpp == ctx.bpp &&
+        (descriptor->Flags & Flags::PublicFlags) == ctx.flags &&
+        ((descriptor->RefreshRate == ctx.refreshRate) || ctx.refreshRate == RefreshRate::DontCare))
+    {
+        if (error != SetVideoError::Success)
+        {
+            ctx.error = error;//Mode exists, but not usable for some reason. perhaps there is another.
+        }
+        else
+        {
+            ctx.error = SetVideoError::Success;
+            ctx.result = descriptor;
+            return false;//= stop iteration
+        }
+    }
+    return true;
+}
+
 ModeDescriptor* GetModeDescriptor(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, SetVideoError_t& error)
 {
     if (!System::s_Initialized)
@@ -47,38 +137,19 @@ ModeDescriptor* GetModeDescriptor(uint16_t width, uint16_t height, BitsPerPixel_
     
     error = SetVideoError::UnknownMode;
 
-    for (uint32_t i = 0; i < Data::s_NumDescriptors; ++i)
+    GetModeDescriptorCallbackContext context =
     {
-        ModeDescriptor& mode = Data::s_Descriptors[i];
-        if (mode.Width == width &&
-            mode.Height == height &&
-            mode.Bpp == bpp &&
-            (mode.Flags & (Flags::Chromacity | Flags::Mode | Flags::MemoryOrganization)) == flags &&
-            ((mode.RefreshRate == refreshRate) || refreshRate == RefreshRate::DontCare))
-        {
-            uint32_t requiredMemory = (mode.Width * mode.Height * mode.Bpp) >> 3;
-            if (requiredMemory > (System::s_MemorySize << 10))
-            {
-                error = SetVideoError::InsufficientVideoMemory;
-                continue;
-            }
-            
-            //Only legacy modes are multi-parameter.
-            if (((mode.Flags & Flags::ParameterCount) == Flags::SingleParameter) &&
-                (mode.Parameters[0]->Timings.FrequencyKHz >= 220000))//TODO: we should have this number live somewhere.
-            {
-                error = SetVideoError::NotSupportedByRamdac;
-                continue;
-            }
+        width,
+        height,
+        bpp,
+        flags,
+        refreshRate,
+        error,
+        NULL
+    };
+    IterateModeDescriptors(GetModeDescriptorCallback, &context);
 
-            //TODO monitor filter.
-
-            error = SetVideoError::Success;
-            return &mode;
-        }
-    }
-
-    return NULL;
+    return context.result;
 }
 
 SetVideoError_t HasVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate)
@@ -556,9 +627,8 @@ void ApplyParameters(ModeDescriptor& descriptor, Hag::VGA::Register_t baseVideoI
     VGA::CRTController::CursorLocationAddressLow::Write(baseVideoIOPort, 0);                                                    //CR0F
     VGA::CRTController::VerticalRetraceStart::Write(baseVideoIOPort, parameters.Timings.Vertical.RetraceStart);                 //CR10
     VGA::CRTController::VerticalRetraceEnd::Write(baseVideoIOPort, parameters.GetVerticalRetraceEnd());                         //CR11
-    VGA::CRTController::UnderlineLocation::Write(baseVideoIOPort, parameters.Config.UnderlineLocation);                         //CR14
     VGA::CRTController::VerticalDisplayEnd::Write(baseVideoIOPort, parameters.Timings.Vertical.DisplayEnd);                     //CR12
-
+    
     uint16_t offset = descriptor.CalculateOffset();
     VGA::CRTController::ScreenOffset::Write(baseVideoIOPort, uint8_t(offset));                                                  //CR13
     Shared::CRTCExtension::AddressGeneratorExtensions::Write(((offset >> 4) &
@@ -566,6 +636,7 @@ void ApplyParameters(ModeDescriptor& descriptor, Hag::VGA::Register_t baseVideoI
         (Shared::CRTCExtension::AddressGeneratorExtensions::Read() &
         ~Shared::CRTCExtension::AddressGeneratorExtensions::Offset9_8));
 
+    VGA::CRTController::UnderlineLocation::Write(baseVideoIOPort, parameters.Config.UnderlineLocation);                         //CR14
     VGA::CRTController::StartVerticalBlank::Write(baseVideoIOPort, parameters.Timings.Vertical.StartBlank);                     //CR15
     VGA::CRTController::EndVerticalBlank::Write(baseVideoIOPort, parameters.Timings.Vertical.EndBlank);                         //CR16
     VGA::CRTController::CRTCModeControl::Write(baseVideoIOPort, parameters.Config.CRTCModeControl);                             //CR17
@@ -842,22 +913,21 @@ void SetStartAddress(uint32_t address)
         (uint8_t(address >> 16) & Shared::CRTCExtension::AddressGeneratorExtensions::StartAddress19_16));
 }
 
-void ApplyMode(ModeDescriptor* descriptor, Hag::System::BDA::VideoModeOptions_t videoModeOptions)
+void ApplyMode(ModeDescriptor& descriptor, Hag::System::BDA::VideoModeOptions_t videoModeOptions)
 {
     using namespace Hag::System;
 
-    BDA::DisplayMode::Get() = descriptor->LegacyMode;
+    BDA::DisplayMode::Get() = descriptor.LegacyMode;
     BDA::VideoModeOptions::Get() = videoModeOptions;
-    BDA::VideoBaseIOPort::Get() = descriptor->CrtController;
+    BDA::VideoBaseIOPort::Get() = descriptor.CrtController;
 
     ResetCRTCExtensionRegisters();
-    descriptor = ConfigureEGAFeatureBitSwitchesAdapter(descriptor, videoModeOptions);
 
     BDA::ActiveDisplayNumber::Get() = 0;
     BDA::VideoBufferOffset::Get() = 0;
     BDA::CursorPositions::Clear();
 
-    VideoParameters& parameters = descriptor->GetParameters();
+    VideoParameters& parameters = descriptor.GetParameters();
 
     BDA::NumberOfScreenColumns::Get() = parameters.Config.NumCharacterColumns;
     BDA::RowsOnScreen::Get() = parameters.Config.NumScreenRowsMinus1;
@@ -869,18 +939,18 @@ void ApplyMode(ModeDescriptor* descriptor, Hag::System::BDA::VideoModeOptions_t 
     BDA::CursorScanLines::Get().Start = parameters.Font.CursorStartScanLine;
     BDA::CursorScanLines::Get().End = parameters.Font.CursorEndScanLine;
 
-    ApplyParameters(*descriptor, BDA::VideoBaseIOPort::Get());
+    ApplyParameters(descriptor, BDA::VideoBaseIOPort::Get());
 
     VGA::AttributeController::PixelPadding::Write(0);
 
     if (parameters.Timings.FrequencyKHz != 0)//Power Graphics mode
-        ApplyPowerGraphicsSettings(*descriptor);
+        ApplyPowerGraphicsSettings(descriptor);
 
-    InitializePalettes(*descriptor);
+    InitializePalettes(descriptor);
 
-    ClearScreen(*descriptor);
+    ClearScreen(descriptor);
 
-    if ((descriptor->Flags & Flags::Mode) == Flags::Text)
+    if ((descriptor.Flags & Flags::Mode) == Flags::Text)
     {
         if (parameters.Font.Font != NULL)
         {
@@ -890,7 +960,7 @@ void ApplyMode(ModeDescriptor* descriptor, Hag::System::BDA::VideoModeOptions_t 
         }
     }
     else
-        SetInterruptTableFontPointer(*descriptor);
+        SetInterruptTableFontPointer(descriptor);
 
     if (parameters.Timings.FrequencyKHz != 0)
         SetStartAddress(0);
@@ -898,11 +968,11 @@ void ApplyMode(ModeDescriptor* descriptor, Hag::System::BDA::VideoModeOptions_t 
     VGA::InputStatus1::Read(BDA::VideoBaseIOPort::Get() + 0x06);
     VGA::AttributeControllerIndex::Write(VGA::AttributeControllerIndex::EnableVideoDisplay);
     
-    if (descriptor->CRTModeControlRegValue != 0xFF)
-        BDA::CRTModeControlRegValue::Get() = descriptor->CRTModeControlRegValue;
+    if (descriptor.CRTModeControlRegValue != 0xFF)
+        BDA::CRTModeControlRegValue::Get() = descriptor.CRTModeControlRegValue;
 
-    if (descriptor->CGAColorPaletteMaskSetting != 0xFF)
-        BDA::CGAColorPaletteMaskSetting::Get() = descriptor->CGAColorPaletteMaskSetting;
+    if (descriptor.CGAColorPaletteMaskSetting != 0xFF)
+        BDA::CGAColorPaletteMaskSetting::Get() = descriptor.CGAColorPaletteMaskSetting;
 
     BDA::VideoDisplayDataArea::Get() &= ~BDA::VideoDisplayDataArea::Reserved;
 }
@@ -1102,7 +1172,7 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
 
     videoModeOptions &= ~(BDA::VideoModeOptions::Unknown | BDA::VideoModeOptions::Inactive);
 
-    ApplyMode(descriptor, videoModeOptions);
+    ApplyMode(*descriptor, videoModeOptions);
 
     //Turn monitor on
     CRTCExtension::HorizontalCounterExtensions::Write(
@@ -1111,7 +1181,7 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
         CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff));
     TurnScreenOn();
 
-    return true;
+    return SetVideoError::Success;
 }
 
 }}}}}

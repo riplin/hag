@@ -3,7 +3,7 @@
 #pragma once
 
 #include <hag/drivers/matrox/shared/pci/ctrlap.h>
-#include <hag/drivers/matrox/shared/regs/memacc.h>
+#include <hag/drivers/matrox/shared/regs/plnwrmsk.h>
 
 namespace Hag { namespace Matrox { namespace Shared { namespace MMIO
 {

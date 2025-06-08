@@ -4,10 +4,13 @@
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+#include <conio.h>
 
 #include <support/allocatr.h>
 #include <hag/testing/mock.h>
+#include <hag/testing/testpat.h>
 
+#include <hag/color.h>
 #include <hag/system/bda.h>
 #include <hag/system/pci.h>
 #include <hag/system/pit.h>
@@ -16,7 +19,9 @@
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
 
-//#include "mode.h"
+#include <hag/math/fp/FPMATH.H>
+
+#include "mode.h"
 #include <hag/drivers/matrox/shared/funcs/system.h>
 #include <hag/drivers/matrox/shared/funcs/modeset.h>
 
@@ -78,7 +83,6 @@
 #include <hag/drivers/matrox/shared/idx/pixpllp.h>          //IDX46, IDX4A, IDX4E
 #include <hag/drivers/matrox/shared/idx/pixpllst.h>         //IDX4F
 
-
 #include <hag/drivers/matrox/shared/pci/ind/indidx.h>       //PCI44
 #include <hag/drivers/matrox/shared/pci/ind/inddat.h>       //PCI48
 
@@ -110,6 +114,28 @@
 #include <hag/drivers/matrox/shared/pci/idx/pixplln.h>      //IDX45, IDX49, IDX4D
 #include <hag/drivers/matrox/shared/pci/idx/pixpllp.h>      //IDX46, IDX4A, IDX4E
 #include <hag/drivers/matrox/shared/pci/idx/pixpllst.h>     //IDX4F
+
+#include <hag/drivers/matrox/shared/mmio/dwgctrl.h>         //0x1C00
+#include <hag/drivers/matrox/shared/mmio/memacc.h>          //0x1C04
+#include <hag/drivers/matrox/shared/mmio/memctlws.h>        //0x1C08
+#include <hag/drivers/matrox/shared/mmio/zdorg.h>           //0x1C0C
+#include <hag/drivers/matrox/shared/mmio/ptrn.h>            //0x1C10, 0x1C14
+#include <hag/drivers/matrox/shared/mmio/plnwrmsk.h>        //0x1C1C
+#include <hag/drivers/matrox/shared/mmio/bgcol.h>           //0x1C20
+#include <hag/drivers/matrox/shared/mmio/blcolmsk.h>        //0x1C20
+#include <hag/drivers/matrox/shared/mmio/fgcol.h>           //0x1C24
+#include <hag/drivers/matrox/shared/mmio/blcolkey.h>        //0x1C24
+#include <hag/drivers/matrox/shared/mmio/src.h>             //0x1C30, 0x1C34, 0x1C38, 0x1C3C
+#include <hag/drivers/matrox/shared/mmio/xyaddr.h>          //0x1C40, 0x1C44, 0x1C84, 0x1CA8, 0x1CAC, 0x1CB0, 0x1C88, 0x1C90
+#include <hag/drivers/matrox/shared/mmio/shift.h>           //0x1C50
+#include <hag/drivers/matrox/shared/mmio/dmapad.h>          //0x1C54
+#include <hag/drivers/matrox/shared/mmio/sign.h>            //0x1C58
+#include <hag/drivers/matrox/shared/mmio/length.h>          //0x1C5C
+#include <hag/drivers/matrox/shared/mmio/mpaddr.h>          //0x1C60, 0x1C64, 0x1C68, 0x1C6C, 0x1C70, 0x1C74, 0x1C78
+#include <hag/drivers/matrox/shared/mmio/clipper.h>         //0x1C80, 0x1C98, 0x1CA0, 0x1CA4
+#include <hag/drivers/matrox/shared/mmio/memptch.h>         //0x1C8C
+#include <hag/drivers/matrox/shared/mmio/memorg.h>          //0x1C94
+#include <hag/drivers/matrox/shared/mmio/status.h>          //0x1E14
 
 #ifdef MOCK
 
@@ -2783,14 +2809,14 @@ namespace ASM
         Hag::Vesa::VideoMode::G800x600x32bpp,       //0x115
         Hag::Vesa::VideoMode::G1024x768x15bpp,      //0x116
         Hag::Vesa::VideoMode::G1024x768x16bpp,      //0x117
-        Hag::Vesa::VideoMode::G1600x1200x8bpp2,     //0x11c
+        Hag::Vesa::VideoMode::G1600x1200x8bpp,      //0x11c
         0xFFFF,
         Hag::Vesa::VideoMode::G1024x768x32bpp,      //0x118      //4MB
         Hag::Vesa::VideoMode::G1280x1024x15bpp,     //0x119
         Hag::Vesa::VideoMode::G1280x1024x16bpp,     //0x11a
         Hag::Vesa::VideoMode::G1280x1024x32bpp,     //0x11b
-        Hag::Vesa::VideoMode::G1600x1200x15bpp2,    //0x11d
-        Hag::Vesa::VideoMode::G1600x1200x16bpp2,    //0x11e
+        Hag::Vesa::VideoMode::G1600x1200x15bpp,     //0x11d
+        Hag::Vesa::VideoMode::G1600x1200x16bpp,     //0x11e
         0xFFFF
     };
 
@@ -8394,14 +8420,14 @@ namespace CPP
         Hag::Vesa::VideoMode::G800x600x32bpp,       //0x115
         Hag::Vesa::VideoMode::G1024x768x15bpp,      //0x116
         Hag::Vesa::VideoMode::G1024x768x16bpp,      //0x117
-        Hag::Vesa::VideoMode::G1600x1200x8bpp2,     //0x11c
+        Hag::Vesa::VideoMode::G1600x1200x8bpp,      //0x11c
         0xFFFF,
         Hag::Vesa::VideoMode::G1024x768x32bpp,      //0x118      //4MB
         Hag::Vesa::VideoMode::G1280x1024x15bpp,     //0x119
         Hag::Vesa::VideoMode::G1280x1024x16bpp,     //0x11a
         Hag::Vesa::VideoMode::G1280x1024x32bpp,     //0x11b
-        Hag::Vesa::VideoMode::G1600x1200x15bpp2,    //0x11d
-        Hag::Vesa::VideoMode::G1600x1200x16bpp2,    //0x11e
+        Hag::Vesa::VideoMode::G1600x1200x15bpp,     //0x11d
+        Hag::Vesa::VideoMode::G1600x1200x16bpp,     //0x11e
         0xFFFF
     };
 
@@ -11587,16 +11613,6 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
     },
-    {//4
-        Hag::VGA::VideoMode::G320x200x2bppC,
-        320,
-        200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp2,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
-    },
     {//6
         Hag::VGA::VideoMode::G640x200x1bppM,
         640,
@@ -11616,6 +11632,16 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+    },
+    {//4
+        Hag::VGA::VideoMode::G320x200x2bppC,
+        320,
+        200,
+        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp2,
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
+        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
     {//D
         Hag::VGA::VideoMode::G320x200x4bppC,
@@ -11694,6 +11720,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
     },
@@ -11704,6 +11731,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11724,6 +11752,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11734,6 +11763,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11744,6 +11774,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11804,6 +11835,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11814,6 +11846,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11824,6 +11857,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11834,6 +11868,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11844,6 +11879,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11854,6 +11890,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11864,6 +11901,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11874,6 +11912,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11884,6 +11923,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11894,6 +11934,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11904,6 +11945,7 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
@@ -11914,41 +11956,45 @@ TestMode TestModes[] =
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
     {//11C
-        Hag::Vesa::VideoMode::G1600x1200x8bpp2,
+        Hag::Vesa::VideoMode::G1600x1200x8bpp,
         1600,
         1200,
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
     {//11D
-        Hag::Vesa::VideoMode::G1600x1200x15bpp2,
+        Hag::Vesa::VideoMode::G1600x1200x15bpp,
         1600,
         1200,
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
     },
     {//11E
-        Hag::Vesa::VideoMode::G1600x1200x16bpp2,
+        Hag::Vesa::VideoMode::G1600x1200x16bpp,
         1600,
         1200,
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
+        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
         Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
         Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
-    },/* Not supported on 4MB Also matrox BIOS uses this mode ID for something else.
+    },/* Not supported on 4MB
     {//11F
-        Hag::Vesa::VideoMode::G1600x1200x32bpp2,
+        Hag::Vesa::VideoMode::G1600x1200x32bpp,
         1600,
         1200,
         Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
@@ -11961,35 +12007,29 @@ TestMode TestModes[] =
 
 //If you are wondering why the below code is so explicit, it's because it's super easy to mess up.
 
-bool IsExtendedMode(CPP::VesaMode& vesaMode)
+bool IsExtendedMode(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode)
 {
     //Note to self, MGA mode and clock select are not the same thing...
-    return (vesaMode.Flags & 0x03) == 0x00;
+    return vesaMode.FrequencyKHz != 0;
 }
 
-uint8_t CharacterClockInPixels(CPP::VesaMode& vesaMode)
+uint8_t CharacterClockInPixels(Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
 
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
-
     //Dot clock select bit is in bit 0.
-    uint8_t dotClockSelect = table.SequencerRegisters[Sequencer::Register::ClockingMode] & Sequencer::ClockingMode::DotClockSelect;
+    uint8_t dotClockSelect = table.SequencerRegisters[Sequencer::Register::ClockingMode - 1] & Sequencer::ClockingMode::DotClockSelect;
     //dotClockSelect == 0 -> 9 pixels, 1 -> 8 pixels.
     uint8_t characterClockInPixels = dotClockSelect == 1 ? 8 : 9;
 
     return characterClockInPixels;
 }
 
-uint8_t ScanlineDouble(CPP::VesaMode& vesaMode)//Returns 0 if no doubling, 1 if there is.
+uint8_t ScanlineDouble(Hag::System::BDA::VideoParameterTable& table)//Returns 0 if no doubling, 1 if there is.
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     //Scan line bit is in bit 2.
     uint8_t scanlineDouble = table.CRTCRegisters[CRTController::Register::CRTCModeControl] & CRTController::CRTCModeControl::VerticalTotalDouble;
@@ -11999,13 +12039,10 @@ uint8_t ScanlineDouble(CPP::VesaMode& vesaMode)//Returns 0 if no doubling, 1 if 
     return scanlineDouble;
 }
 
-uint32_t HorizontalTotalChars(CPP::VesaMode& vesaMode)
+uint32_t HorizontalTotalChars(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t horizontalTotal = table.CRTCRegisters[CRTController::Register::HorizontalTotal];
     if (IsExtendedMode(vesaMode))
@@ -12020,36 +12057,30 @@ uint32_t HorizontalTotalChars(CPP::VesaMode& vesaMode)
     return horizontalTotal + 5;
 }
 
-uint32_t HorizontalTotalPixels(CPP::VesaMode& vesaMode)
+uint32_t HorizontalTotalPixels(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
-    return HorizontalTotalChars(vesaMode) * CharacterClockInPixels(vesaMode);
+    return HorizontalTotalChars(vesaMode, table) * CharacterClockInPixels(table);
 }
 
-uint32_t HorizontalDisplayEnableEndChars(CPP::VesaMode& vesaMode)
+uint32_t HorizontalDisplayEnableEndChars(Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t horizontalDisplay = table.CRTCRegisters[CRTController::Register::HorizontalDisplayEnd];
 
     return horizontalDisplay + 1;
 }
 
-uint32_t HorizontalDisplayEnableEndPixels(CPP::VesaMode& vesaMode)
+uint32_t HorizontalDisplayEnableEndPixels(Hag::System::BDA::VideoParameterTable& table)
 {
-    return HorizontalDisplayEnableEndChars(vesaMode) * CharacterClockInPixels(vesaMode);
+    return HorizontalDisplayEnableEndChars(table) * CharacterClockInPixels(table);
 }
 
-uint32_t HorizontalBlankStartChars(CPP::VesaMode& vesaMode)
+uint32_t HorizontalBlankStartChars(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t startHorizontalBlank = table.CRTCRegisters[CRTController::Register::StartHorizontalBlank];
     if (IsExtendedMode(vesaMode))
@@ -12064,18 +12095,15 @@ uint32_t HorizontalBlankStartChars(CPP::VesaMode& vesaMode)
     return startHorizontalBlank + 1;//+1 added by me.
 }
 
-uint32_t HorizontalBlankStartPixels(CPP::VesaMode& vesaMode)
+uint32_t HorizontalBlankStartPixels(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
-    return HorizontalBlankStartChars(vesaMode) * CharacterClockInPixels(vesaMode);
+    return HorizontalBlankStartChars(vesaMode, table) * CharacterClockInPixels(table);
 }
 
-uint32_t HorizontalBlankEndChars(CPP::VesaMode& vesaMode)
+uint32_t HorizontalBlankEndChars(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     //5 bits.
     uint32_t endHorizontalBlank = table.CRTCRegisters[CRTController::Register::EndHorizontalBlank] & CRTController::EndHorizontalBlank::EndHorizontalBlankLow;
@@ -12092,7 +12120,7 @@ uint32_t HorizontalBlankEndChars(CPP::VesaMode& vesaMode)
         //Move bit in to place.
         endHorizontalBlank |= endHorizontalBlankBit6;
         //Fetch start horizontal blank.
-        uint32_t startHorizontalBlank = HorizontalBlankStartChars(vesaMode);
+        uint32_t startHorizontalBlank = HorizontalBlankStartChars(vesaMode, table);
         //Recover top bits from startHorizontal Blank.
         uint32_t startHorizontalBlankTopBits = startHorizontalBlank & ~0x7F;//And off the irrelevant bits.
         //Move bits in to place.
@@ -12103,7 +12131,7 @@ uint32_t HorizontalBlankEndChars(CPP::VesaMode& vesaMode)
     else
     {
         //Fetch start horizontal blank.
-        uint32_t startHorizontalBlank = HorizontalBlankStartChars(vesaMode);
+        uint32_t startHorizontalBlank = HorizontalBlankStartChars(vesaMode, table);
         //Recover top bits from startHorizontal Blank.
         uint32_t startHorizontalBlankTopBits = startHorizontalBlank & ~0x3F;//And off the irrelevant bits.
         //Move bits in to place.
@@ -12115,18 +12143,15 @@ uint32_t HorizontalBlankEndChars(CPP::VesaMode& vesaMode)
     return endHorizontalBlank + 1; //+1 added by me.
 }
 
-uint32_t HorizontalBlankEndPixels(CPP::VesaMode& vesaMode)
+uint32_t HorizontalBlankEndPixels(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
-    return HorizontalBlankEndChars(vesaMode) * CharacterClockInPixels(vesaMode);
+    return HorizontalBlankEndChars(vesaMode, table) * CharacterClockInPixels(table);
 }
 
-uint32_t HorizontalSyncStartChars(CPP::VesaMode& vesaMode)
+uint32_t HorizontalSyncStartChars(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint16_t startHorizontalSync = table.CRTCRegisters[CRTController::Register::StartHorizontalSyncPosition];
     if (IsExtendedMode(vesaMode))
@@ -12142,23 +12167,20 @@ uint32_t HorizontalSyncStartChars(CPP::VesaMode& vesaMode)
     return startHorizontalSync;
 }
 
-uint32_t HorizontalSyncStartPixels(CPP::VesaMode& vesaMode)
+uint32_t HorizontalSyncStartPixels(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
-    return HorizontalSyncStartChars(vesaMode) * CharacterClockInPixels(vesaMode);
+    return HorizontalSyncStartChars(vesaMode, table) * CharacterClockInPixels(table);
 }
 
-uint32_t HorizontalSyncEndChars(CPP::VesaMode& vesaMode)
+uint32_t HorizontalSyncEndChars(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     //5 bits.
     uint32_t endHorizontalSync = table.CRTCRegisters[CRTController::Register::EndHorizontalSyncPosition] & CRTController::EndHorizontalSyncPosition::EndHorizontalSyncPositionLow;
     //Fetch start horizontal sync start.
-    uint32_t startHorizontalSync = HorizontalSyncStartChars(vesaMode);
+    uint32_t startHorizontalSync = HorizontalSyncStartChars(vesaMode, table);
     //Recover top bits from start horizontal sync;
     uint32_t startHorizontalSyncTopBits = startHorizontalSync & 0xFFFFFFE0;
     //Move bits in to place.
@@ -12169,18 +12191,15 @@ uint32_t HorizontalSyncEndChars(CPP::VesaMode& vesaMode)
     return endHorizontalSync;
 }
 
-uint32_t HorizontalSyncEndPixels(CPP::VesaMode& vesaMode)
+uint32_t HorizontalSyncEndPixels(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
-    return HorizontalSyncEndChars(vesaMode) * CharacterClockInPixels(vesaMode);
+    return HorizontalSyncEndChars(vesaMode, table) * CharacterClockInPixels(table);
 }
 
-uint32_t VerticalDisplayEnableEndLines(CPP::VesaMode& vesaMode)
+uint32_t VerticalDisplayEnableEndLines(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t verticalDisplayEnd = table.CRTCRegisters[CRTController::Register::VerticalDisplayEnd];
     //Extension bit 8 is in bit 1.
@@ -12204,16 +12223,13 @@ uint32_t VerticalDisplayEnableEndLines(CPP::VesaMode& vesaMode)
         //Move bit in to place.
         verticalDisplayEnd |= verticalDisplayEndBit10;
     }
-    return (verticalDisplayEnd + 1) << ScanlineDouble(vesaMode);
+    return (verticalDisplayEnd + 1) << ScanlineDouble(table);
 }
 
-uint32_t VerticalTotalLines(CPP::VesaMode& vesaMode)
+uint32_t VerticalTotalLines(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t verticalTotal = table.CRTCRegisters[CRTController::Register::VerticalTotal];
     //Extension bit 8 is in bit 0.
@@ -12237,16 +12253,13 @@ uint32_t VerticalTotalLines(CPP::VesaMode& vesaMode)
         //Move bits in to place.
         verticalTotal |= verticalTotalBits11And10;
     }
-    return (verticalTotal + 2) << ScanlineDouble(vesaMode);
+    return (verticalTotal + 2) << ScanlineDouble(table);
 }
 
-uint32_t VerticalBlankStartLines(CPP::VesaMode& vesaMode)
+uint32_t VerticalBlankStartLines(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t verticalBlankStart = table.CRTCRegisters[CRTController::Register::StartVerticalBlank];
     //Extension bit 8 is in bit 3.
@@ -12270,20 +12283,17 @@ uint32_t VerticalBlankStartLines(CPP::VesaMode& vesaMode)
         //Move bits in to place.
         verticalBlankStart |= verticalBlankStartBits11And10;
     }
-    return (verticalBlankStart + 1) << ScanlineDouble(vesaMode);
+    return (verticalBlankStart + 1) << ScanlineDouble(table);
 }
 
-uint32_t VerticalBlankEndLines(CPP::VesaMode& vesaMode)
+uint32_t VerticalBlankEndLines(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t verticalBlankEnd = table.CRTCRegisters[CRTController::Register::EndVerticalBlank];
     //Fetch vertical blank start lines.
-    uint32_t verticalBlankStart = VerticalBlankStartLines(vesaMode);
+    uint32_t verticalBlankStart = VerticalBlankStartLines(vesaMode, table);
     //Recover top bits from vertical blank start.
     uint32_t verticalBlankStartTopBits = verticalBlankStart & 0xFFFFFF00;
     //Move bits in to place.
@@ -12297,16 +12307,13 @@ uint32_t VerticalBlankEndLines(CPP::VesaMode& vesaMode)
         verticalBlankEnd += 1;
     }
 
-    return verticalBlankEnd << ScanlineDouble(vesaMode);
+    return verticalBlankEnd << ScanlineDouble(table);
 }
 
-uint32_t VerticalSyncStartLines(CPP::VesaMode& vesaMode)
+uint32_t VerticalSyncStartLines(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t verticalSyncStart = table.CRTCRegisters[CRTController::Register::VerticalRetraceStart];
     //Extension bit 8 is in bit 2.
@@ -12331,21 +12338,18 @@ uint32_t VerticalSyncStartLines(CPP::VesaMode& vesaMode)
         verticalSyncStart |= verticalSyncStartBits11And10;
     }
 
-    return verticalSyncStart << ScanlineDouble(vesaMode);
+    return verticalSyncStart << ScanlineDouble(table);
 }
 
-uint32_t VerticalSyncEndLines(CPP::VesaMode& vesaMode)
+uint32_t VerticalSyncEndLines(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     //4 bits.
     uint32_t verticalSyncEnd = table.CRTCRegisters[CRTController::Register::VerticalRetraceEnd] & CRTController::VerticalRetraceEnd::VerticalRetraceEndCount;
     //Fetch vertical sync start lines.
-    uint32_t verticalSyncStart = VerticalSyncStartLines(vesaMode);
+    uint32_t verticalSyncStart = VerticalSyncStartLines(vesaMode, table);
     //Recover top bits from sync start lines.
     uint32_t verticalSyncStartTopBits = verticalSyncStart & 0xFFFFFFF0;
     //Move bits in to place.
@@ -12353,57 +12357,48 @@ uint32_t VerticalSyncEndLines(CPP::VesaMode& vesaMode)
     //If start is less than end, add an extra top bit to compensate.
     if (verticalSyncStart >= verticalSyncEnd) verticalSyncEnd += 0x10;
 
-    return verticalSyncEnd << ScanlineDouble(vesaMode);
+    return verticalSyncEnd << ScanlineDouble(table);
 }
 
-bool IsInterlaced(CPP::VesaMode& vesaMode)
+bool IsInterlaced(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode)
 {
     return false;//No way to even set this currently.
 }
 
-bool HorizontalSyncPolarityPositive(CPP::VesaMode& vesaMode)
+bool HorizontalSyncPolarityPositive(Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint8_t horizontalSyncPolarity = table.MiscellaneousOutputRegister & MiscellaneousOutput::SelectNegativeHorizontalSyncPulse;
 
     return horizontalSyncPolarity == 0;
 }
 
-bool VerticalSyncPolarityPositive(CPP::VesaMode& vesaMode)
+bool VerticalSyncPolarityPositive(Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint8_t verticalSyncPolarity = table.MiscellaneousOutputRegister & MiscellaneousOutput::SelectNegativeVerticalSyncPulse;
 
     return verticalSyncPolarity == 0;
 }
 
-float RefreshRateHz(CPP::VesaMode& vesaMode)
+float RefreshRateHz(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
-    uint32_t horizontalTotalPixels = HorizontalTotalPixels(vesaMode);
-    uint32_t verticalTotalLines = VerticalTotalLines(vesaMode);
+    uint32_t horizontalTotalPixels = HorizontalTotalPixels(vesaMode, table);
+    uint32_t verticalTotalLines = VerticalTotalLines(vesaMode, table);
 
     float refreshRate = (float(vesaMode.FrequencyKHz) / (horizontalTotalPixels * verticalTotalLines)) * 1000.0f;
 
     return refreshRate;
 }
 
-uint32_t Offset(CPP::VesaMode& vesaMode)
+uint32_t Offset(Hag::System::BDA::VideoParameterTable& table)
 {
     using namespace Hag::VGA;
-    using namespace Hag::System;
     using namespace Hag::Matrox;
-
-    BDA::VideoParameterTable& table = *vesaMode.VideoParameters;
 
     uint32_t offset = table.CRTCRegisters[CRTController::Register::ScreenOffset];
     //Extension bits 9 and 8 are in bits 5 and 4 of CREXT00. This register is not encoded in the settings.
@@ -12411,11 +12406,11 @@ uint32_t Offset(CPP::VesaMode& vesaMode)
     return offset;
 }
 
-void VesaPrintTimings(CPP::VesaMode& vesaMode)
+void VesaPrintTimings(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, Hag::System::BDA::VideoParameterTable& table)
 {
-    uint32_t horizontalAddressPixels = HorizontalDisplayEnableEndPixels(vesaMode);
-    uint32_t verticalAddressLines = VerticalDisplayEnableEndLines(vesaMode);
-    float refreshRateHz = RefreshRateHz(vesaMode);
+    uint32_t horizontalAddressPixels = HorizontalDisplayEnableEndPixels(table);
+    uint32_t verticalAddressLines = VerticalDisplayEnableEndLines(vesaMode, table);
+    float refreshRateHz = RefreshRateHz(vesaMode, table);
 
     printf("\n\nTiming Name         = %i x %i @ %.fHz;\n\n",
         horizontalAddressPixels, verticalAddressLines, refreshRateHz);
@@ -12423,7 +12418,7 @@ void VesaPrintTimings(CPP::VesaMode& vesaMode)
     printf("Hor Pixels          = %4i;         // Pixels\n", horizontalAddressPixels);
     printf("Ver Pixels          = %4i;         // Pixels\n\n", verticalAddressLines);
 
-    uint32_t horizontalTotalPixels = HorizontalTotalPixels(vesaMode);
+    uint32_t horizontalTotalPixels = HorizontalTotalPixels(vesaMode, table);
     float horizontalFrequencyKhz = float(vesaMode.FrequencyKHz) / horizontalTotalPixels;
     float horizontalTotalTimeUsec = 1000.0f / horizontalFrequencyKhz;
 
@@ -12440,7 +12435,7 @@ void VesaPrintTimings(CPP::VesaMode& vesaMode)
     printf("Pixel Clock         = %.3f;       // MHz      =    %.1f nsec ± 0.5%\n",
         pixelClockMHz, pixelTime);
 
-    uint32_t characterWidth = CharacterClockInPixels(vesaMode);
+    uint32_t characterWidth = CharacterClockInPixels(table);
     float characterTime = (characterWidth * 1000.0f) / pixelClockMHz;
 
     printf("Character Width     = %i;            // Pixels   =   %.1f nsec\n",
@@ -12449,81 +12444,81 @@ void VesaPrintTimings(CPP::VesaMode& vesaMode)
     printf("Scan Type           = %s;                // H Phase  =   ? %\n",
         IsInterlaced(vesaMode) ? "INTERLACED" : "NONINTERLACED");
 
-    uint32_t horizontalBlankDurationPixels = HorizontalBlankEndPixels(vesaMode) - HorizontalBlankStartPixels(vesaMode);
+    uint32_t horizontalBlankDurationPixels = HorizontalBlankEndPixels(vesaMode, table) - HorizontalBlankStartPixels(vesaMode, table);
     float hblankPercentage = 100.0f * (float(horizontalBlankDurationPixels) / horizontalTotalPixels);
 
     printf("Hor Sync Polarity   = %s;     // HBlank   =   %.1f%% of HTotal\n",
-        HorizontalSyncPolarityPositive(vesaMode) ? "POSITIVE" : "NEGATIVE", hblankPercentage);
+        HorizontalSyncPolarityPositive(table) ? "POSITIVE" : "NEGATIVE", hblankPercentage);
 
-    uint32_t verticalBlankDurationLines = VerticalBlankEndLines(vesaMode) - VerticalBlankStartLines(vesaMode);
-    uint32_t verticalTotalLines = VerticalTotalLines(vesaMode);
+    uint32_t verticalBlankDurationLines = VerticalBlankEndLines(vesaMode, table) - VerticalBlankStartLines(vesaMode, table);
+    uint32_t verticalTotalLines = VerticalTotalLines(vesaMode, table);
     float vblankPercentage = 100.0f * (float(verticalBlankDurationLines) / verticalTotalLines);
 
     printf("Ver Sync Polarity   = %s;     // VBlank   =   %.1f%% of VTotal\n\n",
-        VerticalSyncPolarityPositive(vesaMode) ? "POSITIVE" : "NEGATIVE", vblankPercentage);
+        VerticalSyncPolarityPositive(table) ? "POSITIVE" : "NEGATIVE", vblankPercentage);
 
     float horizontalTotalTime = float(horizontalTotalPixels) / pixelClockMHz;
-    uint32_t horizontalTotalChars = HorizontalTotalChars(vesaMode);
+    uint32_t horizontalTotalChars = HorizontalTotalChars(vesaMode, table);
 
     printf("Hor Total Time      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
         horizontalTotalTime, horizontalTotalChars, horizontalTotalPixels);
 
     float horizontalAddressTime = float(horizontalAddressPixels) / pixelClockMHz;
-    uint32_t horizontalAddressChars = HorizontalDisplayEnableEndChars(vesaMode);
+    uint32_t horizontalAddressChars = HorizontalDisplayEnableEndChars(table);
 
     printf("Hor Addr Time       = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
         horizontalAddressTime, horizontalAddressChars, horizontalAddressPixels);
 
-    uint32_t horizontalBlankStartPixels = HorizontalBlankStartPixels(vesaMode);
-    uint32_t horizontalBlankStartChars = HorizontalBlankStartChars(vesaMode);
+    uint32_t horizontalBlankStartPixels = HorizontalBlankStartPixels(vesaMode, table);
+    uint32_t horizontalBlankStartChars = HorizontalBlankStartChars(vesaMode, table);
     float horizontalBlankStartTime = float(horizontalBlankStartPixels) / pixelClockMHz;
 
     printf("Hor Blank Start     = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
         horizontalBlankStartTime, horizontalBlankStartChars, horizontalBlankStartPixels);
 
-    uint32_t horizontalBlankDurationChars = HorizontalBlankEndChars(vesaMode) - HorizontalBlankStartChars(vesaMode);
+    uint32_t horizontalBlankDurationChars = HorizontalBlankEndChars(vesaMode, table) - HorizontalBlankStartChars(vesaMode, table);
     float horizontalBlankDurationTime = float(horizontalBlankDurationPixels) / pixelClockMHz;
 
     printf("Hor Blank Time      =  %1.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
         horizontalBlankDurationTime, horizontalBlankDurationChars, horizontalBlankDurationPixels);
 
-    uint32_t horizontalSyncStartChars = HorizontalSyncStartChars(vesaMode);
-    uint32_t horizontalSyncStartPixels = HorizontalSyncStartPixels(vesaMode);
+    uint32_t horizontalSyncStartChars = HorizontalSyncStartChars(vesaMode, table);
+    uint32_t horizontalSyncStartPixels = HorizontalSyncStartPixels(vesaMode, table);
     float horizontalSyncStartTime = float(horizontalSyncStartPixels) / pixelClockMHz;
 
     printf("Hor Sync Start      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n\n",
         horizontalSyncStartTime, horizontalSyncStartChars, horizontalSyncStartPixels);
 
-    uint32_t horizontalRightBorderChars = HorizontalBlankStartChars(vesaMode) - HorizontalDisplayEnableEndChars(vesaMode);
-    uint32_t horizontalRightBorderPixels = HorizontalBlankStartPixels(vesaMode) - HorizontalDisplayEnableEndPixels(vesaMode);
+    uint32_t horizontalRightBorderChars = HorizontalBlankStartChars(vesaMode, table) - HorizontalDisplayEnableEndChars(table);
+    uint32_t horizontalRightBorderPixels = HorizontalBlankStartPixels(vesaMode, table) - HorizontalDisplayEnableEndPixels(table);
     float horizontalRightBorderTime = float(horizontalRightBorderPixels) / pixelClockMHz;
 
     printf("// H Right Border   = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
         horizontalRightBorderTime, horizontalRightBorderChars, horizontalRightBorderPixels);
 
-    uint32_t horizontalFrontPorchChars = HorizontalSyncStartChars(vesaMode) - HorizontalBlankStartChars(vesaMode);
-    uint32_t horizontalFrontPorchPixels = HorizontalSyncStartPixels(vesaMode) - HorizontalBlankStartPixels(vesaMode);
+    uint32_t horizontalFrontPorchChars = HorizontalSyncStartChars(vesaMode, table) - HorizontalBlankStartChars(vesaMode, table);
+    uint32_t horizontalFrontPorchPixels = HorizontalSyncStartPixels(vesaMode, table) - HorizontalBlankStartPixels(vesaMode, table);
     float horizontalFrontPorchTime = float(horizontalFrontPorchPixels) / pixelClockMHz;
 
     printf("// H Front Porch    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
         horizontalFrontPorchTime, horizontalFrontPorchChars, horizontalFrontPorchPixels);
 
-    uint32_t horizontalSyncDurationChars = HorizontalSyncEndChars(vesaMode) - HorizontalSyncStartChars(vesaMode);
-    uint32_t horizontalSyncDurationPixels = HorizontalSyncEndPixels(vesaMode) - HorizontalSyncStartPixels(vesaMode);
+    uint32_t horizontalSyncDurationChars = HorizontalSyncEndChars(vesaMode, table) - HorizontalSyncStartChars(vesaMode, table);
+    uint32_t horizontalSyncDurationPixels = HorizontalSyncEndPixels(vesaMode, table) - HorizontalSyncStartPixels(vesaMode, table);
     float horizontalSyncDurationTime = float(horizontalSyncDurationPixels) / pixelClockMHz;
 
     printf("Hor Sync Time       = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
     horizontalSyncDurationTime, horizontalSyncDurationChars, horizontalSyncDurationPixels);
 
-    uint32_t horizontalBackPorchChars = HorizontalBlankEndChars(vesaMode) - HorizontalSyncEndChars(vesaMode);
-    uint32_t horizontalBackPorchPixels = HorizontalBlankEndPixels(vesaMode) - HorizontalSyncEndPixels(vesaMode);
+    uint32_t horizontalBackPorchChars = HorizontalBlankEndChars(vesaMode, table) - HorizontalSyncEndChars(vesaMode, table);
+    uint32_t horizontalBackPorchPixels = HorizontalBlankEndPixels(vesaMode, table) - HorizontalSyncEndPixels(vesaMode, table);
     float horizontalBackPorchTime = float(horizontalBackPorchPixels) / pixelClockMHz;
 
     printf("// H Back Porch     = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
         horizontalBackPorchTime, horizontalBackPorchChars, horizontalBackPorchPixels);
 
-    uint32_t horizontalLeftBorderChars = HorizontalTotalChars(vesaMode) - HorizontalBlankEndChars(vesaMode);
-    uint32_t horizontalLeftBorderPixels = HorizontalTotalPixels(vesaMode) - HorizontalBlankEndPixels(vesaMode);
+    uint32_t horizontalLeftBorderChars = HorizontalTotalChars(vesaMode, table) - HorizontalBlankEndChars(vesaMode, table);
+    uint32_t horizontalLeftBorderPixels = HorizontalTotalPixels(vesaMode, table) - HorizontalBlankEndPixels(vesaMode, table);
     float horizontalLeftBorderTime = float(horizontalLeftBorderPixels) / pixelClockMHz;
 
     printf("// H Left Border    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n\n",
@@ -12540,7 +12535,7 @@ void VesaPrintTimings(CPP::VesaMode& vesaMode)
     printf("Ver Addr Time       = %2.3f;       // (msec)   =  %4i lines         = %1.2f\n",
         verticalAddressTime, verticalAddressLines, extraCalculation);
 
-    uint32_t verticalBlankStartLines = VerticalBlankStartLines(vesaMode);
+    uint32_t verticalBlankStartLines = VerticalBlankStartLines(vesaMode, table);
     float verticalBlankStartTime = (1000.0f * (float(verticalBlankStartLines) / verticalTotalLines)) / refreshRateHz;
 
     printf("Ver Blank Start     = %2.3f;       // (msec)   =  %4i lines\n",
@@ -12551,136 +12546,188 @@ void VesaPrintTimings(CPP::VesaMode& vesaMode)
     printf("Ver Blank Time      =  %1.3f;       // (msec)   =  %4i lines\n",
         verticalBlankDurationTime, verticalBlankDurationLines);
 
-    uint32_t verticalSyncStartLines = VerticalSyncStartLines(vesaMode);
+    uint32_t verticalSyncStartLines = VerticalSyncStartLines(vesaMode, table);
     float verticalSyncStartTime = (1000.0f * (float(verticalSyncStartLines) / verticalTotalLines)) / refreshRateHz;
 
     printf("Ver Sync Start      = %2.3f;       // (msec)   =  %4i lines\n\n",
         verticalSyncStartTime, verticalSyncStartLines);
 
-    uint32_t verticalBottomBorderLines = VerticalBlankStartLines(vesaMode) - VerticalDisplayEnableEndLines(vesaMode);
+    uint32_t verticalBottomBorderLines = VerticalBlankStartLines(vesaMode, table) - VerticalDisplayEnableEndLines(vesaMode, table);
     float verticalBottomBorderTime = (1000.0f * (float(verticalBottomBorderLines) / verticalTotalLines)) / refreshRateHz;
 
     printf("// V Bottom Border  = %1.3f;        // (msec)   =  %4i lines\n",
         verticalBottomBorderTime, verticalBottomBorderLines);
 
-    uint32_t verticalFrontPorchLines = VerticalSyncStartLines(vesaMode) - VerticalBlankStartLines(vesaMode);
+    uint32_t verticalFrontPorchLines = VerticalSyncStartLines(vesaMode, table) - VerticalBlankStartLines(vesaMode, table);
     float verticalFrontPorchTime = (1000.0f * (float(verticalFrontPorchLines) / verticalTotalLines)) / refreshRateHz;
 
     printf("// V Front Porch    = %1.3f;        // (msec)   =  %4i lines\n",
         verticalFrontPorchTime, verticalFrontPorchLines);
     
-    uint32_t verticalSyncDurationLines = VerticalSyncEndLines(vesaMode) - VerticalSyncStartLines(vesaMode);
+    uint32_t verticalSyncDurationLines = VerticalSyncEndLines(vesaMode, table) - VerticalSyncStartLines(vesaMode, table);
     float verticalSyncDurationTime = (1000.0f * (float(verticalSyncDurationLines) / verticalTotalLines)) / refreshRateHz;
 
     printf("Ver Sync Time       = %1.3f;        // (msec)   =  %4i lines\n",
         verticalSyncDurationTime, verticalSyncDurationLines);
 
-    uint32_t verticalBackPorchLines = VerticalBlankEndLines(vesaMode) - VerticalSyncEndLines(vesaMode);
+    uint32_t verticalBackPorchLines = VerticalBlankEndLines(vesaMode, table) - VerticalSyncEndLines(vesaMode, table);
     float verticalBackPorchTime = (1000.0f * (float(verticalBackPorchLines) / verticalTotalLines)) / refreshRateHz;
 
     printf("// V Back Porch     = %1.3f;        // (msec)   =  %4i lines\n",
         verticalBackPorchTime, verticalBackPorchLines);
 
-    uint32_t verticalTopBorderLines = VerticalTotalLines(vesaMode) - VerticalBlankEndLines(vesaMode);
+    uint32_t verticalTopBorderLines = VerticalTotalLines(vesaMode, table) - VerticalBlankEndLines(vesaMode, table);
     float verticalTopBorderTime = (1000.0f * (float(verticalTopBorderLines) / verticalTotalLines)) / refreshRateHz;
 
     printf("// V Top Border     = %1.3f;        // (msec)   =  %4i lines\n\n",
         verticalTopBorderTime, verticalTopBorderLines);
 }
 
+uint32_t FrequencyFromMNPS(uint32_t mnps)
+{
+    uint32_t M = (mnps >> 8) & 0x1F;
+    uint32_t N = mnps & 0x7F;
+    uint32_t P = (mnps >> 13) & 0x7;
+    double Fref = 14.31818;//MHz
+
+    double Fvco = (Fref * (N + 1)) / (M + 1);
+    double Fo = Fvco / (P + 1);
+    
+    return uint32_t(Fo * 1000.0);
+}
+
+void DumpModeSettings(uint16_t mode)
+{
+    using namespace Hag;
+    using namespace Hag::Matrox;
+    using namespace Hag::System;
+
+    printf("\n//Mode: %X\n", mode);
+
+    PCI::Device_t device;
+    //PCI::FindDevice(0x102B, 0x051A, device);
+    if (PCI::FindDevice(0x102B, 0x051A, device))
+    {
+        uint32_t frequency = 0;
+        uint32_t mnps = 0;
+        switch (VGA::MiscellaneousOutput::Read() & VGA::MiscellaneousOutput::ClockSelect)
+        {
+        case VGA::MiscellaneousOutput::ClockSelect25p175MHz:
+        case VGA::MiscellaneousOutput::ClockSelect28p322MHz:
+            //Clock should be 0 because default clock setting...
+            frequency = 0;
+            break;
+        default:
+            {
+                Shared::Indexed::PixelPLLM_t pllMC = Shared::PCI::Indexed::PixelPLLM::ReadC(device);
+                Shared::Indexed::PixelPLLN_t pllNC = Shared::PCI::Indexed::PixelPLLN::ReadC(device);
+                Shared::Indexed::PixelPLLP_t pllPC = Shared::PCI::Indexed::PixelPLLP::ReadC(device);
+                mnps = (uint32_t(pllPC) << 13) | (uint32_t(pllMC) << 8) | pllNC;
+                frequency = FrequencyFromMNPS(mnps);
+            }
+            break;
+        }
+        printf("//Frequency: 0x%08X, mnps: 0x%08X\n", frequency, mnps);
+        printf("//Horizontal extensions: 0x%02X\n", Shared::CRTCExtension::HorizontalCounterExtensions::Read() & ~(Shared::CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff | Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalSyncOff));
+        printf("//Vertical extensions: 0x%02X\n", Shared::CRTCExtension::VerticalCounterExtensions::Read());
+        printf("{ // %X\n", mode);
+        printf("    0x%02X,\n", BDA::NumberOfScreenColumns::Get());
+        printf("    0x%02X,\n", BDA::RowsOnScreen::Get());
+        printf("    0x%02X,\n", BDA::PointHeightOfCharacterMatrix::Get());
+        printf("    0x%04X,\n", BDA::VideoBufferSize::Get());
+        printf("    { 0x%02X, ", VGA::Sequencer::ClockingMode::Read());
+        printf("0x%02X, ", VGA::Sequencer::EnableWritePlane::Read());
+        printf("0x%02X, ", VGA::Sequencer::CharacterFontSelect::Read());
+        printf("0x%02X },\n", VGA::Sequencer::MemoryModeControl::Read());
+        printf("    0x%02X,\n", VGA::MiscellaneousOutput::Read());
+        printf("    { ");
+
+        for (VGA::CRTController::Register_t index = 0; index < 25; ++index)
+        {
+            if (index != 0)
+                printf(", ");
+            VGA::CRTControllerIndex::Write(BDA::VideoBaseIOPort::Get(), index);
+            printf("0x%02X", VGA::CRTControllerData::Read(BDA::VideoBaseIOPort::Get() + 1));
+        }
+
+        printf(" },\n");
+        printf("    { ");
+
+        VGA::InputStatus1::Read(BDA::VideoBaseIOPort::Get() + 0x06);
+        VGA::AttributeController::Register_t origAttribIdx = VGA::AttributeControllerIndex::Read();
+
+        for (uint8_t attribIdx = 0; attribIdx < 20; ++attribIdx)
+        {
+            if (attribIdx != 0)
+                printf(", ");
+            VGA::InputStatus1::Read(BDA::VideoBaseIOPort::Get() + 0x06);
+            VGA::AttributeControllerIndex::Write(attribIdx);
+            printf("0x%02X", VGA::AttributeControllerData::Read());
+        }
+        VGA::InputStatus1::Read(BDA::VideoBaseIOPort::Get() + 0x06);
+        VGA::AttributeControllerIndex::Write(origAttribIdx);
+
+        printf(" },\n");
+        printf("    { ");
+
+        for (VGA::GraphicsController::Register_t index = 0; index < 9; ++index)
+        {
+            if (index != 0)
+                printf(", ");
+            VGA::GraphicsControllerIndex::Write(index);
+            printf("0x%02X", VGA::GraphicsControllerData::Read());
+        }
+
+        printf(" }\n");
+        printf("},");
+    }
+}
+
+bool PrintModeListCallback(uint16_t width, uint16_t height, Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel_t bpp, Hag::Matrox::Shared::Function::ModeSetting::Flags_t flags, Hag::Matrox::Shared::Function::ModeSetting::RefreshRate_t refreshRate, void* context)
+{
+    using namespace Hag::Matrox::Shared::Function::ModeSetting;
+
+    printf("%ix%i %i bpp %iHz", width, height, bpp, refreshRate);
+
+    if ((flags & Flags::Chromacity) == Flags::Monochrome)
+        printf(" monochrome");
+
+    if ((flags & Flags::Mode) == Flags::Text)
+        printf(" text");
+
+    if ((flags & Flags::MemoryOrganization) == Flags::Planar)
+        printf(" planar");
+
+    if ((flags & Flags::LinearFramebuffer) == Flags::LinearFramebuffer)
+        printf(" linear framebuffer");
+
+    printf("\n");
+
+    return true;
+}
+
+
 int main(void)
 {
-
+    using namespace Hag;
+    using namespace Hag::Math;
+    using namespace Hag::Color;
+    using namespace Hag::Testing;
+    using namespace Hag::Matrox::Shared;
     using namespace Hag::Matrox::Shared::Function;
-
 #ifndef MOCK
 
 
+    /*
+    for (uint32_t i = 0; i < Mode::s_VideoModeCount; ++i)
+    {
+        if ((Mode::s_VideoModes[i].Flags & Mode::Flags::ParameterCount) == Mode::Flags::SingleParameter)
+        VesaPrintTimings(Mode::s_VideoModes[i], *Mode::s_VideoModes[i].ParametersAndFonts[0].VideoParameters);
+    }
+    */
+
     //Mode::PrintNewModeSettings();
 
-
-    // VesaPrintTimings(CPP::Data0x6de3);   //Offset 0x6de3 VESA_MODE_640x400x256
-    // VesaPrintTimings(CPP::Data0x6df9);   //Offset 0x6df9 VESA_MODE_640x480x256
-    // VesaPrintTimings(CPP::Data0x6e51);   //Offset 0x6e51 VESA_MODE_800x600x16
-    // VesaPrintTimings(CPP::Data0x6e69);   //Offset 0x6e69 VESA_MODE_800x600x256
-    // VesaPrintTimings(CPP::Data0x6ec1);   //Offset 0x6ec1 VESA_MODE_1024x768x256
-    // VesaPrintTimings(CPP::Data0x6f19);   //Offset 0x6f19 VESA_MODE_1280x1024x256
-    // VesaPrintTimings(CPP::Data0x6fc9);   //Offset 0x6fc9 VESA_MODE_80x60xText
-    // VesaPrintTimings(CPP::Data0x6fdf);   //Offset 0x6fdf VESA_MODE_132x25xText
-    // VesaPrintTimings(CPP::Data0x6ff5);   //Offset 0x6ff5 VESA_MODE_132x43xText
-    // VesaPrintTimings(CPP::Data0x700b);   //Offset 0x700b VESA_MODE_132x50xText
-    // VesaPrintTimings(CPP::Data0x7021);   //Offset 0x7021 VESA_MODE_132x60xText
-    // VesaPrintTimings(CPP::Data0x6e0f);   //Offset 0x6e0f VESA_MODE_640x480x32K
-    // VesaPrintTimings(CPP::Data0x6e25);   //Offset 0x6e25 VESA_MODE_640x480x64K
-    // VesaPrintTimings(CPP::Data0x6e3b);   //Offset 0x6e3b VESA_MODE_640x480x16M
-    // VesaPrintTimings(CPP::Data0x6e7f);   //Offset 0x6e7f VESA_MODE_800x600x32K
-    // VesaPrintTimings(CPP::Data0x6e95);   //Offset 0x6e95 VESA_MODE_800x600x64K
-    // VesaPrintTimings(CPP::Data0x6eab);   //Offset 0x6eab VESA_MODE_800x600x16M
-    // VesaPrintTimings(CPP::Data0x6ed7);   //Offset 0x6ed7 VESA_MODE_1024x768x32K
-    // VesaPrintTimings(CPP::Data0x6eed);   //Offset 0x6eed VESA_MODE_1024x768x64K
-    // VesaPrintTimings(CPP::Data0x6f03);   //Offset 0x6f03 VESA_MODE_1024x768x16M
-    // VesaPrintTimings(CPP::Data0x6f2f);   //Offset 0x6f2f VESA_MODE_1280x1024x32K
-    // VesaPrintTimings(CPP::Data0x6f45);   //Offset 0x6f45 VESA_MODE_1280x1024x64K
-    // VesaPrintTimings(CPP::Data0x6f5b);   //Offset 0x6f5b VESA_MODE_1280x1024x16M
-    // VesaPrintTimings(CPP::Data0x6f71);   //Offset 0x6f71 VESA_MODE_1600x1200x256
-    // VesaPrintTimings(CPP::Data0x6f87);   //Offset 0x6f87 VESA_MODE_1600x1200x32K
-    // VesaPrintTimings(CPP::Data0x6f9d);   //Offset 0x6f9d VESA_MODE_1600x1200x64K
-
-/*
-    System::Initialize();
-
-    //Mode X test
-    Mode::Set(320, 240, Mode::BitsPerPixel::Bpp8, Mode::Flags::Planar);
-
-    uint8_t* ptr = FARPointer(0xA000, 0x0000).ToPointer<uint8_t>();
-
-    Hag::VGA::Sequencer::EnableWritePlane::Write(1);
-    memset(ptr, 0x0F, 80*240);
-    Hag::VGA::Sequencer::EnableWritePlane::Write(2);
-    memset(ptr, 0x09, 80*240);
-    Hag::VGA::Sequencer::EnableWritePlane::Write(4);
-    memset(ptr, 0x0A, 80*240);
-    Hag::VGA::Sequencer::EnableWritePlane::Write(8);
-    memset(ptr, 0x0C, 80*240);
-
-    getchar();
-
-    //Mode Q(ubed) test - 256x256x256
-    Mode::Set(256, 256, Mode::BitsPerPixel::Bpp8);
-
-    for (uint32_t i = 0; i < 256*256; ++i)
-        ptr[i] = Hag::max<uint8_t>(uint8_t(i), uint8_t(i >> 8));
-
-    getchar();
-
-    for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(TestMode); ++modesIdx)
-    {
-        TestMode& testMode = TestModes[modesIdx];
-        if (!Mode::Has(testMode.Width,
-            testMode.Height,
-            testMode.Bpp,
-            testMode.Flags,
-            testMode.RefreshRate))
-            continue;
-
-        Mode::Set(testMode.Width,
-            testMode.Height,
-            testMode.Bpp,
-            testMode.Flags,
-            testMode.RefreshRate);
-
-        printf("Mode           : 0x%02X\n", testMode.LegacyMode);
-        printf("Width          : %i\n", testMode.Width);
-        printf("Height         : %i\n", testMode.Height);
-        printf("Type           : %s\n", ((testMode.Flags & Mode::Flags::Mode) == Mode::Flags::Text) ? "Text" : "Graphics");
-        printf("Bits per pixel : %i\n", testMode.Bpp);
-
-        getchar();
-    }
-   
-    Mode::Set(80, 25, Mode::BitsPerPixel::Bpp4, Mode::Flags::Text);
-    System::Shutdown();
-    */
 #else
     using namespace Hag;
     using namespace Hag::System;

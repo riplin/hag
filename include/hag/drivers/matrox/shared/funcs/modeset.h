@@ -4,6 +4,13 @@
 
 #include <hag/types.h>
 
+#define HAG_IMPORT_MODESETTING                                                                  \
+    using namespace Shared::Function::ModeSetting;                                              \
+    namespace Flags { using namespace Shared::Function::ModeSetting::Flags; }                   \
+    namespace RefreshRate { using namespace Shared::Function::ModeSetting::RefreshRate; }       \
+    namespace BitsPerPixel { using namespace Shared::Function::ModeSetting::BitsPerPixel; }     \
+    namespace SetVideoError { using namespace Shared::Function::ModeSetting::SetVideoError; }
+
 namespace Hag { namespace Matrox { namespace Shared { namespace Function
 {
 
@@ -41,6 +48,8 @@ namespace ModeSetting
             MemoryOrganization = 0x04,  //Sequential or planar memory organization, only applies to graphical modes
             Sequential = 0x00,
             Planar = 0x04,
+
+            LinearFramebuffer = 0x08,   //Linear framebuffer access
         };
     }
 
@@ -51,7 +60,8 @@ namespace ModeSetting
         {
             DontCare = 0,
             R60Hz = 60,
-            R70Hz = 70
+            R70Hz = 70,
+            R72Hz = 72
         };
     }
 
@@ -68,6 +78,9 @@ namespace ModeSetting
             NotSupportedByMonitor = 0x05,
         };
     };
+
+    typedef bool (*VideoModeCallback_t)(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, void* context);//Return true to continue receiving modes.
+    void EnumerateVideoModes(VideoModeCallback_t callback, void* context);
 
     SetVideoError_t HasVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare);
     SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare, bool clearDisplay = true);
