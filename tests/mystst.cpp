@@ -145,12 +145,12 @@ public:
     inline MockMystique(Hag::IAllocator& allocator)
         : Device("Mystique")
         , m_allocator(allocator)
-        , m_Config(NULL)
-        , m_Indexed(NULL)
-        , m_ControlAperture(NULL)
-        , m_ConfigSnapshot(NULL)
-        , m_IndexedSnapshot(NULL)
-        , m_ControlApertureSnapshot(NULL)
+        , m_Config(nullptr)
+        , m_Indexed(nullptr)
+        , m_ControlAperture(nullptr)
+        , m_ConfigSnapshot(nullptr)
+        , m_IndexedSnapshot(nullptr)
+        , m_ControlApertureSnapshot(nullptr)
     {
         m_Config = allocator.AllocateAs<uint8_t>(sizeof(s_Config));
         m_Indexed = allocator.AllocateAs<uint8_t>(sizeof(s_Indexed));
@@ -165,22 +165,22 @@ public:
     virtual ~MockMystique()
     {
         m_allocator.Free(m_ControlApertureSnapshot);
-        m_ControlApertureSnapshot = NULL;
+        m_ControlApertureSnapshot = nullptr;
 
         m_allocator.Free(m_IndexedSnapshot);
-        m_IndexedSnapshot = NULL;
+        m_IndexedSnapshot = nullptr;
 
         m_allocator.Free(m_ConfigSnapshot);
-        m_ConfigSnapshot = NULL;
+        m_ConfigSnapshot = nullptr;
 
         m_allocator.Free(m_ControlAperture);
-        m_ControlAperture = NULL;
+        m_ControlAperture = nullptr;
 
         m_allocator.Free(m_Indexed);
-        m_Indexed = NULL;
+        m_Indexed = nullptr;
 
         m_allocator.Free(m_Config);
-        m_Config = NULL;
+        m_Config = nullptr;
     }
 
     virtual void Report(Device* instance1)
@@ -1908,7 +1908,7 @@ namespace ASM
 
         //     mov   bl, ah
         //     call  Func0x2d24                    ;Offset 0x2d24
-        Func0x2d24(val, val2, NULL, 0x0000);
+        Func0x2d24(val, val2, nullptr, 0x0000);
 
         //     call  ApplyAlphanumericCharacterSetOverride                    ;Offset 0x1612
         ApplyAlphanumericCharacterSetOverride();
@@ -2132,7 +2132,7 @@ namespace ASM
         BDA::CursorPositions::Clear();
 
         //     call      GetVideoParameterTable                ;Offset 0x2fe4
-        BDA::VideoParameterTable& videoParameterTable = videoParameterTableOverride != NULL ? *videoParameterTableOverride : *GetVideoParameterTable();
+        BDA::VideoParameterTable& videoParameterTable = videoParameterTableOverride != nullptr ? *videoParameterTableOverride : *GetVideoParameterTable();
 
         //     xor       ax, ax
         r.w.ax = 0;
@@ -2379,7 +2379,7 @@ namespace ASM
 
         REGPACK r;
         memset(&r, 0, sizeof(r));
-        uint8_t* siPointer = NULL;
+        uint8_t* siPointer = nullptr;
         bool isLower = false;
 
         r.h.al = videoMode;
@@ -2843,8 +2843,8 @@ namespace ASM
         uint16_t saveCX = 0;
 
         FARPointer ptr;
-        uint8_t* siPointer = NULL;
-        uint8_t* diPointer = NULL;
+        uint8_t* siPointer = nullptr;
+        uint8_t* diPointer = nullptr;
         bool valNotEqual = false;
 
         //     push  bx
@@ -3176,7 +3176,7 @@ namespace ASM
         memset(&r, 0, sizeof(r));
         uint16_t saveBX = 0;
         r.w.bx = videoMode;
-        uint16_t* siPointer = NULL;
+        uint16_t* siPointer = nullptr;
         bool ret = false;
 
         //     push  ax
@@ -3965,18 +3965,18 @@ namespace ASM
         &Data0x6df9,   //Offset 0x6df9 VESA_MODE_640x480x256
         &Data0x6e51,   //Offset 0x6e51 VESA_MODE_800x600x16
         &Data0x6e69,   //Offset 0x6e69 VESA_MODE_800x600x256
-        NULL,
+        nullptr,
         &Data0x6ec1,   //Offset 0x6ec1 VESA_MODE_1024x768x256
-        NULL,
+        nullptr,
         &Data0x6f19,   //Offset 0x6f19 VESA_MODE_1280x1024x256
         &Data0x6fc9,   //Offset 0x6fc9 VESA_MODE_80x60xText
         &Data0x6fdf,   //Offset 0x6fdf VESA_MODE_132x25xText
         &Data0x6ff5,   //Offset 0x6ff5 VESA_MODE_132x43xText
         &Data0x700b,   //Offset 0x700b VESA_MODE_132x50xText
         &Data0x7021,   //Offset 0x7021 VESA_MODE_132x60xText
-        NULL,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
+        nullptr,
         &Data0x6e0f,   //Offset 0x6e0f VESA_MODE_640x480x32K
         &Data0x6e25,   //Offset 0x6e25 VESA_MODE_640x480x64K
         &Data0x6e3b,   //Offset 0x6e3b VESA_MODE_640x480x16M
@@ -5373,7 +5373,7 @@ namespace ASM
             ConfigureFontLoadMemoryMapping();
 
             //     call      Func0x2d24                ;Offset 0x2d24
-            Func0x2d24(function, bx, NULL, 0x0000);
+            Func0x2d24(function, bx, nullptr, 0x0000);
 
             //     call      Func0x2ce9                ;Offset 0x2ce9
             ConfigureTextMemoryMapping();
@@ -5491,8 +5491,8 @@ namespace ASM
 
         REGPACK r;
         memset(&r, 0, sizeof(r));
-        VesaMode* siPointer = NULL;
-        Hag::System::BDA::VideoParameterTable* axPointer = NULL;
+        VesaMode* siPointer = nullptr;
+        Hag::System::BDA::VideoParameterTable* axPointer = nullptr;
         r.w.ax = videoMode;
 
         //     push      bp
@@ -5702,7 +5702,7 @@ namespace ASM
         memset(&r, 0, sizeof(r));
         uint16_t saveBX = 0;
         r.w.ax = videoMode;
-        VesaMode* siStruct = NULL;
+        VesaMode* siStruct = nullptr;
 
         //     push  ax
         //     push  ds
@@ -6125,7 +6125,7 @@ namespace ASM
 
     bool SetVideoMode(Hag::VGA::VideoMode_t videoMode)//Offset 0x12f0
     {
-        return SetVideoModeInternal(videoMode, NULL);
+        return SetVideoModeInternal(videoMode, nullptr);
     }
 
     //Offset 0xc4e0
@@ -8157,7 +8157,7 @@ namespace CPP
         BDA::VideoBufferOffset::Get() = 0;
         BDA::CursorPositions::Clear();
 
-        BDA::VideoParameterTable& videoParameterTable = videoParameterTableOverride != NULL ? *videoParameterTableOverride : *GetVideoParameterTable();
+        BDA::VideoParameterTable& videoParameterTable = videoParameterTableOverride != nullptr ? *videoParameterTableOverride : *GetVideoParameterTable();
 
         BDA::NumberOfScreenColumns::Get() = videoParameterTable.NumCharacterColumns;
         BDA::RowsOnScreen::Get() = videoParameterTable.NumScreenRowsMinus1;
@@ -9228,18 +9228,18 @@ namespace CPP
         &Data0x6df9,   //Offset 0x6df9 VESA_MODE_640x480x256
         &Data0x6e51,   //Offset 0x6e51 VESA_MODE_800x600x16
         &Data0x6e69,   //Offset 0x6e69 VESA_MODE_800x600x256
-        NULL,
+        nullptr,
         &Data0x6ec1,   //Offset 0x6ec1 VESA_MODE_1024x768x256
-        NULL,
+        nullptr,
         &Data0x6f19,   //Offset 0x6f19 VESA_MODE_1280x1024x256
         &Data0x6fc9,   //Offset 0x6fc9 VESA_MODE_80x60xText
         &Data0x6fdf,   //Offset 0x6fdf VESA_MODE_132x25xText
         &Data0x6ff5,   //Offset 0x6ff5 VESA_MODE_132x43xText
         &Data0x700b,   //Offset 0x700b VESA_MODE_132x50xText
         &Data0x7021,   //Offset 0x7021 VESA_MODE_132x60xText
-        NULL,
-        NULL,
-        NULL,
+        nullptr,
+        nullptr,
+        nullptr,
         &Data0x6e0f,   //Offset 0x6e0f VESA_MODE_640x480x32K
         &Data0x6e25,   //Offset 0x6e25 VESA_MODE_640x480x64K
         &Data0x6e3b,   //Offset 0x6e3b VESA_MODE_640x480x16M
@@ -9857,7 +9857,7 @@ namespace CPP
 
     bool SetLegacyMode(Hag::VGA::VideoMode_t videoMode)//Offset 0x12f0
     {
-        return SetLegacyModeInternal(videoMode, NULL);
+        return SetLegacyModeInternal(videoMode, nullptr);
     }
 
     PaletteData Data0x32f2 = 
@@ -10923,9 +10923,9 @@ void MatroxMystiqueMockConfigSetup(Hag::IAllocator& allocator)
 
     Mock::AddIndexedPort("CRT Controller B", Hag::VGA::Register::CRTControllerIndexB, 0xff, Hag::VGA::Register::CRTControllerDataB, 0x19, Matrox_Mystique_CRTControllerRegisters, Matrox_Mystique_CRTControllerRegisters_OrMask, Matrox_Mystique_CRTControllerRegisters_AndMask);
     Mock::AddIndexedPort("CRT Controller D", Hag::VGA::Register::CRTControllerIndexD, 0xff, Hag::VGA::Register::CRTControllerDataD, 0x19, Matrox_Mystique_CRTControllerRegisters, Matrox_Mystique_CRTControllerRegisters_OrMask, Matrox_Mystique_CRTControllerRegisters_AndMask);
-    Mock::AddIndexedPort("Graphics Controller", Hag::VGA::Register::GraphicsControllerIndex, 0x0f, Hag::VGA::Register::GraphicsControllerData, 0x09, Matrox_Mystique_GraphicsControllerRegisters, NULL, Matrox_Mystique_GraphicsControllerRegisters_AndMask);
-    Mock::AddIndexedPort("Sequence Controller", Hag::VGA::Register::SequencerIndex, 0x1f, Hag::VGA::Register::SequencerData, 0x05, Matrox_Mystique_SequencerControllerRegisters, NULL, Matrox_Mystique_SequencerControllerRegisters_AndMask);
-    Mock::AddIndexedPort("CRTC Extension Controller", Hag::Matrox::Shared::Register::CRTCExtensionIndex, 0x07, Hag::Matrox::Shared::Register::CRTCExtensionData, 0x07, Matrox_Mystique_CRTCExtensionRegisters, NULL, Matrox_Mystique_CRTCExtensionRegisters_AndMask);
+    Mock::AddIndexedPort("Graphics Controller", Hag::VGA::Register::GraphicsControllerIndex, 0x0f, Hag::VGA::Register::GraphicsControllerData, 0x09, Matrox_Mystique_GraphicsControllerRegisters, nullptr, Matrox_Mystique_GraphicsControllerRegisters_AndMask);
+    Mock::AddIndexedPort("Sequence Controller", Hag::VGA::Register::SequencerIndex, 0x1f, Hag::VGA::Register::SequencerData, 0x05, Matrox_Mystique_SequencerControllerRegisters, nullptr, Matrox_Mystique_SequencerControllerRegisters_AndMask);
+    Mock::AddIndexedPort("CRTC Extension Controller", Hag::Matrox::Shared::Register::CRTCExtensionIndex, 0x07, Hag::Matrox::Shared::Register::CRTCExtensionData, 0x07, Matrox_Mystique_CRTCExtensionRegisters, nullptr, Matrox_Mystique_CRTCExtensionRegisters_AndMask);
     BDA::SystemBDA().DetectedHardware = 0x22; //Hack
     BDA::SystemBDA().EGAFeatureBitSwitches = 0xF9;
     BDA::SystemBDA().VideoDisplayDataArea = 0x11;
@@ -10962,7 +10962,7 @@ int Diff(const char* name)
 void BDADump(FILE* fp, FILE* fpbin)
 {
     using namespace Hag::System::BDA;
-    if (fpbin != NULL) fwrite(&SystemBDA(), 256, 1, fpbin);
+    if (fpbin != nullptr) fwrite(&SystemBDA(), 256, 1, fpbin);
     fprintf(fp, "BIOS Data Area:\n\n");
     fprintf(fp, "Display mode                  : 0x%02X\n", DisplayMode::Get());
     fprintf(fp, "Detected hardware             : 0x%02X\n", DetectedHardware::Get());
@@ -11097,11 +11097,11 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
 
     FeatureControl_t featureControl = FeatureControl::Read();
     fprintf(fp, "Feature control               : 0x%02X\n", featureControl);
-    if (fpbin != NULL) fwrite(&featureControl, sizeof(featureControl), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&featureControl, sizeof(featureControl), 1, fpbin);
 
     //InputStatus1_t inputStatus1 = InputStatus1::Read(baseIOPort + 0x06);
     //fprintf(fp, "Input status 1                : 0x%02X\n", inputStatus1);
-    //if (fpbin != NULL) fwrite(&inputStatus1, sizeof(inputStatus1), 1, fpbin);
+    //if (fpbin != nullptr) fwrite(&inputStatus1, sizeof(inputStatus1), 1, fpbin);
 
     MiscellaneousOutput_t miscellaneousOutput = MiscellaneousOutput::Read();
     fprintf(fp, "Miscellaneous output          : 0x%02X\n", miscellaneousOutput);
@@ -11109,58 +11109,58 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
 
     //InputStatus0_t inputStatus0 = InputStatus0::Read();
     //fprintf(fp, "Input status 0                : 0x%02X\n", inputStatus0);
-    //if (fpbin != NULL) fwrite(&inputStatus0, sizeof(inputStatus0), 1, fpbin);
+    //if (fpbin != nullptr) fwrite(&inputStatus0, sizeof(inputStatus0), 1, fpbin);
 
     //VideoSubsystemEnable_t videoSubsystemEnable = VideoSubsystemEnable::Read();
     //fprintf(fp, "Video subsystem enable        : 0x%02X\n", videoSubsystemEnable);
-    //if (fpbin != NULL) fwrite(&videoSubsystemEnable, sizeof(videoSubsystemEnable), 1, fpbin);
+    //if (fpbin != nullptr) fwrite(&videoSubsystemEnable, sizeof(videoSubsystemEnable), 1, fpbin);
 
     DACMask_t dacMask = DACMask::Read();
     fprintf(fp, "DAC mask                      : 0x%02X\n", dacMask);
-    if (fpbin != NULL) fwrite(&dacMask, sizeof(dacMask), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&dacMask, sizeof(dacMask), 1, fpbin);
 
     DACStatus_t dacStatus = DACStatus::Read();
     fprintf(fp, "DAC status                    : 0x%02X\n", dacStatus);
-    if (fpbin != NULL) fwrite(&dacStatus, sizeof(dacStatus), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&dacStatus, sizeof(dacStatus), 1, fpbin);
 
     fprintf(fp, "\nAttributes:\n");
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::Register_t origAttribIdx = AttributeControllerIndex::Read();
     fprintf(fp, "Attribute Index:              : 0x%02X\n", origAttribIdx);
-    if (fpbin != NULL) fwrite(&origAttribIdx, sizeof(origAttribIdx), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&origAttribIdx, sizeof(origAttribIdx), 1, fpbin);
 
     for (uint8_t attribIdx = 0; attribIdx < 0x10; ++attribIdx)
     {
         InputStatus1::Read(baseIOPort + 0x06);
         AttributeController::Palette_t palette = AttributeController::Palette::Read(attribIdx);
         fprintf(fp, "Palette entry %02X              : 0x%02X\n", attribIdx, palette);
-        if (fpbin != NULL) fwrite(&palette, sizeof(palette), 1, fpbin);
+        if (fpbin != nullptr) fwrite(&palette, sizeof(palette), 1, fpbin);
     }
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::AttributeMode_t attributeMode = AttributeController::AttributeMode::Read();
     fprintf(fp, "Attribute mode control        : 0x%02X\n", attributeMode);
-    if (fpbin != NULL) fwrite(&attributeMode, sizeof(attributeMode), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&attributeMode, sizeof(attributeMode), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::BorderColor_t borderColor = AttributeController::BorderColor::Read();
     fprintf(fp, "Overscan color                : 0x%02X\n", borderColor);
-    if (fpbin != NULL) fwrite(&borderColor, sizeof(borderColor), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&borderColor, sizeof(borderColor), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::ColorPlane_t colorPlane = AttributeController::ColorPlane::Read();
     fprintf(fp, "Color palette enable          : 0x%02X\n", colorPlane);
-    if (fpbin != NULL) fwrite(&colorPlane, sizeof(colorPlane), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&colorPlane, sizeof(colorPlane), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::HorizontalPixelPanning_t horizontalPixelPanning = AttributeController::HorizontalPixelPanning::Read();
     fprintf(fp, "Horizontal PEL panning        : 0x%02X\n", horizontalPixelPanning);
-    if (fpbin != NULL) fwrite(&horizontalPixelPanning, sizeof(horizontalPixelPanning), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&horizontalPixelPanning, sizeof(horizontalPixelPanning), 1, fpbin);
 
     InputStatus1::Read(baseIOPort + 0x06);
     AttributeController::PixelPadding_t pixelPadding = AttributeController::PixelPadding::Read();
     fprintf(fp, "Color select                  : 0x%02X\n", pixelPadding);
-    if (fpbin != NULL) fwrite(&pixelPadding, sizeof(pixelPadding), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&pixelPadding, sizeof(pixelPadding), 1, fpbin);
 
 
     InputStatus1::Read(baseIOPort + 0x06);
@@ -11169,163 +11169,163 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
     fprintf(fp, "\nCRTC:\n");
     CRTController::HorizontalTotal_t horizontalTotal = CRTController::HorizontalTotal::Read(baseIOPort);
     fprintf(fp, "Horizontal total              : 0x%02X\n", horizontalTotal);
-    if (fpbin != NULL) fwrite(&horizontalTotal, sizeof(horizontalTotal), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&horizontalTotal, sizeof(horizontalTotal), 1, fpbin);
 
     CRTController::HorizontalDisplayEnd_t horizontalDisplayEnd = CRTController::HorizontalDisplayEnd::Read(baseIOPort);
     fprintf(fp, "Horizontal display enable end : 0x%02X\n", horizontalDisplayEnd);
-    if (fpbin != NULL) fwrite(&horizontalDisplayEnd, sizeof(horizontalDisplayEnd), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&horizontalDisplayEnd, sizeof(horizontalDisplayEnd), 1, fpbin);
 
     CRTController::StartHorizontalBlank_t startHorizontalBlank = CRTController::StartHorizontalBlank::Read(baseIOPort);
     fprintf(fp, "Star horizontal blanking      : 0x%02X\n", startHorizontalBlank);
-    if (fpbin != NULL) fwrite(&startHorizontalBlank, sizeof(startHorizontalBlank), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&startHorizontalBlank, sizeof(startHorizontalBlank), 1, fpbin);
 
     CRTController::EndHorizontalBlank_t endHorizontalBlank = CRTController::EndHorizontalBlank::Read(baseIOPort);
     fprintf(fp, "End horizontal blanking       : 0x%02X\n", endHorizontalBlank);
-    if (fpbin != NULL) fwrite(&endHorizontalBlank, sizeof(endHorizontalBlank), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&endHorizontalBlank, sizeof(endHorizontalBlank), 1, fpbin);
 
     CRTController::StartHorizontalSyncPosition_t startHorizontalSyncPosition = CRTController::StartHorizontalSyncPosition::Read(baseIOPort);
     fprintf(fp, "Start horizontal retrace pulse: 0x%02X\n", startHorizontalSyncPosition);
-    if (fpbin != NULL) fwrite(&startHorizontalSyncPosition, sizeof(startHorizontalSyncPosition), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&startHorizontalSyncPosition, sizeof(startHorizontalSyncPosition), 1, fpbin);
 
     CRTController::EndHorizontalSyncPosition_t endHorizontalSyncPosition = CRTController::EndHorizontalSyncPosition::Read(baseIOPort);
     fprintf(fp, "End horizontal retrace pulse  : 0x%02X\n", endHorizontalSyncPosition);
-    if (fpbin != NULL) fwrite(&endHorizontalSyncPosition, sizeof(endHorizontalSyncPosition), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&endHorizontalSyncPosition, sizeof(endHorizontalSyncPosition), 1, fpbin);
 
     CRTController::VerticalTotal_t verticalTotal = CRTController::VerticalTotal::Read(baseIOPort);
     fprintf(fp, "Vertical total                : 0x%02X\n", verticalTotal);
-    if (fpbin != NULL) fwrite(&verticalTotal, sizeof(verticalTotal), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&verticalTotal, sizeof(verticalTotal), 1, fpbin);
 
     CRTController::CRTCOverflow_t crtcOverflow = CRTController::CRTCOverflow::Read(baseIOPort);
     fprintf(fp, "Overflow                      : 0x%02X\n", crtcOverflow);
-    if (fpbin != NULL) fwrite(&crtcOverflow, sizeof(crtcOverflow), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&crtcOverflow, sizeof(crtcOverflow), 1, fpbin);
 
     CRTController::PresetRowScan_t presetRowScan = CRTController::PresetRowScan::Read(baseIOPort);
     fprintf(fp, "Preset row scan               : 0x%02X\n", presetRowScan);
-    if (fpbin != NULL) fwrite(&presetRowScan, sizeof(presetRowScan), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&presetRowScan, sizeof(presetRowScan), 1, fpbin);
 
     CRTController::MaximumScanLine_t maximumScanLine = CRTController::MaximumScanLine::Read(baseIOPort);
     fprintf(fp, "Maximum scan line             : 0x%02X\n", maximumScanLine);
-    if (fpbin != NULL) fwrite(&maximumScanLine, sizeof(maximumScanLine), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&maximumScanLine, sizeof(maximumScanLine), 1, fpbin);
 
     CRTController::CursorStartScanLine_t cursorStartScanLine = CRTController::CursorStartScanLine::Read(baseIOPort);
     fprintf(fp, "Cursor start                  : 0x%02X\n", cursorStartScanLine);
-    if (fpbin != NULL) fwrite(&cursorStartScanLine, sizeof(cursorStartScanLine), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&cursorStartScanLine, sizeof(cursorStartScanLine), 1, fpbin);
 
     CRTController::CursorEndScanLine_t cursorEndScanLine = CRTController::CursorEndScanLine::Read(baseIOPort);
     fprintf(fp, "Cursor end                    : 0x%02X\n", cursorEndScanLine);
-    if (fpbin != NULL) fwrite(&cursorEndScanLine, sizeof(cursorEndScanLine), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&cursorEndScanLine, sizeof(cursorEndScanLine), 1, fpbin);
 
     CRTController::StartAddressHigh_t startAddressHigh = CRTController::StartAddressHigh::Read(baseIOPort);
     fprintf(fp, "Start address high            : 0x%02X\n", startAddressHigh);
-    if (fpbin != NULL) fwrite(&startAddressHigh, sizeof(startAddressHigh), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&startAddressHigh, sizeof(startAddressHigh), 1, fpbin);
 
     CRTController::StartAddressLow_t startAddressLow = CRTController::StartAddressLow::Read(baseIOPort);
     fprintf(fp, "Start address low             : 0x%02X\n", startAddressLow);
-    if (fpbin != NULL) fwrite(&startAddressLow, sizeof(startAddressLow), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&startAddressLow, sizeof(startAddressLow), 1, fpbin);
 
     CRTController::CursorLocationAddressHigh_t cursorLocationAddressHigh = CRTController::CursorLocationAddressHigh::Read(baseIOPort);
     fprintf(fp, "Cursor location high          : 0x%02X\n", cursorLocationAddressHigh);
-    if (fpbin != NULL) fwrite(&cursorLocationAddressHigh, sizeof(cursorLocationAddressHigh), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&cursorLocationAddressHigh, sizeof(cursorLocationAddressHigh), 1, fpbin);
 
     CRTController::CursorLocationAddressLow_t cursorLocationAddressLow = CRTController::CursorLocationAddressLow::Read(baseIOPort);
     fprintf(fp, "Cursor location low           : 0x%02X\n", cursorLocationAddressLow);
-    if (fpbin != NULL) fwrite(&cursorLocationAddressLow, sizeof(cursorLocationAddressLow), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&cursorLocationAddressLow, sizeof(cursorLocationAddressLow), 1, fpbin);
 
     CRTController::VerticalRetraceStart_t verticalRetraceStart = CRTController::VerticalRetraceStart::Read(baseIOPort);
     fprintf(fp, "Vertical retrace start        : 0x%02X\n", verticalRetraceStart);
-    if (fpbin != NULL) fwrite(&verticalRetraceStart, sizeof(verticalRetraceStart), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&verticalRetraceStart, sizeof(verticalRetraceStart), 1, fpbin);
 
     CRTController::VerticalRetraceEnd_t verticalRetraceEnd = CRTController::VerticalRetraceEnd::Read(baseIOPort);
     fprintf(fp, "Vertical retrace end          : 0x%02X\n", verticalRetraceEnd);
-    if (fpbin != NULL) fwrite(&verticalRetraceEnd, sizeof(verticalRetraceEnd), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&verticalRetraceEnd, sizeof(verticalRetraceEnd), 1, fpbin);
 
     CRTController::VerticalDisplayEnd_t verticalDisplayEnd = CRTController::VerticalDisplayEnd::Read(baseIOPort);
     fprintf(fp, "Vertical display enable end   : 0x%02X\n", verticalDisplayEnd);
-    if (fpbin != NULL) fwrite(&verticalDisplayEnd, sizeof(verticalDisplayEnd), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&verticalDisplayEnd, sizeof(verticalDisplayEnd), 1, fpbin);
 
     CRTController::ScreenOffset_t screenOffset = CRTController::ScreenOffset::Read(baseIOPort);
     fprintf(fp, "Offset                        : 0x%02X\n", screenOffset);
-    if (fpbin != NULL) fwrite(&screenOffset, sizeof(screenOffset), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&screenOffset, sizeof(screenOffset), 1, fpbin);
 
     CRTController::UnderlineLocation_t underlineLocation = CRTController::UnderlineLocation::Read(baseIOPort);
     fprintf(fp, "Underline location            : 0x%02X\n", underlineLocation);
-    if (fpbin != NULL) fwrite(&underlineLocation, sizeof(underlineLocation), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&underlineLocation, sizeof(underlineLocation), 1, fpbin);
 
     CRTController::StartVerticalBlank_t startVerticalBlank = CRTController::StartVerticalBlank::Read(baseIOPort);
     fprintf(fp, "Start vertical blank          : 0x%02X\n", startVerticalBlank);
-    if (fpbin != NULL) fwrite(&startVerticalBlank, sizeof(startVerticalBlank), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&startVerticalBlank, sizeof(startVerticalBlank), 1, fpbin);
 
     CRTController::EndVerticalBlank_t endVerticalBlank = CRTController::EndVerticalBlank::Read(baseIOPort);
     fprintf(fp, "End vertical blank            : 0x%02X\n", endVerticalBlank);
-    if (fpbin != NULL) fwrite(&endVerticalBlank, sizeof(endVerticalBlank), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&endVerticalBlank, sizeof(endVerticalBlank), 1, fpbin);
 
     CRTController::CRTCModeControl_t crtcModeControl = CRTController::CRTCModeControl::Read(baseIOPort);
     fprintf(fp, "CRTC mode control             : 0x%02X\n", crtcModeControl);
-    if (fpbin != NULL) fwrite(&crtcModeControl, sizeof(crtcModeControl), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&crtcModeControl, sizeof(crtcModeControl), 1, fpbin);
 
     CRTController::LineCompare_t lineCompare = CRTController::LineCompare::Read(baseIOPort);
     fprintf(fp, "Line compare                  : 0x%02X\n", lineCompare);
-    if (fpbin != NULL) fwrite(&lineCompare, sizeof(lineCompare), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&lineCompare, sizeof(lineCompare), 1, fpbin);
 
 
     fprintf(fp, "\nSequencer:\n");
     Sequencer::Reset_t reset = Sequencer::Reset::Read();
     fprintf(fp, "Reset                         : 0x%02X\n", reset);
-    if (fpbin != NULL) fwrite(&reset, sizeof(reset), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&reset, sizeof(reset), 1, fpbin);
 
     Sequencer::ClockingMode_t clockingMode = Sequencer::ClockingMode::Read();
     fprintf(fp, "Clocking mode                 : 0x%02X\n", clockingMode);
-    if (fpbin != NULL) fwrite(&clockingMode, sizeof(clockingMode), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&clockingMode, sizeof(clockingMode), 1, fpbin);
 
     Sequencer::EnableWritePlane_t enableWritePlane = Sequencer::EnableWritePlane::Read();
     fprintf(fp, "Map mask                      : 0x%02X\n", enableWritePlane);
-    if (fpbin != NULL) fwrite(&enableWritePlane, sizeof(enableWritePlane), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&enableWritePlane, sizeof(enableWritePlane), 1, fpbin);
 
     Sequencer::CharacterFontSelect_t characterFontSelect = Sequencer::CharacterFontSelect::Read();
     fprintf(fp, "Character map select          : 0x%02X\n", characterFontSelect);
-    if (fpbin != NULL) fwrite(&characterFontSelect, sizeof(characterFontSelect), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&characterFontSelect, sizeof(characterFontSelect), 1, fpbin);
 
     Sequencer::MemoryModeControl_t memoryModeControl = Sequencer::MemoryModeControl::Read();
     fprintf(fp, "Memory mode                   : 0x%02X\n", memoryModeControl);
-    if (fpbin != NULL) fwrite(&memoryModeControl, sizeof(memoryModeControl), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&memoryModeControl, sizeof(memoryModeControl), 1, fpbin);
 
 
     fprintf(fp, "\nGraphics controller:\n");
     GraphicsController::SetResetData_t setResetData = GraphicsController::SetResetData::Read();
     fprintf(fp, "Set/Reset                     : 0x%02X\n", setResetData);
-    if (fpbin != NULL) fwrite(&setResetData, sizeof(setResetData), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&setResetData, sizeof(setResetData), 1, fpbin);
 
     GraphicsController::EnableSetResetData_t enableSetResetData = GraphicsController::EnableSetResetData::Read();
     fprintf(fp, "Enable Set/Reset              : 0x%02X\n", enableSetResetData);
-    if (fpbin != NULL) fwrite(&enableSetResetData, sizeof(enableSetResetData), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&enableSetResetData, sizeof(enableSetResetData), 1, fpbin);
 
     GraphicsController::ColorCompare_t colorCompare = GraphicsController::ColorCompare::Read();
     fprintf(fp, "Color compare                 : 0x%02X\n", colorCompare);
-    if (fpbin != NULL) fwrite(&colorCompare, sizeof(colorCompare), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&colorCompare, sizeof(colorCompare), 1, fpbin);
 
     GraphicsController::RasterOperationRotateCount_t rasterOperationRotateCount = GraphicsController::RasterOperationRotateCount::Read();
     fprintf(fp, "Data rotate                   : 0x%02X\n", rasterOperationRotateCount);
-    if (fpbin != NULL) fwrite(&rasterOperationRotateCount, sizeof(rasterOperationRotateCount), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&rasterOperationRotateCount, sizeof(rasterOperationRotateCount), 1, fpbin);
 
     GraphicsController::ReadPlaneSelect_t readPlaneSelect = GraphicsController::ReadPlaneSelect::Read();
     fprintf(fp, "Read map select               : 0x%02X\n", readPlaneSelect);
-    if (fpbin != NULL) fwrite(&readPlaneSelect, sizeof(readPlaneSelect), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&readPlaneSelect, sizeof(readPlaneSelect), 1, fpbin);
 
     GraphicsController::GraphicsControllerMode_t graphicsControllerMode = GraphicsController::GraphicsControllerMode::Read();
     fprintf(fp, "Graphics mode                 : 0x%02X\n", graphicsControllerMode);
-    if (fpbin != NULL) fwrite(&graphicsControllerMode, sizeof(graphicsControllerMode), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&graphicsControllerMode, sizeof(graphicsControllerMode), 1, fpbin);
 
     GraphicsController::MemoryMapModeControl_t memoryMapModeControl = GraphicsController::MemoryMapModeControl::Read();
     fprintf(fp, "Miscellaneous                 : 0x%02X\n", memoryMapModeControl);
-    if (fpbin != NULL) fwrite(&memoryMapModeControl, sizeof(memoryMapModeControl), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&memoryMapModeControl, sizeof(memoryMapModeControl), 1, fpbin);
 
     GraphicsController::ColorDontCare_t colorDontCare = GraphicsController::ColorDontCare::Read();
     fprintf(fp, "Color don't care              : 0x%02X\n", colorDontCare);
-    if (fpbin != NULL) fwrite(&colorDontCare, sizeof(colorDontCare), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&colorDontCare, sizeof(colorDontCare), 1, fpbin);
 
     GraphicsController::BitMask_t bitMask = GraphicsController::BitMask::Read();
     fprintf(fp, "Bit mask                      : 0x%02X\n", bitMask);
-    if (fpbin != NULL) fwrite(&bitMask, sizeof(bitMask), 1, fpbin);
+    if (fpbin != nullptr) fwrite(&bitMask, sizeof(bitMask), 1, fpbin);
 
 
     fprintf(fp, "\nRAMDAC registers:\n");
@@ -11336,7 +11336,7 @@ void VGADump(FILE* fp, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
         uint8_t green = RAMDACData::Read();
         uint8_t blue = RAMDACData::Read();
         fprintf(fp, "0x%02X: 0x%02X, 0x%02X, 0x%02X\n", color, red, green, blue);
-        if (fpbin != NULL)
+        if (fpbin != nullptr)
         {
             fwrite(&red, 1, 1, fpbin);
             fwrite(&green, 1, 1, fpbin);
@@ -11408,7 +11408,7 @@ bool FindDevices(uint8_t bus, uint8_t slot, uint8_t function, void* context)
                     uint8_t(pciReg >> 16),
                     uint8_t(pciReg >> 24),
                     pciReg);
-            if (ctx->fpbin != NULL)
+            if (ctx->fpbin != nullptr)
             {
                 fwrite(&pciReg, sizeof(pciReg), 1, ctx->fpbin);
             }
@@ -11466,7 +11466,7 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     CRTCExtensionIndex::Write(0x08);
     fprintf(fp, "Address extension             : 0x%02X\n", CRTCExtensionData::Read());
 
-    if (fpbin != NULL)
+    if (fpbin != nullptr)
     {
         for (uint8_t idx = 0; idx < 0x08; ++idx)
         {
@@ -11539,7 +11539,7 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
         fprintf(fp, "Cursor color %02i blue (G200)   : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 2));
     }
 
-    if (fpbin != NULL)
+    if (fpbin != nullptr)
     {
         for (uint16_t index = 0; index < 0x86; ++index)
         {

@@ -41,8 +41,10 @@
 # Mac junk
 **/.DS_Store
 
-# VS Code junk
-**/.vscode
+# cache and build output
+.cache/
+build/
+CMakeFiles/
 
 # abandoned code
 **/old
@@ -53,3 +55,9 @@
 *.err
 *.txt
 *.lst
+
+cmake_install.cmake
+compile_commands.json
+makefile
+
+!CMakeLists.txt

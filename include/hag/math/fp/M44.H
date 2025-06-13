@@ -118,9 +118,9 @@ public:
     inline static m44 Projection(fp width, fp height, fp fov, fp nearPlane, fp farPlane)
     {
         fp aspect = width / height;
-        fp tanFov = (fov * fp::Half).Tan();
-        fp w = fp::One / (tanFov * aspect);
-        fp h = fp::One / tanFov;
+        //fp tanFov = (fov * fp::Half).Tan();
+        //fp w = fp::One / (tanFov * aspect);
+        //fp h = fp::One / tanFov;
         fp q = 1 / (farPlane - nearPlane);
 
         return m44(v4(1, 0, 0, 0),

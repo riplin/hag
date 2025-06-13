@@ -4,8 +4,6 @@
 
 #include <hag/types.h>
 
-#pragma pack(push, 1);
-
 namespace Hag { namespace Vesa
 {
 
@@ -41,6 +39,8 @@ namespace ModeMemoryModel
     };
 }
 
+#pragma pack(push, 1)
+
 struct ModeInfo
 {
     ModeAttributes_t ModeAttributes;
@@ -54,12 +54,6 @@ struct ModeInfo
     ModeMemoryModel_t MemoryModelType;
 };
 
-namespace Data
-{
-
-
-}
+#pragma pack(pop)
 
 }}
-
-#pragma pack(pop);

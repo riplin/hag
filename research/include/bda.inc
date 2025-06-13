@@ -110,8 +110,32 @@ BDA_VideoParameterControlBlockPtrSeg    EQU 04aah;word 0x4aa
     BDA_VPCB_VideoParameterTable        EQU 00h;dword 0x00
     BDA_VPCB_DynamicParamSaveArea       EQU 04h;dword 0x04
     BDA_VPCB_AlphaNumCharSetOverride    EQU 08h;dword 0x08
+        BDA_ACSO_ChardDefLength         EQU 00h;0x00   byte    length of each character definition in bytes
+        BDA_ACSO_RamBankIndex           EQU 01h;0x01   byte    character generator RAM bank
+        BDA_ACSO_NumCharacters          EQU 02h;0x02   word    count of characters defined
+        BDA_ACSO_StartIndex             EQU 04h;0x04   word    first character code in table
+        BDA_ACSO_FontData               EQU 06h;0x06   dword   pointer to character font definition table
+        BDA_ACSO_CharacterRows          EQU 0ah;0x0A   byte    number of character rows displayed
+        BDA_ACSO_ApplicableModeList     EQU 0bh;0x0B   nbytes  array of applicable video modes
+                                               ;9x0B+n byte    FFh end of mode list marker
     BDA_VPCB_GrahicsCharSetOverride     EQU 0ch;dword 0x0c
+        BDA_GCSO_NumCharacters          EQU 00h;0x00   byte    count of displayed character rows
+        BDA_GCSO_CharDefLength          EQU 01h;0x01   word    length of each character definition in bytes
+        BDA_GCSO_FontData               EQU 03h;0x03   dword   pointer to character font definition table
+        BDA_GCSO_ApplicableModeList     EQU 07h;0x07   nbytes  array of applicable video modes
+                                               ;07+n byte    FFh end of mode list marker
     BDA_VPCB_SecondarySavePointerTbl    EQU 10h;dword 0x10
+        BDA_SSP_Length                  EQU 00h;0x00  word   length of table in bytes
+        BDA_SSP_DisplayCombinationCode  EQU 02h;0x02  dword  pointer to display combination code table
+        BDA_SSP_SecondaryAlphaOverr     EQU 06h;0x06  dword  pointer to secondary alphanumeric char set override
+            BDA_SACSO_CharDefLength     EQU 00h;0x00   byte    bytes per character
+            BDA_SACSO_RamBankIndex      EQU 01h;0x01   byte    block to load
+            BDA_SACSO_Reserved2         EQU 02h;0x02   byte    reserved
+            BDA_SACSO_FontData          EQU 03h;0x03   dword   font table pointer
+            BDA_SACSO_ApplicableModeLst EQU 07h;07   nbytes  array of mode values for this font
+                                               ;07+n byte    FFh end of mode list marker
+
+        BDA_SSP_UserPaletteProfileTbl   EQU 0ah;0x0a  dword  pointer to user palette profile table  (VGA)    
     BDA_VPCB_DisplayCombinationCodePtr  EQU 02h;dword 0x02
         BDA_DCC_NoDisplay               EQU 000h;0x00   No display
         BDA_DCC_MDPA                    EQU 001h;0x01   Monochrome display and printer adapter (MDPA)
@@ -121,25 +145,45 @@ BDA_VideoParameterControlBlockPtrSeg    EQU 04aah;word 0x4aa
         BDA_DCC_PGC                     EQU 006h;0x06   Professional graphics controller (PGC)
         BDA_DCC_MVGA                    EQU 007h;0x07   VGA based with monochrome display (MVGA)
         BDA_DCC_CVGA                    EQU 008h;0x08   Video Graphics Array (VGA) based with color display (CVGA)
-    BDA_VPCB_SecondaryCharSetOverride   EQU 06h;dword 0x06
-    BDA_VPCB_PaletterProfileTable       EQU 0ah;dword 0x0a
+    BDA_VPCB_SecondaryCharSetOverride   EQU 006h;dword 0x06
+    BDA_VPCB_PaletterProfileTable       EQU 00ah;dword 0x0a
+        BDA_PPT_Underlining             EQU 000h;0x00 byte    1 - enable underlining in all alphanumeric modes
+                                                ;             0 - enable underlining in monochrome alpha modes
+                                                ;            -1 - disable underlining in all alpha modes
+        BDA_PPT_Reserved1               EQU 001h;0x01 byte   reserved
+        BDA_PPT_Reserved2               EQU 002h;0x02 word   reserved
+        BDA_PPT_AttributeRegCount       EQU 004h;0x04 word   count of attribute controller regs in table
+        BDA_PPT_AttributeRegStartIndex  EQU 006h;0x06 word   first attribute controller register number
+        BDA_PPT_AttributeRegsPtr        EQU 008h;0x08 dword  pointer to attribute controller reg table
+        BDA_PPT_DACRegCount             EQU 00ch;0x0c word   count of video DAC color registers in table
+        BDA_PPT_DACRegStartIndex        EQU 00eh;0x0e word   first video DAC color register number
+        BDA_PPT_DacRegsPtr              EQU 010h;0x10 dword  video DAC color register table pointer
+        BDA_PPT_ApplicableModeList      EQU 014h;0x14 nbytes array of applicable video modes for this font
+                                                ;9x14+n byte FFh end of video mode list marker
 BDA_PrintScreenStatus                   EQU 0500h;Byte 0x500
     BDA_PSS_NotActive                   EQU 00h
     BDA_PSS_InProgress                  EQU 01h
     BDA_PSS_Error                       EQU 0FFh
 
+INT_5_Handler                           EQU 0014h   ;Word 0x14
 INT_5_HandlerOfs                        EQU 0014h   ;Word 0x14
 INT_5_HandlerSeg                        EQU 0016h   ;Word 0x16
+INT_10_Handler                          EQU 0040h   ;Word 0x40
 INT_10_HandlerOfs                       EQU 0040h   ;Word 0x40
 INT_10_HandlerSeg                       EQU 0042h   ;Word 0x42
+INT_1D_Handler                          EQU 0074h   ;Word 0x74
 INT_1D_HandlerOfs                       EQU 0074h   ;Word 0x74
 INT_1D_HandlerSeg                       EQU 0076h   ;Word 0x76
+INT_1F_Handler                          EQU 007ch   ;Word 0x7c
 INT_1F_HandlerOfs                       EQU 007ch   ;Word 0x7c
 INT_1F_HandlerSeg                       EQU 007eh   ;Word 0x7e
+INT_42_Handler                          EQU 0108h   ;Word 0x108
 INT_42_HandlerOfs                       EQU 0108h   ;Word 0x108
 INT_42_HandlerSeg                       EQU 010ah   ;Word 0x10a
+INT_43_Handler                          EQU 010ch   ;Word 0x10c
 INT_43_HandlerOfs                       EQU 010ch   ;Word 0x10c
 INT_43_HandlerSeg                       EQU 010eh   ;Word 0x10e
+INT_6D_Handler                          EQU 01b4h   ;Word 0x1b4
 INT_6D_HandlerOfs                       EQU 01b4h   ;Word 0x1b4
 INT_6D_HandlerSeg                       EQU 01b6h   ;Word 0x1b6
 SYS_INT_10h_HandlerOfs                  EQU 0f065h  ;Word 0xf065

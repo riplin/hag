@@ -594,7 +594,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA22
     },
     { // Mode 148
@@ -610,7 +610,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA23
     },
     { // Mode 145
@@ -626,7 +626,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA24
     },
     { // Mode 143
@@ -642,7 +642,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA25
     },
     { // Mode 100
@@ -754,7 +754,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA22
     },
     { // Mode 139
@@ -770,7 +770,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA23
     },
     { // Mode 136
@@ -786,7 +786,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA24
     },
     { // Mode 134
@@ -802,7 +802,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA25
     },
     { // Mode 121
@@ -818,7 +818,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA26
     },
     { // Mode 110
@@ -834,7 +834,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA27
     },
     { // Mode 113
@@ -850,7 +850,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA28
     },
     { // Mode 116
@@ -866,7 +866,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA29
     },
     { // Mode 119
@@ -882,7 +882,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA30
     },
     { // Mode 11D
@@ -898,7 +898,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA31
     },
     { // Mode 10E
@@ -914,7 +914,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA22
     },
     { // Mode 1D9
@@ -930,7 +930,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA23
     },
     { // Mode 1D6
@@ -946,7 +946,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA24
     },
     { // Mode 1D4
@@ -962,7 +962,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA25
     },
     { // Mode 122
@@ -978,7 +978,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA26
     },
     { // Mode 111
@@ -994,7 +994,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA27
     },
     { // Mode 114
@@ -1010,7 +1010,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA28
     },
     { // Mode 117
@@ -1026,7 +1026,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA29
     },
     { // Mode 11A
@@ -1042,7 +1042,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA30
     },
     { // Mode 11E
@@ -1058,7 +1058,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA31
     },
     { // Mode 10F
@@ -1074,7 +1074,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA22
     },
     { // Mode 1B8
@@ -1090,7 +1090,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA23
     },
     { // Mode 1B5
@@ -1106,7 +1106,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA24
     },
     { // Mode 1B3
@@ -1122,7 +1122,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA25
     },
     { // Mode 124
@@ -1138,7 +1138,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA26
     },
     { // Mode 112
@@ -1154,7 +1154,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA27
     },
     { // Mode 115
@@ -1170,7 +1170,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA28
     },
     { // Mode 118
@@ -1186,7 +1186,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA29
     },
     { // Mode 11B
@@ -1202,7 +1202,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA30
     },
     { // Mode 11F
@@ -1218,7 +1218,7 @@ ModeDescriptor s_Descriptors[] =
         Scanlines::Invalid,
         0xFF,
         0xFF,
-        NULL,
+        nullptr,
         PA31
     },
 };

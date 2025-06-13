@@ -32,7 +32,7 @@ bool VerifyBDAOrDeactivate(VGA::VideoMode_t& mode, bool isVesa, bool isVesaColor
 template<typename T>
 bool GetVideoParameterBlockElementAs(uint16_t index, T*& returnPointer, uint16_t size = sizeof(FARPointer))
 {
-    uint8_t* ptr = NULL;
+    uint8_t* ptr = nullptr;
     bool ret = GetVideoParameterBlockElement(index, ptr, size);
     returnPointer = (T*)ptr;
     return ret;

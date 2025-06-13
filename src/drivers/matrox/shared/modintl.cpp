@@ -375,11 +375,11 @@ void PrintTimings(VideoParameters& videoMode)
     uint32_t verticalAddressLines = videoMode.VerticalDisplayEnableEndLines();
     float refreshRateHz = videoMode.RefreshRateHz();
 
-    printf("\n\nTiming Name         = %i x %i @ %.fHz;\n\n",
+    printf("\n\nTiming Name         = %lu x %lu @ %.fHz;\n\n",
         horizontalAddressPixels, verticalAddressLines, refreshRateHz);
 
-    printf("Hor Pixels          = %4i;         // Pixels\n", horizontalAddressPixels);
-    printf("Ver Pixels          = %4i;         // Pixels\n\n", verticalAddressLines);
+    printf("Hor Pixels          = %4lu;         // Pixels\n", horizontalAddressPixels);
+    printf("Ver Pixels          = %4lu;         // Pixels\n\n", verticalAddressLines);
 
     uint32_t horizontalTotalPixels = videoMode.HorizontalTotalPixels();
     float horizontalFrequencyKhz = float(videoMode.Timings.FrequencyKHz) / horizontalTotalPixels;
@@ -395,16 +395,16 @@ void PrintTimings(VideoParameters& videoMode)
     float pixelClockMHz = float(videoMode.Timings.FrequencyKHz) / 1000.0f;
     float pixelTime = 1000.0f / pixelClockMHz;
 
-    printf("Pixel Clock         = %.3f;       // MHz      =    %.1f nsec ± 0.5%\n",
+    printf("Pixel Clock         = %.3f;       // MHz      =    %.1f nsec ± 0.5%%\n",
         pixelClockMHz, pixelTime);
 
     uint32_t characterWidth = videoMode.CharacterClockInPixels();
     float characterTime = (characterWidth * 1000.0f) / pixelClockMHz;
 
-    printf("Character Width     = %i;            // Pixels   =   %.1f nsec\n",
+    printf("Character Width     = %lu;            // Pixels   =   %.1f nsec\n",
         characterWidth, characterTime);
 
-    printf("Scan Type           = %s;                // H Phase  =   ? %\n",
+    printf("Scan Type           = %s;                // H Phase  =   ? %%\n",
         videoMode.IsInterlaced() ? "INTERLACED" : "NONINTERLACED");
 
     uint32_t horizontalBlankDurationPixels = videoMode.HorizontalBlankEndPixels() - videoMode.HorizontalBlankStartPixels();
@@ -423,126 +423,126 @@ void PrintTimings(VideoParameters& videoMode)
     float horizontalTotalTime = float(horizontalTotalPixels) / pixelClockMHz;
     uint32_t horizontalTotalChars = videoMode.HorizontalTotalChars();
 
-    printf("Hor Total Time      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Total Time      = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalTotalTime, horizontalTotalChars, horizontalTotalPixels);
 
     float horizontalAddressTime = float(horizontalAddressPixels) / pixelClockMHz;
     uint32_t horizontalAddressChars = videoMode.HorizontalDisplayEnableEndChars();
 
-    printf("Hor Addr Time       = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Addr Time       = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalAddressTime, horizontalAddressChars, horizontalAddressPixels);
 
     uint32_t horizontalBlankStartPixels = videoMode.HorizontalBlankStartPixels();
     uint32_t horizontalBlankStartChars = videoMode.HorizontalBlankStartChars();
     float horizontalBlankStartTime = float(horizontalBlankStartPixels) / pixelClockMHz;
 
-    printf("Hor Blank Start     = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Blank Start     = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalBlankStartTime, horizontalBlankStartChars, horizontalBlankStartPixels);
 
     uint32_t horizontalBlankDurationChars = videoMode.HorizontalBlankEndChars() - videoMode.HorizontalBlankStartChars();
     float horizontalBlankDurationTime = float(horizontalBlankDurationPixels) / pixelClockMHz;
 
-    printf("Hor Blank Time      =  %1.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Blank Time      =  %1.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalBlankDurationTime, horizontalBlankDurationChars, horizontalBlankDurationPixels);
 
     uint32_t horizontalSyncStartChars = videoMode.HorizontalSyncStartChars();
     uint32_t horizontalSyncStartPixels = videoMode.HorizontalSyncStartPixels();
     float horizontalSyncStartTime = float(horizontalSyncStartPixels) / pixelClockMHz;
 
-    printf("Hor Sync Start      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n\n",
+    printf("Hor Sync Start      = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n\n",
         horizontalSyncStartTime, horizontalSyncStartChars, horizontalSyncStartPixels);
 
     uint32_t horizontalRightBorderChars = videoMode.HorizontalBlankStartChars() - videoMode.HorizontalDisplayEnableEndChars();
     uint32_t horizontalRightBorderPixels = videoMode.HorizontalBlankStartPixels() - videoMode.HorizontalDisplayEnableEndPixels();
     float horizontalRightBorderTime = float(horizontalRightBorderPixels) / pixelClockMHz;
 
-    printf("// H Right Border   = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("// H Right Border   = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalRightBorderTime, horizontalRightBorderChars, horizontalRightBorderPixels);
 
     uint32_t horizontalFrontPorchChars = videoMode.HorizontalSyncStartChars() - videoMode.HorizontalBlankStartChars();
     uint32_t horizontalFrontPorchPixels = videoMode.HorizontalSyncStartPixels() - videoMode.HorizontalBlankStartPixels();
     float horizontalFrontPorchTime = float(horizontalFrontPorchPixels) / pixelClockMHz;
 
-    printf("// H Front Porch    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("// H Front Porch    = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalFrontPorchTime, horizontalFrontPorchChars, horizontalFrontPorchPixels);
 
     uint32_t horizontalSyncDurationChars = videoMode.HorizontalSyncEndChars() - videoMode.HorizontalSyncStartChars();
     uint32_t horizontalSyncDurationPixels = videoMode.HorizontalSyncEndPixels() - videoMode.HorizontalSyncStartPixels();
     float horizontalSyncDurationTime = float(horizontalSyncDurationPixels) / pixelClockMHz;
 
-    printf("Hor Sync Time       = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Sync Time       = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
     horizontalSyncDurationTime, horizontalSyncDurationChars, horizontalSyncDurationPixels);
 
     uint32_t horizontalBackPorchChars = videoMode.HorizontalBlankEndChars() - videoMode.HorizontalSyncEndChars();
     uint32_t horizontalBackPorchPixels = videoMode.HorizontalBlankEndPixels() - videoMode.HorizontalSyncEndPixels();
     float horizontalBackPorchTime = float(horizontalBackPorchPixels) / pixelClockMHz;
 
-    printf("// H Back Porch     = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("// H Back Porch     = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalBackPorchTime, horizontalBackPorchChars, horizontalBackPorchPixels);
 
     uint32_t horizontalLeftBorderChars = videoMode.HorizontalTotalChars() - videoMode.HorizontalBlankEndChars();
     uint32_t horizontalLeftBorderPixels = videoMode.HorizontalTotalPixels() - videoMode.HorizontalBlankEndPixels();
     float horizontalLeftBorderTime = float(horizontalLeftBorderPixels) / pixelClockMHz;
 
-    printf("// H Left Border    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n\n",
+    printf("// H Left Border    = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n\n",
         horizontalLeftBorderTime, horizontalLeftBorderChars, horizontalLeftBorderPixels);
 
     float verticalTotalTime = 1000.0f / refreshRateHz;
 
-    printf("Ver Total Time      = %2.3f;       // (msec)   =  %4i lines     HT - (1.06xHA)\n",
+    printf("Ver Total Time      = %2.3f;       // (msec)   =  %4lu lines     HT - (1.06xHA)\n",
         verticalTotalTime, verticalTotalLines);
 
     float verticalAddressTime = (1000.0f * (float(verticalAddressLines) / verticalTotalLines)) / refreshRateHz;
     float extraCalculation = horizontalTotalTime - (1.06f * horizontalAddressTime);
 
-    printf("Ver Addr Time       = %2.3f;       // (msec)   =  %4i lines         = %1.2f\n",
+    printf("Ver Addr Time       = %2.3f;       // (msec)   =  %4lu lines         = %1.2f\n",
         verticalAddressTime, verticalAddressLines, extraCalculation);
 
     uint32_t verticalBlankStartLines = videoMode.VerticalBlankStartLines();
     float verticalBlankStartTime = (1000.0f * (float(verticalBlankStartLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Blank Start     = %2.3f;       // (msec)   =  %4i lines\n",
+    printf("Ver Blank Start     = %2.3f;       // (msec)   =  %4lu lines\n",
         verticalBlankStartTime, verticalBlankStartLines);
 
     float verticalBlankDurationTime = (1000.0f * (float(verticalBlankDurationLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Blank Time      =  %1.3f;       // (msec)   =  %4i lines\n",
+    printf("Ver Blank Time      =  %1.3f;       // (msec)   =  %4lu lines\n",
         verticalBlankDurationTime, verticalBlankDurationLines);
 
     uint32_t verticalSyncStartLines = videoMode.VerticalSyncStartLines();
     float verticalSyncStartTime = (1000.0f * (float(verticalSyncStartLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Sync Start      = %2.3f;       // (msec)   =  %4i lines\n\n",
+    printf("Ver Sync Start      = %2.3f;       // (msec)   =  %4lu lines\n\n",
         verticalSyncStartTime, verticalSyncStartLines);
 
     uint32_t verticalBottomBorderLines = videoMode.VerticalBlankStartLines() - videoMode.VerticalDisplayEnableEndLines();
     float verticalBottomBorderTime = (1000.0f * (float(verticalBottomBorderLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Bottom Border  = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("// V Bottom Border  = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalBottomBorderTime, verticalBottomBorderLines);
 
     uint32_t verticalFrontPorchLines = videoMode.VerticalSyncStartLines() - videoMode.VerticalBlankStartLines();
     float verticalFrontPorchTime = (1000.0f * (float(verticalFrontPorchLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Front Porch    = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("// V Front Porch    = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalFrontPorchTime, verticalFrontPorchLines);
     
     uint32_t verticalSyncDurationLines = videoMode.VerticalSyncEndLines() - videoMode.VerticalSyncStartLines();
     float verticalSyncDurationTime = (1000.0f * (float(verticalSyncDurationLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Sync Time       = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("Ver Sync Time       = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalSyncDurationTime, verticalSyncDurationLines);
 
     uint32_t verticalBackPorchLines = videoMode.VerticalBlankEndLines() - videoMode.VerticalSyncEndLines();
     float verticalBackPorchTime = (1000.0f * (float(verticalBackPorchLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Back Porch     = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("// V Back Porch     = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalBackPorchTime, verticalBackPorchLines);
 
     uint32_t verticalTopBorderLines = videoMode.VerticalTotalLines() - videoMode.VerticalBlankEndLines();
     float verticalTopBorderTime = (1000.0f * (float(verticalTopBorderLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Top Border     = %1.3f;        // (msec)   =  %4i lines\n\n",
+    printf("// V Top Border     = %1.3f;        // (msec)   =  %4lu lines\n\n",
         verticalTopBorderTime, verticalTopBorderLines);
 }
 

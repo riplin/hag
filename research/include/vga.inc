@@ -34,6 +34,7 @@ VGA_AttributeControllerIndex_lowbyte    EQU 0c0h;0xc0
     VGA_ATTR_PaletteE                   EQU 00eh;0x0e
     VGA_ATTR_PaletteF                   EQU 00fh;0x0f
     VGA_ATTR_ModeControl                EQU 010h;0x10
+        VGA_MC_Blinking                 EQU 008h;0x08
     VGA_ATTR_OverscanColor              EQU 011h;0x11
     VGA_ATTR_ColorPlaneEnable           EQU 012h;0x12
     VGA_ATTR_HorizontalPelPanning       EQU 013h;0x13
@@ -107,6 +108,8 @@ VGA_DACMask_lowbyte                     EQU 0c6h;0xc6
 VGA_DACReadIndex                        EQU 03c7h;0x3c7
 VGA_DACReadIndex_lowbyte                EQU 0c7h;0xc7
 VGA_DACStatus                           EQU 03c7h;0x3c7
+    VGA_DACS_WriteCycle                 EQU 000h;0x00
+    VGA_DACS_ReadCycle                  EQU 003h;0x03
 VGA_DACStatus_lowbyte                   EQU 0c7h;0xc7
 VGA_DACWriteIndex                       EQU 03c8h;0x3c8
 VGA_DACWriteIndex_lowbyte               EQU 0c8h;0xc8
@@ -181,7 +184,9 @@ VGA_CRTControllerIndexD_lowbyte         EQU 0d4h;0xd4
     VGA_CRTCIdx_PresetRowScan           EQU 008h;0x08
     VGA_CRTCIdx_MaxScanLine             EQU 009h;0x09
         VGA_CRTC9_MaxScanMask           EQU 01fh;0x1f
+        VGA_CRTC9_DoubleScan            EQU 080h;0x80
     VGA_CRTCIdx_CursorStart             EQU 00ah;0x0a
+        VGA_CS_CursorOff                EQU 020h;0x20
     VGA_CRTCIdx_CursorEnd               EQU 00bh;0x0b
     VGA_CRTCIdx_StartAddrHigh           EQU 00ch;0x0c
     VGA_CRTCIdx_StartAddrLow            EQU 00dh;0x0d
@@ -189,6 +194,7 @@ VGA_CRTControllerIndexD_lowbyte         EQU 0d4h;0xd4
     VGA_CRTCIdx_CursorLocLow            EQU 00fh;0x0f
     VGA_CRTCIdx_VertRetraceStart        EQU 010h;0x10
     VGA_CRTCIdx_VertRetraceEnd          EQU 011h;0x11
+        VGA_VRE_DisableVertRetrIntr     EQU 020h;0x20
     VGA_CRTCIdx_VertDispEnableEnd       EQU 012h;0x12
     VGA_CRTCIdx_Offset                  EQU 013h;0x13
     VGA_CRTCIdx_UnderlineLoc            EQU 014h;0x14
@@ -196,6 +202,7 @@ VGA_CRTControllerIndexD_lowbyte         EQU 0d4h;0xd4
     VGA_CRTCIdx_EndVertBlank            EQU 016h;0x16
     VGA_CRTCIdx_ModeControl             EQU 017h;0x17
     VGA_CRTCIdx_LineCompare             EQU 018h;0x18
+    VGA_CRTCIdx_LatchReadback           EQU 022h;0x22
 VGA_CRTControllerDataD                  EQU 03d5h;0x3d5
 VGA_CRTControllerDataD_lowbyte          EQU 0d5h;0xd5
 VGA_CGAModeControl                      EQU 03d8h;0x3d8

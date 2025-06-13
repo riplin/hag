@@ -11,11 +11,9 @@
 
 //This API handles the BIOS Data Area
 
-#pragma pack(push, 1);
-
 namespace Hag { namespace System { namespace BDA
 {
-    #pragma pack(push, 1);
+    #pragma pack(push, 1)
 
     struct Position
     {
@@ -350,11 +348,11 @@ namespace Hag { namespace System { namespace BDA
         VideoParameterControlBlockPointer_t VideoParameterControlBlockPointer;      // 40:a8
     };
     
-    #pragma pack(pop);
+    #pragma pack(pop)
 
     inline Instance& SystemBDA()
     {
-        return *((Instance*)0x400);
+        return *FARPointer(0x0000, 0x0400).ToPointer<Instance>();
     }
 
     Instance& CurrentInstance();
@@ -628,5 +626,3 @@ namespace Hag { namespace System { namespace BDA
     }
 
 }}}
-
-#pragma pack(pop);

@@ -23,22 +23,26 @@ typedef VGA::Sequencer::MemoryModeControl_t MemoryModeControl_t;
 
 namespace MemoryModeControl
 {
-    using namespace Hag::VGA::Sequencer::MemoryModeControl;
-
+    using namespace VGA::Sequencer::MemoryModeControl;
+    
     enum //Mask
     {
         Unknown = 0x01,
-        Unknown2 = 0x10
+        Unknown2 = 0x10,
+        ExtendedMemoryAddress = Hag::VGA::Sequencer::MemoryModeControl::ExtendedMemoryAddress,
+        SequentialAddressingMode = Hag::VGA::Sequencer::MemoryModeControl::SequentialAddressingMode,
+        SelectChain4Mode = Hag::VGA::Sequencer::MemoryModeControl::SelectChain4Mode
     };
 
     namespace Shift
     {
-        using namespace Hag::VGA::Sequencer::MemoryModeControl::Shift;
-
         enum
         {
             Unknown = 0x00,
-            Unknown2 = 0x04
+            Unknown2 = 0x04,
+            ExtendedMemoryAddress = Hag::VGA::Sequencer::MemoryModeControl::Shift::ExtendedMemoryAddress,
+            SequentialAddressingMode = Hag::VGA::Sequencer::MemoryModeControl::Shift::SequentialAddressingMode,
+            SelectChain4Mode = Hag::VGA::Sequencer::MemoryModeControl::Shift::SelectChain4Mode
         };
     }
 

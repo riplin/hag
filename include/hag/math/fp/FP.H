@@ -5,7 +5,7 @@
 #include <hag/types.h>
 
 namespace Hag { namespace Math { class fp; }}
-
+/*
 Hag::Math::fp imulfp(Hag::Math::fp a, Hag::Math::fp b);
 #pragma aux imulfp =            \
         "imul edx"              \
@@ -59,7 +59,7 @@ Hag::Math::fp int32imod(int32_t a, Hag::Math::fp b);
         "xor eax, eax"          \
         "idiv ebx"              \
         parm [edx] [ebx] modify exact [eax edx] value [edx];
-
+*/
 namespace Hag { namespace Math {
 
 class fp
@@ -202,36 +202,36 @@ private:
 };
 
 inline fp fp::operator*(fp rhs) const
-//{ return FromTotal(int32_t((int64_t(m_total) * int64_t(rhs.m_total)) >> 16)); }
-{ return imulfp((*this), rhs); }
+{ return FromTotal(int32_t((int64_t(m_total) * int64_t(rhs.m_total)) >> 16)); }
+//{ return imulfp((*this), rhs); }
 
 inline fp fp::operator*(int16_t rhs) const
-//{ return FromTotal(m_total * rhs); }
-{ return imulint32((*this), rhs); }
+{ return FromTotal(m_total * rhs); }
+//{ return imulint32((*this), rhs); }
     
 inline fp fp::operator/(fp rhs) const
-//{ return FromTotal(int32_t((int64_t(m_total) << 16) / rhs.m_total)); }
-{ return idivfp((*this), rhs); }
+{ return FromTotal(int32_t((int64_t(m_total) << 16) / rhs.m_total)); }
+//{ return idivfp((*this), rhs); }
     
 inline fp fp::operator/(int16_t rhs) const
-//{ return FromTotal(m_total / rhs); }
-{ return idivint32((*this), rhs); }
+{ return FromTotal(m_total / rhs); }
+//{ return idivint32((*this), rhs); }
 
 inline fp fp::operator*=(fp rhs)
-//{ (*this) = FromTotal(int32_t((int64_t(m_total) * int64_t(rhs.m_total)) >> 16)); return (*this); }
-{ (*this) = imulfp((*this), rhs); return (*this); }
+{ (*this) = FromTotal(int32_t((int64_t(m_total) * int64_t(rhs.m_total)) >> 16)); return (*this); }
+//{ (*this) = imulfp((*this), rhs); return (*this); }
     
 inline fp fp::operator*=(int16_t rhs)
-//{ (*this) = FromTotal(m_total * rhs); return (*this); }
-{ (*this) = imulint32((*this), rhs); return (*this); }
+{ (*this) = FromTotal(m_total * rhs); return (*this); }
+//{ (*this) = imulint32((*this), rhs); return (*this); }
 
 inline fp fp::operator/=(fp rhs)
-//{ (*this) = FromTotal(int32_t((int64_t(m_total) << 16) / rhs.m_total)); return (*this); }
-{ (*this) = idivfp((*this), rhs); return (*this); }
+{ (*this) = FromTotal(int32_t((int64_t(m_total) << 16) / rhs.m_total)); return (*this); }
+//{ (*this) = idivfp((*this), rhs); return (*this); }
     
 inline fp fp::operator/=(int16_t rhs)
-//{ (*this) = FromTotal(m_total / rhs); return (*this); }
-{ (*this) = idivint32((*this), rhs); return (*this); }
+{ (*this) = FromTotal(m_total / rhs); return (*this); }
+//{ (*this) = idivint32((*this), rhs); return (*this); }
 
 inline fp fp::operator%(fp rhs) const
 { return FromTotal(m_total % rhs.m_total); }
@@ -261,17 +261,17 @@ inline fp operator-(int16_t lhs, fp rhs)
 
 inline fp operator*(int16_t lhs, fp rhs)
 {
-    return imulint32(rhs, lhs);
+    return fp(rhs) * lhs;
 }
 
 inline fp operator/(int16_t lhs, fp rhs)
 {
-    return int32idiv(lhs, rhs);
+    return fp(lhs) / rhs;
 }
 
 inline fp operator%(int16_t lhs, fp rhs)
 {
-    return int32imod(lhs, rhs);
+    return fp(lhs) % rhs;
 }
 
 inline bool operator==(int16_t lhs, fp rhs)

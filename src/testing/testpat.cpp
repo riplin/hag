@@ -32,12 +32,12 @@ namespace BorderThickness
     };
 }
 
-char HorBorder[2]   = { 0xB3 /* │ */, 0xBA /* ║ */ };
-char VerBorder[2]   = { 0xC4 /* ─ */, 0xCD /* ═ */ };
-char TopLeft[4]     = { 0xDA /* ┌ */, 0xD6 /* ╓ */, 0xD5 /* ╒ */, 0xC9 /* ╔ */ };
-char TopRight[4]    = { 0xBF /* ┐ */, 0xB7 /* ╖ */, 0xB8 /* ╕ */, 0xBB /* ╗ */ };
-char BottomRight[4] = { 0xD9 /* ┘ */, 0xBD /* ╜ */, 0xBE /* ╛ */, 0xBC /* ╝ */ };
-char BottomLeft[4]  = { 0xC0 /* └ */, 0xD3 /* ╙ */, 0xD4 /* ╘ */, 0xC8 /* ╚ */ };
+uint8_t HorBorder[2]   = { 0xB3 /* │ */, 0xBA /* ║ */ };
+uint8_t VerBorder[2]   = { 0xC4 /* ─ */, 0xCD /* ═ */ };
+uint8_t TopLeft[4]     = { 0xDA /* ┌ */, 0xD6 /* ╓ */, 0xD5 /* ╒ */, 0xC9 /* ╔ */ };
+uint8_t TopRight[4]    = { 0xBF /* ┐ */, 0xB7 /* ╖ */, 0xB8 /* ╕ */, 0xBB /* ╗ */ };
+uint8_t BottomRight[4] = { 0xD9 /* ┘ */, 0xBD /* ╜ */, 0xBE /* ╛ */, 0xBC /* ╝ */ };
+uint8_t BottomLeft[4]  = { 0xC0 /* └ */, 0xD3 /* ╙ */, 0xD4 /* ╘ */, 0xC8 /* ╚ */ };
 
 void DrawTextBox(uint16_t x0, uint16_t y0,
                  uint16_t x1, uint16_t y1,
@@ -116,7 +116,7 @@ void DrawTextBox(uint16_t x0, uint16_t y0,
 
 void DrawTextPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     DrawTextBox(0, 0, width - 1, height - 1,
@@ -143,7 +143,7 @@ void DrawTextPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void Draw1BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     uint16_t pixelWidth = width >> 3;
@@ -154,12 +154,12 @@ void Draw1BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
         uint8_t* realMemory = (y & 1) == 0x00 ? videoMemory : videoMemory + 0x2000;
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0xFF : borderColorY;
-        borderColorY = y == (height - 1) ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
         for (uint32_t x = 0; x < pixelWidth; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x80 : 0x00;
-            borderColor |= x == (pixelWidth - 1) ? 0x01 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
             uint8_t color = 0;
             switch((x / divisor) & 0x0003)
             {
@@ -182,7 +182,7 @@ void Draw1BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void Draw2BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     uint16_t pixelWidth = width >> 2;
@@ -193,12 +193,12 @@ void Draw2BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
         uint8_t* realMemory = (y & 1) == 0x00 ? videoMemory : videoMemory + 0x2000;
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0xFF : borderColorY;
-        borderColorY = y == (height - 1) ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
         for (uint32_t x = 0; x < pixelWidth; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0xC0 : 0x00;
-            borderColor |= x == (pixelWidth - 1) ? 0x03 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x03 : 0x00;
             uint8_t color = x / divisor;
             color |= color << 2;
             color |= color << 4;
@@ -211,7 +211,7 @@ void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     using namespace Hag::VGA;
 
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     uint16_t pixelWidth = width >> 3;
@@ -220,12 +220,12 @@ void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     {
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0xFF : borderColorY;
-        borderColorY = y == (height - 1) ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
         for (uint32_t x = 0; x < pixelWidth; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x80 : 0x00;
-            borderColor |= x == (pixelWidth - 1) ? 0x01 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
             uint8_t color = x / divisor;
             uint8_t plane0 = ((color & 1) == 0 ? 0x00 : 0xFF) | borderColor;
             uint8_t plane1 = ((color & 2) == 0 ? 0x00 : 0xFF) | borderColor;
@@ -249,19 +249,19 @@ void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void Draw8BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     for (uint32_t y = 0; y < height; ++y)
     {
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0x0F : borderColorY;
-        borderColorY = y == (height - 1) ? 0x0F : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0x0F : borderColorY;
         for (uint32_t x = 0; x < width; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x0F : 0x00;
-            borderColor |= x == (width - 1) ? 0x0F : 0x00;
+            borderColor |= x == uint32_t(width - 1) ? 0x0F : 0x00;
             uint8_t color = borderColor == 0x00 ? uint8_t(x) : borderColor;
             videoMemory[y * width + x] = color;
         }
@@ -272,19 +272,19 @@ void Draw8BppPlanarPattern(uint16_t width, uint16_t height, uint8_t* videoMemory
 {
     using namespace Hag::VGA;
 
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     for (uint32_t y = 0; y < height; ++y)
     {
         uint8_t borderColorY = 0x00;
         borderColorY = y == 0 ? 0x0F : borderColorY;
-        borderColorY = y == (height - 1) ? 0x0F : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0x0F : borderColorY;
         for (uint32_t x = 0; x < width; ++x)
         {
             uint8_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x0F : 0x00;
-            borderColor |= x == (width - 1) ? 0x0F : 0x00;
+            borderColor |= x == uint32_t(width - 1) ? 0x0F : 0x00;
             uint8_t color = borderColor == 0x00 ? uint8_t(x) : borderColor;
             Sequencer::EnableWritePlane::Write(0x01 << ((y * width + x) & 0x03));
             videoMemory[(y * width + x) >> 2] = color;
@@ -294,7 +294,7 @@ void Draw8BppPlanarPattern(uint16_t width, uint16_t height, uint8_t* videoMemory
 
 void Draw15BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     uint16_t* mem = (uint16_t*)videoMemory;
@@ -303,12 +303,12 @@ void Draw15BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     {
         uint16_t borderColorY = 0x0000;
         borderColorY = y == 0 ? 0x7FFF : borderColorY;
-        borderColorY = y == (height - 1) ? 0x7FFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0x7FFF : borderColorY;
         for (uint32_t x = 0; x < width; ++x)
         {
             uint16_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0x7FFF : 0x00;
-            borderColor |= x == (width - 1) ? 0x7FFF : 0x00;
+            borderColor |= x == uint32_t(width - 1) ? 0x7FFF : 0x00;
             uint32_t blue = ((y + 1) * 0x1F) / height;
             uint32_t red = 0x1f - blue;
             uint32_t green = ((x + 1) * 0x1F) / width;
@@ -320,7 +320,7 @@ void Draw15BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void Draw16BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     uint16_t* mem = (uint16_t*)videoMemory;
@@ -328,12 +328,12 @@ void Draw16BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     {
         uint16_t borderColorY = 0x0000;
         borderColorY = y == 0 ? 0xFFFF : borderColorY;
-        borderColorY = y == (height - 1) ? 0xFFFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFFFF : borderColorY;
         for (uint32_t x = 0; x < width; ++x)
         {
             uint16_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0xFFFF : 0x00;
-            borderColor |= x == (width - 1) ? 0xFFFF : 0x00;
+            borderColor |= x == uint32_t(width - 1) ? 0xFFFF : 0x00;
             uint32_t blue = ((y + 1) * 0x1F) / height;
             uint32_t red = 0x1f - blue;
             uint32_t green = ((x + 1) * 0x3F) / width;
@@ -345,7 +345,7 @@ void Draw16BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
 void Draw32BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
-    if (videoMemory == NULL)
+    if (videoMemory == nullptr)
         return;
 
     uint32_t* mem = (uint32_t*)videoMemory;
@@ -353,12 +353,12 @@ void Draw32BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     {
         uint32_t borderColorY = 0x00000000;
         borderColorY = y == 0 ? 0xFFFFFFFF : borderColorY;
-        borderColorY = y == (height - 1) ? 0xFFFFFFFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFFFFFFFF : borderColorY;
         for (uint32_t x = 0; x < width; ++x)
         {
             uint32_t borderColor = borderColorY;
             borderColor |= x == 0 ? 0xFFFFFFFF : 0x00;
-            borderColor |= x == (width - 1) ? 0xFFFFFFFF : 0x00;
+            borderColor |= x == uint32_t(width - 1) ? 0xFFFFFFFF : 0x00;
             uint32_t blue = ((y + 1) * 0xFF) / height;
             uint32_t red = 0xFF - blue;
             uint32_t green = ((x + 1) * 0xFF) / width;

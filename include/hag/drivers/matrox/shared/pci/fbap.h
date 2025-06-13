@@ -3,6 +3,7 @@
 #pragma once
 
 #include <hag/system/pci.h>
+#include <sys/nearptr.h>
 
 namespace Hag { namespace Matrox { namespace Shared { namespace PCI
 {
@@ -68,7 +69,7 @@ namespace FrameBufferAperture
     template<typename T>
     T* GetAddress(System::PCI::Device_t device)
     {
-        return (T*)(Read(device) & BaseAddress);
+        return (T*)((Read(device) & BaseAddress) + __djgpp_conventional_base);
     }
 }
 

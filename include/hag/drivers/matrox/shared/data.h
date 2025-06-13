@@ -11,7 +11,7 @@ namespace Hag { namespace Matrox { namespace Shared
 namespace Data
 {
 
-#pragma pack(push, 1);
+#pragma pack(push, 1)
 
 struct PaletteData
 {
@@ -28,7 +28,7 @@ struct PalettePair
     uint8_t StartIndex;
 };
 
-#pragma pack(pop);
+#pragma pack(pop)
 
 extern uint8_t Font8x8[];
 extern uint8_t Font8x16[];

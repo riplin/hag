@@ -738,13 +738,13 @@ ParameterFontPair Mode2And3Parameters[] =
 // Mode 4, 5
 ParameterFontPair Mode4And5Parameters[] =
 {
-    { &Mode4And5SL200, NULL, 0, 0, 0, false }
+    { &Mode4And5SL200, nullptr, 0, 0, 0, false }
 };
 
 // Mode 6
 ParameterFontPair Mode6Parameters[] =
 {
-    { &Mode6SL200, NULL, 0, 0, 0, false }
+    { &Mode6SL200, nullptr, 0, 0, 0, false }
 };
 
 // Mode 7
@@ -759,78 +759,78 @@ ParameterFontPair Mode7Parameters[] =
 // Mode D
 ParameterFontPair ModeDParameters[] =
 {
-    { &ModeDSL200, NULL, 0, 0, 0, false }
+    { &ModeDSL200, nullptr, 0, 0, 0, false }
 };
 
 // Mode E
 ParameterFontPair ModeEParameters[] =
 {
-    { &ModeESL200, NULL, 0, 0, 0, false }
+    { &ModeESL200, nullptr, 0, 0, 0, false }
 };
 
 // Mode F
 ParameterFontPair ModeFParameters[] =
 {
-    { &ModeFSL350, NULL, 0, 0, 0, false }
+    { &ModeFSL350, nullptr, 0, 0, 0, false }
 };
 
 // Mode 10
 ParameterFontPair Mode10Parameters[] =
 {
-    { &Mode10SL350, NULL, 0, 0, 0, false }
+    { &Mode10SL350, nullptr, 0, 0, 0, false }
 };
 
 // Mode 11
 ParameterFontPair Mode11Parameters[] =
 {
-    { &Mode11SL480, NULL, 0, 0, 0, false }
+    { &Mode11SL480, nullptr, 0, 0, 0, false }
 };
 
 // Mode 12
 ParameterFontPair Mode12Parameters[] =
 {
-    { &Mode12SL480,  NULL, 0, 0, 0, false }
+    { &Mode12SL480,  nullptr, 0, 0, 0, false }
 };
 
 // Mode 13
 ParameterFontPair Mode13Parameters[] =
 {
-    { &Mode13SL200, NULL, 0, 0, 0, false }
+    { &Mode13SL200, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair G640x400Parameters[] =
 {
-    { &G640x400, NULL, 0, 0, 0, false }
+    { &G640x400, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair G640x480Parameters[] =
 {
-    { &G640x480, NULL, 0, 0, 0, false }
+    { &G640x480, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair G800x600x4Parameters[] =
 {
-    { &G800x600x4, NULL, 0, 0, 0, false }
+    { &G800x600x4, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair G800x600Parameters[] =
 {
-    { &G800x600, NULL, 0, 0, 0, false }
+    { &G800x600, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair G1024x768Parameters[] =
 {
-    { &G1024x768, NULL, 0, 0, 0, false }
+    { &G1024x768, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair G1280x1024Parameters[] =
 {
-    { &G1280x1024, NULL, 0, 0, 0, false }
+    { &G1280x1024, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair G1600x1200Parameters[] =
 {
-    { &G1600x1200, NULL, 0, 0, 0, false }
+    { &G1600x1200, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 3
@@ -848,7 +848,7 @@ ParameterFontPair T80x50Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1B8Parameters[] =
 {
-    { &Mode1B8, NULL, 0, 0, 0, false }
+    { &Mode1B8, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1F9
@@ -857,7 +857,7 @@ ParameterFontPair Mode1B8Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1F9Parameters[] =
 {
-    { &Mode1F9, NULL, 0, 0, 0, false }
+    { &Mode1F9, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1F8
@@ -866,7 +866,7 @@ ParameterFontPair Mode1F9Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1F8Parameters[] =
 {
-    { &Mode1F8, NULL, 0, 0, 0, false }
+    { &Mode1F8, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1E9
@@ -875,7 +875,7 @@ ParameterFontPair Mode1F8Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1E9Parameters[] =
 {
-    { &Mode1E9, NULL, 0, 0, 0, false }
+    { &Mode1E9, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1D9
@@ -884,7 +884,7 @@ ParameterFontPair Mode1E9Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1D9Parameters[] =
 {
-    { &Mode1D9, NULL, 0, 0, 0, false }
+    { &Mode1D9, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1F5
@@ -893,7 +893,7 @@ ParameterFontPair Mode1D9Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1F5Parameters[] =
 {
-    { &Mode1F5, NULL, 0, 0, 0, false }
+    { &Mode1F5, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1E6
@@ -902,7 +902,7 @@ ParameterFontPair Mode1F5Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1E6Parameters[] =
 {
-    { &Mode1E6, NULL, 0, 0, 0, false }
+    { &Mode1E6, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1D6
@@ -911,7 +911,7 @@ ParameterFontPair Mode1E6Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1D6Parameters[] =
 {
-    { &Mode1D6, NULL, 0, 0, 0, false }
+    { &Mode1D6, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1F3
@@ -920,7 +920,7 @@ ParameterFontPair Mode1D6Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1F3Parameters[] =
 {
-    { &Mode1F3, NULL, 0, 0, 0, false }
+    { &Mode1F3, nullptr, 0, 0, 0, false }
 };
 //Mode: 1B3
 //Frequency: 0x00008FA3, mnps: 0x00026A70
@@ -928,7 +928,7 @@ ParameterFontPair Mode1F3Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1B3Parameters[] =
 {
-    { &Mode1B3, NULL, 0, 0, 0, false }
+    { &Mode1B3, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1E4
@@ -937,7 +937,7 @@ ParameterFontPair Mode1B3Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1E4Parameters[] =
 {
-    { &Mode1E4, NULL, 0, 0, 0, false }
+    { &Mode1E4, nullptr, 0, 0, 0, false }
 };
 //Mode: 1D4
 //Frequency: 0x00008FA3, mnps: 0x00026A70
@@ -945,7 +945,7 @@ ParameterFontPair Mode1E4Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1D4Parameters[] =
 {
-    { &Mode1D4, NULL, 0, 0, 0, false }
+    { &Mode1D4, nullptr, 0, 0, 0, false }
 };
 
 //Mode: 1B5
@@ -954,7 +954,7 @@ ParameterFontPair Mode1D4Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair Mode1B5Parameters[] =
 {
-    { &Mode1B5, NULL, 0, 0, 0, false }
+    { &Mode1B5, nullptr, 0, 0, 0, false }
 };
 
 ParameterFontPair T80x60Parameters[] =
@@ -985,19 +985,19 @@ ParameterFontPair T132x60Parameters[] =
 // Mode Y
 ParameterFontPair ModeYParameters[] =
 {
-    { &ModeYSL200, NULL, 0, 0, 0, false }
+    { &ModeYSL200, nullptr, 0, 0, 0, false }
 };
 
 // Mode X
 ParameterFontPair ModeXParameters[] =
 {
-    { &ModeXSL200, NULL, 0, 0, 0, false }
+    { &ModeXSL200, nullptr, 0, 0, 0, false }
 };
 
 // Mode Q
 ParameterFontPair ModeQParameters[] =
 {
-    { &ModeQSL200, NULL, 0, 0, 0, false }
+    { &ModeQSL200, nullptr, 0, 0, 0, false }
 };
 
 PaletteData Data0x32f2 = 
@@ -1148,27 +1148,27 @@ PaletteData Data0x3482 =
 PalettePair PalettePair0[] =
 {
     { &Data0x32f2, &Data0x3236, 0 },
-    { NULL, NULL, 0 }
+    { nullptr, nullptr, 0 }
 };
 
 PalettePair PalettePair2[] =
 {
     { &Data0x337a, &Data0x32be, 0 },
-    { NULL, NULL, 0 }
+    { nullptr, nullptr, 0 }
 };
 
 PalettePair PalettePair4[] =
 {
-    { &Data0x3402, NULL, 0 },
-    { NULL, NULL, 0 }
+    { &Data0x3402, nullptr, 0 },
+    { nullptr, nullptr, 0 }
 };
 
 PalettePair PalettePair578[] =
 {
     { &Data0x3446, &Data0x345a, 0 },
-    { &Data0x346e, NULL, 16 },
-    { &Data0x3482, NULL, 32 },
-    { NULL, NULL, 0 }
+    { &Data0x346e, nullptr, 16 },
+    { &Data0x3482, nullptr, 32 },
+    { nullptr, nullptr, 0 }
 };
 
 VideoMode s_VideoModes[] =
@@ -1650,7 +1650,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         63,//KB
         12633,//KHz
         0x00,
@@ -1671,7 +1671,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         75,//KB
         12633,//KHz
         0x00,
@@ -1692,7 +1692,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         118,//KB
         24385,//KHz
         0x00,
@@ -1713,7 +1713,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         192,//KB
         36771,//KHz
         0x00,
@@ -1860,7 +1860,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         63,//KB
         12633,//KHz
         0x00,
@@ -1881,7 +1881,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         150,//KB
         12633,//KHz
         0x00,
@@ -1902,7 +1902,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         235,//KB
         24385,//KHz
         0x00,
@@ -1923,7 +1923,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         384,//KB
         36771,//KHz
         0x00,
@@ -1944,7 +1944,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         500,//KB
         27270,//KHz
         0x40,
@@ -1965,7 +1965,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         600,//KB
         25175,
         0x40,
@@ -1986,7 +1986,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         938,//KB
         40000,
         0,
@@ -2007,7 +2007,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         1536,//KB
         65000,
         0,
@@ -2028,7 +2028,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         2560,//KB
         108000,
         0x40,
@@ -2049,7 +2049,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         3750,//KB
         162000,
         0x01,
@@ -2070,7 +2070,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         63,//KB
         12633,//KHz
         0x00,
@@ -2091,7 +2091,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         150,//KB
         12633,//KHz
         0x00,
@@ -2112,7 +2112,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         235,//KB
         24385,//KHz
         0x00,
@@ -2133,7 +2133,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         384,//KB
         36771,//KHz
         0x00,
@@ -2154,7 +2154,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         500,//KB
         27270,//KHz
         0x40,
@@ -2175,7 +2175,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         600,//KB
         25175,
         0x40,
@@ -2196,7 +2196,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         938,//KB
         40000,
         0,
@@ -2217,7 +2217,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         1536,//KB
         65000,
         0,
@@ -2238,7 +2238,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         2560,//KB
         108000,
         0x40,
@@ -2259,7 +2259,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         3750,//KB
         162000,
         0x01,
@@ -2280,7 +2280,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         63,//KB
         12633,//KHz
         0x00,
@@ -2301,7 +2301,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         300,//KB
         12633,//KHz
         0x00,
@@ -2322,7 +2322,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         768,//KB
         24385,//KHz
         0x00,
@@ -2343,7 +2343,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         384,//KB
         36771,//KHz
         0x00,
@@ -2364,7 +2364,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         1000,//KB
         27270,//KHz
         0x40,
@@ -2385,7 +2385,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         1200,//KB
         25175,
         0x40,
@@ -2406,7 +2406,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         1875,//KB
         40000,
         0,
@@ -2427,7 +2427,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         3072,//KB
         65000,
         0,
@@ -2448,7 +2448,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         5120,//KB
         108000,
         0x40,
@@ -2469,7 +2469,7 @@ VideoMode s_VideoModes[] =
         Scanlines::Invalid,
         0xFF,//CRTModeControlRegValue
         0xFF,//CGAColorPaletteMaskSetting
-        NULL,
+        nullptr,
         7500,//KB
         162000,
         0x01,
@@ -2482,7 +2482,7 @@ uint32_t s_VideoModeCount = sizeof(s_VideoModes) / sizeof(VideoMode);
 VideoMode* Get(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate)
 {
     if (!System::s_Initialized)
-        return NULL;
+        return nullptr;
 
     for (uint32_t i = 0; i < sizeof(s_VideoModes) / sizeof(VideoMode); ++i)
     {
@@ -2500,12 +2500,12 @@ VideoMode* Get(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flag
             return &mode;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 bool Has(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate)
 {
-    return Get(width, height, bpp, flags, refreshRate) != NULL;
+    return Get(width, height, bpp, flags, refreshRate) != nullptr;
 }
 
 VideoMode* ConfigureEGAFeatureBitSwitchesAdapter(VideoMode* videoMode, Hag::System::BDA::VideoModeOptions_t& videoModeOptions)
@@ -2724,12 +2724,12 @@ void InitializeRAMDACPalette(VideoMode& videoMode)
 
     DACMask::Write(0xFF);
 
-    if (videoMode.Palettes != NULL)
+    if (videoMode.Palettes != nullptr)
     {
         PalettePair* palettePair = videoMode.Palettes;
-        while (palettePair->Primary != NULL)
+        while (palettePair->Primary != nullptr)
         {
-            PaletteData* palette = ((palettePair->Alternate != NULL) && 
+            PaletteData* palette = ((palettePair->Alternate != nullptr) && 
                                     ((VideoDisplayDataArea::Get() & palettePair->Primary->Mask) != 0)) ?
                                     palettePair->Alternate : palettePair->Primary;
 
@@ -3255,7 +3255,7 @@ void ApplyMode(VideoMode* videoMode, Hag::System::BDA::VideoModeOptions_t videoM
             videoMode->ParametersAndFonts[GetNumberOfActiveScanlines(*videoMode)] :
             videoMode->ParametersAndFonts[0];
 
-        if (parameterFontPair.Font != NULL)
+        if (parameterFontPair.Font != nullptr)
         {
             ConfigureFontLoadMemoryMapping();
             UploadFont(parameterFontPair);
@@ -3482,7 +3482,7 @@ bool Set(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, Ref
     using namespace Hag::System;
 
     VideoMode* videoMode = Get(width, height, bpp, flags, refreshRate);
-    if (videoMode == NULL)
+    if (videoMode == nullptr)
         return false;
 
     TurnScreenOff();
@@ -4347,7 +4347,7 @@ void PrintDescriptor(VideoMode& mode, const char* name)
     }
     else
     {
-        printf("NULL,\n");
+        printf("nullptr,\n");
     }
 
     printf("        Mode%sParameters\n    },\n", name);
@@ -4518,7 +4518,7 @@ void PrintDescriptor2(VideoMode& mode, const char* name, const char* parameterAr
     }
     else
     {
-        printf("NULL,\n");
+        printf("nullptr,\n");
     }
 
     printf("        %s\n    },\n", parameterArrayName);

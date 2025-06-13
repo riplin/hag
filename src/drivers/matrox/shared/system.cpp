@@ -1,6 +1,6 @@
 //Copyright 2025-Present riplin
 
-#include <i86.h>
+#include <dos.h>
 #include <string.h>
 #include <hag/system/pci.h>
 #include <hag/system/interrup.h>
@@ -123,16 +123,15 @@ bool Initialize()
     {
         uint16_t size = Data::Font8x8Size + Data::Font8x16Size;
     
-        Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device);
-        //if (!Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
-            //return false;
+        if (!Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
+            return false;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
         r.w.ax = 0x0100;
         r.w.bx = (size + 15) >> 4;
-        intr(0x31, &r);
+        int386(0x31, &r, &r);
 
         if ((r.w.flags & 0x01) == 0)
         {
@@ -163,11 +162,11 @@ void Shutdown()
         Hag::System::InterruptTable::Pointer<Hag::System::InterruptTable::CharacterTable>() = s_SystemFont;
         Hag::System::InterruptTable::Pointer<Hag::System::InterruptTable::GraphicsFont8x8>() = s_SystemFontGraphics;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         r.w.ax = 0x0101;
         r.w.dx = s_FontSelector;
-        intr(0x31, &r);
+        int386(0x31, &r, &r);
         s_Initialized = false;
     }
 }
@@ -181,7 +180,6 @@ uint32_t GetMemorySize()
     }
     return ret;
 }
-
 
 }
 

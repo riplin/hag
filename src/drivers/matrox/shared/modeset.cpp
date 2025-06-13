@@ -1,6 +1,5 @@
 //Copyright 2025-Present riplin
 
-#include <i86.h>
 #include <stdio.h>
 #include <string.h>
 #include "sysintl.h"
@@ -132,7 +131,7 @@ ModeDescriptor* GetModeDescriptor(uint16_t width, uint16_t height, BitsPerPixel_
     if (!System::s_Initialized)
     {
         error = SetVideoError::SystemNotInitialized;
-        return NULL;
+        return nullptr;
     }
     
     error = SetVideoError::UnknownMode;
@@ -145,7 +144,7 @@ ModeDescriptor* GetModeDescriptor(uint16_t width, uint16_t height, BitsPerPixel_
         flags,
         refreshRate,
         error,
-        NULL
+        nullptr
     };
     IterateModeDescriptors(GetModeDescriptorCallback, &context);
 
@@ -309,7 +308,6 @@ void LoadColorPalette(Data::PaletteData* palette)
     uint8_t green = 0;
     uint8_t blue = 0;
     uint8_t greyscale = 0;
-    uint16_t colorIndex = 0;
 
     uint8_t* colors = palette->Colors;
 
@@ -377,12 +375,12 @@ void InitializeRAMDACPalette(ModeDescriptor& descriptor)
 
     DACMask::Write(0xFF);
 
-    if (descriptor.Palettes != NULL)
+    if (descriptor.Palettes != nullptr)
     {
         Data::PalettePair* palettePair = descriptor.Palettes;
-        while (palettePair->Primary != NULL)
+        while (palettePair->Primary != nullptr)
         {
-            Data::PaletteData* palette = ((palettePair->Alternate != NULL) && 
+            Data::PaletteData* palette = ((palettePair->Alternate != nullptr) && 
                                     ((VideoDisplayDataArea::Get() & palettePair->Primary->Mask) != 0)) ?
                                     palettePair->Alternate : palettePair->Primary;
 
@@ -952,7 +950,7 @@ void ApplyMode(ModeDescriptor& descriptor, Hag::System::BDA::VideoModeOptions_t 
 
     if ((descriptor.Flags & Flags::Mode) == Flags::Text)
     {
-        if (parameters.Font.Font != NULL)
+        if (parameters.Font.Font != nullptr)
         {
             ConfigureFontLoadMemoryMapping();
             UploadFont(parameters.Font);

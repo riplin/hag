@@ -42,7 +42,7 @@ namespace Flags //Internal flags in addition to the public flags.
     };
 }
 
-#pragma pack(push, 1);
+#pragma pack(push, 1)
 struct HorizontalTimings
 {
     VGA::CRTController::HorizontalTotal_t Total; //CR00
@@ -183,7 +183,7 @@ struct ModeDescriptor
     uint16_t CalculateOffset() const;
 };
 
-#pragma pack(pop);
+#pragma pack(pop)
 
 }}
 

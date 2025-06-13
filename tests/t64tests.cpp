@@ -254,12 +254,12 @@ int FindVideoModeDataTest()
         }
 
         Hag::S3::Shared::VESAVideoModeData* videoModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
-        if (isVesaMode && (videoModeData != NULL))
+        if (isVesaMode && (videoModeData != nullptr))
         {
             if (videoModeData->Mode == modes[i])
                 --ret;
         }
-        if (isVesaMode && (videoModeData == NULL))
+        if (isVesaMode && (videoModeData == nullptr))
         {
             printf("Could not find video mode data for mode 0x%02X : %i\n", modes[i], i);
         }
@@ -301,7 +301,7 @@ int GetVideoModeFlagsTest()
         }
 
         Hag::S3::Shared::VESAVideoModeData* videoModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
-        if (((videoModeData != NULL) == isVesaMode) && isVesaMode)
+        if (((videoModeData != nullptr) == isVesaMode) && isVesaMode)
         {
             if (videoModeData->Mode == modes[i] &&
                 videoModeData->Flags == flags1)
@@ -331,13 +331,13 @@ int GetVESAVideoModeOverrideTableTest()
             }
         }
         
-        uint8_t* overrideTable1 = NULL;
+        uint8_t* overrideTable1 = nullptr;
         uint8_t modeDataIndex = 0xff;
 
         bool returnValue1 = GetVESAVideoModeOverrideTable(modes[i], overrideTable1, modeDataIndex);
         if ((returnValue1 == isVesaMode) && isVesaMode)
         {
-            if (overrideTable1 != NULL &&
+            if (overrideTable1 != nullptr &&
                 modeDataIndex != 0xff)
             {
                 --ret;
@@ -345,7 +345,7 @@ int GetVESAVideoModeOverrideTableTest()
         }
 
         Hag::S3::Shared::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(modes[i]);
-        if ((vesaModeData != NULL) && isVesaMode)
+        if ((vesaModeData != nullptr) && isVesaMode)
         {
             if ((overrideTable1[0] == vesaModeData->OverrideTable->DisplayedCharacterColumns) &&
                 (overrideTable1[1] == vesaModeData->OverrideTable->DisplayedRowsMinus1) &&
@@ -390,11 +390,11 @@ int ModeSetBDATest()
         Hag::Testing::Mock::SelectInstance(1);
 
         Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-        if (mode > 0x13 && (vesaData == NULL))
+        if (mode > 0x13 && (vesaData == nullptr))
             continue; //Failure.
 
         Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
         if (mode == modes[i])
             --ret;
@@ -456,7 +456,7 @@ int VerifyBDAOrDeactivateTest()
 
         Hag::Testing::Mock::SelectInstance(1);
         Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-        bool isVesa = vesaData != NULL;
+        bool isVesa = vesaData != nullptr;
         uint8_t flags = isVesa ? vesaData->Flags : 0;
         bool isColor = isVesa && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0);
         Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, isColor);
@@ -541,8 +541,8 @@ int SetTextModeBiosDataTest()
 
         Hag::System::BDA::DisplayMode::Get() = mode;
 
-        uint8_t* selectedFont = NULL;
-        uint8_t* overrideTable = NULL;
+        uint8_t* selectedFont = nullptr;
+        uint8_t* overrideTable = nullptr;
         uint8_t modeDataIndex = 0;
         SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
 
@@ -550,17 +550,17 @@ int SetTextModeBiosDataTest()
         Hag::Testing::Mock::SelectInstance(1);
 
         Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-        if (mode > 0x13 && (vesaData == NULL))
+        if (mode > 0x13 && (vesaData == nullptr))
             continue; //Failure.
 
         //Reset clear screen on mode switch flag.
         Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
 
         Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
-        if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != NULL,
-            (vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
+        if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != nullptr,
+            (vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
             continue; //Failure.
 
         Hag::System::BDA::DisplayMode::Get() = mode;
@@ -661,8 +661,8 @@ int ApplyVideoParametersTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            uint8_t* selectedFont = NULL;
-            uint8_t* overrideTable = NULL;
+            uint8_t* selectedFont = nullptr;
+            uint8_t* overrideTable = nullptr;
             uint8_t modeDataIndex = 0;
             SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
 
@@ -683,17 +683,17 @@ int ApplyVideoParametersTest()
             Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
             
             Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-            if (mode > 0x13 && (vesaData == NULL))
+            if (mode > 0x13 && (vesaData == nullptr))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
             Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
 
             Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
-            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != NULL,
-                (vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
+            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != nullptr,
+                (vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
                 continue; //Failure.
 
             Hag::System::BDA::DisplayMode::Get() = mode;
@@ -822,7 +822,7 @@ int InitializeCRTControllerAndSequencerTest()
                                                         CRTControllerInitData_readIndexedPortsCount,
                                                         CRTControllerInitData_ignorePorts,
                                                         CRTControllerInitData_ignorePortsCount,
-                                                        NULL,
+                                                        nullptr,
                                                         0);
     }
 
@@ -842,7 +842,7 @@ int InitializeCRTControllerAndSequencerTest()
                                                         CRTControllerInitData_readIndexedPortsCount,
                                                         CRTControllerInitData_ignorePorts,
                                                         CRTControllerInitData_ignorePortsCount,
-                                                        NULL,
+                                                        nullptr,
                                                         0);
     }
 
@@ -871,7 +871,7 @@ int SetupClocksTest()
         uint8_t mode = vesaModesOnly[i];
 
         {
-            uint8_t* overrideTable = NULL;
+            uint8_t* overrideTable = nullptr;
             uint8_t modeDataIndex = 0;
 
             Hag::Testing::Mock::SelectInstance(0);
@@ -887,13 +887,13 @@ int SetupClocksTest()
             Hag::S3::Trio64::SetupClocks(Hag::S3::Trio64::GetCRTControllerIndexRegister(), vesaModeData->VariantData->ClockConfigIndex);
         }
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, nullptr,
                                                            0,
-                                                           NULL,
+                                                           nullptr,
                                                            0,
                                                            SetupClocksTest_modifiedIndexedPorts[i],
                                                            SetupClocksTest_modifiedIndexedPortsCount[i],
-                                                           NULL,
+                                                           nullptr,
                                                            0,
                                                            SetupClocksTest_ignorePorts,
                                                            SetupClocksTest_ignorePortsCount,
@@ -901,13 +901,13 @@ int SetupClocksTest()
                                                            SetupClocksTest_ignoreIndexedPortsCount
                                                            );
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, nullptr,
                                                            0,
-                                                           NULL,
+                                                           nullptr,
                                                            0,
                                                            SetupClocksTest_modifiedIndexedPorts[i],
                                                            SetupClocksTest_modifiedIndexedPortsCount[i],
-                                                           NULL,
+                                                           nullptr,
                                                            0,
                                                            SetupClocksTest_ignorePorts,
                                                            SetupClocksTest_ignorePortsCount,
@@ -946,15 +946,15 @@ int ConfigureExtraVESAModeSettingsTest()
     {
         uint8_t mode = vesaModesOnly[i];
 
-        uint8_t* overrideTable = NULL;
+        uint8_t* overrideTable = nullptr;
         uint8_t modeDataIndex = 0;
 
         GetVideoModeOverrideTable(mode, overrideTable, modeDataIndex);
-        uint8_t* modeData1 = NULL;
+        uint8_t* modeData1 = nullptr;
         uint8_t baseIdx = modeDataIndex;
 
         Hag::S3::Shared::VESAVideoModeData* vesaModeData = Hag::S3::Trio64::FindVideoModeData(mode);
-        if (vesaModeData == NULL)
+        if (vesaModeData == nullptr)
             continue;
 
         Hag::S3::Shared::VESAResolutionVariant* modeData2 = vesaModeData->VariantData;
@@ -975,7 +975,7 @@ int ConfigureExtraVESAModeSettingsTest()
             //printf("\n%i: 0x%02X, idx: %i instance 0\n", i, mode, idx);
             ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, ConfigureExtraVESAModeSettingsTest_modifiedPorts[idx],
                                                             ConfigureExtraVESAModeSettingsTest_modifiedPortsCount[idx],
-                                                            NULL,
+                                                            nullptr,
                                                             0,
                                                             ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts[idx],
                                                             ConfigureExtraVESAModeSettingsTest_modifiedIndexedPortsCount[idx],
@@ -990,7 +990,7 @@ int ConfigureExtraVESAModeSettingsTest()
             //printf("\n%i: 0x%02X, idx: %i instance 1\n", i, mode, idx);
             ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, ConfigureExtraVESAModeSettingsTest_modifiedPorts[idx],
                                                             ConfigureExtraVESAModeSettingsTest_modifiedPortsCount[idx],
-                                                            NULL,
+                                                            nullptr,
                                                             0,
                                                             ConfigureExtraVESAModeSettingsTest_modifiedIndexedPorts[idx],
                                                             ConfigureExtraVESAModeSettingsTest_modifiedIndexedPortsCount[idx],
@@ -1039,31 +1039,31 @@ int EnableOver256KAddressingAndSetAddressWindowTest()
         Hag::Testing::Mock::SelectInstance(1);
         Hag::S3::Trio64::Configure256KAddressingAndAddressWindow(mode, crtcPort);
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
                                                         EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPorts[i],
                                                         EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPortsCount[i],
                                                         EnableOver256KAddressingAndSetAddressWindowTest_ignorePorts,
                                                         EnableOver256KAddressingAndSetAddressWindowTest_ignorePortsCount,
-                                                        NULL,
+                                                        nullptr,
                                                         0
                                                         ); 
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
                                                         EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPorts[i],
                                                         EnableOver256KAddressingAndSetAddressWindowTest_readIndexedPortsCount[i],
                                                         EnableOver256KAddressingAndSetAddressWindowTest_ignorePorts,
                                                         EnableOver256KAddressingAndSetAddressWindowTest_ignorePortsCount,
-                                                        NULL,
+                                                        nullptr,
                                                         0
                                                         ); 
 
@@ -1097,14 +1097,14 @@ int SetColorModeTest()
         Hag::Testing::Mock::SelectInstance(1);
 
         Hag::S3::Shared::VESAColorMode_t colorMode = 0;
-        Hag::S3::Shared::VESAVideoModeData* vesaModeData = NULL;
+        Hag::S3::Shared::VESAVideoModeData* vesaModeData = nullptr;
         if (vesaModeData = Hag::S3::Trio64::FindVideoModeData(mode))
             colorMode = vesaModeData->ColorMode;
         Hag::S3::Trio64::SetColorMode(mode, colorMode, Hag::S3::Trio64::GetCRTControllerIndexRegister());
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
                                                         SetColorModeTest_modifiedIndexedPorts[i],
                                                         SetColorModeTest_modifiedIndexedPortsCount[i],
@@ -1112,13 +1112,13 @@ int SetColorModeTest()
                                                         SetColorModeTest_readIndexedPortsCount[i],
                                                         SetColorModeTest_ignorePorts,
                                                         SetColorModeTest_ignorePortsCount,
-                                                        NULL,
+                                                        nullptr,
                                                         0
                                                         ); 
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
                                                         SetColorModeTest_modifiedIndexedPorts[i],
                                                         SetColorModeTest_modifiedIndexedPortsCount[i],
@@ -1126,7 +1126,7 @@ int SetColorModeTest()
                                                         SetColorModeTest_readIndexedPortsCount[i],
                                                         SetColorModeTest_ignorePorts,
                                                         SetColorModeTest_ignorePortsCount,
-                                                        NULL,
+                                                        nullptr,
                                                         0
                                                         ); 
 
@@ -1161,7 +1161,7 @@ int ClearMemoryTest()
     ret -= Hag::Testing::Mock::VerifyPortsAndValues(0,
                                                     ClearMemoryTest_modifiedPorts,
                                                     ClearMemoryTest_modifiedPortsCount,
-                                                    NULL,
+                                                    nullptr,
                                                     0,
                                                     ClearMemoryTest_modifiedIndexedPorts,
                                                     ClearMemoryTest_modifiedIndexedPortsCount,
@@ -1169,14 +1169,14 @@ int ClearMemoryTest()
                                                     ClearMemoryTest_readIndexedPortsCount,
                                                     ClearMemoryTest_ignorePorts,
                                                     ClearMemoryTest_ignorePortsCount,
-                                                    NULL,
+                                                    nullptr,
                                                     0
                                                     ); 
 
     ret -= Hag::Testing::Mock::VerifyPortsAndValues(1,
                                                     ClearMemoryTest_modifiedPorts,
                                                     ClearMemoryTest_modifiedPortsCount,
-                                                    NULL,
+                                                    nullptr,
                                                     0,
                                                     ClearMemoryTest_modifiedIndexedPorts,
                                                     ClearMemoryTest_modifiedIndexedPortsCount,
@@ -1184,7 +1184,7 @@ int ClearMemoryTest()
                                                     ClearMemoryTest_readIndexedPortsCount,
                                                     ClearMemoryTest_ignorePorts,
                                                     ClearMemoryTest_ignorePortsCount,
-                                                    NULL,
+                                                    nullptr,
                                                     0
                                                     ); 
 
@@ -1239,8 +1239,8 @@ int ApplyVESAOverrideDataTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            uint8_t* selectedFont = NULL;
-            uint8_t* overrideTable = NULL;
+            uint8_t* selectedFont = nullptr;
+            uint8_t* overrideTable = nullptr;
             uint8_t modeDataIndex = 0;
             SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
 
@@ -1278,17 +1278,17 @@ int ApplyVESAOverrideDataTest()
             Hag::S3::Trio64::CRTController::RegisterLock2::Unlock(crtcPort);
 
             Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-            if (mode > 0x13 && (vesaData == NULL))
+            if (mode > 0x13 && (vesaData == nullptr))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
             Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
 
             Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
-            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != NULL,
-                (vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
+            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != nullptr,
+                (vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
                 continue; //Failure.
 
             Hag::System::BDA::DisplayMode::Get() = mode;
@@ -1372,8 +1372,8 @@ int SetPaletteTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            uint8_t* selectedFont = NULL;
-            uint8_t* overrideTable = NULL;
+            uint8_t* selectedFont = nullptr;
+            uint8_t* overrideTable = nullptr;
             uint8_t modeDataIndex = 0;
             SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
 
@@ -1392,13 +1392,13 @@ int SetPaletteTest()
             SetPalette();
         }
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, nullptr,
                                                            0,
                                                            SetPaletteTest_readPorts[i],
                                                            SetPaletteTest_readPortsCount[i],
                                                            SetPaletteTest_modifiedIndexedPorts[i],
                                                            SetPaletteTest_modifiedIndexedPortsCount[i],
-                                                           NULL,
+                                                           nullptr,
                                                            0,
                                                            SetPaletteTest_ignorePorts,
                                                            SetPaletteTest_ignorePortsCount,
@@ -1414,17 +1414,17 @@ int SetPaletteTest()
             
             uint32_t offset = 0x00;
             Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-            if (mode > 0x13 && (vesaData == NULL))
+            if (mode > 0x13 && (vesaData == nullptr))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
             Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
 
             Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
-            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != NULL,
-                (vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
+            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != nullptr,
+                (vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
                 continue; //Failure.
 
             Hag::System::BDA::DisplayMode::Get() = mode;
@@ -1444,20 +1444,20 @@ int SetPaletteTest()
 
             Hag::Testing::Mock::Snapshot();
 
-            Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
-            bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
-            bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
+            Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != nullptr ? vesaData->Flags : 0;
+            bool ifVesaIsColor = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
+            bool ifVesaIs256Color = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
 
             Hag::S3::Trio64::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
         }
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, nullptr,
                                                            0,
                                                            SetPaletteTest_readPorts[i],
                                                            SetPaletteTest_readPortsCount[i],
                                                            SetPaletteTest_modifiedIndexedPorts[i],
                                                            SetPaletteTest_modifiedIndexedPortsCount[i],
-                                                           NULL,
+                                                           nullptr,
                                                            0,
                                                            SetPaletteTest_ignorePorts,
                                                            SetPaletteTest_ignorePortsCount,
@@ -1539,8 +1539,8 @@ int SetFontTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            uint8_t* selectedFont = NULL;
-            uint8_t* overrideTable = NULL;
+            uint8_t* selectedFont = nullptr;
+            uint8_t* overrideTable = nullptr;
             uint8_t modeDataIndex = 0;
             SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
 
@@ -1576,12 +1576,12 @@ int SetFontTest()
 
                 Hag::Testing::Mock::SetMemoryAccessCallback(Memory_VerifyCallback, &context);
                 SetFont();
-                Hag::Testing::Mock::SetMemoryAccessCallback(NULL, NULL);
+                Hag::Testing::Mock::SetMemoryAccessCallback(nullptr, nullptr);
                 ret -= context.Verified;
 
-                ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+                ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, nullptr,
                                                                 0,
-                                                                NULL,
+                                                                nullptr,
                                                                 0,
                                                                 SetFontTest_modifiedIndexedPorts[idx1],
                                                                 SetFontTest_modifiedIndexedPortsCount[idx1],
@@ -1603,17 +1603,17 @@ int SetFontTest()
             
             uint32_t offset = 0x00;
             Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-            if (mode > 0x13 && (vesaData == NULL))
+            if (mode > 0x13 && (vesaData == nullptr))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
             Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
 
             Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
-            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != NULL,
-                (vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
+            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != nullptr,
+                (vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
                 continue; //Failure.
 
             Hag::System::BDA::DisplayMode::Get() = mode;
@@ -1633,9 +1633,9 @@ int SetFontTest()
 
             Hag::Testing::Mock::Snapshot();
 
-            Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
-            bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
-            bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
+            Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != nullptr ? vesaData->Flags : 0;
+            bool ifVesaIsColor = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
+            bool ifVesaIs256Color = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
 
             Hag::S3::Trio64::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
 
@@ -1657,12 +1657,12 @@ int SetFontTest()
 
                 Hag::Testing::Mock::SetMemoryAccessCallback(Memory_VerifyCallback, &context);
                 Hag::S3::Trio64::SetFont();
-                Hag::Testing::Mock::SetMemoryAccessCallback(NULL, NULL);
+                Hag::Testing::Mock::SetMemoryAccessCallback(nullptr, nullptr);
                 ret -= context.Verified;
 
-                ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, NULL,
+                ret -= Hag::Testing::Mock::VerifyPortsAndValues(1, nullptr,
                                                                 0,
-                                                                NULL,
+                                                                nullptr,
                                                                 0,
                                                                 SetFontTest_modifiedIndexedPorts[idx2],
                                                                 SetFontTest_modifiedIndexedPortsCount[idx2],
@@ -1724,8 +1724,8 @@ int SetVideoModeInternalsTest()
 
             Hag::System::BDA::DisplayMode::Get() = mode;
 
-            uint8_t* selectedFont = NULL;
-            uint8_t* overrideTable = NULL;
+            uint8_t* selectedFont = nullptr;
+            uint8_t* overrideTable = nullptr;
             uint8_t modeDataIndex = 0;
             SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
 
@@ -1747,13 +1747,13 @@ int SetVideoModeInternalsTest()
             {
                 SetFont();
 
-                uint8_t* fontDefinition = NULL;
+                uint8_t* fontDefinition = nullptr;
                 if (FetchCheckedVideoParameterBlockElement(8, 11, fontDefinition, 0x0B + 0x14))
                 {
                     ConfigureFontAndCursor(fontDefinition);
                 }
 
-                uint8_t* paramBlock = NULL;
+                uint8_t* paramBlock = nullptr;
                 if (GetVideoParameterBlockElement(0x0010, paramBlock, 0x20) &&
                     !((FARPointer*)(paramBlock + 0x06))->IsNull())
                 {
@@ -1767,7 +1767,7 @@ int SetVideoModeInternalsTest()
             {
                 Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
                 
-                uint8_t* graphicsCharacterFontDefinition = NULL;
+                uint8_t* graphicsCharacterFontDefinition = nullptr;
                 if (FetchCheckedVideoParameterBlockElement(12, 7, graphicsCharacterFontDefinition, 0x07 + 0x14))
                     SetGraphicsCharacterFont(graphicsCharacterFontDefinition); //Sets the pointer in the interrupt table.
             }
@@ -1780,7 +1780,7 @@ int SetVideoModeInternalsTest()
             EnablePaletteBasedVideo();
             TurnOnScreen();
 
-            Hag::Testing::Mock::SetMemoryAccessCallback(NULL, NULL);
+            Hag::Testing::Mock::SetMemoryAccessCallback(nullptr, nullptr);
             ret -= context.Verified;
         }
 
@@ -1802,17 +1802,17 @@ int SetVideoModeInternalsTest()
             
             uint32_t offset = 0x00;
             Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-            if (mode > 0x13 && (vesaData == NULL))
+            if (mode > 0x13 && (vesaData == nullptr))
                 continue; //Failure.
 
             //Reset clear screen on mode switch flag.
             Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
 
             Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
-            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != NULL,
-                (vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
+            if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != nullptr,
+                (vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
                 continue; //Failure.
 
             Hag::System::BDA::DisplayMode::Get() = mode;
@@ -1828,25 +1828,25 @@ int SetVideoModeInternalsTest()
             Hag::S3::Trio64::ApplyVideoParameters(parameters);
             Hag::S3::Trio64::ApplyVESAOverrideData(mode, crtcPort, vesaData);
             
-            Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
-            bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
-            bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
+            Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != nullptr ? vesaData->Flags : 0;
+            bool ifVesaIsColor = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
+            bool ifVesaIs256Color = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
             
             Hag::S3::Trio64::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
 
-            uint8_t oldflags = vesaData != NULL ? vesaData->Flags : 0;
+            uint8_t oldflags = vesaData != nullptr ? vesaData->Flags : 0;
             if ((mode < 0x04) ||
                 (mode == 0x07) ||
-                (mode > 0x13 && (vesaData != NULL) && ((oldflags & 0x01) == 0x01)))
+                (mode > 0x13 && (vesaData != nullptr) && ((oldflags & 0x01) == 0x01)))
             {
                 Hag::S3::Trio64::SetFont();
 
-                Hag::System::BDA::AlphanumericCharSet* fontDefinition = NULL;
+                Hag::System::BDA::AlphanumericCharSet* fontDefinition = nullptr;
                 if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::AlphanumericCharSet>(2, fontDefinition, 0x0B + 0x14) &&
                     Hag::S3::Trio64::CheckValidInCurrentMode(fontDefinition->ApplicableModes))
                     Hag::S3::Trio64::ConfigureFontAndCursor(mode, fontDefinition);
 
-                Hag::System::BDA::SecondarySavePointerTable* paramBlock = NULL;
+                Hag::System::BDA::SecondarySavePointerTable* paramBlock = nullptr;
                 if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::SecondarySavePointerTable>(4, paramBlock, 0x20) &&
                     !paramBlock->SecondaryAlphanumericCharacterSetOverride.IsNull())
                 {
@@ -1862,7 +1862,7 @@ int SetVideoModeInternalsTest()
             {
                 Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
                 
-                Hag::System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition = NULL;
+                Hag::System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition = nullptr;
                 if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::GraphicsCharacterSet>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
                     Hag::S3::Trio64::CheckValidInCurrentMode(graphicsCharacterFontDefinition->ApplicableVideoModes))
                     Hag::S3::Trio64::SetGraphicsCharacterFont(graphicsCharacterFontDefinition);
@@ -1870,7 +1870,7 @@ int SetVideoModeInternalsTest()
 
             if (((Hag::System::BDA::VideoModeOptions::Get() & 0x80) == 0x00) &&
                 (Hag::System::BDA::VideoBufferSize::Get() != 0x0000) &&
-                ((vesaData == NULL) || ((flags & Hag::S3::Shared::VESAVideoModeFlags::WindowGranularity64KiB) != 0)))
+                ((vesaData == nullptr) || ((flags & Hag::S3::Shared::VESAVideoModeFlags::WindowGranularity64KiB) != 0)))
                 Hag::S3::Trio64::ClearScreen(mode, ifVesaIsColor);
 
             Hag::S3::Trio64::SetPaletteProfile(crtcPort);
@@ -1881,7 +1881,7 @@ int SetVideoModeInternalsTest()
             Hag::Testing::Mock::CompareMemoryRegions(SetVideoModeInternalsTest_memoryAccess[i],
                                                      SetVideoModeInternalsTest_memoryAccessCount[i], matches);
 
-            Hag::Testing::Mock::SetMemoryAccessCallback(NULL, NULL);
+            Hag::Testing::Mock::SetMemoryAccessCallback(nullptr, nullptr);
             ret -= context.Verified;
             ret -= matches;
         }
@@ -1889,9 +1889,9 @@ int SetVideoModeInternalsTest()
 /*
         ret -= context.Verified;
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
                                                         SetFontTest_modifiedIndexedPorts[idx],
                                                         SetFontTest_modifiedIndexedPortsCount[idx],
@@ -1958,7 +1958,7 @@ int SetVideoModeInternalsCompareTest()
 
         Hag::Testing::Mock::SelectInstance(1);
         Hag::S3::Shared::VESAVideoModeData* vesaData = Hag::S3::Trio64::FindVideoModeData(mode);
-        if (mode > 0x13 && (vesaData == NULL))
+        if (mode > 0x13 && (vesaData == nullptr))
             continue; //Failure.
 
         Diff("FindVideoModeData");
@@ -1970,7 +1970,7 @@ int SetVideoModeInternalsCompareTest()
         Hag::Testing::Mock::SelectInstance(1);
         Hag::System::BDA::VideoModeOptions::Get() &= 0x7f;
         Hag::S3::Trio64::ModeSetBDA(mode, (Hag::S3::Trio64::Data::FirmwareFlags & Hag::S3::Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) == 0)));
 
         Diff("ModeSetBDA");
 
@@ -1980,16 +1980,16 @@ int SetVideoModeInternalsCompareTest()
         Hag::System::BDA::DisplayMode::Get() = mode;
 
         Hag::Testing::Mock::SelectInstance(1);
-        if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != NULL,
-            (vesaData != NULL) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
+        if (mode <= 0x13 && !Hag::S3::Trio64::VerifyBDAOrDeactivate(mode, vesaData != nullptr,
+            (vesaData != nullptr) && ((vesaData->Flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0)))
             continue; //Failure.
         Hag::System::BDA::DisplayMode::Get() = mode;
 
         Diff("VerifyBDAOrDeactivate");
 
         Hag::Testing::Mock::SelectInstance(0);
-        uint8_t* selectedFont = NULL;
-        uint8_t* overrideTable = NULL;
+        uint8_t* selectedFont = nullptr;
+        uint8_t* overrideTable = nullptr;
         uint8_t modeDataIndex = 0;
         SetTextModeBiosData(mode, selectedFont, overrideTable, modeDataIndex);
 
@@ -2040,9 +2040,9 @@ int SetVideoModeInternalsCompareTest()
         Hag::Testing::Mock::SelectInstance(1);
         Hag::System::BDA::DisplayMode::Get();//Pulling this so the diff is the same.
         
-        Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != NULL ? vesaData->Flags : 0;
-        bool ifVesaIsColor = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
-        bool ifVesaIs256Color = vesaData != NULL && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
+        Hag::S3::Shared::VESAVideoModeFlags_t flags = vesaData != nullptr ? vesaData->Flags : 0;
+        bool ifVesaIsColor = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Color) != 0x00);
+        bool ifVesaIs256Color = vesaData != nullptr && ((flags & Hag::S3::Shared::VESAVideoModeFlags::Palette256) != 0x00);
         
         Hag::S3::Trio64::SetPalette(mode, ifVesaIsColor, ifVesaIs256Color);
 
@@ -2055,10 +2055,10 @@ int SetVideoModeInternalsCompareTest()
             (mode > 0x13 && GetVideoModeFlags(mode, flags1) && ((flags1 & 0x01) == 0x01));
 
         Hag::Testing::Mock::SelectInstance(1);
-        uint8_t flags2 = vesaData != NULL ? vesaData->Flags : 0;
+        uint8_t flags2 = vesaData != nullptr ? vesaData->Flags : 0;
         bool ifResult2 = (mode < 0x04) ||
             (mode == 0x07) ||
-            (mode > 0x13 && (vesaData != NULL) && ((flags2 & 0x01) == 0x01));
+            (mode > 0x13 && (vesaData != nullptr) && ((flags2 & 0x01) == 0x01));
 
         if (ifResult1 == ifResult2)
             --ret;
@@ -2078,12 +2078,12 @@ int SetVideoModeInternalsCompareTest()
             Diff("SetFont");
 
             Hag::Testing::Mock::SelectInstance(0);
-            uint8_t* fontDefinition1 = NULL;
+            uint8_t* fontDefinition1 = nullptr;
             if (FetchCheckedVideoParameterBlockElement(8, 11, fontDefinition1, 0x0B + 0x14))
                 ConfigureFontAndCursor(fontDefinition1);
 
             Hag::Testing::Mock::SelectInstance(1);
-            Hag::System::BDA::AlphanumericCharSet* fontDefinition2 = NULL;
+            Hag::System::BDA::AlphanumericCharSet* fontDefinition2 = nullptr;
             if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::AlphanumericCharSet>(2, fontDefinition2, 0x0B + 0x14) &&
                 Hag::S3::Trio64::CheckValidInCurrentMode(fontDefinition2->ApplicableModes))
                 Hag::S3::Trio64::ConfigureFontAndCursor(mode, fontDefinition2);
@@ -2091,7 +2091,7 @@ int SetVideoModeInternalsCompareTest()
             Diff("ConfigureFontAndCursor");
 
             Hag::Testing::Mock::SelectInstance(0);
-            uint8_t* paramBlock1 = NULL;
+            uint8_t* paramBlock1 = nullptr;
             if (GetVideoParameterBlockElement(0x0010, paramBlock1, 0x20) &&
                 !((FARPointer*)(paramBlock1 + 0x06))->IsNull())
             {
@@ -2102,7 +2102,7 @@ int SetVideoModeInternalsCompareTest()
             }
 
             Hag::Testing::Mock::SelectInstance(1);
-            Hag::System::BDA::SecondarySavePointerTable* paramBlock2 = NULL;
+            Hag::System::BDA::SecondarySavePointerTable* paramBlock2 = nullptr;
             if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::SecondarySavePointerTable>(4, paramBlock2, 0x20) &&
                 !paramBlock2->SecondaryAlphanumericCharacterSetOverride.IsNull())
             {
@@ -2120,13 +2120,13 @@ int SetVideoModeInternalsCompareTest()
         {
             Hag::Testing::Mock::SelectInstance(0);
             Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
-            uint8_t* graphicsCharacterFontDefinition1 = NULL;
+            uint8_t* graphicsCharacterFontDefinition1 = nullptr;
             if (FetchCheckedVideoParameterBlockElement(12, 7, graphicsCharacterFontDefinition1, 0x07 + 0x14))
                 SetGraphicsCharacterFont(graphicsCharacterFontDefinition1); //Sets the pointer in the interrupt table.
 
             Hag::Testing::Mock::SelectInstance(1);
             Hag::System::BDA::CursorScanLines::Get() = Hag::System::BDA::CursorScanLines_t(0x00, 0x00);
-            Hag::System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition2 = NULL;
+            Hag::System::BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition2 = nullptr;
             if (Hag::S3::Trio64::GetVideoParameterBlockElementAs<Hag::System::BDA::GraphicsCharacterSet>(3, graphicsCharacterFontDefinition2, 0x07 + 0x14) &&
                 Hag::S3::Trio64::CheckValidInCurrentMode(graphicsCharacterFontDefinition2->ApplicableVideoModes))
                 Hag::S3::Trio64::SetGraphicsCharacterFont(graphicsCharacterFontDefinition2);
@@ -2146,7 +2146,7 @@ int SetVideoModeInternalsCompareTest()
             (Hag::System::BDA::VideoBufferSize::Get() != 0x0000))
             {
                 Hag::System::BDA::DisplayMode::Get();//Pulling this so the diff is the same.
-                if (((vesaData == NULL) || ((flags & Hag::S3::Shared::VESAVideoModeFlags::WindowGranularity64KiB) != 0)))
+                if (((vesaData == nullptr) || ((flags & Hag::S3::Shared::VESAVideoModeFlags::WindowGranularity64KiB) != 0)))
                     Hag::S3::Trio64::ClearScreen(mode, ifVesaIsColor);
             }
 
@@ -2206,9 +2206,9 @@ int SetVideoModeTest()
 /*
         ret -= context.Verified;
 
-        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, NULL,
+        ret -= Hag::Testing::Mock::VerifyPortsAndValues(0, nullptr,
                                                         0,
-                                                        NULL,
+                                                        nullptr,
                                                         0,
                                                         SetFontTest_modifiedIndexedPorts[idx],
                                                         SetFontTest_modifiedIndexedPortsCount[idx],

@@ -157,27 +157,27 @@ PaletteData Data0x3482 =
 PalettePair PalettePair0[] =
 {
     { &Data0x32f2, &Data0x3236, 0 },
-    { NULL, NULL, 0 }
+    { nullptr, nullptr, 0 }
 };
 
 PalettePair PalettePair2[] =
 {
     { &Data0x337a, &Data0x32be, 0 },
-    { NULL, NULL, 0 }
+    { nullptr, nullptr, 0 }
 };
 
 PalettePair PalettePair4[] =
 {
-    { &Data0x3402, NULL, 0 },
-    { NULL, NULL, 0 }
+    { &Data0x3402, nullptr, 0 },
+    { nullptr, nullptr, 0 }
 };
 
 PalettePair PalettePair578[] =
 {
     { &Data0x3446, &Data0x345a, 0 },
-    { &Data0x346e, NULL, 16 },
-    { &Data0x3482, NULL, 32 },
-    { NULL, NULL, 0 }
+    { &Data0x346e, nullptr, 16 },
+    { &Data0x3482, nullptr, 32 },
+    { nullptr, nullptr, 0 }
 };
 
 

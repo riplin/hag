@@ -5,10 +5,9 @@
 #include <hag/types.h>
 #include <hag/farptr.h>
 
-#pragma pack(push, 1);
-
 namespace Hag { namespace System { namespace InterruptTable
 {
+
     typedef uint16_t Interrupt_t;
 
     enum
@@ -19,6 +18,5 @@ namespace Hag { namespace System { namespace InterruptTable
 
     template <Interrupt_t intr>
     inline static FARPointer& Pointer() { return *((FARPointer*)(intr * 4)); }
-}}}
 
-#pragma pack(pop);
+}}}

@@ -2,8 +2,14 @@
 
 #pragma once
 
+#include <hag/types.h>
 
-namespace Hag { namespace Color
+namespace Hag {
+
+typedef uint16_t Color15_t;
+typedef uint16_t Color16_t;
+typedef uint32_t Color32_t;
+namespace Color
 {
 
 namespace Bpp32
@@ -29,5 +35,11 @@ namespace Bpp32
         BabyBlue                = 0xFF89CFF0,
     };
 }
+
+namespace Gradient { namespace Bpp32
+{
+    extern Color32_t Gold[5];
+    extern Color32_t Silver[6];
+}}
 
 }}

@@ -2,11 +2,7 @@
 
 #pragma once
 
-#include <sys/types.h>
-
-#ifndef NULL
-#define NULL 0
-#endif
+#include <stdint.h>
 
 //These are defined to clearly communicate the number of bits that are expected.
 typedef unsigned char uint1_t;

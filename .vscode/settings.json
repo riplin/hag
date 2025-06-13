@@ -1,0 +1,9 @@
+{
+	"C_Cpp.intelliSenseEngine": "default",
+	"cmake.configureArgs": [
+		"-DCMAKE_MAKE_PROGRAM=${userHome}/.dos/ninja"
+	],
+	"cmake.generator": "Ninja",
+	"editor.formatOnSave": false,
+	"editor.tabSize": 4
+}

@@ -1508,7 +1508,7 @@ LABEL(VerifyBDAOrDeactivate, Exit);
 //;bx = offset into Video Parameter Control Block
 bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size = sizeof(FARPointer))
 {
-    returnPointer = NULL;
+    returnPointer = nullptr;
 //    push di
 //    les  di, ds:[BDA_VideoParameterControlBlockPointer];Offset 0x4a8 load segment:offset of video parameter control block into es:di
     bool ret = false;
@@ -1543,7 +1543,7 @@ uint8_t VideoModeOverrideTranslationTable3[] =
 void GetVideoModeOverrideTable(uint8_t mode, uint8_t*& overrideTable, uint8_t& modeDataIndex)
 {
     REGPACK r;
-    uint8_t* translationTable = NULL;
+    uint8_t* translationTable = nullptr;
     memset(&r, 0, sizeof(r));
     r.h.al = mode;
 
@@ -1564,13 +1564,13 @@ void GetVideoModeOverrideTable(uint8_t mode, uint8_t*& overrideTable, uint8_t& m
 //     mov  ax, es
 //     or   ax, ax
 //     jne  Exit                           ;Offset 0x4a9b
-    if (overrideTable != NULL)
+    if (overrideTable != nullptr)
         goto Exit;
 
 //     mov  ax, cs
 //     mov  es, ax
 //     jmp  Exit                           ;Offset 0x4a9b
-        printf("Override is NULL!\n");
+        printf("Override is nullptr!\n");
         goto Exit;
 
 // NotVESA:                                ;Offset 0x4a62
@@ -1672,9 +1672,9 @@ void SetTextModeBiosData(uint8_t mode, uint8_t*& selectedFont, uint8_t*& overrid
     memset(&r, 0, sizeof(r));
     uint8_t flags = 0;
     r.h.al = mode;
-    //uint8_t** di_ptr = NULL;
-    uint8_t* bx_ptr = NULL;
-    Hag::System::BDA::CursorPosition_t* posptr = NULL;
+    //uint8_t** di_ptr = nullptr;
+    uint8_t* bx_ptr = nullptr;
+    Hag::System::BDA::CursorPosition_t* posptr = nullptr;
 
 //     mov       es, word ptr cs:[Data1488];Offset 0x1488
 //     mov       di, 010ch                 ;int 43 - VIDEO DATA - CHARACTER TABLE (EGA,MCGA,VGA)
@@ -3033,7 +3033,7 @@ void SetupClocks(uint8_t clockConfig)
     REGPACK r;
     memset(&r, 0, sizeof(r));
     r.h.ah = clockConfig;
-    uint8_t* clockDataPtr = NULL;
+    uint8_t* clockDataPtr = nullptr;
     uint16_t axtmp = 0;
 
 //     xor  bx, bx
@@ -3169,7 +3169,7 @@ uint8_t* VESAModeDataPtr[] =
     VESAModeInfo_79_1280x1024x32K,
     VESAModeInfo_7A_1280x1024x64K,
     VESAModeInfo_7C_1600x1200x256,
-    NULL,
+    nullptr,
     VESAModeInfo_49_640x480x256C,
     VESAModeInfo_4A_800x600x16C,
     VESAModeInfo_4B_800x600x256C,
@@ -3320,7 +3320,7 @@ void ConfigureExtraVESAModeSettings(uint16_t crtc, uint8_t* modeData)
     r.w.dx = crtc;
     uint16_t vesaVideoModeIdsOffset = 0;
     uint8_t* vesaModeData = VESAModeData;
-    uint8_t* vesaModeInfo = NULL;
+    uint8_t* vesaModeInfo = nullptr;
 
 //     push di
 //     push ds
@@ -3866,7 +3866,7 @@ void SetColorMode(uint8_t mode)
     memset(&r, 0, sizeof(r));
     r.h.al = mode;
     uint32_t offset = 0;
-    uint8_t* videoModeData = NULL;
+    uint8_t* videoModeData = nullptr;
 
 //     push dx
 //     push bx
@@ -4061,9 +4061,9 @@ void ApplyVESAOverrideData(uint8_t mode, uint8_t* overrideTable, uint8_t modeDat
     r.h.al = mode;
     uint32_t offset = 0;
     uint16_t idx = 0;
-    uint8_t* vesaData = NULL;
-    uint8_t* modeData = NULL;
-    uint8_t* crtData = NULL;
+    uint8_t* vesaData = nullptr;
+    uint8_t* modeData = nullptr;
+    uint8_t* crtData = nullptr;
 
 //     push ax
 //     push bx
@@ -4873,7 +4873,7 @@ void Set248ColorPalette(uint16_t& colorIndex)
 {
    REGPACK r;
     memset(&r, 0, sizeof(r));
-    uint8_t* palettePtr = NULL;
+    uint8_t* palettePtr = nullptr;
     uint8_t red = 0;
     uint8_t green = 0;
     uint8_t blue = 0;
@@ -4953,7 +4953,7 @@ void SetPalette()
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
-    uint8_t* palettePtr = NULL;
+    uint8_t* palettePtr = nullptr;
     uint8_t flags = 0;
 
 //     test  byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_PaletteLoadingEnabled;Offset 0489h, 0x08
@@ -5256,7 +5256,7 @@ void PatchCharacterSet(uint8_t flags)
     REGPACK r;
     memset(&r, 0, sizeof(r));
     FARPointer dst(0xA000, 0x0000);
-    uint8_t* src = NULL;
+    uint8_t* src = nullptr;
 
 //     push      ax
 //     push      cx
@@ -6257,7 +6257,7 @@ LABEL(SetFont, Is8x14);
 LABEL(SetFont, Label0x1c8a);
 
 //     call  TextModeCharFunctionsInternal ;Offset 0x2f71
-    TextModeCharFunctionsInternal(r.h.al, NULL, 0x0000, 0x0000, 0x00, r.h.bl, 0x00, 0x00);//the 0 arguments aren't used.
+    TextModeCharFunctionsInternal(r.h.al, nullptr, 0x0000, 0x0000, 0x00, r.h.bl, 0x00, 0x00);//the 0 arguments aren't used.
 
 //     ret   
 }
@@ -6472,7 +6472,7 @@ void ClearScreen()
     REGPACK r;
     memset(&r, 0, sizeof(r));
     uint8_t flags = 0;
-    uint16_t* ptr = NULL;
+    uint16_t* ptr = nullptr;
 
 //     mov       cx, 4000h
     r.w.cx = 0x4000;
@@ -6580,10 +6580,10 @@ void SetPaletteProfile()
 {
     REGPACK r;
     memset(&r, 0, sizeof(r));
-    uint8_t* secondarySavePointerTable = NULL;
-    uint8_t* paletteProfile = NULL;
-    uint8_t* paletteColors = NULL;
-    uint8_t* attributeRegisters = NULL;
+    uint8_t* secondarySavePointerTable = nullptr;
+    uint8_t* paletteProfile = nullptr;
+    uint8_t* paletteColors = nullptr;
+    uint8_t* attributeRegisters = nullptr;
     uint8_t t = 0;
 
     //     mov   bx, 10h                       ;Secondary Save Pointer Table pointer (VGA)
@@ -6846,11 +6846,11 @@ bool SetVideoMode(uint8_t mode)
     REGPACK r;
     memset(&r, 0, sizeof(r));
     uint32_t offset = 0;
-    uint8_t* selectedFont = NULL;
-    uint8_t* overrideTable = NULL;
-    uint8_t* fontDefinition = NULL;
-    uint8_t* graphicsCharacterFontDefinition = NULL;
-    uint8_t* paramBlock = NULL;
+    uint8_t* selectedFont = nullptr;
+    uint8_t* overrideTable = nullptr;
+    uint8_t* fontDefinition = nullptr;
+    uint8_t* graphicsCharacterFontDefinition = nullptr;
+    uint8_t* paramBlock = nullptr;
     uint8_t modeDataIndex = 0;
     uint8_t flags = 0;
     r.h.al = mode;

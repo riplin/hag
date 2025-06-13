@@ -3,6 +3,7 @@
 #pragma once
 
 #include <hag/system/pci.h>
+#include <sys/nearptr.h>
 
 namespace Hag { namespace Matrox { namespace Shared { namespace PCI
 {
@@ -60,7 +61,7 @@ namespace ILOADAperture
 
     inline ILOADAperture_t GetAddress(System::PCI::Device_t device)
     {
-        return Read(device) & BaseAddress;
+        return (Read(device) & BaseAddress) + __djgpp_conventional_base;
     }
 }
 

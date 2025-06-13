@@ -1,5 +1,7 @@
 //Copyright 2023-Present riplin
 
+#ifdef MOCK
+
 #include <stdio.h>
 #include <string.h>
 #include <hag/testing/mock.h>
@@ -57,21 +59,21 @@ bool CustomPortHandler::CacheValue(uint16_t port)
 
 CustomPortHandler* CustomPortHandler::CheckTypeId(uint32_t id)
 {
-    return id == s_ID ? this : NULL;
+    return id == s_ID ? this : nullptr;
 }
 
 struct Instance
 {
     inline Instance()
-        : Allocator(NULL)
-        , PCIDevices(NULL)
-        , PortHandlers(NULL)
-        , PortMap(NULL)
-        , Ports(NULL)
-        , MemoryMap(NULL)
-        , Memory(NULL)
-        , DefaultMemory(NULL)
-        , DefaultPortValues(NULL)
+        : Allocator(nullptr)
+        , PCIDevices(nullptr)
+        , PortHandlers(nullptr)
+        , PortMap(nullptr)
+        , Ports(nullptr)
+        , MemoryMap(nullptr)
+        , Memory(nullptr)
+        , DefaultMemory(nullptr)
+        , DefaultPortValues(nullptr)
         , DefaultPortValuesCount(0)
     {
 
@@ -114,7 +116,7 @@ struct Instance
 
 void Instance::Initialize(IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount)
 {
-    if (Allocator != NULL)
+    if (Allocator != nullptr)
         Shutdown();
 
     Allocator = &allocator;
@@ -179,14 +181,14 @@ void Instance::Snapshot()
     memset(Memory, 0, memorySize);
 
     CustomPortHandler* ptr = PortHandlers;
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         ptr->Snapshot();
         ptr = ptr->GetNext();
     }
 
     PCI::Device* dev = PCIDevices;
-    while (dev != NULL)
+    while (dev != nullptr)
     {
         dev->Snapshot();
         dev = dev->GetNext();
@@ -206,14 +208,14 @@ void Instance::Rollback()
     memset(Memory, 0, memorySize);
 
     CustomPortHandler* ptr = PortHandlers;
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         ptr->Rollback();
         ptr = ptr->GetNext();
     }
 
     PCI::Device* dev = PCIDevices;
-    while (dev != NULL)
+    while (dev != nullptr)
     {
         dev->Rollback();
         dev = dev->GetNext();
@@ -245,14 +247,14 @@ void Instance::Reset()
     }
 
     CustomPortHandler* ptr = PortHandlers;
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         ptr->Reset();
         ptr = ptr->GetNext();
     }
 
     PCI::Device* dev = PCIDevices;
-    while (dev != NULL)
+    while (dev != nullptr)
     {
         dev->Reset();
         dev = dev->GetNext();
@@ -261,10 +263,10 @@ void Instance::Reset()
 
 void Instance::Shutdown()
 {
-    if (Allocator == NULL)
+    if (Allocator == nullptr)
         return;
 
-    while (PortHandlers != NULL)
+    while (PortHandlers != nullptr)
     {
         CustomPortHandler* tmp = PortHandlers->GetNext();
         PortHandlers->~CustomPortHandler();
@@ -272,7 +274,7 @@ void Instance::Shutdown()
         PortHandlers = tmp;
     }
 
-    while (PCIDevices != NULL)
+    while (PCIDevices != nullptr)
     {
         using namespace PCI;
         Device* tmp = PCIDevices->GetNext();
@@ -282,34 +284,34 @@ void Instance::Shutdown()
     }
 
     Allocator->Free(Ports);
-    Ports = NULL;
+    Ports = nullptr;
 
     Allocator->Free(PortMap);
-    PortMap = NULL;
+    PortMap = nullptr;
     
     Allocator->Free(SnapshotPorts);
-    SnapshotPorts = NULL;
+    SnapshotPorts = nullptr;
 
     Allocator->Free(SnapshotPortMap);
-    SnapshotPortMap = NULL;
+    SnapshotPortMap = nullptr;
 
     Allocator->Free(Memory);
-    Memory = NULL;
+    Memory = nullptr;
 
     Allocator->Free(DefaultMemory);
-    DefaultMemory = NULL;
+    DefaultMemory = nullptr;
 
     Allocator->Free(SnapshotMemory);
 
     Allocator->Free(MemoryMap);
-    MemoryMap = NULL;
+    MemoryMap = nullptr;
 
-    Allocator = NULL;
+    Allocator = nullptr;
 }
 
 bool Instance::MarkPort(uint16_t port)
 {
-    if (Allocator == NULL)
+    if (Allocator == nullptr)
         return false;
 
     uint16_t index = port >> 3;
@@ -321,7 +323,7 @@ bool Instance::MarkPort(uint16_t port)
 
 void Instance::CachePort8(uint16_t port)
 {
-    if (Allocator == NULL)
+    if (Allocator == nullptr)
         return;
 
     uint16_t index = port >> 3;
@@ -342,7 +344,7 @@ void Instance::CachePort8(uint16_t port)
 
 void Instance::CachePort16(uint16_t port)
 {
-    if (Allocator == NULL)
+    if (Allocator == nullptr)
         return;
     
     CachePort8(port);
@@ -357,7 +359,7 @@ void Instance::SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size)
 
 bool Instance::MarkMemory(uint32_t offset)
 {
-    if (Allocator == NULL)
+    if (Allocator == nullptr)
         return false;
 
     uint32_t index = offset >> 3;
@@ -371,7 +373,7 @@ uint8_t dummy[16] = { 0 };
 
 uint8_t& Instance::CacheMemory(uint32_t offset, uint32_t size, uint32_t count)
 {
-    if (Allocator == NULL)
+    if (Allocator == nullptr)
         return dummy[0];
 
     for (uint32_t i = 0; i < size * count; ++i)
@@ -385,8 +387,8 @@ uint8_t& Instance::CacheMemory(uint32_t offset, uint32_t size, uint32_t count)
 Instance s_Instance0;
 Instance s_Instance1;
 Instance* s_CurrentInstance = &s_Instance0;
-MemoryAccessCallback_t s_MemoryAccessCallback = NULL;
-void* s_MemoryAccessContext = NULL;
+MemoryAccessCallback_t s_MemoryAccessCallback = nullptr;
+void* s_MemoryAccessContext = nullptr;
 
 const uint32_t CustomPortHandler::s_ID = 0x62947393;
 
@@ -497,13 +499,13 @@ public:
         , m_DataPort(dataPort)
         , m_RegisterCount(regCount)
         , m_IndexMask(indexMask)
-        , m_Data(NULL)
-        , m_DataMask(NULL)
-        , m_SnapshotValues(NULL)
+        , m_Data(nullptr)
+        , m_DataMask(nullptr)
+        , m_SnapshotValues(nullptr)
         , m_DefaultValues(defaultValues)
         , m_OrMask(orMask)
         , m_AndMask(andMask)
-        , m_ReadOnlyRegisters(NULL)
+        , m_ReadOnlyRegisters(nullptr)
     {
         m_Data = m_Allocator->AllocateAs<uint8_t>(regCount);
         m_DataMask = m_Allocator->AllocateAs<uint8_t>(regCount >> 3);
@@ -514,15 +516,15 @@ public:
     virtual ~IndexedPort()
     {
         m_Allocator->Free(m_DataMask);
-        m_DataMask = NULL;
+        m_DataMask = nullptr;
 
         m_Allocator->Free(m_Data);
-        m_Data = NULL;
+        m_Data = nullptr;
 
         m_Allocator->Free(m_SnapshotValues);
-        m_SnapshotValues = NULL;
+        m_SnapshotValues = nullptr;
 
-        while (m_ReadOnlyRegisters != NULL)
+        while (m_ReadOnlyRegisters != nullptr)
         {
             ReadOnlyReg* reg = m_ReadOnlyRegisters;
             m_ReadOnlyRegisters = reg->Next;
@@ -600,12 +602,12 @@ public:
             }
             VERBOSE(printf("%s port read 0x%04X:0x%02X = 0x%02X\n", GetName(), port, index, m_Data[index]));
 
-            if (m_OrMask != NULL)
+            if (m_OrMask != nullptr)
             {
                 m_Data[index] |= m_OrMask[index];
             }
 
-            if (m_AndMask != NULL)
+            if (m_AndMask != nullptr)
             {
                 m_Data[index] &= m_AndMask[index];
             }
@@ -635,7 +637,7 @@ public:
                 return;
             
             ReadOnlyReg* ptr = m_ReadOnlyRegisters;
-            while (ptr != NULL)
+            while (ptr != nullptr)
             {
                 if (index == ptr->Reg)
                     return;
@@ -643,12 +645,12 @@ public:
                 ptr = ptr->Next;
             }
 
-            if (m_OrMask != NULL)
+            if (m_OrMask != nullptr)
             {
                 value |= m_OrMask[index];
             }
 
-            if (m_AndMask != NULL)
+            if (m_AndMask != nullptr)
             {
                 value &= m_AndMask[index];
             }
@@ -785,9 +787,9 @@ public:
     AttributePortHandler(IAllocator& allocator, uint8_t* defaultValues)
         : CustomPortHandler("Attribute Ports")
         , m_Allocator(allocator)
-        , Mask(NULL)
-        , Data(NULL)
-        , SnapshotValues(NULL)
+        , Mask(nullptr)
+        , Data(nullptr)
+        , SnapshotValues(nullptr)
         , DefaultValues(defaultValues)
         , m_OriginalIndex(0)
         , m_CurrentIndex(0)
@@ -806,17 +808,17 @@ public:
 
     virtual ~AttributePortHandler()
     {
-        if (Mask != NULL)
+        if (Mask != nullptr)
             m_Allocator.Free(Mask);
-        Mask = NULL;
+        Mask = nullptr;
 
-        if (Data != NULL)
+        if (Data != nullptr)
             m_Allocator.Free(Data);
-        Data = NULL;
+        Data = nullptr;
 
-        if (SnapshotValues != NULL)
+        if (SnapshotValues != nullptr)
             m_Allocator.Free(SnapshotValues);
-        SnapshotValues = NULL;
+        SnapshotValues = nullptr;
     }
 
     virtual void Reset()
@@ -1029,9 +1031,9 @@ public:
     RAMDACPortHandler(IAllocator& allocator, uint8_t* defaultValues)
         : CustomPortHandler("RAMDAC Ports")
         , m_Allocator(allocator)
-        , Mask(NULL)
-        , Data(NULL)
-        , SnapshotValues(NULL)
+        , Mask(nullptr)
+        , Data(nullptr)
+        , SnapshotValues(nullptr)
         , DefaultValues(defaultValues)
         , ReadIndex(0)
         , WriteIndex(0)
@@ -1046,17 +1048,17 @@ public:
 
     virtual ~RAMDACPortHandler()
     {
-        if (Mask != NULL)
+        if (Mask != nullptr)
             m_Allocator.Free(Mask);
-        Mask = NULL;
+        Mask = nullptr;
 
-        if (Data != NULL)
+        if (Data != nullptr)
             m_Allocator.Free(Data);
-        Data = NULL;
+        Data = nullptr;
 
-        if (SnapshotValues != NULL)
+        if (SnapshotValues != nullptr)
             m_Allocator.Free(SnapshotValues);
-        SnapshotValues = NULL;
+        SnapshotValues = nullptr;
     }
 
     virtual void Reset()
@@ -1293,7 +1295,7 @@ void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint
 
 void AddReadOnlyPort(const char* name, uint16_t port)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     ReadOnlyPort* port0 = ::new(s_Instance0.Allocator->Allocate(sizeof(ReadOnlyPort))) 
@@ -1309,7 +1311,7 @@ void AddReadOnlyPort(const char* name, uint16_t port)
 
 void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues, uint8_t* orMask, uint8_t* andMask)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     IndexedPort* port0 = ::new(s_Instance0.Allocator->Allocate(sizeof(IndexedPort))) 
@@ -1326,10 +1328,10 @@ void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uin
 void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg)
 {
     CustomPortHandler* ptr = s_Instance0.PortHandlers;
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         IndexedPort* idxPort = customporthandler_cast<IndexedPort>(ptr);
-        if (idxPort != NULL && idxPort->GetIndexPort() == port)
+        if (idxPort != nullptr && idxPort->GetIndexPort() == port)
         {
             idxPort->AddReadOnlyRegister(reg);
             break;
@@ -1338,10 +1340,10 @@ void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg)
     }
 
     ptr = s_Instance1.PortHandlers;
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         IndexedPort* idxPort = customporthandler_cast<IndexedPort>(ptr);
-        if (idxPort != NULL && idxPort->GetIndexPort() == port)
+        if (idxPort != nullptr && idxPort->GetIndexPort() == port)
         {
             idxPort->AddReadOnlyRegister(reg);
             break;
@@ -1492,7 +1494,7 @@ void AddDualPortRegister(const char* name, uint16_t readPort, uint16_t writePort
 
 void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     if (offset + size > 1024 * 1024)
@@ -1684,7 +1686,7 @@ int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int
                          uint16_t* ignorePorts, int ignorePortsCount,
                          PortAndIndex* ignoreIndexedPorts, int ignoreIndexedCount)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return 0;
 
     VerifyPaVContext context = 
@@ -1715,28 +1717,28 @@ int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int
 
 void FetchModifiedIndexedRegisters(int instance, IndexedRegisterCheckCallback_t callback, void* context)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     Instance* inst = instance == 0 ? &s_Instance0 : &s_Instance1;
     
     CustomPortHandler* ptr = inst->PortHandlers;
-    while (ptr != NULL)
+    while (ptr != nullptr)
     {
         IndexedPort* indexed = customporthandler_cast<IndexedPort>(ptr);
-        if (indexed != NULL)
+        if (indexed != nullptr)
         {
             indexed->FetchModifiedIndexedRegisters(callback, context);
         }
 
         AttributePortHandler* attr = customporthandler_cast<AttributePortHandler>(ptr);
-        if (attr != NULL)
+        if (attr != nullptr)
         {
             attr->FetchModifiedIndexedRegisters(callback, context);
         }
 
         RAMDACPortHandler* ramdac = customporthandler_cast<RAMDACPortHandler>(ptr);
-        if (ramdac != NULL)
+        if (ramdac != nullptr)
         {
             ramdac->FetchModifiedIndexedRegisters(callback, context);
         }
@@ -1747,7 +1749,7 @@ void FetchModifiedIndexedRegisters(int instance, IndexedRegisterCheckCallback_t 
 
 void FetchModifiedRegisters(int instance, RegisterCheckCallback_t callback, void* context)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     Instance* inst = instance == 0 ? &s_Instance0 : &s_Instance1;
@@ -1873,7 +1875,7 @@ void VerifyBDAFieldsCallback(uint8_t field, uint8_t modifiedValue, uint8_t origi
 int VerifyBDAFieldsAndValues(int instance, BDAFieldsAndValues* modifiedFieldsAndValues, int modifiedCount,
                              uint8_t* readFields, int readCount, uint8_t* ignoreFields, int ignoreCount)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return 0;
 
     VerifyBDAContext context =
@@ -1894,7 +1896,7 @@ int VerifyBDAFieldsAndValues(int instance, BDAFieldsAndValues* modifiedFieldsAnd
 
 void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* context)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     //uint8_t* realMem = (uint8_t*)0x00000000;
@@ -2011,7 +2013,7 @@ void Reset()
 
 bool HasDifferences()
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return false;
 
     if (memcmp(s_Instance0.PortMap, s_Instance1.PortMap, 0x10000 >> 3) != 0)
@@ -2022,7 +2024,7 @@ bool HasDifferences()
 
     CustomPortHandler* ptr0 = s_Instance0.PortHandlers;
     CustomPortHandler* ptr1 = s_Instance1.PortHandlers;
-    while (ptr0 != NULL && ptr1 != NULL)
+    while (ptr0 != nullptr && ptr1 != nullptr)
     {
         if (ptr0->HasDifferences(ptr1))
             return true;
@@ -2033,7 +2035,7 @@ bool HasDifferences()
 
     PCI::Device* dev0 = s_Instance0.PCIDevices;
     PCI::Device* dev1 = s_Instance1.PCIDevices;
-    while (dev0 != NULL && dev1 != NULL)
+    while (dev0 != nullptr && dev1 != nullptr)
     {
         if (dev0->HasDifferences(dev1))
             return true;
@@ -2053,7 +2055,7 @@ bool HasDifferences()
 
 void Report(uint16_t* ignorePorts, uint16_t ignorePortsCount)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     bool portsHaveDifferences = memcmp(s_Instance0.PortMap, s_Instance1.PortMap, 0x10000 >> 3) != 0;
@@ -2116,7 +2118,7 @@ void Report(uint16_t* ignorePorts, uint16_t ignorePortsCount)
 
     CustomPortHandler* ptr0 = s_Instance0.PortHandlers;
     CustomPortHandler* ptr1 = s_Instance1.PortHandlers;
-    while (ptr0 != NULL && ptr1 != NULL)
+    while (ptr0 != nullptr && ptr1 != nullptr)
     {
         if (ptr0->HasDifferences(ptr1))
             ptr0->Report(ptr1);
@@ -2126,7 +2128,7 @@ void Report(uint16_t* ignorePorts, uint16_t ignorePortsCount)
 
     PCI::Device* dev0 = s_Instance0.PCIDevices;
     PCI::Device* dev1 = s_Instance1.PCIDevices;
-    while (dev0 != NULL && dev1 != NULL)
+    while (dev0 != nullptr && dev1 != nullptr)
     {
         if (dev0->HasDifferences(dev1))
             dev0->Report(dev1);
@@ -2209,7 +2211,7 @@ namespace Port
 
 uint8_t Read8(uint16_t port)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return 0;
 
     uint8_t ret = 0;
@@ -2217,7 +2219,7 @@ uint8_t Read8(uint16_t port)
     bool cacheValue = true;
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     
-    while (handler != NULL)
+    while (handler != nullptr)
     {
         if (handler->CanHandle(port))
         {
@@ -2250,14 +2252,14 @@ uint8_t Read8(uint16_t port)
 
 uint16_t Read16(uint16_t port)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return 0;
 
     uint16_t ret = 0;
     bool handled = false;
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     
-    while (handler != NULL)
+    while (handler != nullptr)
     {
         if (handler->CanHandle(port))
         {
@@ -2288,11 +2290,11 @@ uint16_t Read16(uint16_t port)
 
 void Write8(uint16_t port, uint8_t value)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     PCI::Device* dev = s_CurrentInstance->PCIDevices;
-    while (dev != NULL)
+    while (dev != nullptr)
     {
         dev->Snoop8(port, value);
         dev = dev->GetNext();
@@ -2301,7 +2303,7 @@ void Write8(uint16_t port, uint8_t value)
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     bool handled = false;
     bool cacheValue = true;
-    while (handler != NULL)
+    while (handler != nullptr)
     {
         if (handler->CanHandle(port))
         {
@@ -2327,11 +2329,11 @@ void Write8(uint16_t port, uint8_t value)
 
 void Write16(uint16_t port, uint16_t value)
 {
-    if (s_Instance0.Allocator == NULL)
+    if (s_Instance0.Allocator == nullptr)
         return;
 
     PCI::Device* dev = s_CurrentInstance->PCIDevices;
-    while (dev != NULL)
+    while (dev != nullptr)
     {
         dev->Snoop16(port, value);
         dev = dev->GetNext();
@@ -2339,7 +2341,7 @@ void Write16(uint16_t port, uint16_t value)
 
     CustomPortHandler* handler = s_CurrentInstance->PortHandlers;
     bool handled = false;
-    while (handler != NULL)
+    while (handler != nullptr)
     {
         if (handler->CanHandle(port))
         {
@@ -2372,10 +2374,10 @@ namespace Memory
 {
     uint8_t& Ref(uint32_t offset, uint32_t size, uint32_t count)
     {
-        if (s_Instance0.Allocator == NULL)
+        if (s_Instance0.Allocator == nullptr)
             return dummy[0];
 
-        if (s_MemoryAccessCallback != NULL)
+        if (s_MemoryAccessCallback != nullptr)
             s_MemoryAccessCallback(offset, size * count, s_MemoryAccessContext);
 
         VERBOSE(printf("Memory access 0x%08X, size %i\n", offset, size * count));
@@ -2387,7 +2389,7 @@ namespace BDA
 {
     uint8_t& Ref(uint16_t offset, uint16_t size, uint16_t count)
     {
-        if (s_Instance0.Allocator == NULL)
+        if (s_Instance0.Allocator == nullptr)
             return dummy[0];
 
         VERBOSE(printf("BDA access 0x%04X, size %i\n", 0x400 + offset, size * count));
@@ -2406,7 +2408,7 @@ namespace PCI
 
     Device* Device::CheckTypeId(uint32_t id)
     {
-        return id == s_ID ? this : NULL;
+        return id == s_ID ? this : nullptr;
     }
 
     void RegisterDevice(uint32_t instance, Device* ptr)
@@ -2418,7 +2420,7 @@ namespace PCI
         uint8_t deviceID = 1;
 
         Device* dev = inst->PCIDevices;
-        while (dev != NULL)
+        while (dev != nullptr)
         {
             ++deviceID;
             dev = dev->GetNext();
@@ -2433,7 +2435,7 @@ namespace PCI
     uint32_t Read32(uint16_t bsf, uint8_t offset)
     {
         Device* dev = s_CurrentInstance->PCIDevices;
-        while (dev != NULL)
+        while (dev != nullptr)
         {
             if (dev->GetBSF() == bsf)
             {
@@ -2447,7 +2449,7 @@ namespace PCI
     void Write8(uint16_t bsf, uint8_t offset, uint8_t value)
     {
         Device* dev = s_CurrentInstance->PCIDevices;
-        while (dev != NULL)
+        while (dev != nullptr)
         {
             if (dev->GetBSF() == bsf)
             {
@@ -2461,7 +2463,7 @@ namespace PCI
     void Write16(uint16_t bsf, uint8_t offset, uint16_t value)
     {
         Device* dev = s_CurrentInstance->PCIDevices;
-        while (dev != NULL)
+        while (dev != nullptr)
         {
             if (dev->GetBSF() == bsf)
             {
@@ -2475,7 +2477,7 @@ namespace PCI
     void Write32(uint16_t bsf, uint8_t offset, uint32_t value)
     {
         Device* dev = s_CurrentInstance->PCIDevices;
-        while (dev != NULL)
+        while (dev != nullptr)
         {
             if (dev->GetBSF() == bsf)
             {
@@ -2489,7 +2491,7 @@ namespace PCI
     void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context)
     {
         Device* dev = s_CurrentInstance->PCIDevices;
-        while (dev != NULL)
+        while (dev != nullptr)
         {
             uint16_t bsf = dev->GetBSF();
             if (uint8_t(bsf >> 8) == bus)
@@ -2505,3 +2507,5 @@ namespace PCI
 }
 
 }}}
+
+#endif

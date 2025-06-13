@@ -13,9 +13,6 @@ public:
 	virtual void* Allocate(uint32_t size);
 	virtual void Free(void* memory);
 
-	//Memory in the first 1MiB area.
-	virtual void far* AllocateLow(uint16_t size);
-	virtual void FreeLow(void far* memory);
 };
 
 }

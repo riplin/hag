@@ -873,7 +873,7 @@ struct SetTextModeBiosDataTest_DataVerify
 
 SetTextModeBiosDataTest_DataVerify SetTextModeBiosDataTest_Verify[] =
 {
-    { NULL, NULL, 0 },
+    { nullptr, nullptr, 0 },
     { Characters8x8, LegacyVideoParameterTable[23], 0 },
     { Characters8x8, LegacyVideoParameterTable[24], 0 },
     { Characters8x8, LegacyVideoParameterTable[24], 0 },

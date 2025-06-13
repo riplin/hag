@@ -1,12 +1,13 @@
 //Copyright 2025-Present riplin
 
 #include <stdio.h>
-#include <conio.h>
+#include <pc.h>
 
 #include <hag/color.h>
 #include <hag/system/bda.h>
-#include <hag/math/fp/FPMATH.H>
+#include <hag/math/fp/fpmath.h>
 #include <hag/drivers/matrox/mystique/mystique.h>
+#include <sys/nearptr.h>
 
 extern Hag::Math::v4 icoVecs[12];
 extern int32_t icoTri[20][3];
@@ -24,24 +25,54 @@ void FlipFrame(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uint
 bool isBackFace(Hag::Math::v4& vec0, Hag::Math::v4& vec1, Hag::Math::v4& vec2);
 void setupNormals();
 void colorLerp(uint32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB);
+void gradientLerp(Hag::Color32_t* colors, uint16_t count, Hag::Color32_t* gradient, uint16_t gradientCount, Hag::Math::fp* intensityRamp, uint16_t intensityCount);
 
 uint32_t colors[256];
 
 int main(void)
 {
+	__djgpp_nearptr_enable();
     using namespace Hag;
     using namespace Hag::Math;
     using namespace Hag::Color;
     using namespace Hag::Matrox;
+
+    // fp intensities[] =
+    // {
+    //     fp(0) / fp(10),
+    //     fp(1) / fp(10),
+    //     fp(2) / fp(10),
+    //     fp(3) / fp(10),
+    //     fp(4) / fp(10),
+    //     fp(5) / fp(10),
+    //     fp(7) / fp(10),
+    //     fp(9) / fp(10),
+    //     fp(10) / fp(10),
+    //     fp(12) / fp(10),
+    //     fp(15) / fp(10)
+    // };
+
+    //meh
+    //gradientLerp(colors, 256, Gradient::Bpp32::Gold, sizeof(Gradient::Bpp32::Gold) / sizeof(Color32_t), intensities, sizeof(intensities) / sizeof(fp));
+    colorLerp(colors, 192, Bpp32::Black, Bpp32::RoyalPurple);
+    colorLerp(colors + 192, 63, Bpp32::RoyalPurple, Bpp32::Cream);
+    colors[255] = Bpp32::Cream;
 
     if (!Mystique::Initialize())
     {
         printf("Could not initialize Matrox Mystique.\n");
         return 1;
     }
-    colorLerp(colors, 192, Bpp32::Black, Bpp32::RoyalPurple);
-    colorLerp(colors + 192, 63, Bpp32::RoyalPurple, Bpp32::Cream);
-    colors[255] = Bpp32::Cream;
+
+    //TODO:: figure out another way to feed the device to the functions that need it.
+    System::PCI::Device_t device;
+    if (!System::PCI::FindDevice(0x102B, 0x051A, device))
+    {
+        printf("Unable to find PCI device.\n");
+        Mystique::Shutdown();
+        return 1;
+    }
+
     uint16_t width = 640;
     uint16_t height = 480;
 
@@ -54,16 +85,7 @@ int main(void)
         return result;
     }
 
-    //TODO:: figure out another way to feed the device to the functions that need it.
-    System::PCI::Device_t device;
-    if (!System::PCI::FindDevice(0x102B, 0x051A, device))
-    {
-        printf("Unable to find PCI device.\n");
-        Mystique::Shutdown();
-        return 1;
-    }
-
-    uint32_t* frameBuffer = Mystique::PCI::FrameBufferAperture::GetAddress<uint32_t>(device);
+    //uint32_t* frameBuffer = Mystique::PCI::FrameBufferAperture::GetAddress<uint32_t>(device);
     Mystique::PCI::ControlAperture_t controlAperture = Mystique::PCI::ControlAperture::GetAddress(device);
 
     GlobalInit(controlAperture, width, height);
@@ -71,11 +93,12 @@ int main(void)
     SetStartY(controlAperture, height);
     SetClipping(controlAperture, 0, 0, width - 1, height);//The clip window does not migrate after a back buffer change.
 
-    int16_t hwidth = width >> 1;
-    int16_t hheight = height >> 1;
+    //int16_t hwidth = width >> 1;
+    //int16_t hheight = height >> 1;
 
     v3 val(0);
     v3 inc(fp::Pi / 100, fp::Pi / 75, fp::Pi / 55);
+    //v3 inc(fp::Pi / 200, fp::Pi / 150, fp::Pi / 110);
 
     v4 icor[12];
     v4 icon[20];
@@ -143,6 +166,7 @@ int main(void)
     Mystique::SetVideoMode(80, 25, Mystique::BitsPerPixel::Bpp4, Mystique::Flags::Text);
     Mystique::Shutdown();
 
+	__djgpp_nearptr_disable();
     return 0;
 }
 
@@ -401,6 +425,8 @@ void DrawTriangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, H
          2----|      |----1
           \   |      |   /  bottom trapezoid
             \ 1      2 /
+
+    Both top and bottom can be flat. And so don't have to be rendered.
     */
 
     if ((vectors[vec0].y().Floor() != vectors[vec1].y().Floor()) && (vectors[vec0].y().Floor() != vectors[vec2].y().Floor())) // Flat top check
@@ -444,6 +470,10 @@ void DrawTriangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, H
         MMIO::Length::Write(controlAperture, min(dYL, dYR));
         MMIO::ForegroundColor::Write(controlAperture, fgcolor);
         MMIO::DrawingControl::WriteCommit(controlAperture, dwgctl);
+
+        // There seems to be an issue with the side that isn't updated that it shifts a pixel
+        // when we resume down the second trapezoid. This is causing a gap or overlap to form along the remainder
+        // of the triangle.
 
         //Filter out dYL == dYR
         if (dYL > dYR)
@@ -599,12 +629,11 @@ void FlipFrame(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uint
 {
     static bool even = false;
     WaitVerticalSync();
-    SetStartAddress(even ? 0 : (width * height));
-    SetStartY(controlAperture, even ? height : 0);
-    SetClipping(controlAperture, 0, 0, width - 1, height);
+    SetStartAddress(even ? 0 : (width * height));   // Screen address
+    SetStartY(controlAperture, even ? height : 0);  // Render address
+    SetClipping(controlAperture, 0, 0, width - 1, height); // Move clipping window
     even = !even;
 }
-
 
 /////////////////////
 
@@ -653,7 +682,7 @@ bool isBackFace(Hag::Math::v4& vec0, Hag::Math::v4& vec1, Hag::Math::v4& vec2)
     return d01x * d02y - d01y * d02x >= 0;
 }
 
-void colorLerp(uint32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB)
+void colorLerp(Hag::Color32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB)
 {
     using namespace Hag;
     using namespace Hag::Math;
@@ -671,6 +700,76 @@ void colorLerp(uint32_t* colors, uint32_t steps, uint32_t colorA, uint32_t color
         int16_t red = min<int16_t>(max<int16_t>((fromRed * fromCol + toRed * toCol).RawFloor(), 0), 255);
         int16_t green = min<int16_t>(max<int16_t>((fromGreen * fromCol + toGreen * toCol).RawFloor(), 0), 255);
         int16_t blue = min<int16_t>(max<int16_t>((fromBlue * fromCol + toBlue * toCol).RawFloor(), 0), 255);
-        colors[i] = 0xFF000000 | (uint32_t(red) << 16) | (uint32_t(green) << 8) | uint32_t(blue);                    
+        colors[i] = 0xFF000000 | (Color32_t(red) << 16) | (Color32_t(green) << 8) | Color32_t(blue);                    
     }
+}
+
+Hag::Math::fp getIntensity(Hag::Math::fp* intensityRamp, uint16_t intensityCount, Hag::Math::fp intensityIndex)
+{
+    using namespace Hag::Math;
+    // intensityIndex goes from 0.0 to 1.0
+    // Multiplying with count should give us a start index and an interpolation value in the fraction.
+    
+    fp scaledIntensityIndex = (intensityIndex * (intensityCount - 1));
+    uint16_t index = scaledIntensityIndex.RawFloor();
+
+    if (index >= (intensityCount - 1)) // Last value
+        return intensityRamp[index];
+
+    if (index < 0) // Just in case
+        return *intensityRamp;
+
+    fp intensityInterpolator = scaledIntensityIndex.Fraction();
+    fp inverseInterpolator = 1 - intensityInterpolator;
+
+    return intensityRamp[index] * inverseInterpolator + intensityRamp[index + 1] * intensityInterpolator;
+}
+
+Hag::Color32_t applyIntensity(Hag::Color32_t color, Hag::Math::fp intensity)
+{
+    using namespace Hag;
+    using namespace Hag::Math;
+
+    fp fromRed = (color >> 16) & 0xFF;
+    fp fromGreen = (color >> 8) & 0xFF;
+    fp fromBlue = color & 0xFF;
+
+    int16_t red = min<int16_t>(max<int16_t>((fromRed * intensity).RawFloor(), 0), 255);
+    int16_t green = min<int16_t>(max<int16_t>((fromGreen * intensity).RawFloor(), 0), 255);
+    int16_t blue = min<int16_t>(max<int16_t>((fromBlue * intensity).RawFloor(), 0), 255);
+    return (color & 0xFF000000) | (Color32_t(red) << 16) | (Color32_t(green) << 8) | Color32_t(blue);                    
+}
+
+void gradientLerp(Hag::Color32_t* colors, uint16_t count, Hag::Color32_t* gradient, uint16_t gradientCount, Hag::Math::fp* intensityRamp, uint16_t intensityCount)
+{
+    using namespace Hag;
+    using namespace Hag::Math;
+
+    uint16_t colorsPerGradientStep = (count - 1) / (gradientCount - 1);
+    uint16_t colorsLeft = count - 1;// Skip the last color.
+    uint16_t colorOffset = 0;
+    Color32_t* gradientPtr = gradient;
+
+    while (colorsLeft != 0)
+    {
+        uint16_t steps = colorsPerGradientStep;
+        if (colorsLeft < (colorsPerGradientStep << 1)) // Division above is going to round down and give remaining colors.
+            steps = colorsLeft;
+        colorsLeft -= steps;
+
+        colorLerp(colors + colorOffset, steps, gradientPtr[0], gradientPtr[1]);
+        colorOffset += steps;
+        ++gradientPtr;
+    }
+    colors[count - 1] = *gradientPtr; // Set the last color.
+
+    // Apply intensity ramp.
+    
+    for (uint16_t i = 0; i < count; ++i)
+    {
+        fp intensityIndex = fp(i) / fp(count - 1);
+        fp intensity = getIntensity(intensityRamp, intensityCount, intensityIndex);
+        colors[i] = applyIntensity(colors[i], intensity);
+    }
+    
 }

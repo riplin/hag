@@ -13,7 +13,7 @@ Factory Factory::m_Instance;
 
 Hag::Driver* Factory::InstantiateDriver(Hag::IAllocator& allocator) const
 {
-    Hag::Driver* driver = NULL;
+    Hag::Driver* driver = nullptr;
     Shared::ChipId_t chipId = Hardware::IdentifyChip();
 
     if (chipId == Shared::ChipId::Trio64 ||
@@ -24,6 +24,5 @@ Hag::Driver* Factory::InstantiateDriver(Hag::IAllocator& allocator) const
     
     return driver;
 }
-
 
 }}

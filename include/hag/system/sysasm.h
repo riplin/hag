@@ -3,18 +3,13 @@
 #pragma once
 
 #include <hag/types.h>
+#include <pc.h>
 
-void SYS_ClearInterrupts();
-#pragma aux SYS_ClearInterrupts = "cli";
+inline void SYS_ClearInterrupts() { asm("cli\n\t":::); }
+inline void SYS_RestoreInterrupts() { asm("sti\n\t":::); }
 
-void SYS_RestoreInterrupts();
-#pragma aux SYS_RestoreInterrupts = "sti";
-
-void SYS_SpinWait(uint16_t cycles);//This is a time sensitive loop!!!!
-#pragma aux SYS_SpinWait = \
-    "waitloop:"         \
-    "loop waitloop"     \
-    parm [cx];
+//This is a time sensitive loop!!!!
+inline void SYS_SpinWait(uint32_t cycles){ asm("1:\n\t" "loop 1b\n\t"::"c" (cycles): "%ecx", "cc"); }
 
 #ifdef MOCK
 
@@ -58,42 +53,18 @@ inline uint32_t SYS_ReadPortDouble(uint16_t reg)
 
 #else
 
-uint8_t SYS_ReadPortByte(uint16_t reg);
-#pragma aux SYS_ReadPortByte = \
-    "in al, dx"         \
-    parm [dx]           \
-    value [al];
+inline uint8_t SYS_ReadPortByte(uint16_t reg) { return inportb(reg); }
 
-void SYS_WritePortByte(uint16_t reg, uint8_t val);
-#pragma aux SYS_WritePortByte = \
-    "out dx, al"        \
-    parm [dx] [al];
+inline void SYS_WritePortByte(uint16_t reg, uint8_t val) { outportb(reg, val); }
 
-void SYS_WritePortBytes(uint16_t reg, uint8_t val1, uint8_t val2);
-#pragma aux SYS_WritePortBytes = \
-    "out dx, ax"        \
-    parm [dx] [al] [ah];
+inline void SYS_WritePortBytes(uint16_t reg, uint8_t val1, uint8_t val2) { outportw(reg, (uint16_t(val2) << 8) | val1); }
 
-uint16_t SYS_ReadPortShort(uint16_t reg);
-#pragma aux SYS_ReadPortShort = \
-    "in ax, dx"         \
-    parm [dx]           \
-    value [ax];
+inline uint16_t SYS_ReadPortShort(uint16_t reg) { return inportw(reg); }
 
-void SYS_WritePortShort(uint16_t reg, uint16_t val);
-#pragma aux SYS_WritePortShort = \
-    "out dx, ax"        \
-    parm [dx] [ax];
+inline void SYS_WritePortShort(uint16_t reg, uint16_t val) { outportw(reg, val); }
 
-void SYS_WritePortDouble(uint16_t reg, uint32_t val);
-#pragma aux SYS_WritePortDouble = \
-    "out dx, eax"       \
-    parm [dx] [eax];
+inline void SYS_WritePortDouble(uint16_t reg, uint32_t val) { outportl(reg, val); }
 
-uint32_t SYS_ReadPortDouble(uint16_t reg);
-#pragma aux SYS_ReadPortDouble = \
-    "in eax, dx"        \
-    parm [dx]           \
-    value [eax];
+inline uint32_t SYS_ReadPortDouble(uint16_t reg) { return inportl(reg); }
 
 #endif

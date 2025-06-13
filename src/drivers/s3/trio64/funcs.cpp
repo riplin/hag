@@ -14,7 +14,7 @@ bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint
     using namespace System::BDA;
 
     bool ret = false;
-    returnPointer = NULL;
+    returnPointer = nullptr;
 
     if (!VideoParameterControlBlockPointer::Get().IsNull())
     {
@@ -234,7 +234,6 @@ bool VerifyBDAOrDeactivate(VGA::VideoMode_t& mode, bool isVesa, bool isVesaColor
 {
     using namespace System::BDA;
 
-    uint8_t flags = 0;
     bool ret = false;
     PointHeightOfCharacterMatrix_t newPointHeight = 0;
 
@@ -661,7 +660,7 @@ void ApplyVideoParameters(VGA::VideoParameters* parameters)
     }
     
     //Reset Attribute Controller port 0x3c0 to point to index register
-    Register_t inputStatus1 = crtRegister + (Register::InputStatus1D - Register::CRTControllerIndexD);
+    Register_t inputStatus1 = crtRegister + (Register_t(Register::InputStatus1D) - Register_t(Register::CRTControllerIndexD));
     InputStatus1::Read(inputStatus1);
 
     if ((DisplayMode::Get() == VideoMode::Unknown2) ||
@@ -699,7 +698,7 @@ void PrepareAttributeController()
 {
     using namespace Hag::System::BDA;
 
-    InputStatus1::Read(VideoBaseIOPort::Get() + (Register::InputStatus1D - Register::CRTControllerIndexD));
+    InputStatus1::Read(VideoBaseIOPort::Get() + (Register_t(Register::InputStatus1D) - Register_t(Register::CRTControllerIndexD)));
     AttributeControllerIndex::Write(AttributeController::Register::Palette0);
 }
 
@@ -720,7 +719,7 @@ void SetPaletteProfile(Register_t crtcPort)
 {
     using namespace Hag::System::BDA;
 
-    SecondarySavePointerTable* secondarySavePointerTable = NULL;
+    SecondarySavePointerTable* secondarySavePointerTable = nullptr;
     if (GetVideoParameterBlockElementAs<SecondarySavePointerTable>(4, secondarySavePointerTable, 32) &&
         !secondarySavePointerTable->UserPaletteProfileTable.IsNull())
     {
@@ -729,7 +728,7 @@ void SetPaletteProfile(Register_t crtcPort)
         {
             if ((VideoDisplayDataArea::Get() & VideoDisplayDataArea::PaletteLoadingDisabled) != 0)
             {
-                InputStatus1::Read(crtcPort + (Register::InputStatus1D - Register::CRTControllerIndexD));
+                InputStatus1::Read(crtcPort + (Register_t(Register::InputStatus1D) - Register_t(Register::CRTControllerIndexD)));
 
                 uint16_t colorCount = (paletteProfile->DACRegisterCount << 1) +
                                        paletteProfile->DACRegisterCount;
@@ -773,7 +772,7 @@ void EnableVideoDisplay()
 {
     using namespace Hag::System::BDA;
 
-    Register_t inputStatus = VideoBaseIOPort::Get() + (Register::InputStatus1D - Register::CRTControllerIndexD);
+    Register_t inputStatus = VideoBaseIOPort::Get() + (Register_t(Register::InputStatus1D) - Register_t(Register::CRTControllerIndexD));
     AttributeControllerIndex::ResetIndex(inputStatus);
     AttributeControllerIndex::Write(AttributeControllerIndex::EnableVideoDisplay);
 }
@@ -978,7 +977,7 @@ VideoModeError_t CheckValidVideoMode(VideoMode_t mode)
 
 Shared::VESAVideoModeData* FindVideoModeData(VideoMode_t mode)
 {
-    Shared::VESAVideoModeData* videoModeData = NULL;
+    Shared::VESAVideoModeData* videoModeData = nullptr;
     for (int i = 0; i < Data::VesaVideoModesCount; ++i)
     {
         if (Data::VesaVideoModes[i].Mode == mode)
@@ -1005,12 +1004,12 @@ uint16_t GetDisplayMemoryInKiB()
 
 void* GetLinearFrameBufferInternal(Shared::VESAVideoModeData* vesaData)
 {
-    void* ret = NULL;
+    void* ret = nullptr;
     
     using namespace Hag::System;
     using namespace Hag::System::BDA;
     
-    if (vesaData != NULL)
+    if (vesaData != nullptr)
     {
         Register_t crtcPort = VideoBaseIOPort::Get();
         CRTController::RegisterLock1_t rl1 = CRTController::RegisterLock1::Read(crtcPort);
@@ -1048,7 +1047,7 @@ VGA::VideoParameters* GetVideoParameters(VideoMode_t mode)
 {
     using namespace Hag::System::BDA;
 
-    VGA::VideoParameters* parameters = NULL;
+    VGA::VideoParameters* parameters = nullptr;
 
     if (mode <= VideoMode::MaxValid)
     {
@@ -1069,8 +1068,8 @@ VGA::VideoParameters* GetVideoParameters(VideoMode_t mode)
     }
     else
     {
-        Shared::VESAVideoModeData* vesaModeData = NULL;
-        if (vesaModeData = FindVideoModeData(mode))
+        Shared::VESAVideoModeData* vesaModeData = nullptr;
+        if ((vesaModeData = FindVideoModeData(mode)) != nullptr)
             parameters = vesaModeData->OverrideTable;
     }
     return parameters;
@@ -1152,7 +1151,6 @@ void ClearMemory(VGA::Register_t crtcPort)
         CRTController::ExtendedMode::Write(crtcPort, extendedMode &
                                                CRTController::ExtendedMode::UnknownMask);
 
-        CRTController::SystemConfiguration_t systemConfiguration = CRTController::SystemConfiguration::Read(crtcPort);
         CRTController::SystemConfiguration::Unlock(crtcPort);
 
         AdvancedFunctionControl::WriteLower(AdvancedFunctionControl::EnableEnhancedFunctions |
@@ -1472,7 +1470,7 @@ void ApplyVESAOverrideData(VideoMode_t mode, VGA::Register_t crtcPort, Shared::V
         InitializeCRTControllerAndSequencer(Shared::Data::CRTControllerInitData, crtcPort);
     }
 
-    if (overrideTable != NULL)
+    if (overrideTable != nullptr)
     {
         Shared::VESAResolutionVariant* modeData = overrideTable->VariantData;
 
@@ -1517,7 +1515,7 @@ void ApplyVESAOverrideData(VideoMode_t mode, VGA::Register_t crtcPort, Shared::V
     Configure256KAddressingAndAddressWindow(mode, crtcPort);
 
     Shared::VESAColorMode_t colorMode = 0;
-    if (overrideTable != NULL)
+    if (overrideTable != nullptr)
         colorMode = overrideTable->ColorMode;
 
     SetColorMode(mode, colorMode, crtcPort);
@@ -1539,16 +1537,16 @@ VideoModeError_t SetLegacyVideoModeInternal(VideoMode_t mode, Shared::VESAVideoM
     mode &= ~VideoMode::DontClearDisplay;
 
     if ((mode <= VideoMode::MaxValid) ||
-        (vesaData != NULL))
+        (vesaData != nullptr))
     {
         BDA::VideoModeOptions::Get() &= ~BDA::VideoModeOptions::DontClearDisplay;
         BDA::VideoModeOptions::Get() |= dontClearDisplay;
 
         ModeSetBDA(mode, (Data::FirmwareFlags & Shared::FirmwareFlag::Color) != 0, 
-            ((vesaData != NULL) && ((vesaData->Flags & Shared::VESAVideoModeFlags::Color) == 0)));
+            ((vesaData != nullptr) && ((vesaData->Flags & Shared::VESAVideoModeFlags::Color) == 0)));
 
         if ((mode <= VideoMode::MaxValid) &&
-            !VerifyBDAOrDeactivate(mode, vesaData != NULL, (vesaData != NULL) && 
+            !VerifyBDAOrDeactivate(mode, vesaData != nullptr, (vesaData != nullptr) && 
             ((vesaData->Flags & Shared::VESAVideoModeFlags::Color) != 0)))
         {
             return VideoModeError::AdapterNotActive;
@@ -1566,7 +1564,7 @@ VideoModeError_t SetLegacyVideoModeInternal(VideoMode_t mode, Shared::VESAVideoM
         ApplyVideoParameters(parameters);
         ApplyVESAOverrideData(mode, crtcPort, vesaData);
 
-        bool hasVesaFlags = vesaData != NULL;
+        bool hasVesaFlags = vesaData != nullptr;
         Shared::VESAVideoModeFlags_t flags = hasVesaFlags ? vesaData->Flags : 0;
         bool ifVesaIsColor = hasVesaFlags && ((flags & Shared::VESAVideoModeFlags::Color) != 0x00);
         bool ifVesaIs256Color = hasVesaFlags && ((flags & Shared::VESAVideoModeFlags::Palette256) != 0x00);
@@ -1580,12 +1578,12 @@ VideoModeError_t SetLegacyVideoModeInternal(VideoMode_t mode, Shared::VESAVideoM
         {
             SetFont();
 
-            BDA::AlphanumericCharSet* fontDefinition = NULL;
+            BDA::AlphanumericCharSet* fontDefinition = nullptr;
             if (GetVideoParameterBlockElementAs<BDA::AlphanumericCharSet>(2, fontDefinition, 0x0B + 0x14) &&
                 CheckValidInCurrentMode(fontDefinition->ApplicableModes))
                 ConfigureFontAndCursor(mode, fontDefinition);
 
-            BDA::SecondarySavePointerTable* paramBlock = NULL;
+            BDA::SecondarySavePointerTable* paramBlock = nullptr;
             if (GetVideoParameterBlockElementAs<BDA::SecondarySavePointerTable>(4, paramBlock, 0x20) &&
                 !paramBlock->SecondaryAlphanumericCharacterSetOverride.IsNull())
             {
@@ -1602,7 +1600,7 @@ VideoModeError_t SetLegacyVideoModeInternal(VideoMode_t mode, Shared::VESAVideoM
             BDA::CursorScanLines::Get().End = 0;
             BDA::CursorScanLines::Get().Start = 0;
 
-            BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition = NULL;
+            BDA::GraphicsCharacterSet* graphicsCharacterFontDefinition = nullptr;
             if (GetVideoParameterBlockElementAs<BDA::GraphicsCharacterSet>(3, graphicsCharacterFontDefinition, 0x07 + 0x14) &&
                 CheckValidInCurrentMode(graphicsCharacterFontDefinition->ApplicableVideoModes))
                 SetGraphicsCharacterFont(graphicsCharacterFontDefinition);

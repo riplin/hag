@@ -8,20 +8,20 @@
 namespace Hag
 {
 
-Factory* Factory::m_factories = NULL;
+Factory* Factory::m_factories = nullptr;
 
 Driver* Factory::CreateDriver(IAllocator& allocator)
 {
-    if (m_factories == NULL)
+    if (m_factories == nullptr)
     {
         m_factories = &S3::Factory::Instance();
     }
-    Driver* driver = NULL;
+    Driver* driver = nullptr;
     Factory* factory = m_factories;
-    while (factory != NULL)
+    while (factory != nullptr)
     {
         driver = factory->InstantiateDriver(allocator);
-        if (driver != NULL)
+        if (driver != nullptr)
             break;
             
         factory = factory->m_next;

@@ -26,7 +26,10 @@ namespace MemoryModeControl
 
     enum //Mask
     {
-        Unknown1 = 0x01
+        Unknown1 = 0x01,
+        ExtendedMemoryAddress = VGA::Sequencer::MemoryModeControl::ExtendedMemoryAddress,
+        SequentialAddressingMode = VGA::Sequencer::MemoryModeControl::SequentialAddressingMode,
+        SelectChain4Mode = VGA::Sequencer::MemoryModeControl::SelectChain4Mode
     };
 
     namespace Shift
@@ -36,6 +39,9 @@ namespace MemoryModeControl
         enum
         {
             Unknown1 = 0x00,
+            ExtendedMemoryAddress = VGA::Sequencer::MemoryModeControl::Shift::ExtendedMemoryAddress,
+            SequentialAddressingMode = VGA::Sequencer::MemoryModeControl::Shift::SequentialAddressingMode,
+            SelectChain4Mode = VGA::Sequencer::MemoryModeControl::Shift::SelectChain4Mode
         };
     }
 }

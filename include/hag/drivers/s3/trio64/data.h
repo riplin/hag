@@ -7,8 +7,6 @@
 #include <hag/drivers/s3/shared/data.h>
 #include <hag/drivers/s3/trio64/trio64.h>
 
-#pragma pack(push, 1);
-
 namespace Hag { namespace S3 { namespace Trio64
 {
 
@@ -39,5 +37,3 @@ extern Shared::FirmwareFlag_t FirmwareFlags;
 }
 
 }}}
-
-#pragma pack(pop);

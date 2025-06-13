@@ -4,6 +4,7 @@
 
 #include <hag/types.h>
 #include <hag/testing/mock.h>
+#include <sys/nearptr.h>
 
 struct FARPointer
 {
@@ -15,7 +16,7 @@ struct FARPointer
 #ifdef MOCK
     template<typename T> T*ToPointer(uint32_t size = sizeof(T)) { return (T*)(&Hag::Testing::Mock::Memory::Ref((uint32_t(Segment) << 4) + Offset, size)); }
 #else
-    template<typename T> T*ToPointer(uint32_t size = sizeof(T)) { return (T*)((uint32_t(Segment) << 4) + Offset); }
+    template<typename T> T*ToPointer(uint32_t size = sizeof(T)) { return (T*)(((uint32_t(Segment) << 4) + Offset) + __djgpp_conventional_base); }
 #endif
 
     uint16_t Offset;

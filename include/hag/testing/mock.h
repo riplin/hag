@@ -2,6 +2,8 @@
 
 #pragma once
 
+#ifdef MOCK
+
 #include <hag/drivers/vga/regtype.h>
 #include <hag/ialloc.h>
 
@@ -12,7 +14,7 @@ class CustomPortHandler
 public:
     inline CustomPortHandler(const char* name)
         : m_Name(name)
-        , m_Next(NULL)
+        , m_Next(nullptr)
     {
 
     }
@@ -49,7 +51,7 @@ private:
 
 template<typename T> T* customporthandler_cast(CustomPortHandler* ptr)
 {
-    return (T*)(ptr != NULL ? ptr->CheckTypeId(T::s_ID) : NULL);
+    return (T*)(ptr != nullptr ? ptr->CheckTypeId(T::s_ID) : nullptr);
 }
 
 struct PortAndValue
@@ -65,7 +67,7 @@ void Snapshot();
 void Rollback();
 
 void AddReadOnlyPort(const char* name, uint16_t port);
-void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues, uint8_t* orMask = NULL, uint8_t* andMask = NULL);
+void AddIndexedPort(const char* name, uint16_t indexPort, uint8_t indexMask, uint16_t dataPort, uint16_t regCount, uint8_t* defaultValues, uint8_t* orMask = nullptr, uint8_t* andMask = nullptr);
 void AddReadOnlyIndexedRegister(uint16_t port, uint8_t reg);
 void AddDualPortRegister(const char* name, uint16_t readPort, uint16_t writePort, uint16_t writePort2 = 0xFFFF);
 void SetDefaultMemory(uint8_t* memory, uint32_t offset, uint32_t size);
@@ -98,8 +100,8 @@ int VerifyPortsAndValues(int instance, PortAndValue* modifiedPortsAndValues, int
                          uint16_t* readPorts, int readCount,
                          PortAndIndexAndValue* modifiedIndexedPortsAndValues, int modifiedIndexedCount,
                          PortAndIndex* readIndexedPorts, int readIndexedCount,
-                         uint16_t* ignorePorts = NULL, int ignorePortsCount = 0,
-                         PortAndIndex* ignoreIndexedPorts = NULL, int ignoreIndexedCount = NULL);
+                         uint16_t* ignorePorts = nullptr, int ignorePortsCount = 0,
+                         PortAndIndex* ignoreIndexedPorts = nullptr, int ignoreIndexedCount = 0);
 
 struct BDAFieldsAndValues
 {
@@ -109,7 +111,7 @@ struct BDAFieldsAndValues
 
 int VerifyBDAFieldsAndValues(int instance, BDAFieldsAndValues* modifiedFieldsAndValues, int modifiedCount,
                              uint8_t* readFields, int readCount,
-                             uint8_t* ignoreFields = NULL, int ignoreCount = 0);
+                             uint8_t* ignoreFields = nullptr, int ignoreCount = 0);
 
 void FetchModifiedIndexedRegisters(int instance, IndexedRegisterCheckCallback_t callback, void* context);
 void FetchModifiedRegisters(int instance, RegisterCheckCallback_t callback, void* context);
@@ -118,7 +120,7 @@ void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* con
 void SetMemoryAccessCallback(MemoryAccessCallback_t callback, void* context);
 void CompareMemoryRegions(MemoryAccess* memoryRegions, int count, int& matches);
 
-void Report(uint16_t* ignorePorts = NULL, uint16_t ignorePortsCount = 0);
+void Report(uint16_t* ignorePorts = nullptr, uint16_t ignorePortsCount = 0);
 bool HasDifferences();
 void Reset();
 
@@ -163,7 +165,7 @@ namespace PCI
     public:
         inline Device(const char* name)
             : m_Name(name)
-            , m_Next(NULL)
+            , m_Next(nullptr)
         {
 
         }
@@ -216,7 +218,7 @@ namespace PCI
 
     template<typename T> T* device_cast(Device* ptr)
     {
-        return (T*)(ptr != NULL ? ptr->CheckTypeId(T::s_ID) : NULL);
+        return (T*)(ptr != nullptr ? ptr->CheckTypeId(T::s_ID) : nullptr);
     }
     
     void RegisterDevice(uint32_t instance, Device* ptr);
@@ -247,3 +249,5 @@ Hag::Testing::Mock::VerifyBDAFieldsAndValues(Instance, ModifiedFields,          
                     sizeof(ModifiedFields) / sizeof(Hag::Testing::Mock::BDAFieldsAndValues),    \
                     ReadFields, sizeof(ReadFields) / sizeof(uint8_t)                            \
                     IgnoreFields, sizeof(IgnoreFields) / sizeof(uint8_t));
+
+#endif
