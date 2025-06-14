@@ -134,8 +134,10 @@ BDA_VideoParameterControlBlockPtrSeg    EQU 04aah;word 0x4aa
             BDA_SACSO_FontData          EQU 03h;0x03   dword   font table pointer
             BDA_SACSO_ApplicableModeLst EQU 07h;07   nbytes  array of mode values for this font
                                                ;07+n byte    FFh end of mode list marker
-
         BDA_SSP_UserPaletteProfileTbl   EQU 0ah;0x0a  dword  pointer to user palette profile table  (VGA)    
+        BDA_SSP_Reserved0E              EQU 0eh;0x0e  dword  reserved
+	    BDA_SSP_Reserved12              EQU 12h;0x12  dword  reserved
+	    BDA_SSP_Reserved16              EQU 16h;0x16  dword  reserved
     BDA_VPCB_DisplayCombinationCodePtr  EQU 02h;dword 0x02
         BDA_DCC_NoDisplay               EQU 000h;0x00   No display
         BDA_DCC_MDPA                    EQU 001h;0x01   Monochrome display and printer adapter (MDPA)
@@ -165,25 +167,28 @@ BDA_PrintScreenStatus                   EQU 0500h;Byte 0x500
     BDA_PSS_InProgress                  EQU 01h
     BDA_PSS_Error                       EQU 0FFh
 
-INT_5_Handler                           EQU 0014h   ;Word 0x14
+INT_5_Handler                           EQU 0014h   ;DWord 0x14
 INT_5_HandlerOfs                        EQU 0014h   ;Word 0x14
 INT_5_HandlerSeg                        EQU 0016h   ;Word 0x16
-INT_10_Handler                          EQU 0040h   ;Word 0x40
+INT_10_Handler                          EQU 0040h   ;DWord 0x40
 INT_10_HandlerOfs                       EQU 0040h   ;Word 0x40
 INT_10_HandlerSeg                       EQU 0042h   ;Word 0x42
-INT_1D_Handler                          EQU 0074h   ;Word 0x74
+INT_1A_Handler                          EQU 0068h   ;DWord 0x68
+INT_1A_HandlerOfs                       EQU 0068h   ;DWord 0x68
+INT_1A_HandlerSeg                       EQU 006ah   ;DWord 0x6a
+INT_1D_Handler                          EQU 0074h   ;DWord 0x74
 INT_1D_HandlerOfs                       EQU 0074h   ;Word 0x74
 INT_1D_HandlerSeg                       EQU 0076h   ;Word 0x76
-INT_1F_Handler                          EQU 007ch   ;Word 0x7c
+INT_1F_Handler                          EQU 007ch   ;DWord 0x7c
 INT_1F_HandlerOfs                       EQU 007ch   ;Word 0x7c
 INT_1F_HandlerSeg                       EQU 007eh   ;Word 0x7e
-INT_42_Handler                          EQU 0108h   ;Word 0x108
+INT_42_Handler                          EQU 0108h   ;DWord 0x108
 INT_42_HandlerOfs                       EQU 0108h   ;Word 0x108
 INT_42_HandlerSeg                       EQU 010ah   ;Word 0x10a
-INT_43_Handler                          EQU 010ch   ;Word 0x10c
+INT_43_Handler                          EQU 010ch   ;DWord 0x10c
 INT_43_HandlerOfs                       EQU 010ch   ;Word 0x10c
 INT_43_HandlerSeg                       EQU 010eh   ;Word 0x10e
-INT_6D_Handler                          EQU 01b4h   ;Word 0x1b4
+INT_6D_Handler                          EQU 01b4h   ;DWord 0x1b4
 INT_6D_HandlerOfs                       EQU 01b4h   ;Word 0x1b4
 INT_6D_HandlerSeg                       EQU 01b6h   ;Word 0x1b6
 SYS_INT_10h_HandlerOfs                  EQU 0f065h  ;Word 0xf065

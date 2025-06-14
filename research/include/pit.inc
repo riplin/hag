@@ -23,3 +23,19 @@ PIT_ModeCommand                         EQU 043h;0x43
     PIT_MC_ChanSel_1                    EQU 040h;0x40
     PIT_MC_ChanSel_2                    EQU 080h;0x80
     PIT_MC_ChanSel_ReadBackCommand      EQU 0c0h;0xc0
+
+;PORT 00EB - DUMMY PORT FOR DELAY???
+;Note:  on a number of machines, the BIOS appears to write a copy of any
+;       data sent to numerous other ports to this port as well; it seems
+;       to be a dummy port used for short delays between writes to other
+;       ports (used instead of JMP $+2, which no longer delays on Pentium+)
+
+DUMMY_DelayEB                           EQU 0ebh;0xeb
+
+;PORT 00ED - DUMMY PORT FOR DELAY???
+;Note:  on a number of machines, the BIOS appears to write a copy of any
+;       data sent to numerous other ports to this port as well; it seems
+;       to be a dummy port used for short delays between writes to other
+;       ports (used instead of JMP $+2, which no longer delays on Pentium+)
+
+DUMMY_DelayED                           EQU 0edh;0xed
