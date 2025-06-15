@@ -1,0 +1,107 @@
+;3Dfx Voodoo Banshee Registers (only includes the ones used by the BIOS)
+
+
+TDFX_IO_Status                                  EQU 000h;0x00
+TDFX_IO_PCIInit                                 EQU 004h;0x04
+TDFX_IO_SIPMonitor                              EQU 008h;0x08
+TDFX_IO_LFBMemoryConfig                         EQU 00ch;0x0c
+TDFX_IO_MiscInit0                               EQU 010h;0x10
+TDFX_IO_MiscInit1                               EQU 014h;0x14
+TDFX_IO_DRamInit0                               EQU 018h;0x18
+    TDFX_DI0_SGRAMChipsetCount                  EQU 004000000h;0x04000000
+        TDFX_DI0_1Chipset                       EQU 000000000h;0x00000000
+        TDFX_DI0_2Chipsets                      EQU 004000000h;0x04000000
+    TDFX_DI0_SGRAMType                          EQU 008000000h;0x08000000
+        TDFX_DI0_SGRAM8Mbit                     EQU 000000000h;0x00000000
+        TDFX_DI0_SGRAM16Mbit                    EQU 008000000h;0x08000000
+    TDFX_DI0_Unknown28_31                       EQU 0f0000000h;0xf0000000
+TDFX_IO_DRamInit1                               EQU 01ch;0x1c
+    TDFX_DI1_PowerOnTime                        EQU 002000000h;0x02000000
+        TDFX_DI1_LongPowerOn                    EQU 000000000h;0x00000000
+        TDFX_DI1_ShortPowerOn                   EQU 002000000h;0x02000000
+    TDFX_DI1_RamType                            EQU 040000000h;0x40000000
+        TDFX_DI1_SGRAM                          EQU 000000000h;0x00000000
+        TDFX_DI1_SDRAM                          EQU 040000000h;0x40000000
+    TDFX_DI1_Unknown31                          EQU 080000000h;0x80000000
+TDFX_IO_AgpInit                                 EQU 020h;0x20
+TDFX_IO_TMUGbeInit                              EQU 024h;0x20
+TDFX_IO_VGAInit0                                EQU 028h;0x28
+    TDFX_VI0_EnableVGAExtensions                EQU 040h;0x40
+    TDFX_VI0_Reserved7                          EQU 080h;0x80
+    TDFX_VI0_WakeUpSelect                       EQU 100h;0x100
+TDFX_IO_VGAInit1                                EQU 02ch;0x2c
+TDFX_IO_DRamCommand                             EQU 030h;0x30
+    TDFX_DRC_BurstLength_MASK                   EQU 000000007h;0x00000007
+    TDFX_DRC_BurstType                          EQU 000000008h;0x00000008
+        TDFX_DRC_BurstTypeSequential            EQU 000000000h;0x00000000
+        TDFX_DRC_BurstTypeInterleave            EQU 000000008h;0x00000008
+    TDFX_DRC_CASLatency_MASK                    EQU 000000070h;0x00000070
+    TDFX_DRC_TestMode_MASK                      EQU 000000180h;0x00000180
+        TDFX_DRC_TestMode0                      EQU 000000000h;0x00000000
+        TDFX_DRC_TestMode1                      EQU 000000080h;0x00000080
+        TDFX_DRC_TestMode2                      EQU 000000100h;0x00000100
+        TDFX_DRC_TestMode3                      EQU 000000180h;0x00000180
+    TDFX_DRC_WriteBurstLength                   EQU 000000200h;0x00000200
+        TDFX_DRC_WriteBurst                     EQU 000000000h;0x00000000
+        TDFX_DRC_SingleBit                      EQU 000000200h;0x00000200
+        TDFX_DRC_SGRamDefined                   EQU 000000400h;0x00000400
+TDFX_IO_DRamData                                EQU 034h;0x34
+TDFX_IO_PLLControl0                             EQU 040h;0x40
+TDFX_IO_PLLControl1                             EQU 044h;0x44
+TDFX_IO_PLLControl2                             EQU 048h;0x48
+TDFX_IO_DACMode                                 EQU 04ch;0x4c
+    TDFX_DM_Mode                                EQU 001h;0x01
+        TDFX_DM_OneToOne                        EQU 000h;0x00
+        TDFX_DM_TwoToOne                        EQU 001h;0x01
+    TDFX_DM_VSyncDPMS                           EQU 002h;0x02
+        TDFX_DM_VSyncDPMSDisable                EQU 000h;0x00
+        TDFX_DM_VSyncDPMSEnable                 EQU 002h;0x02
+    TDFX_DM_VSyncValue                          EQU 004h;0x04
+        TDFX_DM_VSyncOff                        EQU 000h;0x00
+        TDFX_DM_VSyncOn                         EQU 004h;0x04
+    TDFX_DM_HSyncDPMS                           EQU 008h;0x08
+        TDFX_DM_HSyncDPMSDisable                EQU 000h;0x00
+        TDFX_DM_HSyncDPMSEnable                 EQU 008h;0x08
+    TDFX_DM_HSyncValue                          EQU 010h;0x10
+        TDFX_DM_HSyncOff                        EQU 000h;0x00
+        TDFX_DM_HSyncOn                         EQU 010h;0x10
+    TDFX_DM_CRC2CollectionMode                  EQU 020h;0x20
+TDFX_IO_DACAddress                              EQU 050h;0x50
+TDFX_IO_DACData                                 EQU 054h;0x54
+TDFX_IO_RGBMaxDelta                             EQU 058h;0x58
+TDFX_IO_VideoProcessorConfig                    EQU 05ch;0x5c
+TDFX_IO_HardwareCursorPatternAddress            EQU 060h;0x60
+TDFX_IO_HardwareCursorLocation                  EQU 064h;0x64
+TDFX_IO_HardwareCursor0                         EQU 068h;0x68
+TDFX_IO_HardwareCursor1                         EQU 06ch;0x6c
+TDFX_IO_VideoInFormat                           EQU 070h;0x70
+TDFX_IO_VideoInStatus                           EQU 074h;0x74
+TDFX_IO_VideoSerialParallelPort                 EQU 078h;0x78
+    TDFX_VSPP_DDC_Availability                  EQU 000040000h;0x00040000
+    TDFX_VSPP_DDC_Disabled                      EQU 000000000h;0x00000000
+    TDFX_VSPP_DDC_Enabled                       EQU 000040000h;0x00040000
+    TDFX_VSPP_DDC_HostClock                     EQU 000080000h;0x00080000
+    TDFX_VSPP_DDC_HostData                      EQU 000100000h;0x00100000
+    TDFX_VSPP_DDC_MonitorClock                  EQU 000200000h;0x00200000
+    TDFX_VSPP_DDC_MonitorData                   EQU 000400000h;0x00400000
+TDFX_IO_VideoInXDecimDeltas                     EQU 07ch;0x7c
+TDFX_IO_VideoInDecimInitErrors                  EQU 080h;0x80
+TDFX_IO_VideoInYDecimDeltas                     EQU 084h;0x84
+TDFX_IO_VideoPixelBufferTHold                   EQU 088h;0x88
+TDFX_IO_VideoChromaMin                          EQU 08ch;0x8c
+TDFX_IO_VideoChromaMax                          EQU 090h;0x90
+TDFX_IO_VideoCurrentLine                        EQU 094h;0x94
+TDFX_IO_VideoScreenSize                         EQU 098h;0x98
+TDFX_IO_VideoOverlayStartCoordinates            EQU 09ch;0x9c
+TDFX_IO_VideoOverlayEndScreenCoordinate         EQU 0a0h;0xa0
+TDFX_IO_VideoOverlayDudx                        EQU 0a4h;0xa4
+TDFX_IO_VideoOverlayDudxOffsetScreenWidth       EQU 0a8h;0xa8
+TDFX_IO_VideoOverlayDvdy                        EQU 0ach;0xac
+TDFX_IO_VideoOverlayDvDyOffset                  EQU 0e0h;0xe0
+TDFX_IO_VideoDesktopStartAddress                EQU 0e4h;0xe4
+TDFX_IO_VideoDesktopOverlayStride               EQU 0e8h;0xe8
+TDFX_IO_VideoInAddress0                         EQU 0ech;0xec
+TDFX_IO_VideoInAddress1                         EQU 0f0h;0xf0
+TDFX_IO_VideoInAddress2                         EQU 0f4h;0xf4
+TDFX_IO_VideoInStride                           EQU 0f8h;0xf8
+TDFX_IO_VideoCurrentOverlayStartAddress         EQU 0fch;0xfc

@@ -27,6 +27,7 @@ include ..\..\include\vga.inc
 include ..\..\include\pit.inc
 include ..\..\include\vesa.inc
 include ..\..\include\keyboard.inc
+include banshee.inc
 
 PCI_VENDOR_3Dfx                         EQU 121ah;0x121a
 PCI_DEVICE_Banshee                      EQU 0003h;0x0003
@@ -160,12 +161,12 @@ Func0x110 PROC NEAR                     ;Offset 0x110
     mov    es, bp
     mov    bp, offset BootSplash        ;Offset 0x7708
     int    10h
-    call   Func0x3542                   ;Offset 0x3542
-    mov    cx, word ptr cs:[Data0x77f2] ;Offset 0x77f2
-Label0x174:
+    call   PrintNameAndMemorySize       ;Offset 0x3542
+    mov    cx, word ptr cs:[SplashWaitFrames];Offset 0x77f2
+WaitLoop:                               ;Offset 0x174
     call   WaitUntilVSyncInactive       ;Offset 0x406a
     call   WaitUntilVSyncActive         ;Offset 0x4057
-    loop   Label0x174                   ;Offset 0x174
+    loop   WaitLoop                     ;Offset 0x174
     ret
 Func0x110 ENDP
 
@@ -1475,14 +1476,14 @@ Func0xa35 ENDP
 Func0xad2 PROC NEAR                     ;Offset 0xad2
     inc       byte ptr [bp + 07h]
     mov       dl, byte ptr [bp + 07h]
-    call      Func0x3cbb                ;Offset 0x3cbb
+    call      SetVGAWriteAperture       ;Offset 0x3cbb
     jmp       Func0xb4a                 ;Offset 0xb4a
 Func0xad2 ENDP
 
 Func0xadd PROC NEAR                     ;Offset 0xadd
     inc       byte ptr [bp + 07h]
     mov       dl, byte ptr [bp + 07h]
-    call      Func0x3cbb                ;Offset 0x3cbb
+    call      SetVGAWriteAperture       ;Offset 0x3cbb
     jmp       Func0xb51                 ;Offset 0xb51
 Func0xadd ENDP
 
@@ -1514,7 +1515,7 @@ Label0xb1f:                             ;Offset 0xb1f
     add       ax, cx
     mov       di, ax
     adc       dx, 0000h
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
     mov       byte ptr [bp + 07h], dl
     pop       cx
     mov       al, ch
@@ -1606,7 +1607,7 @@ Label0xbca:                             ;Offset 0xbca
     add       ax, bx
     mov       di, ax
     adc       dx, 0000h
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
     mov       byte ptr [bp + 07h], dl
     mov       byte ptr [bp + 08h], dl
     pop       cx
@@ -1629,7 +1630,7 @@ Label0xbca:                             ;Offset 0xbca
     add       si, ax
     adc       dx, 0000h
     add       dl, byte ptr [bp + 07h]
-    call      Func0x3c66                ;Offset 0x3c66
+    call      SetVGAReadAperture        ;Offset 0x3c66
     mov       byte ptr [bp + 08h], dl
     pop       dx
     pop       ax
@@ -1682,32 +1683,32 @@ Label0xc3e:                             ;Offset 0xc3e
 Label0xc46:                             ;Offset 0xc46
     inc       byte ptr [bp + 7]
     mov       dl, byte ptr [bp + 7]
-    call      Func0x3cbb                ;Offset 0x3cbb
+    call      SetVGAWriteAperture       ;Offset 0x3cbb
     jmp       Label0xc1b                ;Offset 0xc1b
 Label0xc51:                             ;Offset 0xc51
     inc       byte ptr [bp + 8]
     mov       dl, byte ptr [bp + 8]
-    call      Func0x3c66                ;Offset 0x3c66
+    call      SetVGAReadAperture        ;Offset 0x3c66
     jmp       Label0xc1f                ;Offset 0xc1f
 Label0xc5c:                             ;Offset 0xc5c
     inc       byte ptr [bp + 7]
     mov       dl, byte ptr [bp + 7]
-    call      Func0x3cbb                ;Offset 0x3cbb
+    call      SetVGAWriteAperture       ;Offset 0x3cbb
     jmp       Label0xc26                ;Offset 0xc26
 Label0xc67:                             ;Offset 0xc67
     inc       byte ptr [bp + 8]
     mov       dl, byte ptr [bp + 8]
-    call      Func0x3c66                ;Offset 0x3c66
+    call      SetVGAReadAperture        ;Offset 0x3c66
     jmp       Label0xc2b                ;Offset 0xc2b
 Label0xc72:                             ;Offset 0xc72
     inc       byte ptr [bp + 7]
     mov       dl, byte ptr [bp + 7]
-    call      Func0x3cbb                ;Offset 0x3cbb
+    call      SetVGAWriteAperture       ;Offset 0x3cbb
     jmp       Label0xc36                ;Offset 0xc36
 Label0xc7d:                             ;Offset 0xc7d
     inc       byte ptr [bp + 7]
     mov       dl, byte ptr [bp + 7]
-    call      Func0x3cbb                ;Offset 0x3cbb
+    call      SetVGAWriteAperture       ;Offset 0x3cbb
     jmp       Label0xc3e                ;Offset 0xc3e
 Func0xb5a ENDP
 
@@ -2006,7 +2007,7 @@ Label0xe98:                             ;Offset 0xe98
     adc       dx, 0000h
     sub       di, word ptr [bp + 02h]
     sbb       dx, 00h
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
     mov       byte ptr [bp + 07h], dl
     mov       byte ptr [bp + 08h], dl
     pop       cx
@@ -2034,7 +2035,7 @@ Label0xe98:                             ;Offset 0xe98
     mov       dh, byte ptr [bp + 07h]
     sub       dh, dl
     xchg      dh, dl
-    call      Func0x3c66                ;Offset 0x3c66
+    call      SetVGAReadAperture        ;Offset 0x3c66
     mov       byte ptr [bp + 08h], dl
 Label0xee3:                             ;Offset 0xee3
     pop       dx
@@ -2087,22 +2088,22 @@ Label0xf23:                             ;Offset 0xf23
     pop       bp
     ret
 Label0xf28:                             ;Offset 0xf28
-    call      Func0x3cdc                ;Offset 0x3cdc
+    call      MoveVGAWriteApertureUp64K ;Offset 0x3cdc
     jmp       Label0xefa                ;Offset 0xefa
 Label0xf2d:                             ;Offset 0xf2d
-    call      Func0x3c8d                ;Offset 0x3c8d
+    call      MoveVGAReadApertureUp64K  ;Offset 0x3c8d
     jmp       Label0xefe                ;Offset 0xefe
 Label0xf32:                             ;Offset 0xf32
-    call      Func0x3cf0                ;Offset 0x3cf0
+    call      MoveVGAWriteApertureDown64K;Offset 0x3cf0
     jmp       Label0xf06                ;Offset 0xf06
 Label0xf37:                             ;Offset 0xf37
-    call      Func0x3ca4                ;Offset 0x3ca4
+    call      MoveVGAReadApertureDown64K;Offset 0x3ca4
     jmp       Label0xf0e                ;Offset 0xf0e
 Label0xf3c:                             ;Offset 0xf3c
-    call      Func0x3cdc                ;Offset 0x3cdc
+    call      MoveVGAWriteApertureUp64K ;Offset 0x3cdc
     jmp       Label0xf16                ;Offset 0xf16
 Label0xf41:                             ;Offset 0xf41
-    call      Func0x3cf0                ;Offset 0x3cf0
+    call      MoveVGAWriteApertureDown64K;Offset 0x3cf0
     jmp       Label0xf21                ;Offset 0xf21
 Func0xe27 ENDP
 
@@ -2440,7 +2441,7 @@ Func0x117c PROC NEAR                    ;Offset 0x117c
     mul        di
     add        si, ax
     adc        dx, 00h
-    call       Func0x3c10               ;Offset 0x3c10
+    call       SetVGAReadWriteAperture64K;Offset 0x3c10
     mov        dx, di
     les        di, ds:[INT_43_Handler]  ;Offset 0x10c
     call       GetA000SelectorInDS      ;Offset 0x3f5e
@@ -2494,7 +2495,7 @@ Label0x11f9:                            ;Offset 0x11f9
     pop        cx
     ret
 Label0x1201:                            ;Offset 0x1201
-    call       Func0x3c4f               ;Offset 0x3c4f
+    call       MoveVGAReadWriteAperturesUp64K;Offset 0x3c4f
     jmp        Label0x11df              ;Offset 0x11df
 Func0x117c ENDP
 
@@ -3409,7 +3410,7 @@ Func0x17e1 PROC NEAR                    ;Offset 0x17e1
     mul        bp
     add        ax, si
     adc        dx, 0000h
-    call       Func0x3c10               ;Offset 0x3c10
+    call       SetVGAReadWriteAperture64K;Offset 0x3c10
     mov        di, ax
     pop        ax
     mul        cl
@@ -3430,12 +3431,12 @@ Label0x1825:                            ;Offset 0x1825
     stosb
     test       di, di
     jne        Label0x182d              ;Offset 0x182d
-    call       Func0x3c4f               ;Offset 0x3c4f
+    call       MoveVGAReadWriteAperturesUp64K;Offset 0x3c4f
 Label0x182d:                            ;Offset 0x182d
     loop       Label0x181d              ;Offset 0x181d
     add        di, bp
     jae        Label0x1836              ;Offset 0x1836
-    call       Func0x3c4f               ;Offset 0x3c4f
+    call       MoveVGAReadWriteAperturesUp64K;Offset 0x3c4f
 Label0x1836:                            ;Offset 0x1836
     dec        dx
     jne        Label0x1817              ;Offset 0x1817
@@ -3465,7 +3466,7 @@ Func0x183f PROC NEAR                    ;Offset 0x183f
     add        ax, si
     adc        dx, 0000h
     mov        di, ax
-    call       Func0x3c10               ;Offset 0x3c10
+    call       SetVGAReadWriteAperture64K;Offset 0x3c10
     pop        ax
     mul        cl
     lds        si, ds:[INT_43_Handler]  ;Offset 0x10c
@@ -3497,7 +3498,7 @@ Label0x1889:                            ;Offset 0x1889
     pop        bx
     ret
 Label0x1892:                            ;Offset 0x1892
-    call       Func0x3c4f               ;Offset 0x3c4f
+    call       MoveVGAReadWriteAperturesUp64K;Offset 0x3c4f
     jmp        Label0x1889              ;Offset 0x1889
 Func0x183f ENDP
 
@@ -3530,7 +3531,7 @@ Label0x18c4:                            ;Offset 0x18c4
     add        ax, si
     adc        dx, 0000h
     mov        di, ax
-    call       Func0x3c10               ;Offset 0x3c10
+    call       SetVGAReadWriteAperture64K;Offset 0x3c10
     pop        ax
     mul        cl
     lds        si, ds:[INT_43_Handler]  ;Offset 0x10c
@@ -3567,7 +3568,7 @@ Label0x1902:                            ;Offset 0x1902
     pop        bx
     ret
 Label0x190c:                            ;Offset 0x190c
-    call       Func0x3c4f               ;Offset 0x3c4f
+    call       MoveVGAReadWriteAperturesUp64K;Offset 0x3c4f
     jmp        Label0x1902              ;Offset 0x1902
 Func0x1897 ENDP
 
@@ -6284,7 +6285,7 @@ Label0x2a63:                            ;Offset 0x2a63
     sub       al, al
     rep stosb
     pop       di
-    call      Func0x37fc                ;Offset 0x37fc
+    call      GetMemorySizeIn256KBlocks ;Offset 0x37fc
     shl       ax, 02h
     mov       word ptr es:[di + VESA_INFO_MemoryIn64KBBlocks], ax;Offset 0x12
     mov       word ptr es:[di + VESA_INFO_Version], 0300h;Offset 0x4
@@ -6359,14 +6360,14 @@ Func0x2b1c PROC NEAR                    ;Offset 0x2b1c
     push      bp
     push      es
     mov       bp, es
-    call      Func0x3852                ;Offset 0x3852
+    call      EnableVGAExtensions       ;Offset 0x3852
     mov       ax, cx
     cmp       ax, 0100h
     jae       Label0x2b31               ;Offset 0x2b31
     call      FindModeData              ;Offset 0x40d9
     jmp       Label0x2b34               ;Offset 0x2b34
 Label0x2b31:                            ;Offset 0x2b31
-    call      Func0x41a9                ;Offset 0x41a9
+    call      FindVESAModeData          ;Offset 0x41a9
 Label0x2b34:                            ;Offset 0x2b34
     jb        Label0x2b4d               ;Offset 0x2b4d
     push      es
@@ -6575,9 +6576,9 @@ Func0x2cba ENDP
 
 Func0x2ce2 PROC NEAR                    ;Offset 0x2ce2
     push      eax
-    cmp       bl, 13h
+    cmp       bl, BDA_DM_320x200_256_Color_Graphics;0x13
     jbe       Label0x2cfb               ;Offset 0x2cfb
-    call      Func0x3817                ;Offset 0x3817
+    call      GetLinearFrameBuffer      ;Offset 0x3817
     mov       dword ptr es:[di + VESA_MODE_INFO_LinearFrameBufferAddress], eax;Offset 0x28
     test      eax, eax
     je        Label0x2cfb               ;Offset 0x2cfb
@@ -6589,7 +6590,7 @@ Func0x2ce2 ENDP
 
 Func0x2cfe PROC NEAR                    ;Offset 0x2cfe
     push      eax
-    call      Func0x3998                ;Offset 0x3998
+    call      GetMaxPixelClockHz        ;Offset 0x3998
     mov       dword ptr es:[di + VESA_MODE_INFO_MaxPixelClockHz], eax;Offset 0x3e
     pop       eax
     ret
@@ -6618,7 +6619,7 @@ Func0x2d0b PROC NEAR                    ;Offset 0x2d0b
     mov       ax, 0000h
     mov       dx, 0004h
     je        Label0x2d4a               ;Offset 0x2d4a
-    call      Func0x37fc                ;Offset 0x37fc
+    call      GetMemorySizeIn256KBlocks ;Offset 0x37fc
     shl       ax, 02h
     mov       bx, ax
     mov       ax, 8000h
@@ -6711,13 +6712,13 @@ CPUVideoMemoryControl PROC NEAR         ;Offset 0x2dc4
     je        Label0x2ddb               ;Offset 0x2ddb
     test      bh, bh
     jne       Label0x2dda               ;Offset 0x2dda
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
 Label0x2dd7:                            ;Offset 0x2dd7
     mov       ax, 004fh
 Label0x2dda:                            ;Offset 0x2dda
     ret
 Label0x2ddb:                            ;Offset 0x2ddb
-    call      Func0x3c3b                ;Offset 0x3c3b
+    call      GetVGAWriteApertureAddress64K;Offset 0x3c3b
     jmp       Label0x2dd7               ;Offset 0x2dd7
 CPUVideoMemoryControl ENDP
 
@@ -6728,18 +6729,18 @@ Func0x2de0 PROC FAR                     ;Offset 0x2de0
     je        Label0x2df1               ;Offset 0x2df1
     test      bh, bh
     jne       Label0x2df0               ;Offset 0x2df0
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
 Label0x2df0:                            ;Offset 0x2df0
     retf
 Label0x2df1:                            ;Offset 0x2df1
-    call      Func0x3c3b                ;Offset 0x3c3b
+    call      GetVGAWriteApertureAddress64K;Offset 0x3c3b
     retf
 Func0x2de0 ENDP
 
 LogicalScanLineLengthHandling PROC NEAR ;Offset 0x2df5
     push      bp
     push      di
-    call      Func0x3852                ;Offset 0x3852
+    call      EnableVGAExtensions       ;Offset 0x3852
     mov       al, bl
     test      al, al
     je        Label0x2e16               ;Offset 0x2e16
@@ -7032,7 +7033,7 @@ Data0x2fb2              DW offset VESANotImplemented;Offset 0x2af6
                         DW offset VESANotImplemented;Offset 0x2af6
 
 DisplayStartHandling PROC NEAR          ;Offset 0x2fc6
-    call   Func0x3852                   ;Offset 0x3852
+    call   EnableVGAExtensions          ;Offset 0x3852
     cmp    bl, 01h
     je     Label0x2ff6                  ;Offset 0x2ff6
     test   bl, bl
@@ -7337,26 +7338,26 @@ GetNearestPixelClock ENDP
 PowerManagement PROC NEAR               ;Offset 0x31af
     mov    ax, 014fh
     cmp    bl, 02h
-    ja     Label0x31cf                  ;Offset 0x31cf
-    je     Label0x31c9                  ;Offset 0x31c9
+    ja     Return                       ;Offset 0x31cf
+    je     GetDisplayPowerState         ;Offset 0x31c9
     test   bl, bl
-    jne    Label0x31c2                  ;Offset 0x31c2
-    mov    bx, 0710h
-    jmp    Label0x31cc                  ;Offset 0x31cc
-Label0x31c2:                            ;Offset 0x31c2
-    call   Func0x3afd                   ;Offset 0x3afd
-    jb     Label0x31cf                  ;Offset 0x31cf
-    jmp    Label0x31cc                  ;Offset 0x31cc
-Label0x31c9:                            ;Offset 0x31c9
-    call   Func0x3b3b                   ;Offset 0x3b3b
-Label0x31cc:                            ;Offset 0x31cc
+    jne    SetDisplayPowerState         ;Offset 0x31c2
+    mov    bx, 0710h                    ;BL = Version 1.0, BH = Supports: Standby, Suspend, Off. Not supported: Reduced on
+    jmp    Success                      ;Offset 0x31cc
+SetDisplayPowerState:                   ;Offset 0x31c2
+    call   SetMonitorSleepWakeStatus    ;Offset 0x3afd
+    jb     Return                       ;Offset 0x31cf
+    jmp    Success                      ;Offset 0x31cc
+GetDisplayPowerState:                   ;Offset 0x31c9
+    call   GetMonitorSleepWakeStatus    ;Offset 0x3b3b
+Success:                                ;Offset 0x31cc
     mov    ax, 004fh
-Label0x31cf:                            ;Offset 0x31cf
+Return:                                 ;Offset 0x31cf
     ret
 PowerManagement ENDP
 
 DisplayDataChannel PROC NEAR            ;Offset 0x31d0
-    call   Func0x3852                   ;Offset 0x3852
+    call   EnableVGAExtensions          ;Offset 0x3852
     mov    ah, 01h
     cmp    bl, 01h
     jb     Label0x31e4                  ;Offset 0x31e4
@@ -7446,16 +7447,16 @@ Func0x3246 ENDP
 
 Func0x3267 PROC NEAR                    ;Offset 0x3267
     pushaw
-    call   Func0x3be2                   ;Offset 0x3be2
+    call   EnableDDC                    ;Offset 0x3be2
     call   SpeedSensitiveWaitLoop       ;Offset 0x328a
-    call   Func0x3b58                   ;Offset 0x3b58
+    call   DDCSetClockAndDataTriState   ;Offset 0x3b58
     call   SpeedSensitiveWaitLoop       ;Offset 0x328a
     mov    bx, 0028h
 Label0x3277:                            ;Offset 0x3277
     sub    cx, cx
-    call   Func0x3bb8                   ;Offset 0x3bb8
+    call   DDCReadMonitorClock          ;Offset 0x3bb8
     jne    Label0x3286                  ;Offset 0x3286
-    call   Func0x3bcd                   ;Offset 0x3bcd
+    call   DDCReadMonitorData           ;Offset 0x3bcd
     jne    Label0x3286                  ;Offset 0x3286
     dec    bx
     jne    Label0x3277                  ;Offset 0x3277
@@ -7478,14 +7479,14 @@ SpeedSensitiveWaitLoop ENDP
 
 Func0x3294 PROC NEAR                    ;Offset 0x3294
     pushaw
-    call      Func0x3b58                ;Offset 0x3b58
+    call      DDCSetClockAndDataTriState;Offset 0x3b58
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      Func0x32f2                ;Offset 0x32f2
-    call      Func0x3b88                ;Offset 0x3b88
+    call      DDCSetClockTriStateAndDataLow;Offset 0x3b88
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
-    call      Func0x3ba3                ;Offset 0x3ba3
+    call      DDCSetClockAndDataLow     ;Offset 0x3ba3
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     sub       cx, cx
@@ -7495,7 +7496,7 @@ Func0x3294 PROC NEAR                    ;Offset 0x3294
 Func0x3294 ENDP
 
 Func0x32b8 PROC NEAR                    ;Offset 0x32b8
-    call      Func0x3bf9                ;Offset 0x3bf9
+    call      DisableDDC                ;Offset 0x3bf9
     ret
 Func0x32b8 ENDP
 
@@ -7517,14 +7518,14 @@ Func0x32bc ENDP
 
 Func0x32d4 PROC NEAR                    ;Offset 0x32d4
     pushaw
-    call      Func0x3ba3                ;Offset 0x3ba3
+    call      DDCSetClockAndDataLow     ;Offset 0x3ba3
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
-    call      Func0x3b88                ;Offset 0x3b88
+    call      DDCSetClockTriStateAndDataLow;Offset 0x3b88
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      Func0x32f2                ;Offset 0x32f2
-    call      Func0x3b58                ;Offset 0x3b58
+    call      DDCSetClockAndDataTriState;Offset 0x3b58
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     popaw
     ret
@@ -7536,7 +7537,7 @@ Func0x32f2 PROC NEAR                    ;Offset 0x32f2
 Label0x32f6:                            ;Offset 0x32f6
     sub       cx, cx
 Label0x32f8:                            ;Offset 0x32f8
-    call      Func0x3bb8                ;Offset 0x3bb8
+    call      DDCReadMonitorClock       ;Offset 0x3bb8
     jne       Label0x3305               ;Offset 0x3305
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     loop      Label0x32f8               ;Offset 0x32f8
@@ -7555,32 +7556,32 @@ Label0x330d:                            ;Offset 0x330d
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     test      al, 80h
     je        Label0x332a               ;Offset 0x332a
-    call      Func0x3b6d                ;Offset 0x3b6d
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
-    call      Func0x3b58                ;Offset 0x3b58
+    call      DDCSetClockAndDataTriState;Offset 0x3b58
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      Func0x32f2                ;Offset 0x32f2
     je        Label0x335b               ;Offset 0x335b
-    call      Func0x3b6d                ;Offset 0x3b6d
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
     jmp       Label0x333b               ;Offset 0x333b
 Label0x332a:                            ;Offset 0x332a
-    call      Func0x3ba3                ;Offset 0x3ba3
+    call      DDCSetClockAndDataLow     ;Offset 0x3ba3
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
-    call      Func0x3b88                ;Offset 0x3b88
+    call      DDCSetClockTriStateAndDataLow;Offset 0x3b88
     call      Func0x32f2                ;Offset 0x32f2
     je        Label0x335b               ;Offset 0x335b
-    call      Func0x3ba3                ;Offset 0x3ba3
+    call      DDCSetClockAndDataLow     ;Offset 0x3ba3
 Label0x333b:                            ;Offset 0x333b
     shl       al, 01h
     dec       si
     jne       Label0x330d               ;Offset 0x330d
-    call      Func0x3b6d                ;Offset 0x3b6d
-    call      Func0x3b58                ;Offset 0x3b58
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
+    call      DDCSetClockAndDataTriState;Offset 0x3b58
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      Func0x32f2                ;Offset 0x32f2
     je        Label0x335b               ;Offset 0x335b
-    call      Func0x3b6d                ;Offset 0x3b6d
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
 Label0x3357:                            ;Offset 0x3357
     test      cx, cx
@@ -7600,39 +7601,39 @@ Func0x335f PROC NEAR                    ;Offset 0x335f
     mov       si, 0008h
 Label0x3368:                            ;Offset 0x3368
     shl       bl, 01h
-    call      Func0x3b58                ;Offset 0x3b58
+    call      DDCSetClockAndDataTriState;Offset 0x3b58
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      Func0x32f2                ;Offset 0x32f2
     je        Label0x33c5               ;Offset 0x33c5
-    call      Func0x3bcd                ;Offset 0x3bcd
+    call      DDCReadMonitorData        ;Offset 0x3bcd
     je        Label0x337d               ;Offset 0x337d
     or        bl, 01h
 Label0x337d:                            ;Offset 0x337d
-    call      Func0x3b6d                ;Offset 0x3b6d
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     dec       si
     jne       Label0x3368               ;Offset 0x3368
     test      dx, dx
     je        Label0x33a9               ;Offset 0x33a9
-    call      Func0x3ba3                ;Offset 0x3ba3
+    call      DDCSetClockAndDataLow     ;Offset 0x3ba3
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
-    call      Func0x3b88                ;Offset 0x3b88
+    call      DDCSetClockTriStateAndDataLow;Offset 0x3b88
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      Func0x32f2                ;Offset 0x32f2
     je        Label0x33c5               ;Offset 0x33c5
-    call      Func0x3ba3                ;Offset 0x3ba3
+    call      DDCSetClockAndDataLow     ;Offset 0x3ba3
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
-    call      Func0x3b6d                ;Offset 0x3b6d
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     jmp       Label0x33c0               ;Offset 0x33c0
 Label0x33a9:                            ;Offset 0x33a9
-    call      Func0x3b6d                ;Offset 0x3b6d
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
-    call      Func0x3b58                ;Offset 0x3b58
+    call      DDCSetClockAndDataTriState;Offset 0x3b58
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
     call      Func0x32f2                ;Offset 0x32f2
     je        Label0x33c5               ;Offset 0x33c5
-    call      Func0x3b6d                ;Offset 0x3b6d
+    call      DDCSetClockLowAndDataTriState;Offset 0x3b6d
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
 Label0x33c0:                            ;Offset 0x33c0
     call      SpeedSensitiveWaitLoop    ;Offset 0x328a
@@ -7784,7 +7785,7 @@ Func0x3506 PROC NEAR                    ;Offset 0x3506
     mov       dl, VGA_GraphicsControllerIndex_lowbyte;Port 0x3ce
     mov       ax, VGA_GCTLIdx_Miscellaneous OR ((VGA_GCTL6_GfxMode OR VGA_GCTL6_Mem_A0000_AFFFF) SHL 8);0x506
     out       dx, ax
-    call      Func0x3852                ;Offset 0x3852
+    call      EnableVGAExtensions       ;Offset 0x3852
     call      Func0x3d14                ;Offset 0x3d14
     call      Func0x3d78                ;Offset 0x3d78
     popaw
@@ -7821,7 +7822,7 @@ Func0x3541 PROC NEAR                    ;Offset 0x3541
     ret
 Func0x3541 ENDP
 
-Func0x3542 PROC NEAR                    ;Offset 0x3542
+PrintNameAndMemorySize PROC NEAR        ;Offset 0x3542
     pushaw
     sub       bh, bh
     mov       bl, byte ptr es:[DefaultAttribute];Offset 0x77f4
@@ -7835,7 +7836,7 @@ Func0x3542 PROC NEAR                    ;Offset 0x3542
     mov       cx, 0013h                 ;Length
     mov       bp, offset MemorySizeMessage ;Offset 0x7cc9
     int       10h
-    call      Func0x37fc                ;Offset 0x37fc
+    call      GetMemorySizeIn256KBlocks ;Offset 0x37fc
     mov       bp, offset Mem4096K       ;Offset 0x7cef
 Label0x356f:                            ;Offset 0x356f
     cmp       byte ptr es:[bp], 00h
@@ -7863,7 +7864,7 @@ Label0x3596:                            ;Offset 0x3596
     int       10h
     popaw
     ret
-Func0x3542 ENDP
+PrintNameAndMemorySize ENDP
 
 Func0x35a7 PROC NEAR                    ;Offset 0x35a7
     push      bx
@@ -7929,15 +7930,15 @@ Func0x35d4 ENDP
 Func0x3615 PROC NEAR                    ;Offset 0x3615
     push      eax
     push      dx
-    call      Func0x3852                ;Offset 0x3852
-    call      Func0x3d69                ;Offset 0x3d69
-    add       dx, 0028h
+    call      EnableVGAExtensions       ;Offset 0x3852
+    call      GetIOBaseAddress          ;Offset 0x3d69
+    add       dx, TDFX_IO_VGAInit0      ;0x28
     in        eax, dx
-    and       eax, 00000100h
-    or        al, 40h
+    and       eax, TDFX_VI0_WakeUpSelect;0x100
+    or        al, TDFX_VI0_EnableVGAExtensions;0x40
     out       dx, eax
     sub       dx, dx
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
     mov       dx, VGA_MiscellaneousWrite;Port 0x3c2
     mov       al, 67h                   ;IO address select, Enable RAM, Clock 28.322 MHz, High page ram, negative hsync, positive vsync
     out       dx, al
@@ -7983,9 +7984,9 @@ Func0x363c PROC NEAR                    ;Offset 0x363c
     call      ReadIndexedRegister       ;Offset 0x3f84
     and       ah, 7fh
     out       dx, ax
-    call      Func0x3d69                ;Offset 0x3d69
+    call      GetIOBaseAddress          ;Offset 0x3d69
     mov       di, dx
-    add       dx, 0040h
+    add       dx, TDFX_IO_PLLControl0   ;0x40
     sub       eax, eax
     mov       ax, word ptr es:[si + 04h]
     test      ax, ax
@@ -8080,7 +8081,7 @@ Label0x377e:                            ;Offset 0x377e
     mov       ax, 01h
     cmp       byte ptr ds:[BDA_DisplayMode], BDA_DM_320x200_256_Color_Graphics;Offset 0x449 0x13
     jbe       Label0x3793               ;Offset 0x3793
-    call      Func0x37fc                ;Offset 0x37fc
+    call      GetMemorySizeIn256KBlocks ;Offset 0x37fc
     cmp       bl, 05h
     je        Label0x3793               ;Offset 0x3793
     shl       ax, 02h
@@ -8091,14 +8092,14 @@ Label0x3793:                            ;Offset 0x3793
     mov       ax, di
     mov       dx, di
 Label0x379f:                            ;Offset 0x379f
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
     mov       cx, 8000h
     rep stosw
     inc       dx
     dec       si
     jne       Label0x379f               ;Offset 0x379f
     sub       dx, dx
-    call      Func0x3c10                ;Offset 0x3c10
+    call      SetVGAReadWriteAperture64K;Offset 0x3c10
 Label0x37b0:                            ;Offset 0x37b0
     pop       es
     pop       eax
@@ -8151,29 +8152,29 @@ Func0x37f7 ENDP
 ;Offset 0x37f8
 Data0x37f8              DB 010h, 020h, 020h, 040h
 
-Func0x37fc PROC NEAR                    ;Offset 0x37fc
+GetMemorySizeIn256KBlocks PROC NEAR     ;Offset 0x37fc
     push      bx
     push      dx
-    call      Func0x3d69                ;Offset 0x3d69
-    add       dx, 0018h
+    call      GetIOBaseAddress          ;Offset 0x3d69
+    add       dx, TDFX_IO_DRamInit0     ;0x18
     in        eax, dx
-    shr       eax, 1ah
-    and       ax, 0003h
+    shr       eax, 1ah                  ;26
+    and       ax, 0003h                 ;26-27 : number of chipsets, size of chips
     mov       bx, ax
     mov       al, byte ptr cs:[bx + Data0x37f8];Offset 0x37f8
     pop       dx
     pop       bx
     ret
-Func0x37fc ENDP
+GetMemorySizeIn256KBlocks ENDP
 
-Func0x3817 PROC NEAR                    ;Offset 0x3817
+GetLinearFrameBuffer PROC NEAR          ;Offset 0x3817
     sub       eax, eax
     cmp       byte ptr [si + 06h], 08h
     jb        Label0x3823               ;Offset 0x3823
-    call      Func0x3e1c                ;Offset 0x3e1c
+    call      GetLinearFrameBufferAddress;Offset 0x3e1c
 Label0x3823:                            ;Offset 0x3823
     ret
-Func0x3817 ENDP
+GetLinearFrameBuffer ENDP
 
 Func0x3824 PROC NEAR                    ;Offset 0x3824
     push      ax
@@ -8208,32 +8209,33 @@ Label0x384f:                            ;Offset 0x384f
     ret
 Func0x3835 ENDP
 
-Func0x3852 PROC NEAR                    ;Offset 0x3852
+EnableVGAExtensions PROC NEAR           ;Offset 0x3852
     push      ax
     push      dx
-    call      Func0x3d69                ;Offset 0x3d69
-    add       dx, 0028h
+    call      GetIOBaseAddress          ;Offset 0x3d69
+    add       dx, TDFX_IO_VGAInit0      ;0x28
     in        eax, dx
-    or        al, 40h
+    or        al, TDFX_VI0_EnableVGAExtensions;0x40
     out       dx, eax
     pop       dx
     pop       ax
     ret
-Func0x3852 ENDP
+EnableVGAExtensions ENDP
 
+;Check to see if there's enough memory for the mode.
 Func0x3863 PROC NEAR                    ;Offset 0x3863
     pushaw
     push      es
     call      FindModeData              ;Offset 0x40d9
     jb        Label0x3886               ;Offset 0x3886
-    mov       ax, word ptr es:[bx + 0bh]
-    mul       word ptr es:[bx + 09h]
+    mov       ax, word ptr es:[bx + 0bh];Bytes per scanline
+    mul       word ptr es:[bx + 09h]    ;Height in pixels or chars
     mov       cx, 8000h
     div       cx
     add       dx, 0ffffh
     adc       ax, 0000h
     xchg      ax, dx
-    call      Func0x37fc                ;Offset 0x37fc
+    call      GetMemorySizeIn256KBlocks ;Offset 0x37fc
     shl       ax, 03h
     cmp       ax, dx
 Label0x3886:                            ;Offset 0x3886
@@ -8267,21 +8269,21 @@ Func0x3890 PROC NEAR                    ;Offset 0x3890
     push      eax
     push      bx
     push      dx
-    call      Func0x3e53                ;Offset 0x3e53
+    call      VideoProcessorStatus      ;Offset 0x3e53
     jne       Label0x38a5               ;Offset 0x38a5
     call      GetCRTControllerIndexPort ;Offset 0x40aa
     mov       bx, ax
     mov       ah, al
-    mov       al, 13h
+    mov       al, VGA_CRTCIdx_Offset    ;0x13
     out       dx, ax
     jmp       Label0x38bd               ;Offset 0x38bd
 Label0x38a5:                            ;Offset 0x38a5
     shl       ax, 03h
     mov       bx, ax
-    call      Func0x3d69                ;Offset 0x3d69
-    add       dx, 00e8h
+    call      GetIOBaseAddress          ;Offset 0x3d69
+    add       dx, TDFX_IO_VideoDesktopOverlayStride;0xe8
     in        eax, dx
-    and       eax, 0ffff8000h
+    and       eax, 0ffff8000h           ;reset overlay stride to 0
     or        ax, bx
     out       dx, eax
 Label0x38bd:                            ;Offset 0x38bd
@@ -8293,7 +8295,7 @@ Func0x3890 ENDP
 
 Func0x38c2 PROC NEAR                    ;Offset 0x38c2
     push      dx
-    call      Func0x3e53                ;Offset 0x3e53
+    call      VideoProcessorStatus      ;Offset 0x3e53
     jne       Label0x38d6               ;Offset 0x38d6
     call      GetCRTControllerIndexPort ;Offset 0x40aa
     mov       al, 13h
@@ -8303,8 +8305,8 @@ Func0x38c2 PROC NEAR                    ;Offset 0x38c2
     jmp       Label0x38ee               ;Offset 0x38ee
 Label0x38d6:                            ;Offset 0x38d6
     push      eax
-    call      Func0x3d69                ;Offset 0x3d69
-    add       dx, 0e8h
+    call      GetIOBaseAddress          ;Offset 0x3d69
+    add       dx, TDFX_IO_VideoDesktopOverlayStride;0xe8
     in        eax, dx
     and       eax, 7fffh
     shr       ax, 03h
@@ -8322,7 +8324,7 @@ Func0x38f0 ENDP
 
 Func0x38f1 PROC NEAR                    ;Offset 0x38f1
     push   bx
-    call   Func0x3e53                   ;Offset 0x3e53
+    call   VideoProcessorStatus         ;Offset 0x3e53
     jne    Label0x3907                  ;Offset 0x3907
     mov    bh, dl
     mov    bl, al
@@ -8340,8 +8342,8 @@ Label0x3907:                            ;Offset 0x3907
     mov    ax, dx
     ror    eax, 10h
     shl    eax, 02h
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 00e4h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoDesktopStartAddress;0xe4
     out    dx, eax
     pop    dx
     pop    eax
@@ -8352,7 +8354,7 @@ Func0x38f1 ENDP
 
 Func0x3926 PROC NEAR                    ;Offset 0x3926
     push   bx
-    call   Func0x3e53                   ;Offset 0x3e53
+    call   VideoProcessorStatus         ;Offset 0x3e53
     jne    Label0x3942                  ;Offset 0x3942
     call   GetCRTControllerIndexPort    ;Offset 0x40aa
     mov    al, 0ch
@@ -8366,8 +8368,8 @@ Func0x3926 PROC NEAR                    ;Offset 0x3926
     jmp    Label0x3959                  ;Offset 0x3959
 Label0x3942:                            ;Offset 0x3942
     push   eax
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0e4h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoDesktopStartAddress;0xe4
     in     eax, dx
     shr    eax, 02h
     mov    bx, ax
@@ -8384,8 +8386,8 @@ Func0x395b PROC NEAR                    ;Offset 0x395b
     jb     Label0x397b                  ;Offset 0x397b
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0028h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit0         ;0x28
     cmp    al, 08h
     in     eax, dx
     jb     Label0x3972                  ;Offset 0x3972
@@ -8407,8 +8409,8 @@ Func0x395b ENDP
 Func0x397d PROC NEAR                    ;Offset 0x397d
     push   bx
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0028h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit0         ;0x28
     push   eax
     in     eax, dx
     mov    bl, 06h
@@ -8423,15 +8425,15 @@ Label0x3991:                            ;Offset 0x3991
     ret
 Func0x397d ENDP
 
-Func0x3998 PROC NEAR                    ;Offset 0x3998
+GetMaxPixelClockHz PROC NEAR            ;Offset 0x3998
     mov    al, bl
     call   Func0x3faf                   ;Offset 0x3faf
-    mov    eax, 02625a00h
+    mov    eax, 02625a00h               ;40,000,000
     je     Label0x39ab                  ;Offset 0x39ab
-    mov    eax, 09896800h
+    mov    eax, 09896800h               ;160,000,000
 Label0x39ab:                            ;Offset 0x39ab
     ret
-Func0x3998 ENDP
+GetMaxPixelClockHz ENDP
 
 Func0x39ac PROC NEAR                    ;Offset 0x39ac
     push   eax
@@ -8461,7 +8463,7 @@ Func0x39cd PROC NEAR                    ;Offset 0x39cd
     cmp    al, BDA_DM_Unknown1          ;0x8
     jb     Label0x3af4                  ;Offset 0x3af4
     mov    eax, dword ptr es:[di + 0dh]
-    call   Func0x3e64                   ;Offset 0x3e64
+    call   SetAndSelectVideoPLL         ;Offset 0x3e64
     mov    ax, word ptr es:[di]
     shr    ax, 03h
     sub    ax, 05h
@@ -8562,8 +8564,8 @@ Func0x39cd PROC NEAR                    ;Offset 0x39cd
     or     al, ah
     mov    dl, 0c2h
     out    dx, al
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 5ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoProcessorConfig;0x5c
     in     eax, dx
     mov    bl, byte ptr es:[di + 0ch]
     and    bl, 02h
@@ -8579,12 +8581,20 @@ Func0x3af7 PROC NEAR                    ;Offset 0x3af7
 Func0x3af7 ENDP
 
 ;Offset 0x3af8
-Data0x3af8              DB 000h, 008h, 002h, 000h, 00Ah
+MonitorState            DB TDFX_DM_VSyncDPMSDisable OR TDFX_DM_HSyncDPMSDisable;0x0
+                        DB TDFX_DM_VSyncDPMSDisable OR TDFX_DM_HSyncDPMSEnable;0x8
+                        DB TDFX_DM_VSyncDPMSEnable OR TDFX_DM_HSyncDPMSDisable;0x2
+                        DB TDFX_DM_VSyncDPMSDisable OR TDFX_DM_HSyncDPMSDisable;0x0 - Not used
+                        DB TDFX_DM_VSyncDPMSEnable OR TDFX_DM_HSyncDPMSEnable;0xA
 
-Func0x3afd PROC NEAR                    ;Offset 0x3afd
+;
+;inputs:
+;   bh = requested state: 0 = on, 1 = standby, 2 = suspend, 4 = 0ff
+;
+SetMonitorSleepWakeStatus PROC NEAR     ;Offset 0x3afd
     cmp    bh, 02h
     jbe    Label0x3b07                  ;Offset 0x3b07
-    cmp    bh, 04h
+    cmp    bh, 04h                      ;filter out 3
     jne    Label0x3b31                  ;Offset 0x3b31
 Label0x3b07:                            ;Offset 0x3b07
     push   eax
@@ -8596,11 +8606,11 @@ Label0x3b07:                            ;Offset 0x3b07
     jne    Label0x3b19                  ;Offset 0x3b19
     call   TurnScreenOn                 ;Offset 0x3f77
 Label0x3b19:                            ;Offset 0x3b19
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 004ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_DACMode          ;0x4c
     in     eax, dx
-    and    al, 0e1h
-    or     al, byte ptr cs:[bx + Data0x3af8];Offset 0x3af8
+    and    al, NOT (TDFX_DM_VSyncDPMS OR TDFX_DM_VSyncValue OR TDFX_DM_HSyncDPMS OR TDFX_DM_HSyncValue);0xe1
+    or     al, byte ptr cs:[bx + MonitorState];Offset 0x3af8
     out    dx, eax
     pop    dx
     pop    ebx
@@ -8610,22 +8620,29 @@ Label0x3b19:                            ;Offset 0x3b19
 Label0x3b31:                            ;Offset 0x3b31 
     stc
     ret
-Func0x3afd ENDP
+SetMonitorSleepWakeStatus ENDP
 
 ;Offset 0x3b33
-Data0x3b33              DB 000h, 002h
-                        DB 000h, 002h
-                        DB 001h, 004h
-                        DB 001h, 004h
-
-Func0x3b3b PROC NEAR                    ;Offset 0x3b3b
+Data0x3b33              DB 000h         ;000    VSyncValue has no effect.
+                        DB 002h         ;001    Result is the same if VSyncValue = 0 or 1
+                        DB 000h         ;010    So: VSyncDPMS HSyncDPMS     Value   Meaning
+                        DB 002h         ;011            0       0           000h    On
+                        DB 001h         ;100            0       1           001h    Standby
+                        DB 004h         ;101            1       0           002h    Suspend
+                        DB 001h         ;110            1       1           004h    Off
+                        DB 004h         ;111        HSync and VSync swapped to count up result values
+;
+;outputs:
+;   bh = Monitor sleep/wake status
+;
+GetMonitorSleepWakeStatus PROC NEAR     ;Offset 0x3b3b
     push   eax
     push   dx
     push   si
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 004ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_DACMode          ;0x4c
     in     eax, dx
-    and    ax, 000eh
+    and    ax, TDFX_DM_VSyncDPMS OR TDFX_DM_VSyncValue OR TDFX_DM_HSyncDPMS;0xe
     shr    ax, 01h
     mov    si, ax
     mov    bh, byte ptr cs:[si + Data0x3b33];Offset 0x3b33
@@ -8633,121 +8650,131 @@ Func0x3b3b PROC NEAR                    ;Offset 0x3b3b
     pop    dx
     pop    eax
     ret
-Func0x3b3b ENDP
+GetMonitorSleepWakeStatus ENDP
 
-Func0x3b58 PROC NEAR                    ;Offset 0x3b58
+;This text is blanked out in the document, but still readable if copied.
+;
+;vidSerialParallelPort Register
+;The vidSerialParallelPort register controls the chip’s I2C, DDC, GPIO, and the host port interface.
+;Bit[17:0] of the register are shared between the I2C and GPIO interface. If VideoIn interface is configured
+;to VMI (vidInFormat bit[15:14] == 2’b01), vidSerialParallelPort[17:0] are for VMI’s host port interface.
+;If configured to TV out (vidInFormat bit[15:14] == 2’b10), the bits are used to co [MISSING TEXT]
+;additional GPIO interface. This is in addition to the two GPIO pins (one input and one output), which are
+;controlled by vidSerialParallelPort[30:29].
+
+DDCSetClockAndDataTriState PROC NEAR    ;Offset 0x3b58
     push   ax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    or     eax, 00180000h
+    or     eax, TDFX_VSPP_DDC_HostClock OR TDFX_VSPP_DDC_HostData;0x180000
     out    dx, eax
     pop    dx
     pop    ax
     ret
-Func0x3b58 ENDP
+DDCSetClockAndDataTriState ENDP
 
-Func0x3b6d PROC NEAR                    ;Offset 0x3b6d
+DDCSetClockLowAndDataTriState PROC NEAR ;Offset 0x3b6d
     push   ax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    and    eax, 0ffe7ffffh
-    or     eax, 00100000h
+    and    eax, NOT (TDFX_VSPP_DDC_HostClock OR TDFX_VSPP_DDC_HostData);0ffe7ffffh
+    or     eax, TDFX_VSPP_DDC_HostData  ;0x100000
     out    dx, eax
     pop    dx
     pop    ax
     ret
-Func0x3b6d ENDP
+DDCSetClockLowAndDataTriState ENDP
 
-Func0x3b88 PROC NEAR                    ;Offset 0x3b88
+DDCSetClockTriStateAndDataLow PROC NEAR ;Offset 0x3b88
     push   ax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    and    eax, 0ffe7ffffh
-    or     eax, 00080000h
+    and    eax, NOT (TDFX_VSPP_DDC_HostClock OR TDFX_VSPP_DDC_HostData);0ffe7ffffh
+    or     eax, TDFX_VSPP_DDC_HostClock  ;0x80000
     out    dx, eax
     pop    dx
     pop    ax
     ret
-Func0x3b88 ENDP
+DDCSetClockTriStateAndDataLow ENDP
 
-Func0x3ba3 PROC NEAR                    ;Offset 0x3ba3
+DDCSetClockAndDataLow PROC NEAR         ;Offset 0x3ba3
     push   ax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    and    eax, 0ffe7ffffh
+    and    eax, NOT (TDFX_VSPP_DDC_HostClock OR TDFX_VSPP_DDC_HostData);0ffe7ffffh
     out    dx, eax
     pop    dx
     pop    ax
     ret
-Func0x3ba3 ENDP
+DDCSetClockAndDataLow ENDP
 
-Func0x3bb8 PROC NEAR                    ;Offset 0x3bb8
+DDCReadMonitorClock PROC NEAR           ;Offset 0x3bb8
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    test   eax, 00200000h
+    test   eax, TDFX_VSPP_DDC_MonitorClock;00200000h
     pop    dx
     pop    eax
     ret
-Func0x3bb8 ENDP
+DDCReadMonitorClock ENDP
 
-Func0x3bcd PROC NEAR                    ;Offset 0x3bcd
+DDCReadMonitorData PROC NEAR            ;Offset 0x3bcd
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    test   eax, 00400000h
+    test   eax, TDFX_VSPP_DDC_MonitorData;00400000h
     pop    dx
     pop    eax
     ret
-Func0x3bcd ENDP
+DDCReadMonitorData ENDP
 
-Func0x3be2 PROC NEAR                    ;Offset 0x3be2
+EnableDDC PROC NEAR                     ;Offset 0x3be2
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    or     eax, 00040000h
+    or     eax, TDFX_VSPP_DDC_Enabled   ;0x40000
     out    dx, eax
     pop    dx
     pop    eax
     ret
-Func0x3be2 ENDP
+EnableDDC ENDP
 
-Func0x3bf9 PROC NEAR                    ;Offset 0x3bf9
+DisableDDC PROC NEAR                    ;Offset 0x3bf9
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0078h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoSerialParallelPort;0x78
     in     eax, dx
-    and    eax, 0fffbffffh
+    and    eax, NOT TDFX_VSPP_DDC_Enabled;0xfffbffff
     out    dx, eax
     pop    dx
     pop    eax
     ret
-Func0x3bf9 ENDP
+DisableDDC ENDP
 
-Func0x3c10 PROC NEAR                    ;Offset 0x3c10
+SetVGAReadWriteAperture64K PROC NEAR    ;Offset 0x3c10
     push   eax
     push   ebx
     push   dx
     sub    ebx, ebx
     mov    bl, dl
     shl    bx, 01h
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     and    eax, 0fff00000h
     mov    ax, bx
@@ -8758,42 +8785,42 @@ Func0x3c10 PROC NEAR                    ;Offset 0x3c10
     pop    ebx
     pop    eax
     ret
-Func0x3c10 ENDP
+SetVGAReadWriteAperture64K ENDP
 
-Func0x3c3b PROC NEAR                    ;Offset 0x3c3b
+GetVGAWriteApertureAddress64K PROC NEAR ;Offset 0x3c3b
     push   eax
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     and    ax, 03ffh
     shr    ax, 01h
     mov    dx, ax
     pop    eax
     ret
-Func0x3c3b ENDP
+GetVGAWriteApertureAddress64K ENDP
 
-Func0x3c4f PROC NEAR                    ;Offset 0x3c4f
+MoveVGAReadWriteAperturesUp64K PROC NEAR;Offset 0x3c4f
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     add    eax, 00000802h
     out    dx, eax
     pop    dx
     pop    eax
     ret
-Func0x3c4f ENDP
+MoveVGAReadWriteAperturesUp64K ENDP
 
-Func0x3c66 PROC NEAR                    ;Offset 0x3c66
+SetVGAReadAperture PROC NEAR            ;Offset 0x3c66
     push   eax
     push   ebx
     push   dx
     sub    ebx, ebx
     mov    bh, dl
     shl    ebx, 03h
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     and    eax, 0fff003ffh
     or     eax, ebx
@@ -8802,43 +8829,43 @@ Func0x3c66 PROC NEAR                    ;Offset 0x3c66
     pop    ebx
     pop    eax
     ret
-Func0x3c66 ENDP
+SetVGAReadAperture ENDP
 
-Func0x3c8d PROC NEAR                    ;Offset 0x3c8d
+MoveVGAReadApertureUp64K PROC NEAR      ;Offset 0x3c8d
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     add    eax, 00000800h
     out    dx, eax
     pop    dx
     pop    eax
     ret
-Func0x3c8d ENDP
+MoveVGAReadApertureUp64K ENDP
 
-Func0x3ca4 PROC NEAR                    ;Offset 0x3ca4
+MoveVGAReadApertureDown64K PROC NEAR    ;Offset 0x3ca4
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     sub    eax, 00000800h
     out    dx, eax
     pop    dx
     pop    eax
     ret
-Func0x3ca4 ENDP
+MoveVGAReadApertureDown64K ENDP
 
-Func0x3cbb PROC NEAR                    ;Offset 0x3cbb
+SetVGAWriteAperture PROC NEAR           ;Offset 0x3cbb
     push   eax
     push   bx
     push   dx
     sub    bx, bx
     mov    bl, dl
     shl    bx, 01h
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     and    eax, 0fffffc00h
     or     ax, bx
@@ -8847,33 +8874,33 @@ Func0x3cbb PROC NEAR                    ;Offset 0x3cbb
     pop    bx
     pop    eax
     ret
-Func0x3cbb ENDP
+SetVGAWriteAperture ENDP
 
-Func0x3cdc PROC NEAR                    ;Offset 0x3cdc
+MoveVGAWriteApertureUp64K PROC NEAR     ;Offset 0x3cdc
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     add    ax, 0002h
     out    dx, eax
     pop    dx
     pop    eax
     ret
-Func0x3cdc ENDP
+MoveVGAWriteApertureUp64K ENDP
 
-Func0x3cf0 PROC NEAR                    ;Offset 0x3cf0
+MoveVGAWriteApertureDown64K PROC NEAR   ;Offset 0x3cf0
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 002ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VGAInit1         ;0x2c
     in     eax, dx
     sub    ax, 0002h
     out    dx, eax
     pop    dx
     pop    eax
     ret
-Func0x3cf0 ENDP
+MoveVGAWriteApertureDown64K ENDP
 
 Func0x3d04 PROC NEAR                    ;Offset 0x3d04
     jmp    Func0x5ad                    ;Offset 0x5ad
@@ -8897,7 +8924,7 @@ Func0x3d10 PROC NEAR                    ;Offset 0x3d10
     ret
 Func0x3d10 ENDP
 
-SetALto2 PROC NEAR                    ;Offset 0x3d11
+SetALto2 PROC NEAR                      ;Offset 0x3d11
     mov    al, 02h
     ret
 SetALto2 ENDP
@@ -8913,31 +8940,31 @@ Func0x3d14 PROC NEAR                    ;Offset 0x3d14
     mov    cx, PCI_DEVICE_Banshee       ;0x0003
     mov    dx, PCI_VENDOR_3Dfx          ;0x121a
     call   Call1AHandlerSafely          ;Offset 0x4116
-    jb     Label0x3d65                  ;Offset 0x3d65
+    jb     Failure                      ;Offset 0x3d65
     test   ah, ah
-    jne    Label0x3d65                  ;Offset 0x3d65
+    jne    Failure                      ;Offset 0x3d65
     mov    ax, 0b10ah                   ;Read Configuration Dword
-    mov    di, 0018h
+    mov    di, 0018h                    ;24 - IO Base Address
     int    1ah
-    test   ah, ah
-    jne    Label0x3d65                  ;Offset 0x3d65
-    and    cx, 0fffeh
+    test   ah, ah                       ;0 == success
+    jne    Failure                      ;Offset 0x3d65
+    and    cx, 0fffeh                   ;drop bottom bit
     mov    dx, cx
     push   dx
     mov    bl, dh
-    add    dx, 0028h
+    add    dx, TDFX_IO_VGAInit0         ;0x28
     in     eax, dx
-    and    al, 007fh
-    or     al, 40h
+    and    al, NOT TDFX_VI0_Reserved7   ;0x7f
+    or     al, TDFX_VI0_EnableVGAExtensions;0x40
     out    dx, eax
     mov    dx, VGA_CRTControllerIndexD  ;Port 0x3d4
     mov    al, 1ch                      ;PCI configuration / extension byte 0
-    mov    ah, bl
+    mov    ah, bl                       ;Set IO Base address byte 1 to scratch pad byte 0
     out    dx, ax
     mov    ax, 001dh                    ;Extension byte 1
-    out    dx, ax
+    out    dx, ax                       ;Clear scratch pad byte 1
     mov    ax, 001eh                    ;Extension byte 2
-    out    dx, ax
+    out    dx, ax                       ;Clear scratch pad byte 2
     pop    dx
 Label0x3d5e:                            ;Offset 0x3d5e
     pop    si
@@ -8946,12 +8973,15 @@ Label0x3d5e:                            ;Offset 0x3d5e
     pop    bx
     pop    ax
     ret
-Label0x3d65:                            ;Offset 0x3d65
+Failure:                                ;Offset 0x3d65
     sub    dx, dx
     jmp    Label0x3d5e                  ;Offset 0x3d5e
 Func0x3d14 ENDP
 
-Func0x3d69 PROC NEAR                    ;Offset 0x3d69
+;outputs:
+;   dx = IO Base Address
+;
+GetIOBaseAddress PROC NEAR              ;Offset 0x3d69
     push   ax
     call   GetCRTControllerIndexPort    ;Offset 0x40aa
     mov    al, 1ch
@@ -8960,54 +8990,54 @@ Func0x3d69 PROC NEAR                    ;Offset 0x3d69
     sub    dl, dl
     pop    ax
     ret
-Func0x3d69 ENDP
+GetIOBaseAddress ENDP
 
 Func0x3d78 PROC NEAR                    ;Offset 0x3d78
     push   eax
     push   dx
     push   si
-    call   Func0x3d69                   ;Offset 0x3d69
+    call   GetIOBaseAddress             ;Offset 0x3d69
     mov    si, dx
-    add    dx, 001ch
+    add    dx, TDFX_IO_DRamInit1        ;0x1c
     in     eax, dx
-    and    eax, 0c2000000h
-    or     eax, dword ptr cs:[Data0x7d09];Offset 0x7d09
+    and    eax, TDFX_DI1_Unknown31 OR TDFX_DI1_RamType OR TDFX_DI1_PowerOnTime;0xc2000000
+    or     eax, dword ptr cs:[DRAMInit1Default];Offset 0x7d09
     out    dx, eax
-    lea    dx, [si + 18h]
+    lea    dx, [si + TDFX_IO_DRamInit0];Offset 0x18
     in     eax, dx
-    and    eax, 0fc000000h
-    or     eax, dword ptr cs:[Data0x7d05];Offset 0x7d05
+    and    eax, TDFX_DI0_Unknown28_31 OR TDFX_DI0_SGRAMType OR TDFX_DI0_SGRAMChipsetCount;0fc000000h
+    or     eax, dword ptr cs:[DRAMInit0Default];Offset 0x7d05
     out    dx, eax
-    lea    dx, [si + 10h]
-    mov    eax, dword ptr cs:[Data0x7cfd];Offset 0x7cfd
+    lea    dx, [si + TDFX_IO_MiscInit0];Offset 0x10
+    mov    eax, dword ptr cs:[MiscInit0Default];Offset 0x7cfd
     out    dx, eax
-    lea    dx, [si + 34h]
-    mov    eax, dword ptr cs:[Data0x7d19];Offset 0x7d19
+    lea    dx, [si + TDFX_IO_DRamData];Offset 0x34
+    mov    eax, dword ptr cs:[DRamDataDefault];Offset 0x7d19
     out    dx, eax
-    lea    dx, [si + 30h]
-    mov    eax, 0000010dh
+    lea    dx, [si + TDFX_IO_DRamCommand];Offset 0x30
+    mov    eax, TDFX_DRC_TestMode2 OR TDFX_DRC_BurstTypeInterleave OR 05h;0x10d
     out    dx, eax
-    lea    dx, [si + 34h]
+    lea    dx, [si + TDFX_IO_DRamData];0x34
     mov    eax, 0ffffffffh
     out    dx, eax
-    lea    dx, [si + 30h]
-    mov    eax, 0000010eh
+    lea    dx, [si + TDFX_IO_DRamCommand];Offset 0x30
+    mov    eax, TDFX_DRC_TestMode2 OR TDFX_DRC_BurstTypeInterleave OR 06h;0000010eh
     out    dx, eax
-    lea    dx, [si + 14h]
+    lea    dx, [si + TDFX_IO_MiscInit1];Offset 0x14
     in     eax, dx
     and    eax, 1ff40000h
     or     eax, dword ptr cs:[Data0x7d01];Offset 0x7d01
     out    dx, eax
-    lea    dx, [si + 20h]
+    lea    dx, [si + TDFX_IO_AgpInit];Offset 0x20
     mov    eax, dword ptr cs:[Data0x7d0d];Offset 0x7d0d
     out    dx, eax
-    lea    dx, [si + 44h]
+    lea    dx, [si + TDFX_IO_PLLControl1];Offset 0x44
     mov    eax, dword ptr cs:[Data0x7d11];Offset 0x7d11
     out    dx, eax
-    lea    dx, [si + 48h]
+    lea    dx, [si + TDFX_IO_PLLControl2];Offset 0x48
     mov    eax, dword ptr cs:[Data0x7d15];Offset 0x7d15
     out    dx, eax
-    lea    dx, [si + 0ch]
+    lea    dx, [si + TDFX_IO_LFBMemoryConfig];Offset 0xc
     in     eax, dx
     or     ax, 1fffh
     out    dx, eax
@@ -9017,7 +9047,7 @@ Func0x3d78 PROC NEAR                    ;Offset 0x3d78
     ret
 Func0x3d78 ENDP
 
-Func0x3e1c PROC NEAR                    ;Offset 0x3e1c
+GetLinearFrameBufferAddress PROC NEAR   ;Offset 0x3e1c
     push   bx
     push   ecx
     push   dx
@@ -9032,7 +9062,7 @@ Func0x3e1c PROC NEAR                    ;Offset 0x3e1c
     test   ah, ah
     jne    Label0x3e4e                  ;Offset 0x3e4e
     mov    ax, 0b10ah                   ;Read Configuration Dword
-    mov    di, 0014h
+    mov    di, PCI_H0_DWord_BaseAddress1;0014h
     int    1ah
     test   ah, ah
     jne    Label0x3e4e                  ;Offset 0x3e4e
@@ -9048,25 +9078,25 @@ Label0x3e47:                            ;Offset 0x3e47
 Label0x3e4e:                            ;Offset 0x3e4e
     sub    eax, eax
     jmp    Label0x3e47                  ;Offset 0x3e47
-Func0x3e1c ENDP
+GetLinearFrameBufferAddress ENDP
 
-Func0x3e53 PROC NEAR                    ;Offset 0x3e53
+VideoProcessorStatus PROC NEAR          ;Offset 0x3e53
     push   eax
     push   dx
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 005ch
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_VideoProcessorConfig;0x5c
     in     eax, dx
     test   al, 01h
     pop    dx
     pop    eax
     ret
-Func0x3e53 ENDP
+VideoProcessorStatus ENDP
 
-Func0x3e64 PROC NEAR                    ;Offset 0x3e64
+SetAndSelectVideoPLL PROC NEAR          ;Offset 0x3e64
     pushad
     call   Func0x3e83                   ;Offset 0x3e83
-    call   Func0x3d69                   ;Offset 0x3d69
-    add    dx, 0040h
+    call   GetIOBaseAddress             ;Offset 0x3d69
+    add    dx, TDFX_IO_PLLControl0      ;0x40
     and    eax, 0000ffffh
     out    dx, eax
     mov    dx, VGA_MiscellaneousRead    ;Port 0x3cc
@@ -9076,7 +9106,7 @@ Func0x3e64 PROC NEAR                    ;Offset 0x3e64
     out    dx, al
     popad
     ret
-Func0x3e64 ENDP
+SetAndSelectVideoPLL ENDP
 
 Func0x3e83 PROC NEAR                    ;Offset 0x3e83
     mov    ebp, eax
@@ -9230,6 +9260,16 @@ TurnScreenOn PROC NEAR                  ;Offset 0x3f77
     ret
 TurnScreenOn ENDP
 
+;
+;inputs:
+;   dx = port
+;   al = index
+;
+;outputs:
+;   dx = port
+;   al = index
+;   ah = value
+;
 ReadIndexedRegister PROC NEAR           ;Offset 0x3f84
     out    dx, al
     mov    ah, al
@@ -9265,6 +9305,12 @@ Label0x3fac:                            ;Offset 0x3fac
     ret
 Func0x3f99 ENDP
 
+;inputs:
+;   -
+;
+;outputs:
+;   carry = 
+;
 Func0x3faf PROC NEAR                    ;Offset 0x3faf
     push   bx
     push   es
@@ -9601,7 +9647,7 @@ Func0x4152 PROC NEAR                    ;Offset 0x4152
     ret
 Func0x4152 ENDP
 
-Func0x4163 PROC NEAR                    ;Offset 0x4163
+FindExtraModeData PROC NEAR             ;Offset 0x4163
     push   ax
     call   FindModeData                 ;Offset 0x40d9
     mov    al, byte ptr es:[bx + 01h]
@@ -9612,7 +9658,7 @@ Func0x4163 PROC NEAR                    ;Offset 0x4163
     add    bx, ax
     pop    ax
     ret
-Func0x4163 ENDP
+FindExtraModeData ENDP
 
 Func0x417c PROC NEAR                    ;Offset 0x417c
     push   bx
@@ -9643,7 +9689,11 @@ Label0x41a6:                            ;Offset 0x41a6
     ret
 Func0x418c ENDP
 
-Func0x41a9 PROC NEAR                    ;Offset 0x41a9
+;inputs:
+;   ax = VESA mode
+;
+;
+FindVESAModeData PROC NEAR              ;Offset 0x41a9
     call   FetchCustomDataPointer       ;Offset 0x40f6
     les    bx, es:[bx + 04h]
 Find:                                   ;Offset 0x41b0
@@ -9660,7 +9710,7 @@ NotFound:                               ;Offset 0x41c3
     sub    bx, bx
     stc
     ret
-Func0x41a9 ENDP
+FindVESAModeData ENDP
 
 StringCopy PROC NEAR                    ;Offset 0x41c7
 ContinueCopy:                           ;Offset 0x41c7
@@ -9671,10 +9721,17 @@ ContinueCopy:                           ;Offset 0x41c7
     ret
 StringCopy ENDP
 
+;inputs:
+;   ax = mode
+;
+;outputs:
+;   al = legacy mode (byte)
+;   ah = extra data index
+;
 Func0x41ce PROC NEAR                    ;Offset 0x41ce
     push   bx
     push   es
-    call   Func0x41a9                   ;Offset 0x41a9
+    call   FindVESAModeData             ;Offset 0x41a9
     mov    ax, 0ffffh
     jb     Label0x41df                  ;Offset 0x41df
     mov    al, byte ptr es:[bx]
@@ -10791,7 +10848,7 @@ Data0x77ea              FARPointer <offset Data0x7b11, 0C000h>;Offset 0x7b11
 Data0x77ee              FARPointer <offset Data0x7870, 0C000h>;Offset 0x7870
 
 ;Offset 0x77f2
-Data0x77f2              DW 00118h
+SplashWaitFrames        DW 00118h   ;280 / 70 = 4 seconds
 
 ;Offset 0x77f4
 DefaultAttribute        DB 007h
@@ -10808,7 +10865,19 @@ DB 60h dup (000h)
 ;Offset 0x786f
 Data0x786f              DB 006h
 
-;Offset 0x7870          ;  Mode
+
+
+
+                        ;                            +----
+                        ;                            | 0 =  0xb800, 32KB
+                        ;                            | 1 =  0xb000, 32KB
+                        ;                            | 2 =  0xb800, 32KB
+                        ;                            | else 0xa000, 64KB
+                        ;                            |
+                        ;                            |
+                        ;        Table               |        Bits    Width in    Height in
+                        ; Legacy   0                 |         per     pixels      pixels     Bytes per  char
+;Offset 0x7870          ;  Mode  index VESA Mode     |        pixel   or chars    or chars    scan line height
 Data0x7870              DB 000h, 017h, 000h, 000h, 000h, 008h, 004h, 028h, 000h, 019h, 000h, 050h, 000h, 010h
                         DB 001h, 017h, 001h, 000h, 000h, 008h, 004h, 028h, 000h, 019h, 000h, 050h, 000h, 010h
                         DB 002h, 018h, 002h, 000h, 000h, 008h, 004h, 050h, 000h, 019h, 000h, 0A0h, 000h, 010h
@@ -10860,34 +10929,73 @@ Data0x7870              DB 000h, 017h, 000h, 000h, 000h, 008h, 004h, 028h, 000h,
                         DB 0FFh
 
 ;Offset 0x7b11
-Data0x7b11              DB 000h, 000h, 004h, 000h, 000h, 000h, 000h, 000h, 004h, 000h, 000h, 000h, 000h, 000h, 001h
-                        DB 000h, 000h, 000h, 000h, 000h, 001h, 000h, 000h, 000h, 000h, 000h, 004h, 000h, 000h, 000h, 000h
-                        DB 000h, 004h, 000h, 000h, 000h, 000h, 000h, 001h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
-                        DB 000h, 001h, 000h, 001h, 000h, 000h, 000h, 001h, 000h, 002h, 000h, 000h, 000h, 000h, 000h, 003h
-                        DB 000h, 03Eh, 0BCh, 001h, 000h, 003h, 000h, 03Eh, 0BCh, 001h, 051h, 0FFh, 000h, 058h, 0B3h, 000h
-                        DB 000h, 004h, 000h, 000h, 000h, 000h, 000h, 001h, 000h, 000h, 000h, 001h, 000h, 0FFh, 000h, 05Dh
-                        DB 0E1h, 000h, 000h, 002h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h, 000h
-                        DB 000h, 000h, 000h, 000h, 000h, 004h, 000h, 000h, 000h, 000h, 000h, 004h, 000h, 000h, 000h, 000h
-                        DB 000h, 001h, 000h, 000h, 000h, 000h, 000h, 001h, 000h, 000h, 000h, 000h, 000h, 004h, 000h, 000h
-                        DB 000h, 000h, 000h, 001h, 000h, 000h, 000h, 000h, 000h, 001h, 000h, 000h, 000h, 000h, 000h, 002h
-                        DB 000h, 000h, 000h, 000h, 000h, 002h, 000h, 000h, 000h, 000h, 000h, 001h, 000h, 000h, 000h, 000h
-                        DB 000h, 0FFh, 000h, 0F4h, 0AEh, 000h, 000h, 0FFh, 000h, 0F4h, 0AEh, 000h, 000h, 0FFh, 000h, 0F4h
-                        DB 0AEh, 000h, 000h, 0FFh, 000h, 0F4h, 0AEh, 005h, 000h, 001h, 000h, 0EAh, 0D1h, 005h, 000h, 002h
-                        DB 000h, 0EAh, 0D1h, 005h, 000h, 003h, 000h, 0F4h, 056h, 005h, 000h, 0FFh, 000h, 0F4h, 08Dh, 00Dh
-                        DB 000h, 001h, 021h, 0EAh, 0D1h, 015h, 000h, 001h, 021h, 0EAh, 0D1h, 00Dh, 000h, 002h, 022h, 0EAh
-                        DB 0D1h, 015h, 000h, 002h, 022h, 0EAh, 0D1h, 00Dh, 000h, 003h, 023h, 0F4h, 056h, 015h, 000h, 003h
-                        DB 023h, 0F4h, 056h, 00Dh, 000h, 0FFh, 024h, 0F4h, 08Dh, 015h, 000h, 0FFh, 024h, 0F4h, 08Dh, 009h
-                        DB 000h, 001h, 008h, 000h, 000h, 011h, 000h, 001h, 008h, 000h, 000h, 009h, 000h, 002h, 009h, 000h
-                        DB 000h, 011h, 000h, 002h, 009h, 000h, 000h, 009h, 000h, 003h, 00Bh, 03Eh, 0BCh, 011h, 000h, 003h
-                        DB 00Bh, 03Eh, 0BCh, 009h, 000h, 0FFh, 00Fh, 05Dh, 0E1h, 011h, 000h, 0FFh, 00Fh, 05Dh, 0E1h, 009h
-                        DB 051h, 0FFh, 00Ch, 058h, 0B3h, 011h, 051h, 0FFh, 00Ch, 058h, 0B3h, 078h, 03Dh, 000h, 075h, 05Dh
-                        DB 080h, 056h, 080h, 056h, 0BAh, 00Ch, 078h, 03Dh, 000h, 07Dh, 05Dh, 080h, 055h, 080h, 056h, 03Eh
-                        DB 0F0h, 078h, 03Dh, 000h, 075h, 05Dh, 080h, 056h, 080h, 056h, 0BAh, 00Ch, 0FCh, 0AEh, 002h, 020h
-                        DB 069h, 080h, 06Dh, 01Bh, 0DDh, 0F8h, 088h, 078h, 03Dh, 000h, 07Dh, 02Ch, 090h, 02Bh, 080h, 056h
-                        DB 03Eh, 0F0h, 0C0h, 065h, 001h, 004h, 071h, 080h, 058h, 080h, 06Fh, 0BAh, 016h, 0C0h, 065h, 001h
-                        DB 004h, 071h, 080h, 058h, 080h, 06Fh, 03Eh, 0F0h, 0C0h, 065h, 001h, 004h, 071h, 080h, 058h, 080h
-                        DB 06Fh, 0BAh, 016h, 084h, 056h, 003h, 050h, 073h, 096h, 070h, 095h, 0ECh, 0F0h, 08Ch, 0C0h, 065h
-                        DB 001h, 004h, 036h, 090h, 02Dh, 080h, 06Fh, 03Eh, 0F0h
+Data0x7b11              DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h
+                        DB 001h, 000h, 001h, 000h, 000h, 000h
+                        DB 001h, 000h, 002h, 000h, 000h, 000h
+                        DB 000h, 000h, 003h, 000h, 03Eh, 0BCh
+                        DB 001h, 000h, 003h, 000h, 03Eh, 0BCh
+                        DB 001h, 051h, 0FFh, 000h, 058h, 0B3h
+                        DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 001h, 000h, 0FFh, 000h, 05Dh, 0E1h
+                        DB 000h, 000h, 002h, 000h, 000h, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h
+                        DB 000h, 000h, 000h, 000h, 000h, 000h
+                        DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 004h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 002h, 000h, 000h, 000h
+                        DB 000h, 000h, 002h, 000h, 000h, 000h
+                        DB 000h, 000h, 001h, 000h, 000h, 000h
+                        DB 000h, 000h, 0FFh, 000h, 0F4h, 0AEh
+                        DB 000h, 000h, 0FFh, 000h, 0F4h, 0AEh
+                        DB 000h, 000h, 0FFh, 000h, 0F4h, 0AEh
+                        DB 000h, 000h, 0FFh, 000h, 0F4h, 0AEh
+                        DB 005h, 000h, 001h, 000h, 0EAh, 0D1h
+                        DB 005h, 000h, 002h, 000h, 0EAh, 0D1h
+                        DB 005h, 000h, 003h, 000h, 0F4h, 056h
+                        DB 005h, 000h, 0FFh, 000h, 0F4h, 08Dh
+                        DB 00Dh, 000h, 001h, 021h, 0EAh, 0D1h
+                        DB 015h, 000h, 001h, 021h, 0EAh, 0D1h
+                        DB 00Dh, 000h, 002h, 022h, 0EAh, 0D1h
+                        DB 015h, 000h, 002h, 022h, 0EAh, 0D1h
+                        DB 00Dh, 000h, 003h, 023h, 0F4h, 056h
+                        DB 015h, 000h, 003h, 023h, 0F4h, 056h
+                        DB 00Dh, 000h, 0FFh, 024h, 0F4h, 08Dh
+                        DB 015h, 000h, 0FFh, 024h, 0F4h, 08Dh
+                        DB 009h, 000h, 001h, 008h, 000h, 000h
+                        DB 011h, 000h, 001h, 008h, 000h, 000h
+                        DB 009h, 000h, 002h, 009h, 000h, 000h
+                        DB 011h, 000h, 002h, 009h, 000h, 000h
+                        DB 009h, 000h, 003h, 00Bh, 03Eh, 0BCh
+                        DB 011h, 000h, 003h, 00Bh, 03Eh, 0BCh
+                        DB 009h, 000h, 0FFh, 00Fh, 05Dh, 0E1h
+                        DB 011h, 000h, 0FFh, 00Fh, 05Dh, 0E1h
+                        DB 009h, 051h, 0FFh, 00Ch, 058h, 0B3h
+                        DB 011h, 051h, 0FFh, 00Ch, 058h, 0B3h
+
+;Offset 0x7c5b
+                        DB 078h, 03Dh, 000h, 075h, 05Dh, 080h, 056h, 080h, 056h, 0BAh, 00Ch
+                        DB 078h, 03Dh, 000h, 07Dh, 05Dh, 080h, 055h, 080h, 056h, 03Eh, 0F0h
+                        DB 078h, 03Dh, 000h, 075h, 05Dh, 080h, 056h, 080h, 056h, 0BAh, 00Ch
+                        DB 0FCh, 0AEh, 002h, 020h, 069h, 080h, 06Dh, 01Bh, 0DDh, 0F8h, 088h
+                        DB 078h, 03Dh, 000h, 07Dh, 02Ch, 090h, 02Bh, 080h, 056h, 03Eh, 0F0h
+                        DB 0C0h, 065h, 001h, 004h, 071h, 080h, 058h, 080h, 06Fh, 0BAh, 016h
+                        DB 0C0h, 065h, 001h, 004h, 071h, 080h, 058h, 080h, 06Fh, 03Eh, 0F0h
+                        DB 0C0h, 065h, 001h, 004h, 071h, 080h, 058h, 080h, 06Fh, 0BAh, 016h
+                        DB 084h, 056h, 003h, 050h, 073h, 096h, 070h, 095h, 0ECh, 0F0h, 08Ch
+                        DB 0C0h, 065h, 001h, 004h, 036h, 090h, 02Dh, 080h, 06Fh, 03Eh, 0F0h
 
 ;Offset 0x7cc9
 MemorySizeMessage       DB 'Video Memory Size: '
@@ -10938,16 +11046,16 @@ Data0x7cf9              DW 0F840h
                         DB 080h, 001h
 
 ;Offset 0x7cfd
-Data0x7cfd              DD 000000000h
+MiscInit0Default        DD 000000000h
 
 ;Offset 0x7d01
 Data0x7d01              DD 000000001h
 
 ;Offset 0x7d05
-Data0x7d05              DD 00017A16Ah
+DRAMInit0Default        DD 00017A16Ah
 
 ;Offset 0x7d09
-Data0x7d09              DD 000548031h
+DRAMInit1Default        DD 000548031h
 
 ;Offset 0x7d0d
 Data0x7d0d              DD 00000049Eh
@@ -10959,7 +11067,7 @@ Data0x7d11              DD 000002805h
 Data0x7d15              DD 000007919h
 
 ;Offset 0x7d19
-Data0x7d19              DD 000000037h
+DRamDataDefault         DD 000000037h
 
 ;Offset 0x7d1d
 DB 090h, 000h, 000h
