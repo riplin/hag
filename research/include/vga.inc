@@ -5,6 +5,9 @@
 ;VGA general info: https://mirrors.apple2.org.za/ftp.apple.asimov.net/documentation/hardware/video/Second%20Sight%20VGA%20Registers.pdf
 ;Interrupt list: http://www.ctyme.com/intr/int.htm
 
+DDC_ADDRESS_A0                          EQU 0a0h;0xa0
+DDC_ADDRESS_A1                          EQU 0a1h;0xa1
+
 VGA_CRTControllerIndexB                 EQU 03b4h;0x3b4
 VGA_CRTControllerIndexB_lowbyte         EQU 0b4h;0xb4
 VGA_CRTControllerDataB                  EQU 03b5h;0x3b5

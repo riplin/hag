@@ -1,12 +1,41 @@
 ;3Dfx Voodoo Banshee Registers (only includes the ones used by the BIOS)
 
+TDFX_CRTC_HorizontalExtension                   EQU 01ah;0x1a
+TDFX_CRTC_VerticalExtension                     EQU 01bh;0x1b
+TDFX_CRTC_PCIConfig                             EQU 01ch;0x1c
+TDFX_CRTC_ExtensionByte0                        EQU 01ch;0x1c
+TDFX_CRTC_ExtensionByte1                        EQU 01dh;0x1d
+TDFX_CRTC_ExtensionByte2                        EQU 01eh;0x1e
+TDFX_CRTC_ExtensionByte3                        EQU 01fh;0x1f
+TDFX_CRTC_VerticalCounterPreLoadLow             EQU 020h;0x20
+TDFX_CRTC_VerticalCounterPreLoadHigh            EQU 021h;0x21
+TDFX_CRTC_DisplayBypass                         EQU 024h;0x24
+TDFX_CRTC_AttributeControllerIndex              EQU 026h;0x26
+
+TDFX_PCI_FabID                                  EQU 040h;0x40  ;byte
+TDFX_PCI_ConfigStatus                           EQU 04ch;0x4C  ;dword
+TDFX_PCI_ConfigScratch                          EQU 050h;0x50  ;dword
+TDFX_PCI_AGPCapID                               EQU 054h;0x54  ;dword
+TDFX_PCI_AGPStatus                              EQU 058h;0x58  ;dword
+TDFX_PCI_AGPCommand                             EQU 05ch;0x5C  ;dword
+TDFX_PCI_ACPICapID                              EQU 060h;0x60  ;dword
+TDFX_PCI_ACPIControlStatus                      EQU 064h;0x64  ;dword
 
 TDFX_IO_Status                                  EQU 000h;0x00
 TDFX_IO_PCIInit                                 EQU 004h;0x04
+    TDFX_PI_PCIReadWaitState                    EQU 000000100h;0x00000100
+        TDFX_PI_PCIReadWaitState1Cycle          EQU 000000000h;0x00000000
+        TDFX_PI_PCIReadWaitState2Cycle          EQU 000000100h;0x00000100
+    TDFX_PI_PCIWriteWaitState                   EQU 000000200h;0x00000200
+        TDFX_PI_PCIWriteWaitState1Cycle         EQU 000000000h;0x00000000
+        TDFX_PI_PCIWriteWaitState2Cycle         EQU 000000200h;0x00000200
 TDFX_IO_SIPMonitor                              EQU 008h;0x08
 TDFX_IO_LFBMemoryConfig                         EQU 00ch;0x0c
 TDFX_IO_MiscInit0                               EQU 010h;0x10
 TDFX_IO_MiscInit1                               EQU 014h;0x14
+    TDFX_MI1_PCIDeviceType                      EQU 010000000h;0x10000000
+        TDFX_MI1_PCIDeviceVGA                   EQU 000000000h;0x00000000
+        TDFX_MI1_PCIDeviceMultimedia            EQU 010000000h;0x10000000
 TDFX_IO_DRamInit0                               EQU 018h;0x18
     TDFX_DI0_SGRAMChipsetCount                  EQU 004000000h;0x04000000
         TDFX_DI0_1Chipset                       EQU 000000000h;0x00000000
@@ -26,9 +55,15 @@ TDFX_IO_DRamInit1                               EQU 01ch;0x1c
 TDFX_IO_AgpInit                                 EQU 020h;0x20
 TDFX_IO_TMUGbeInit                              EQU 024h;0x20
 TDFX_IO_VGAInit0                                EQU 028h;0x28
+    TDFX_VI0_DACBitDepth                        EQU 004h;0x04
+        TDFX_VI_DACBitDepth6                    EQU 000h;0x00
+        TDFX_VI_DACBitDepth8                    EQU 004h;0x04
     TDFX_VI0_EnableVGAExtensions                EQU 040h;0x40
     TDFX_VI0_Reserved7                          EQU 080h;0x80
     TDFX_VI0_WakeUpSelect                       EQU 100h;0x100
+    TDFX_VI0_LegacyVGAMemoryAndIODecode         EQU 200h;0x200
+        TDFX_VI0_LegacyVGAMemoryAndIOEnable     EQU 000h;0x000
+        TDFX_VI0_LegacyVGAMemoryAndIODisable    EQU 200h;0x200
 TDFX_IO_VGAInit1                                EQU 02ch;0x2c
 TDFX_IO_DRamCommand                             EQU 030h;0x30
     TDFX_DRC_BurstLength_MASK                   EQU 000000007h;0x00000007
@@ -46,6 +81,7 @@ TDFX_IO_DRamCommand                             EQU 030h;0x30
         TDFX_DRC_SingleBit                      EQU 000000200h;0x00000200
         TDFX_DRC_SGRamDefined                   EQU 000000400h;0x00000400
 TDFX_IO_DRamData                                EQU 034h;0x34
+TDFX_IO_Unknown38                               EQU 038h;0x38
 TDFX_IO_PLLControl0                             EQU 040h;0x40
 TDFX_IO_PLLControl1                             EQU 044h;0x44
 TDFX_IO_PLLControl2                             EQU 048h;0x48
