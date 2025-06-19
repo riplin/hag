@@ -5,7 +5,7 @@
 #include <hag/types.h>
 #include <hag/farptr.h>
 
-namespace Hag { namespace System { namespace BIOS
+namespace Hag::System::BIOS
 {
 
 namespace Address
@@ -24,4 +24,4 @@ namespace MachineID
 }
 
 
-}}}
+}

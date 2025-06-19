@@ -7,7 +7,7 @@
 #include <hag/drivers/vga/regtype.h>
 #include <hag/drivers/vga/attribc/regtype.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 namespace Register
@@ -67,4 +67,4 @@ namespace AttributeControllerIndex
 
 }
 
-}}
+}

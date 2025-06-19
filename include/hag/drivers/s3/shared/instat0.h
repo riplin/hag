@@ -6,7 +6,7 @@
 
 //Extend the Input Status 0 register with additional bits.
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 namespace Register
@@ -36,4 +36,4 @@ namespace InputStatus0
 
 }
 
-}}}
+}

@@ -2,8 +2,8 @@
 
 #pragma once
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 
-}}}
+}

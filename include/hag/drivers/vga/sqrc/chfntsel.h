@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/sqrc/regtype.h>
 #include <hag/drivers/vga/sqrc/data.h>
 
-namespace Hag { namespace VGA { namespace Sequencer
+namespace Hag::VGA::Sequencer
 {
 
 namespace Register
@@ -58,4 +58,4 @@ namespace CharacterFontSelect
 
 }
 
-}}}
+}

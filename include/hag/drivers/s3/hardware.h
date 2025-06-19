@@ -47,7 +47,7 @@ GX  1A      FB          0 00 1 10 10    1 11 1 1 0 1 1
 #include <hag/drivers/s3/shared/chipid.h>
 #include <hag/drivers/vga/miscout.h>
 
-namespace Hag { namespace S3
+namespace Hag::S3
 {
 
 namespace Hardware
@@ -122,4 +122,4 @@ public:
 };
 */
 
-}}
+}

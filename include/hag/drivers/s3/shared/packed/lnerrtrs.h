@@ -5,18 +5,18 @@
 #include <hag/drivers/s3/shared/linerrtr.h>
 #include <hag/drivers/s3/shared/linerrt2.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         LineErrorTerms = 0x8110,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace LineErrorTerms
+namespace MMIO::Packed::LineErrorTerms
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace LineErrorTerms
     {
             Get() = (uint32_t(errorTerm2) << 16) | errorTerm;
     }
-}}}
+}
 
-}}}
+}

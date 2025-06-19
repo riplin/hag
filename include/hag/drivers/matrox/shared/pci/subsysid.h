@@ -4,7 +4,7 @@
 
 #include <hag/system/pci.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI
+namespace Hag::Matrox::Shared::PCI
 {
 
 namespace Register
@@ -56,4 +56,4 @@ namespace SubsystemID
     inline void Write(System::PCI::Device_t device, SubsystemID_t value) { System::PCI::Write32(device, Register::SubsystemIDW, value); }
 }
 
-}}}}
+}

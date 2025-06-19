@@ -4,9 +4,9 @@
 
 #include <hag/drivers/vga/crtc/regtype.h>
 
-namespace Hag { namespace S3 { namespace Shared { namespace CRTController
+namespace Hag::S3::Shared::CRTController
 {
 
 typedef VGA::CRTController::Register_t Register_t;
 
-}}}}
+}

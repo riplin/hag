@@ -5,18 +5,18 @@
 #include <hag/drivers/s3/shared/dxpdsc.h>
 #include <hag/drivers/s3/shared/dypasc.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         DestinationXYPositionStepConstant = 0x8108,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace DestinationXYPositionStepConstant
+namespace MMIO::Packed::DestinationXYPositionStepConstant
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace DestinationXYPositionStepConstant
     {
             Get() = (uint32_t(destinationX) << 16) | destinationY;
     }
-}}}
+}
 
-}}}
+}

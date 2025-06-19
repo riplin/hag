@@ -3,7 +3,7 @@
 #include <hag/drivers/matrox/shared/data.h>
 
 
-namespace Hag { namespace Matrox { namespace Shared
+namespace Hag::Matrox::Shared
 {
 
 namespace Data
@@ -599,4 +599,4 @@ uint16_t Font8x16Size = sizeof(Font8x16);
 
 }
 
-}}}
+}

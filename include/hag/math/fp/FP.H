@@ -4,7 +4,7 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace Math { class fp; }}
+namespace Hag::Math { class fp; }
 /*
 Hag::Math::fp imulfp(Hag::Math::fp a, Hag::Math::fp b);
 #pragma aux imulfp =            \
@@ -60,7 +60,7 @@ Hag::Math::fp int32imod(int32_t a, Hag::Math::fp b);
         "idiv ebx"              \
         parm [edx] [ebx] modify exact [eax edx] value [edx];
 */
-namespace Hag { namespace Math {
+namespace Hag::Math {
 
 class fp
 {
@@ -284,4 +284,4 @@ inline bool operator!=(int16_t lhs, fp rhs)
     return fp(lhs) != rhs;
 }
 
-}}
+}

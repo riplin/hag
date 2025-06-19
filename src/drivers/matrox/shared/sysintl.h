@@ -6,7 +6,7 @@
 #include <hag/farptr.h>
 #include <hag/system/pci.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function
+namespace Hag::Matrox::Shared::Function
 {
 
 namespace System
@@ -23,4 +23,4 @@ extern FARPointer s_SystemFontGraphics;
 
 }
 
-}}}}
+}

@@ -7,7 +7,7 @@
 #include <hag/drivers/vga/regtype.h>
 #include <hag/ialloc.h>
 
-namespace Hag { namespace Testing { namespace Mock {
+namespace Hag::Testing::Mock {
 
 class CustomPortHandler
 {
@@ -120,8 +120,8 @@ void FetchModifiedBDAFields(int instance, BDAFieldCallback_t callback, void* con
 void SetMemoryAccessCallback(MemoryAccessCallback_t callback, void* context);
 void CompareMemoryRegions(MemoryAccess* memoryRegions, int count, int& matches);
 
-void Report(uint16_t* ignorePorts = nullptr, uint16_t ignorePortsCount = 0);
-bool HasDifferences();
+void Report(uint16_t* ignorePorts = nullptr, uint16_t ignorePortsCount = 0, uint32_t* ignoreMemory = nullptr, uint16_t ignoreMemoryCount = 0);
+bool HasDifferences(uint32_t* ignoreMemory = nullptr, uint16_t ignoreMemoryCount = 0);
 void Reset();
 
 int Shutdown();
@@ -231,7 +231,7 @@ namespace PCI
     void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context);
 }
 
-}}}
+}
 
 #define VERIFYPORTCONTENT(Instance, ModifiedPorts, ReadPorts, ModifiedIndexedPorts, ReadIndexedPorts)                               \
 Hag::Testing::Mock::VerifyPortsAndValues(Instance, ModifiedPorts, sizeof(ModifiedPorts) / sizeof(Hag::Testing::Mock::PortAndValue), \

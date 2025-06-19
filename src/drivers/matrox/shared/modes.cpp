@@ -6,7 +6,7 @@
 #include <hag/drivers/matrox/shared/funcs/modeset.h>
 #include "modintl.h"
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Data
+namespace Hag::Matrox::Shared::Data
 {
 
 using namespace Hag::Matrox::Shared::Function::ModeSetting;
@@ -1225,4 +1225,4 @@ ModeDescriptor s_Descriptors[] =
 
 uint32_t s_NumDescriptors = sizeof(s_Descriptors) / sizeof(ModeDescriptor);
 
-}}}}
+}

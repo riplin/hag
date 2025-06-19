@@ -5,18 +5,18 @@
 #include <hag/farptr.h>
 #include <hag/drivers/s3/shared/wregdata.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         ScissorsTopLeft = 0x8138,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace ScissorsTopLeft
+namespace MMIO::Packed::ScissorsTopLeft
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace ScissorsTopLeft
     {
             Get() = (uint32_t(leftScissors) << 16) | topScissors;
     }
-}}}
+}
 
-}}}
+}

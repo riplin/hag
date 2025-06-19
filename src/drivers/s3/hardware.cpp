@@ -9,7 +9,7 @@
 #include <hag/drivers/s3/shared/crtc/reglock1.h>
 #include <hag/drivers/s3/shared/crtc/revision.h>
 
-namespace Hag { namespace S3 { namespace Hardware
+namespace Hag::S3::Hardware
 {
 
 /*
@@ -378,7 +378,7 @@ void Trio::LockRegisters()
 
 }
 
-namespace Shared { namespace ChipId
+namespace Shared::ChipId
 {
     const char* ToString(ChipId_t value)
     {
@@ -534,4 +534,4 @@ namespace Shared { namespace ChipId
         }
     }
 
-}}}}
+}

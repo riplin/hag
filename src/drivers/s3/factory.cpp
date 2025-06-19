@@ -6,7 +6,7 @@
 
 #include <stdio.h>
 
-namespace Hag { namespace S3
+namespace Hag::S3
 {
 
 Factory Factory::m_Instance;
@@ -25,4 +25,4 @@ Hag::Driver* Factory::InstantiateDriver(Hag::IAllocator& allocator) const
     return driver;
 }
 
-}}
+}

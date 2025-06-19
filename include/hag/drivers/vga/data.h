@@ -9,7 +9,7 @@
 #include <hag/drivers/vga/gfxc/data.h>
 #include <hag/drivers/vga/sqrc/data.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 struct VideoParameters
@@ -25,4 +25,4 @@ struct VideoParameters
     GraphicsControllerData_t GraphicsControllerRegs[9];//GR0-GR8
 };
 
-}}
+}

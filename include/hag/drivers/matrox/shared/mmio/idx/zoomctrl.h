@@ -5,7 +5,7 @@
 #include <hag/drivers/matrox/shared/mmio/idxdata.h>
 #include <hag/drivers/matrox/shared/idx/zoomctrl.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace MMIO { namespace Indexed
+namespace Hag::Matrox::Shared::MMIO::Indexed
 {
 
 namespace ZoomControl
@@ -20,4 +20,4 @@ namespace ZoomControl
     }
 }
 
-}}}}}
+}

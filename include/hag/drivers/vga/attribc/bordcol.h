@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/attribc/regtype.h>
 #include <hag/drivers/vga/attribc/data.h>
 
-namespace Hag { namespace VGA { namespace AttributeController
+namespace Hag::VGA::AttributeController
 {
 
 namespace Register
@@ -52,4 +52,4 @@ namespace BorderColor
 
 }
 
-}}}
+}

@@ -5,7 +5,7 @@
 #include <hag/drivers/matrox/shared/pci/ctrlap.h>
 #include <hag/drivers/matrox/shared/regs/src.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace MMIO
+namespace Hag::Matrox::Shared::MMIO
 {
 
 namespace Source
@@ -44,4 +44,4 @@ namespace Source
     }
 }
 
-}}}}
+}

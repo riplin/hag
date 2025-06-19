@@ -4,18 +4,18 @@
 
 #include <hag/drivers/s3/shared/bitplnwm.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         BitplaneWriteMask = 0x8128,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace BitplaneWriteMask
+namespace MMIO::Packed::BitplaneWriteMask
 {
     inline BitplaneWriteMask_t& Get()
     {
@@ -26,6 +26,6 @@ namespace MMIO { namespace Packed { namespace BitplaneWriteMask
     {
             Get() = writeMask;
     }
-}}}
+}
 
-}}}
+}

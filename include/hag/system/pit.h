@@ -5,7 +5,7 @@
 #include <hag/types.h>
 #include <hag/system/sysasm.h>
 
-namespace Hag { namespace System { namespace PIT
+namespace Hag::System::PIT
 {
 
 namespace Register
@@ -89,4 +89,4 @@ namespace Status
     inline Status_t Read() { return SYS_ReadPortByte(Register::ModeCommand); }
 }
 
-}}}
+}

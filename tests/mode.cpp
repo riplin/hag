@@ -1,6 +1,6 @@
 //Copyright 2025-Present riplin
 
-#include <i86.h>
+#include <pc.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -109,7 +109,7 @@
 #include <hag/drivers/matrox/shared/pci/idx/pixpllst.h>     //IDX4F
 
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function
+namespace Hag::Matrox::Shared::Function
 {
 
 namespace Mode
@@ -2656,7 +2656,7 @@ void LoadColorPalette(PaletteData* palette)
     uint8_t green = 0;
     uint8_t blue = 0;
     uint8_t greyscale = 0;
-    uint16_t colorIndex = 0;
+    //uint16_t colorIndex = 0;
 
     uint8_t* colors = palette->Colors;
 
@@ -3671,12 +3671,12 @@ String_t GenerateHorizontalName(uint16_t count, VideoMode& mode, Hag::System::BD
         VGA::AttributeController::AttributeMode::SelectGraphicsMode)
     {
         uint32_t width = HorizontalDisplayEnableEndPixels(table);
-        sprintf(buf, "H%02ipix%i", count, width);
+        sprintf(buf, "H%02upix%lu", count, width);
     }
     else
     {
         uint32_t width = HorizontalDisplayEnableEndChars(table);
-        sprintf(buf, "H%02ichar%i", count, width);
+        sprintf(buf, "H%02uchar%lu", count, width);
     }
     return String_t(buf);
 }
@@ -3688,13 +3688,13 @@ String_t GenerateVerticalName(uint16_t count, VideoMode& mode, Hag::System::BDA:
         VGA::AttributeController::AttributeMode::SelectGraphicsMode)
     {
         uint32_t height = VerticalDisplayEnableEndLines(mode, table);
-        sprintf(buf, "V%02iline%i", count, height);
+        sprintf(buf, "V%02uline%lu", count, height);
     }
     else
     {
         uint16_t charHeight = table.CRTCRegisters[VGA::CRTController::Register::MaximumScanLine] & VGA::CRTController::MaximumScanLine::MaximumScanLineCount;
         uint32_t height = VerticalDisplayEnableEndLines(mode, table) / (charHeight + 1);
-        sprintf(buf, "V%02ichar%i", count, height);
+        sprintf(buf, "V%02uchar%lu", count, height);
     }
     return String_t(buf);
 }
@@ -3703,7 +3703,7 @@ String_t GenerateGraphicName(uint16_t count)
 {
     char buf[10];
 
-    sprintf(buf, "G%02i", count);
+    sprintf(buf, "G%02u", count);
 
     return String_t(buf);
 }
@@ -3712,7 +3712,7 @@ String_t GenerateConfigurationName(uint16_t count)
 {
     char buf[10];
 
-    sprintf(buf, "C%02i", count);
+    sprintf(buf, "C%02u", count);
 
     return String_t(buf);
 }
@@ -3721,7 +3721,7 @@ String_t GenerateAttributeName(uint16_t count)
 {
     char buf[10];
 
-    sprintf(buf, "A%02i", count);
+    sprintf(buf, "A%02u", count);
 
     return String_t(buf);
 }
@@ -3730,7 +3730,7 @@ String_t GenerateFontConfigName(uint16_t count)
 {
     char buf[10];
 
-    sprintf(buf, "F%02i", count);
+    sprintf(buf, "F%02u", count);
 
     return String_t(buf);
 }
@@ -3739,7 +3739,7 @@ String_t GenerateParameterName(uint16_t count)
 {
     char buf[10];
 
-    sprintf(buf, "P%02i", count);
+    sprintf(buf, "P%02u", count);
 
     return String_t(buf);
 }
@@ -3748,7 +3748,7 @@ String_t GenerateParameterArrayName(uint16_t count)
 {
     char buf[10];
 
-    sprintf(buf, "PA%02i", count);
+    sprintf(buf, "PA%02u", count);
 
     return String_t(buf);
 }
@@ -3761,14 +3761,14 @@ String_t GenerateResolutionName(uint16_t count, VideoMode& mode, Hag::System::BD
     {
         uint32_t width = HorizontalDisplayEnableEndPixels(table);
         uint32_t height = VerticalDisplayEnableEndLines(mode, table);
-        sprintf(buf, "T%02ipix%ix%i", count, width, height);
+        sprintf(buf, "T%02upix%lux%lu", count, width, height);
     }
     else
     {
         uint32_t width = HorizontalDisplayEnableEndChars(table);
         uint16_t charHeight = table.CRTCRegisters[VGA::CRTController::Register::MaximumScanLine] & VGA::CRTController::MaximumScanLine::MaximumScanLineCount;
         uint32_t height = VerticalDisplayEnableEndLines(mode, table) / (charHeight + 1);
-        sprintf(buf, "T%02ichar%ix%i", count, width, height);
+        sprintf(buf, "T%02uchar%lux%lu", count, width, height);
     }
 
     return String_t(buf);
@@ -3842,7 +3842,7 @@ uint16_t PrintResolutionTimings(VideoMode& mode, Hag::System::BDA::VideoParamete
 {
     printf("ResolutionTimings %sTimings = { ", name);
 
-    printf("0x%08X, ", mode.FrequencyKHz);
+    printf("0x%08lX, ", mode.FrequencyKHz);
     printf("0x%02X, ", mode.HorizontalCounterExtensions);
     printf("0x%02X, ", mode.VerticalCounterExtensions);
     printf("0x%02X, ", table.MiscellaneousOutputRegister & (VGA::MiscellaneousOutput::SelectNegativeHorizontalSyncPulse | VGA::MiscellaneousOutput::SelectNegativeVerticalSyncPulse));
@@ -3851,7 +3851,7 @@ uint16_t PrintResolutionTimings(VideoMode& mode, Hag::System::BDA::VideoParamete
 
     char buf[150];
 
-    sprintf(buf, "{ 0x%08X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, %s, %s }",
+    sprintf(buf, "{ 0x%08lX, 0x%02X, 0x%02X, 0x%02X, 0x%02X, %s, %s }",
         mode.FrequencyKHz,
         mode.HorizontalCounterExtensions,
         mode.VerticalCounterExtensions,
@@ -4589,14 +4589,14 @@ void PrintNewModeSettings()
             if (modeID >= 0x20)
             {
                 modeID = (modeID - 0x20) | 0x100;
-                sprintf(subname, "%X", modeID);
+                sprintf(subname, "%lX", modeID);
             }
             else
             {
                 if (modeID == 0x14){sprintf(subname, "Y");}
                 else if (modeID == 0x15){sprintf(subname, "X");}
                 else if (modeID == 0x16){sprintf(subname, "Q");}
-                else sprintf(subname, "%X", modeID);
+                else sprintf(subname, "%lX", modeID);
             }
 
             if (loopCount > 1)
@@ -4639,14 +4639,14 @@ void PrintNewModeSettings()
         if (modeID >= 0x20)
         {
             modeID = (modeID - 0x20) | 0x100;
-            sprintf(name, "%X", modeID);
+            sprintf(name, "%lX", modeID);
         }
         else
         {
             if (modeID == 0x14){sprintf(name, "Y");}
             else if (modeID == 0x15){sprintf(name, "X");}
             else if (modeID == 0x16){sprintf(name, "Q");}
-            else sprintf(name, "%X", modeID);
+            else sprintf(name, "%lX", modeID);
         }
         PrintDescriptor(mode, name);
     }
@@ -4663,20 +4663,18 @@ void PrintNewModeSettings()
 
         for (uint32_t tableIdx = 0; tableIdx < loopCount; ++tableIdx)
         {
-            BDA::VideoParameterTable& table = *mode.ParametersAndFonts[tableIdx].VideoParameters;
-
             uint32_t modeID = mode.LegacyMode;
             if (modeID >= 0x20)
             {
                 modeID = (modeID - 0x20) | 0x100;
-                sprintf(subname, "%X", modeID);
+                sprintf(subname, "%lX", modeID);
             }
             else
             {
                 if (modeID == 0x14){sprintf(subname, "Y");}
                 else if (modeID == 0x15){sprintf(subname, "X");}
                 else if (modeID == 0x16){sprintf(subname, "Q");}
-                else sprintf(subname, "%X", modeID);
+                else sprintf(subname, "%lX", modeID);
             }
 
             if (loopCount > 1)
@@ -4818,14 +4816,14 @@ void PrintNewModeSettings()
         if (modeID >= 0x20)
         {
             modeID = (modeID - 0x20) | 0x100;
-            sprintf(name, "%X", modeID);
+            sprintf(name, "%lX", modeID);
         }
         else
         {
             if (modeID == 0x14){sprintf(name, "X");}
             else if (modeID == 0x15){sprintf(name, "Q");}
             else if (modeID == 0x16){sprintf(name, "80x50");}
-            else sprintf(name, "%X", modeID);
+            else sprintf(name, "%lX", modeID);
         }
         PrintDescriptor2(mode, name, s_ParameterArrayNames[parameterArrayNameIndices[i]].c_str());
     }
@@ -4836,4 +4834,4 @@ void PrintNewModeSettings()
 
 }
 
-}}}}
+}

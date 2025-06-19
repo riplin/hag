@@ -3,7 +3,7 @@
 #include <hag/system/bda.h>
 #include <hag/drivers/s3/trio32/data.h>
 
-namespace Hag { namespace S3 { namespace Trio32 { namespace Data
+namespace Hag::S3::Trio32::Data
 {
 
 VGA::VideoParameters* LegacyVideoModesV1[] =
@@ -699,4 +699,4 @@ uint8_t SequenceInitData[] =
 
 Shared::FirmwareFlag_t FirmwareFlags = Shared::FirmwareFlag::Color | Shared::FirmwareFlag::Unknown3;
 
-}}}}
+}

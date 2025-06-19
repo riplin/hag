@@ -7,7 +7,7 @@
 #include <hag/drivers/vga/funcs.h>
 #include <hag/drivers/s3/trio32/funcs.h>
 
-namespace Hag { namespace S3 { namespace Trio32
+namespace Hag::S3::Trio32
 {
 
 void ConfigureDCLKAndMCLK(uint8_t idx, uint8_t* data)
@@ -52,4 +52,4 @@ void SetupClocks(VGA::Register_t crtcPort, uint8_t clockConfig)
     CRTController::ModeControl::Write(crtcPort, clockConfig & CRTController::ModeControl::Interlaced);
 }
 
-}}}
+}

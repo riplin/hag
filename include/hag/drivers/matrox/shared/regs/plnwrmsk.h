@@ -4,7 +4,7 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace Matrox { namespace Shared
+namespace Hag::Matrox::Shared
 {
 
 namespace Register
@@ -47,4 +47,4 @@ namespace PlaneWriteMask
     }
 }
 
-}}}
+}

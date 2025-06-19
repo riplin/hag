@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/crtc/data.h>
 #include <hag/drivers/s3/shared/crtc/regtype.h>
 
-namespace Hag { namespace S3 { namespace Shared { namespace CRTController
+namespace Hag::S3::Shared::CRTController
 {
 
 namespace Register
@@ -36,4 +36,4 @@ namespace InterlaceRetraceStart
 
 };
 
-}}}}
+}

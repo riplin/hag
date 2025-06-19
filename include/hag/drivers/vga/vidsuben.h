@@ -6,7 +6,7 @@
 #include <hag/system/sysasm.h>
 #include <hag/drivers/vga/regtype.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 namespace Register
@@ -35,4 +35,4 @@ namespace VideoSubsystemEnable
     }
 }
 
-}}
+}

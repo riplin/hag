@@ -2,7 +2,7 @@
 
 #include <hag/math/fp/fpmath.h>
 
-namespace Hag { namespace Math {
+namespace Hag::Math {
 
 fp fp::Pi          = fp::Divide( 314159265, 100000000);
 fp fp::HalfPi      = fp::Divide( 314159265, 200000000);
@@ -148,4 +148,4 @@ void fp::ToString(char* result, int32_t maxDecimals) const
         result[slen] = '\0';
 }
 
-}}
+}

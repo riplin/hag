@@ -4,7 +4,7 @@
 
 #include <hag/system/pci.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI
+namespace Hag::Matrox::Shared::PCI
 {
 
 namespace Register
@@ -42,4 +42,4 @@ namespace IndirectIndex
     inline void Write(System::PCI::Device_t device, IndirectIndex_t value) { System::PCI::Write32(device, Register::IndirectIndex, value); }
 }
 
-}}}}
+}

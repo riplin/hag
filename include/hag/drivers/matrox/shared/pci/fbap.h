@@ -5,7 +5,7 @@
 #include <hag/system/pci.h>
 #include <sys/nearptr.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI
+namespace Hag::Matrox::Shared::PCI
 {
 
 namespace Register
@@ -73,4 +73,4 @@ namespace FrameBufferAperture
     }
 }
 
-}}}}
+}

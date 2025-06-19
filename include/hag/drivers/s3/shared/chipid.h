@@ -4,7 +4,7 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 typedef uint16_t ChipId_t;
@@ -59,4 +59,4 @@ namespace ChipId
 
 }
 
-}}}
+}

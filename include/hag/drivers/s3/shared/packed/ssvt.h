@@ -4,18 +4,18 @@
 
 #include <hag/drivers/s3/shared/shrstrvt.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         ShortStrokeVectorTransfer = 0x811C,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace ShortStrokeVectorTransfer
+namespace MMIO::Packed::ShortStrokeVectorTransfer
 {
     inline uint32_t& Get()
     {
@@ -26,6 +26,6 @@ namespace MMIO { namespace Packed { namespace ShortStrokeVectorTransfer
     {
             Get() = shortStrokeVector;
     }
-}}}
+}
 
-}}}
+}

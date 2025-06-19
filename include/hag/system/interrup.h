@@ -5,7 +5,7 @@
 #include <hag/types.h>
 #include <hag/farptr.h>
 
-namespace Hag { namespace System { namespace InterruptTable
+namespace Hag::System::InterruptTable
 {
 
     typedef uint16_t Interrupt_t;
@@ -17,6 +17,6 @@ namespace Hag { namespace System { namespace InterruptTable
     };
 
     template <Interrupt_t intr>
-    inline static FARPointer& Pointer() { return *((FARPointer*)(intr * 4)); }
+    inline static FARPointer& Pointer() { return *FARPointer(0x0000, intr << 2).ToPointer<FARPointer>(); }
 
-}}}
+}

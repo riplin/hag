@@ -5,11 +5,12 @@
 #include <hag/types.h>
 #include <pc.h>
 
-inline void SYS_ClearInterrupts() { asm("cli\n\t":::); }
-inline void SYS_RestoreInterrupts() { asm("sti\n\t":::); }
+//Absolutely nothing should be moved above or below these calls by the compiler.
+inline void SYS_ClearInterrupts() { asm volatile ("cli\n\t"::: "memory"); }
+inline void SYS_RestoreInterrupts() { asm volatile ("sti\n\t"::: "memory"); }
 
 //This is a time sensitive loop!!!!
-inline void SYS_SpinWait(uint32_t cycles){ asm("1:\n\t" "loop 1b\n\t"::"c" (cycles): "%ecx", "cc"); }
+inline void SYS_SpinWait(uint32_t cycles){ asm volatile ("1:\n\t" "loop 1b\n\t"::"c" (cycles): "%ecx", "cc", "memory"); }
 
 #ifdef MOCK
 

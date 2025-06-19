@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/vidmodes.h>
 #include <hag/vesa/vidmodes.h>
 
-namespace Hag { namespace S3 { namespace Trio32
+namespace Hag::S3::Trio32
 {
 
 typedef Vesa::VideoMode_t VesaVideoMode_t;
@@ -64,4 +64,4 @@ namespace VideoMode
     };
 }
 
-}}}
+}

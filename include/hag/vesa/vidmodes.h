@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace Hag { namespace Vesa
+namespace Hag::Vesa
 {
 
     typedef uint16_t VideoMode_t;
@@ -81,4 +81,4 @@ namespace Hag { namespace Vesa
         };
     }
 
-}}
+}

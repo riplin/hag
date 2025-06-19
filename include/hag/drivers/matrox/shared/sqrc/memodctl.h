@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/sqrc/memodctl.h>
 
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Sequencer
+namespace Hag::Matrox::Shared::Sequencer
 {
 
 namespace Register
@@ -46,4 +46,4 @@ namespace MemoryModeControl
     }
 }
 
-}}}}
+}

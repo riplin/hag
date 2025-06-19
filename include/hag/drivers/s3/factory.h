@@ -4,7 +4,7 @@
 
 #include <hag/factory.h>
 
-namespace Hag { namespace S3
+namespace Hag::S3
 {
 
     class Factory : public Hag::Factory
@@ -19,4 +19,4 @@ namespace Hag { namespace S3
         static Factory m_Instance;
     };
 
-}}
+}

@@ -4,7 +4,7 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace Vesa { namespace PM {
+namespace Hag::Vesa::PM {
 
 /*
     Hardware API:
@@ -158,4 +158,4 @@ namespace Hag { namespace Vesa { namespace PM {
         return false; //I haven't looked at any hardware yet that supports this.
     }
 
-}}}
+}

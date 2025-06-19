@@ -4,15 +4,15 @@
 
 #include <hag/drivers/s3/shared/pixdtrf.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace MMIO { namespace Packed { namespace PixelDataTransfer
+namespace MMIO::Packed::PixelDataTransfer
 {
     inline uint32_t* Get()
     {
         return FARPointer(0xA000, 0x0000).ToPointer<uint32_t>(0x7FFF);
     }
-}}}
+}
 
-}}}
+}

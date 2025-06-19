@@ -4,9 +4,9 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace CRTCExtension
+namespace Hag::Matrox::Shared::CRTCExtension
 {
 
 typedef uint8_t Register_t;
 
-}}}}
+}

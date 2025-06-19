@@ -5,7 +5,7 @@
 #include <hag/drivers/matrox/shared/regtype.h>
 #include <hag/drivers/vga/miscout.h>
 
-namespace Hag { namespace Matrox { namespace Shared
+namespace Hag::Matrox::Shared
 {
 
 namespace Register
@@ -36,4 +36,4 @@ namespace MiscellaneousOutput
     }
 }
 
-}}}
+}

@@ -3,7 +3,7 @@
 #include <hag/testing/testpat.h>
 #include <hag/drivers/vga/sqrc/enwrtpl.h>
 
-namespace Hag { namespace Testing { namespace TestPatterns
+namespace Hag::Testing::TestPatterns
 {
 
 struct CharAndAttr
@@ -368,4 +368,4 @@ void Draw32BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     }
 }
 
-}}}
+}

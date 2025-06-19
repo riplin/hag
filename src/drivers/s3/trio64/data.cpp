@@ -3,7 +3,7 @@
 #include <hag/system/bda.h>
 #include <hag/drivers/s3/trio64/data.h>
 
-namespace Hag { namespace S3 { namespace Trio64 { namespace Data
+namespace Hag::S3::Trio64::Data
 {
 
 Shared::VESAModeTranslation VideoModeTranslation[] =
@@ -1605,4 +1605,4 @@ uint8_t ClockDataRev3[] =
 
 Shared::FirmwareFlag_t FirmwareFlags = Shared::FirmwareFlag::Color | Shared::FirmwareFlag::Unknown3;
 
-}}}}
+}

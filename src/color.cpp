@@ -2,7 +2,7 @@
 
 #include <hag/color.h>
 
-namespace Hag { namespace Color { namespace Gradient
+namespace Hag::Color::Gradient
 {
 
 namespace Bpp32
@@ -27,4 +27,4 @@ namespace Bpp32
     };
 }
 
-}}}
+}

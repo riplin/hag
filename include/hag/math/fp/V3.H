@@ -4,7 +4,7 @@
 
 #include <hag/math/fp/v2.h>
 
-namespace Hag { namespace Math {
+namespace Hag::Math {
 
 class v3
 {
@@ -181,4 +181,4 @@ inline v3 operator/(fp lhs, const v3& rhs)
 inline v3 operator%(fp lhs, const v3& rhs)
 { return v3(lhs % rhs.x(), lhs % rhs.y(), lhs % rhs.z()); }
 
-}}
+}

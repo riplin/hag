@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/gfxc/regtype.h>
 #include <hag/drivers/vga/gfxc/data.h>
 
-namespace Hag { namespace VGA { namespace GraphicsController
+namespace Hag::VGA::GraphicsController
 {
 
 namespace Register
@@ -54,4 +54,4 @@ namespace SetResetData
 
 }
 
-}}}
+}

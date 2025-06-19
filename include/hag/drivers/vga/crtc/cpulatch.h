@@ -2,10 +2,10 @@
 
 #pragma once
 
+#include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
-#include <hag/drivers/s3/shared/crtc/regtype.h>
 
-namespace Hag { namespace S3 { namespace Shared { namespace CRTController
+namespace Hag::VGA::CRTController
 {
 
 namespace Register
@@ -35,4 +35,4 @@ namespace CPULatchData
 
 }
 
-}}}}
+}

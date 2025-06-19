@@ -5,7 +5,7 @@
 #include <hag/types.h>
 #include <hag/system/bda.h>
 
-namespace Hag { namespace Matrox { namespace Shared
+namespace Hag::Matrox::Shared
 {
 
 namespace Data
@@ -43,4 +43,4 @@ extern PalettePair PalettePair578[];
 
 }
 
-}}}
+}

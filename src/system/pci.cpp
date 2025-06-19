@@ -2,7 +2,7 @@
 
 #include <hag/system/pci.h>
 
-namespace Hag { namespace System { namespace PCI
+namespace Hag::System::PCI
 {
 
 static bool ScanBusInternal(uint8_t bus, ScanBusCallback_t callback, void* context);
@@ -99,4 +99,4 @@ bool FindDevice(uint16_t vendorId, uint16_t deviceId, uint8_t& bus, uint8_t& slo
     return context.Bus != 0xFF;
 }
 
-}}}
+}

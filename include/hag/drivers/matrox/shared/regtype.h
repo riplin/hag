@@ -4,9 +4,9 @@
 
 #include <hag/drivers/vga/regtype.h>
 
-namespace Hag { namespace Matrox { namespace Shared
+namespace Hag::Matrox::Shared
 {
-
+    
 typedef VGA::Register_t Register_t;
 
-}}}
+}

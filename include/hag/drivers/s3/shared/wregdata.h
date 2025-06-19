@@ -5,7 +5,7 @@
 #include <hag/drivers/s3/shared/regtype.h>
 #include <hag/system/sysasm.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 namespace Register
@@ -196,4 +196,4 @@ namespace WriteRegisterData
     inline void WriteReadRegisterSelect(WriteRegisterData_t value) { Write(value | ReadRegisterSelect); }
 }
 
-}}}
+}

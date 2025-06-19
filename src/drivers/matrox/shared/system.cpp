@@ -1,6 +1,7 @@
 //Copyright 2025-Present riplin
 
 #include <dos.h>
+#include <stdio.h>
 #include <string.h>
 #include <hag/system/pci.h>
 #include <hag/system/interrup.h>
@@ -11,7 +12,7 @@
 #include <hag/drivers/matrox/shared/crtcext/misc.h>         //CER3
 #include <hag/drivers/matrox/shared/crtcext/mempg.h>        //CER4
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function
+namespace Hag::Matrox::Shared::Function
 {
 
 namespace System
@@ -140,7 +141,7 @@ bool Initialize()
 
             s_Font8x8 = FARPointer(fontSegment, 0x0000);
             s_Font8x8Graphics = FARPointer(fontSegment, Data::Font8x8Size >> 1);
-            s_Font8x16 = FARPointer(fontSegment, Data::Font8x8Size);;
+            s_Font8x16 = FARPointer(fontSegment, Data::Font8x8Size);
             memcpy(s_Font8x8.ToPointer<uint8_t>(Data::Font8x8Size), Data::Font8x8, Data::Font8x8Size);
             memcpy(s_Font8x16.ToPointer<uint8_t>(Data::Font8x16Size), Data::Font8x16, Data::Font8x16Size);
 
@@ -183,4 +184,4 @@ uint32_t GetMemorySize()
 
 }
 
-}}}}
+}

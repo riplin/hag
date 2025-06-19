@@ -4,9 +4,9 @@
 
 #include <hag/drivers/vga/attribc/regtype.h>
 
-namespace Hag { namespace S3 { namespace Shared { namespace AttributeController
+namespace Hag::S3::Shared::AttributeController
 {
 
 typedef VGA::AttributeController::Register_t Register_t;
 
-}}}}
+}

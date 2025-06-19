@@ -7,7 +7,7 @@
 #include <hag/drivers/s3/shared/sqrc/extseqd.h>
 #include <hag/drivers/s3/shared/sqrc/rclksync.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 namespace PM
@@ -71,4 +71,4 @@ struct Hardware
 
 }
 
-}}}
+}

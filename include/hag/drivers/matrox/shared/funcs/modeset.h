@@ -11,7 +11,7 @@
     namespace BitsPerPixel { using namespace Shared::Function::ModeSetting::BitsPerPixel; }     \
     namespace SetVideoError { using namespace Shared::Function::ModeSetting::SetVideoError; }
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function
+namespace Hag::Matrox::Shared::Function
 {
 
 namespace ModeSetting
@@ -86,4 +86,4 @@ namespace ModeSetting
     SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare, bool clearDisplay = true);
 }
 
-}}}}
+}

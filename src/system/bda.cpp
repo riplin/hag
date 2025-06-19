@@ -3,7 +3,7 @@
 #include <hag/system/bda.h>
 #include <hag/drivers/vga/crtc/index.h>
 
-namespace Hag { namespace System { namespace BDA
+namespace Hag::System::BDA
 {
 
 static Instance* s_currentInstance = &SystemBDA();
@@ -18,4 +18,4 @@ void SetInstance(Instance& instance)
     s_currentInstance = &instance;
 }
 
-}}}
+}

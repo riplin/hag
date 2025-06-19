@@ -5,18 +5,18 @@
 #include <hag/drivers/s3/shared/drawcmd.h>
 #include <hag/drivers/s3/shared/drawcmd2.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         DrawingCommands = 0x8118,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace DrawingCommands
+namespace MMIO::Packed::DrawingCommands
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace DrawingCommands
     {
             Get() = (uint32_t(drawingCommand2) << 16) | drawingCommand;
     }
-}}}
+}
 
-}}}
+}

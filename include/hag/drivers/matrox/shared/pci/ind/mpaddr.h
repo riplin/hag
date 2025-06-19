@@ -12,7 +12,7 @@
 #include <hag/drivers/matrox/shared/pci/ind/indidx.h>
 #include <hag/drivers/matrox/shared/pci/ind/inddat.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI { namespace Indirect
+namespace Hag::Matrox::Shared::PCI::Indirect
 {
 
 namespace MultiPurposeAddress
@@ -54,4 +54,4 @@ namespace MultiPurposeAddress
     }
 }
 
-}}}}}
+}

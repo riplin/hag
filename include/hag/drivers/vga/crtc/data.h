@@ -4,7 +4,7 @@
 
 #include <hag/drivers/vga/crtc/index.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 namespace Register
@@ -49,4 +49,4 @@ namespace CRTControllerData
 
 }
 
-}}
+}

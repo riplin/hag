@@ -4,9 +4,9 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace VGA { namespace AttributeController
+namespace Hag::VGA::AttributeController
 {
 
 typedef uint8_t Register_t;
 
-}}}
+}

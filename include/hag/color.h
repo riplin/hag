@@ -36,10 +36,12 @@ namespace Bpp32
     };
 }
 
-namespace Gradient { namespace Bpp32
+namespace Gradient::Bpp32
 {
     extern Color32_t Gold[5];
     extern Color32_t Silver[6];
-}}
+}
 
-}}
+}
+
+}

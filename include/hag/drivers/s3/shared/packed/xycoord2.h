@@ -5,18 +5,18 @@
 #include <hag/drivers/s3/shared/xcoord2.h>
 #include <hag/drivers/s3/shared/yc2asc2.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         XYCoordinate2 = 0x810C,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace XYCoordinate2
+namespace MMIO::Packed::XYCoordinate2
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace XYCoordinate2
     {
             Get() = (uint32_t(coordinateX) << 16) | coordinateY;
     }
-}}}
+}
 
-}}}
+}

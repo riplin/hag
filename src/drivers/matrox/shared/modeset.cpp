@@ -33,7 +33,7 @@
 #include <hag/drivers/matrox/shared/pci/idx/pixpllp.h>      //IDX46, IDX4A, IDX4E
 #include <hag/drivers/matrox/shared/pci/idx/pixpllst.h>     //IDX4F
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function { namespace ModeSetting
+namespace Hag::Matrox::Shared::Function::ModeSetting
 {
 
 typedef bool (*DescriptorCallback_t)(ModeDescriptor* descriptor, void* context, SetVideoError_t error);
@@ -1182,4 +1182,4 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
     return SetVideoError::Success;
 }
 
-}}}}}
+}

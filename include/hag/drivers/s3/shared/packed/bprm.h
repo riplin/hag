@@ -4,18 +4,18 @@
 
 #include <hag/drivers/s3/shared/bitplnrm.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         BitplaneReadMask = 0x812C,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace BitplaneReadMask
+namespace MMIO::Packed::BitplaneReadMask
 {
     inline BitplaneReadMask_t& Get()
     {
@@ -26,6 +26,6 @@ namespace MMIO { namespace Packed { namespace BitplaneReadMask
     {
             Get() = readMask;
     }
-}}}
+}
 
-}}}
+}

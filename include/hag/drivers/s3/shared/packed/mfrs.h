@@ -5,18 +5,18 @@
 #include <hag/farptr.h>
 #include <hag/drivers/s3/shared/wregdata.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         MultiFunctionAndReadSelect = 0x8144,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace MultiFunctionAndReadSelect
+namespace MMIO::Packed::MultiFunctionAndReadSelect
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace MultiFunctionAndReadSelect
     {
             Get() = (uint32_t(readSelect) << 16) | multiFunctionControlMisc;
     }
-}}}
+}
 
-}}}
+}

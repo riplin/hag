@@ -5,18 +5,18 @@
 #include <hag/farptr.h>
 #include <hag/drivers/s3/shared/wregdata.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         PixelControlAndMultiFunctionMisc2 = 0x8140,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace PixelControlAndMultiFunctionMisc2
+namespace MMIO::Packed::PixelControlAndMultiFunctionMisc2
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace PixelControlAndMultiFunctionMisc2
     {
             Get() = (uint32_t(multiFunctionControlMisc2) << 16) | pixelControl;
     }
-}}}
+}
 
-}}}
+}

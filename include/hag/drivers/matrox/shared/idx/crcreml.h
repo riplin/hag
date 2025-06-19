@@ -4,7 +4,7 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Indexed
+namespace Hag::Matrox::Shared::Indexed
 {
 
 namespace Register
@@ -37,4 +37,4 @@ namespace CRCRemainderLow
     }
 }
 
-}}}}
+}

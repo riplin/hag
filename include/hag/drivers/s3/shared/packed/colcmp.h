@@ -4,18 +4,18 @@
 
 #include <hag/drivers/s3/shared/colcomp.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         ColorCompare = 0x8130,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace ColorCompare
+namespace MMIO::Packed::ColorCompare
 {
     inline ColorCompare_t& Get()
     {
@@ -26,6 +26,6 @@ namespace MMIO { namespace Packed { namespace ColorCompare
     {
             Get() = colorCompare;
     }
-}}}
+}
 
-}}}
+}

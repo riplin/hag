@@ -5,7 +5,7 @@
 #include <hag/drivers/matrox/shared/pci/ctrlap.h>
 #include <hag/drivers/matrox/shared/regs/sign.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace MMIO
+namespace Hag::Matrox::Shared::MMIO
 {
 
 namespace Sign
@@ -20,4 +20,4 @@ namespace Sign
     }
 }
 
-}}}}
+}

@@ -6,7 +6,7 @@
 #include <hag/drivers/s3/crtc/regs.h>
 
 
-namespace Hag { namespace S3 { namespace CRTController
+namespace Hag::S3::CRTController
 {
 
 typedef uint8_t Configuration2_t;
@@ -56,4 +56,4 @@ namespace Configuration2
 
 }
 
-}}}
+}

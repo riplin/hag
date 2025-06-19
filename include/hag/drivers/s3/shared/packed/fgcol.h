@@ -4,18 +4,18 @@
 
 #include <hag/drivers/s3/shared/fgcolor.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         ForegroundColor = 0x8124,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace ForegroundColor
+namespace MMIO::Packed::ForegroundColor
 {
     inline ForegroundColor_t& Get()
     {
@@ -26,6 +26,6 @@ namespace MMIO { namespace Packed { namespace ForegroundColor
     {
             Get() = foregroundColor;
     }
-}}}
+}
 
-}}}
+}

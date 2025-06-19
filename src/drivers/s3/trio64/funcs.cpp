@@ -6,7 +6,7 @@
 #include <hag/drivers/vga/data.h>
 #include <hag/drivers/s3/trio64/funcs.h>
 
-namespace Hag { namespace S3 { namespace Trio64
+namespace Hag::S3::Trio64
 {
 
 bool GetVideoParameterBlockElement(uint16_t index, uint8_t*& returnPointer, uint16_t size)
@@ -1860,4 +1860,4 @@ void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t 
                                 DrawingCommand::CommandRectangleFill);
 }
 
-}}}
+}

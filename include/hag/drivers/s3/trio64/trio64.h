@@ -13,8 +13,8 @@
 #include <hag/drivers/vga/attribc/palette.h>
 #include <hag/drivers/vga/attribc/pixelpad.h>
 
-#include <hag/drivers/s3/shared/crtc/attridxf.h>
-#include <hag/drivers/s3/shared/crtc/attridxi.h>
+#include <hag/drivers/vga/crtc/attridxf.h>
+#include <hag/drivers/vga/crtc/attridxi.h>
 #include <hag/drivers/s3/shared/crtc/biosflag.h>
 #include <hag/drivers/s3/shared/crtc/bkwcomp1.h>
 #include <hag/drivers/s3/shared/crtc/bkwcomp2.h>
@@ -23,7 +23,7 @@
 #include <hag/drivers/s3/shared/crtc/conf1.h>
 #include <hag/drivers/s3/shared/crtc/conf2.h>
 #include <hag/drivers/s3/shared/crtc/conf3.h>
-#include <hag/drivers/s3/shared/crtc/cpulatch.h>
+#include <hag/drivers/vga/crtc/cpulatch.h>
 #include <hag/drivers/vga/crtc/crtcovfl.h>
 #include <hag/drivers/s3/shared/crtc/crtreglk.h>
 #include <hag/drivers/vga/crtc/curendsl.h>
@@ -204,7 +204,7 @@
 #include <hag/drivers/s3/shared/ddchw.h>
 #include <hag/drivers/s3/shared/pmhw.h>
 
-namespace Hag { namespace S3 { namespace Trio64
+namespace Hag::S3::Trio64
 {
 
 typedef Shared::Register_t Register_t;
@@ -265,9 +265,9 @@ namespace CRTController
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, EndVerticalBlank);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CRTCModeControl);
     IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, LineCompare);
-    IMPORTNAMESPACEANDTYPE(Shared::CRTController, CPULatchData);
-    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::CRTController, AttributeIndexF);
-    IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::CRTController, AttributeIndexI);
+    IMPORTNAMESPACEANDTYPE(VGA::CRTController, CPULatchData);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, AttributeIndexF);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, AttributeIndexI);
     IMPORTNAMESPACEANDTYPE(Shared::CRTController, DeviceIDHigh);
     IMPORTNAMESPACEANDTYPE(Shared::CRTController, DeviceIDLow);
     IMPORTNAMESPACEANDTYPE(Shared::CRTController, Revision);
@@ -509,4 +509,4 @@ namespace DDC
     using namespace Shared::DDC;
 }
 
-}}}
+}

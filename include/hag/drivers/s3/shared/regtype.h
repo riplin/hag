@@ -4,9 +4,9 @@
 
 #include <hag/drivers/vga/regtype.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 typedef VGA::Register_t Register_t;
 
-}}}
+}

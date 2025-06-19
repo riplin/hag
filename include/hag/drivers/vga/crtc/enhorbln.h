@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/crtc/regtype.h>
 #include <hag/drivers/vga/crtc/data.h>
 
-namespace Hag { namespace VGA { namespace CRTController
+namespace Hag::VGA::CRTController
 {
 
 namespace Register
@@ -64,4 +64,4 @@ namespace EndHorizontalBlank
 
 }
 
-}}}
+}

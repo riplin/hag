@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/sqrc/data.h>
 #include <hag/drivers/s3/shared/sqrc/regtype.h>
 
-namespace Hag { namespace S3 { namespace Shared { namespace Sequencer
+namespace Hag::S3::Shared::Sequencer
 {
 
 namespace Register
@@ -36,4 +36,4 @@ namespace ClockSynthTestHigh
 
 }
 
-}}}}
+}

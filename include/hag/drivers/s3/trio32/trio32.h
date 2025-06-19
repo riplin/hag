@@ -2,8 +2,8 @@
 
 #pragma once
 
-namespace Hag { namespace S3 { namespace Trio32
+namespace Hag::S3::Trio32
 {
 
 
-}}}
+}

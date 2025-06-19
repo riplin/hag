@@ -4,7 +4,7 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace Vesa
+namespace Hag::Vesa
 {
 
 typedef uint8_t ModeAttributes_t;
@@ -56,4 +56,4 @@ struct ModeInfo
 
 #pragma pack(pop)
 
-}}
+}

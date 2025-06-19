@@ -4,9 +4,9 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace VGA { namespace CRTController
+namespace Hag::VGA::CRTController
 {
 
 typedef uint8_t Register_t;
 
-}}}
+}

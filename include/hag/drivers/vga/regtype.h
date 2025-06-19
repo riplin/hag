@@ -4,9 +4,9 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 typedef uint16_t Register_t;
 
-}}
+}

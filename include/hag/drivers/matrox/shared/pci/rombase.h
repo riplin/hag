@@ -4,7 +4,7 @@
 
 #include <hag/system/pci.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI
+namespace Hag::Matrox::Shared::PCI
 {
 
 namespace Register
@@ -63,4 +63,4 @@ namespace RomBaseAddress
     inline void Write(System::PCI::Device_t device, RomBaseAddress_t value) { System::PCI::Write32(device, Register::RomBaseAddress, value); }
 }
 
-}}}}
+}

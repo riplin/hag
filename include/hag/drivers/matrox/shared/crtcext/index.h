@@ -6,7 +6,7 @@
 #include <hag/drivers/vga/regtype.h>
 #include <hag/drivers/matrox/shared/crtcext/regtype.h>
 
-namespace Hag { namespace Matrox { namespace Shared
+namespace Hag::Matrox::Shared
 {
 
 namespace Register
@@ -46,4 +46,4 @@ namespace CRTCExtensionIndex
 
 }
 
-}}}
+}

@@ -5,7 +5,7 @@
 #include <hag/drivers/matrox/shared/funcs/modeset.h>
 #include "modintl.h"
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function { namespace ModeSetting
+namespace Hag::Matrox::Shared::Function::ModeSetting
 {
 
 extern Scanlines_t GetNumberOfActiveScanlines(const ModeDescriptor& descriptor);
@@ -546,4 +546,4 @@ void PrintTimings(VideoParameters& videoMode)
         verticalTopBorderTime, verticalTopBorderLines);
 }
 
-}}}}}
+}

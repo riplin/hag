@@ -11,7 +11,7 @@
 
 //This API handles the BIOS Data Area
 
-namespace Hag { namespace System { namespace BDA
+namespace Hag::System::BDA
 {
     #pragma pack(push, 1)
 
@@ -625,4 +625,4 @@ namespace Hag { namespace System { namespace BDA
         }
     }
 
-}}}
+}

@@ -4,7 +4,7 @@
 
 #include <hag/drivers/vga/gfxc/index.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 namespace Register
@@ -48,4 +48,4 @@ namespace GraphicsControllerData
 
 }
 
-}}
+}

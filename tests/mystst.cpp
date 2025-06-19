@@ -1,6 +1,7 @@
 //Copyright 2025-Present riplin
 
-#include <i86.h>
+#include <new>
+#include <dos.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,15 +20,11 @@
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
 
-#include <hag/math/fp/FPMATH.H>
+#include <hag/math/fp/fpmath.h>
 
 #include "mode.h"
 #include <hag/drivers/matrox/shared/funcs/system.h>
 #include <hag/drivers/matrox/shared/funcs/modeset.h>
-
-#include <hag/drivers/matrox/shared/crtc/cpudata.h>         //CR22
-#include <hag/drivers/matrox/shared/crtc/atadrdat.h>        //CR24
-#include <hag/drivers/matrox/shared/crtc/attraddr.h>        //CR26
 
 #include <hag/drivers/matrox/shared/miscout.h>              //0x3C2, 0x3CC
 
@@ -196,7 +193,7 @@ public:
             {
                 if (config0[idx] != config1[idx])
                 {
-                    printf("0x%02X : 0x%08X != 0x%08X\n", idx * 4, config0[idx], config1[idx]);
+                    printf("0x%02X : 0x%08lX != 0x%08lX\n", idx * 4, config0[idx], config1[idx]);
                 }
             }
             printf("\n");
@@ -226,7 +223,7 @@ public:
             {
                 if (aperture0[idx] != aperture1[idx])
                 {
-                    printf("0x%04X : 0x%08X != 0x%08X\n", idx * 4, aperture0[idx], aperture1[idx]);
+                    printf("0x%04X : 0x%08lX != 0x%08lX\n", idx * 4, aperture0[idx], aperture1[idx]);
                 }
             }
             printf("\n");
@@ -534,7 +531,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
         //;
@@ -630,7 +627,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
     //        +------------------------ 200 Scan lines
@@ -719,7 +716,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
         //     mov       dx, VGA_AttributeControllerIndex;Port 0x3c0
@@ -754,7 +751,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         r.w.dx = baseVideoIOPort;
 
@@ -899,7 +896,7 @@ namespace ASM
         //     ret
     }
 
-    #pragma pack(push, 1);
+    #pragma pack(push, 1)
     struct PaletteData
     {
         Hag::System::BDA::VideoDisplayDataArea_t mask;
@@ -907,7 +904,7 @@ namespace ASM
         uint16_t count;
         uint8_t colors[];
     };
-    #pragma pack(pop);
+    #pragma pack(pop)
 
     extern PaletteData* Palettes[];
     uint8_t Greyscale(uint8_t red, uint8_t green, uint8_t blue)//Offset 0x2fcc
@@ -1016,7 +1013,7 @@ namespace ASM
     {
         using namespace Hag;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
         for (uint16_t i = 0; i < count; ++i)
@@ -1171,7 +1168,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
 
@@ -1486,7 +1483,7 @@ namespace ASM
     void Func0x2d47(uint8_t* font, uint16_t count, uint16_t val, uint16_t val2)//Offset 0x2d47
     {
         static uint8_t Data0x2dbe[] = { 0x00, 0x40, 0x80, 0xC0, 0x20, 0x60, 0xA0, 0xE0 };
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         r.w.cx = count;
         r.w.dx = val;   //?
@@ -1794,7 +1791,7 @@ namespace ASM
 
     void Func0x2d24(uint16_t val1, uint16_t val2, uint8_t* ptr, uint16_t count)//Offset 0x2d24
     {
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         r.w.ax = val1;
         r.w.bx = val2;
@@ -1927,7 +1924,7 @@ namespace ASM
         using namespace Hag::System;
         BDA::VideoParameterControlBlock* videoParameterControlBlock = 
             BDA::VideoParameterControlBlockPointer::Get().ToPointer<BDA::VideoParameterControlBlock>();
-
+        (void)videoParameterControlBlock;
         //TODO
         //     mov   al, BDA_VPCB_GrahicsCharSetOverride;0xc
         //     call  LookupVideoParameterControlBlockPointer;Offset 0x317d
@@ -2049,10 +2046,12 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox::Shared;
 
-        REGPACK r;
+        REGS r;
+        SREGS sr;
         memset(&r, 0, sizeof(r));
+        memset(&sr, 0, sizeof(sr));
         uint16_t saveAX = 0;
-        uint16_t saveDX = 0;
+        //uint16_t saveDX = 0;
 
         //;
         //;inputs:
@@ -2084,7 +2083,7 @@ namespace ASM
         r.w.ax = saveAX;
 
         //     push      dx
-        saveDX = r.w.dx;
+        //saveDX = r.w.dx;
 
         //     mov       byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
         BDA::DisplayMode::Get() = r.h.al;
@@ -2118,7 +2117,7 @@ namespace ASM
         r.w.ax = 0;
 
         //     mov       es, ax
-        r.w.es = r.w.ax;
+        sr.es = r.w.ax;
 
         //     mov       byte ptr ds:[BDA_ActiveDisplayNumber], al;Offset 0x462
         BDA::ActiveDisplayNumber::Get() = r.h.al;
@@ -2377,7 +2376,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         uint8_t* siPointer = nullptr;
         bool isLower = false;
@@ -2607,7 +2606,7 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox;
         
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         PCI::Device_t mystique = 0;
         
@@ -2831,7 +2830,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::Matrox;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
         uint16_t saveAX1 = 0;
@@ -3172,9 +3171,8 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
-        uint16_t saveBX = 0;
         r.w.bx = videoMode;
         uint16_t* siPointer = nullptr;
         bool ret = false;
@@ -4011,9 +4009,9 @@ namespace ASM
     //
     uint32_t CalculatePLL_MNPS(uint32_t frequencyKHz)//Offset 0x5e4b
     {
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
-        r.x.eax = frequencyKHz;
+        r.d.eax = frequencyKHz;
         bool notEquals = false;
         uint32_t saveEAX = 0;
         uint32_t saveEBX = 0;
@@ -4028,40 +4026,40 @@ namespace ASM
 
         //     cmp    eax, 00001876h               ;6,262
         //     jge    Label0x5e63                  ;Offset 0x5e63
-        if (r.x.eax >= 6262)
+        if (r.d.eax >= 6262)
             goto Label0x5e63;
 
         //     mov    eax, 00001876h               ;6,262
-        r.x.eax = 6262;
+        r.d.eax = 6262;
 
         // Label0x5e63:                            ;Offset 0x5e63
     LABEL(CalculatePLL_MNPS, Label0x5e63);
 
         //     cmp    eax, 000356f0h               ;218,864
         //     jle    Label0x5e71                  ;Offset 0x5e71
-        if (r.x.eax <= 218864)
+        if (r.d.eax <= 218864)
             goto Label0x5e71;
 
         //     mov    eax, 000356f0h               ;218,864
-        r.x.eax = 218864;
+        r.d.eax = 218864;
 
         // Label0x5e71:                            ;Offset 0x5e71
     LABEL(CalculatePLL_MNPS, Label0x5e71);
 
         //     mov    esi, eax
-        r.x.esi = r.x.eax;
+        r.d.esi = r.d.eax;
 
         //     mov    edi, 000356f0h               ;218,864
-        r.x.edi = 218864;
+        r.d.edi = 218864;
 
         //     mov    edx, 00035b60h               ;220,000
-        r.x.edx = 220000;
+        r.d.edx = 220000;
 
         //     mov    cl, 64h                      ;100
         r.h.cl = 0x64;
 
         //     xor    ebx, ebx
-        r.x.ebx = 0;
+        r.d.ebx = 0;
 
         // Label0x5e85:                            ;Offset 0x5e85
     LABEL(CalculatePLL_MNPS, Label0x5e85);
@@ -4083,58 +4081,58 @@ namespace ASM
             goto Label0x5f81;
 
         //     push   ebx
-        saveEBX = r.x.ebx;
+        saveEBX = r.d.ebx;
 
         //     push   edx
-        saveEDX = r.x.edx;
+        saveEDX = r.d.edx;
 
         //     xor    edx, edx
-        r.x.edx = 0;
+        r.d.edx = 0;
 
         //     mov    eax, 000037eeh               ;14,318
-        r.x.eax = 14318;
+        r.d.eax = 14318;
 
         //     xor    ebx, ebx
-        r.x.ebx = 0;
+        r.d.ebx = 0;
 
         //     mov    bl, cl
         r.h.bl = r.h.cl;
 
         //     inc    ebx
-        ++r.x.ebx;
+        ++r.d.ebx;
 
         //     mul    ebx
-        rax = uint64_t(r.x.eax) * r.x.ebx;
+        rax = uint64_t(r.d.eax) * r.d.ebx;
 
         //     xor    ebx, ebx
-        r.x.ebx = 0;
+        r.d.ebx = 0;
 
         //     mov    bl, ch
         r.h.bl = r.h.ch;
 
         //     inc    ebx
-        ++r.x.ebx;
+        ++r.d.ebx;
         //     div    ebx
-        r.x.eax = uint32_t(rax / r.x.ebx);
+        r.d.eax = uint32_t(rax / r.d.ebx);
 
         //     pop    edx
-        r.x.edx = saveEDX;
+        r.d.edx = saveEDX;
 
         //     pop    ebx
-        r.x.ebx = saveEBX;
+        r.d.ebx = saveEBX;
 
         //     cmp    eax, 0000c350h               ;50,000
         //     jl     Label0x5f7c                  ;Offset 0x5f7c
-        if (r.x.eax < 50000)
+        if (r.d.eax < 50000)
             goto Label0x5f7c;
 
         //     cmp    eax, 00035b60h               ;220,000
         //     jg     Label0x5f7c                  ;Offset 0x5f7c
-        if (r.x.eax > 220000)
+        if (r.d.eax > 220000)
             goto Label0x5f7c;
 
         //     shl    ecx, 10h
-        r.x.ecx <<= 0x10;
+        r.d.ecx <<= 0x10;
 
         //     mov    cl, 00h
         r.h.cl = 0x00;
@@ -4148,7 +4146,7 @@ namespace ASM
             goto Label0x5ee0;
 
         //     shr    ecx, 10h
-        r.x.ecx >>= 0x10;
+        r.d.ecx >>= 0x10;
 
         //     jmp    Label0x5f7c                  ;Offset 0x5f7c
         goto Label0x5f7c;
@@ -4157,61 +4155,61 @@ namespace ASM
     LABEL(CalculatePLL_MNPS, Label0x5ee0);
 
         //     push   eax
-        saveEAX = r.x.eax;
+        saveEAX = r.d.eax;
 
         //     push   ebx
-        saveEBX = r.x.ebx;
+        saveEBX = r.d.ebx;
 
         //     push   edx
-        saveEDX = r.x.edx;
+        saveEDX = r.d.edx;
 
         //     xor    edx, edx
-        r.x.edx = 0;
+        r.d.edx = 0;
 
         //     mov    ebx, 00000001h
-        r.x.ebx = 1;
+        r.d.ebx = 1;
 
         //     shl    ebx, cl
-        r.x.ebx <<= r.h.cl;
+        r.d.ebx <<= r.h.cl;
 
         //     div    ebx
-        r.x.eax /= r.x.ebx;
+        r.d.eax /= r.d.ebx;
 
         //     mov    edx, esi
-        r.x.edx = r.x.esi;
+        r.d.edx = r.d.esi;
 
         //     cmp    eax, edx
         //     jge    Label0x5eff                  ;Offset 0x5eff
-        if (r.x.eax >= r.x.edx)
+        if (r.d.eax >= r.d.edx)
             goto Label0x5eff;
 
         //     xchg   eax, edx
-        r.x.eax ^= r.x.edx;
-        r.x.edx ^= r.x.eax;
-        r.x.eax ^= r.x.edx;
+        r.d.eax ^= r.d.edx;
+        r.d.edx ^= r.d.eax;
+        r.d.eax ^= r.d.edx;
 
         // Label0x5eff:                            ;Offset 0x5eff
     LABEL(CalculatePLL_MNPS, Label0x5eff);
 
         //     sub    eax, edx
-        r.x.eax -= r.x.edx;
+        r.d.eax -= r.d.edx;
 
         //     pop    edx
-        r.x.edx = saveEDX;
+        r.d.edx = saveEDX;
 
         //     pop    ebx
-        r.x.ebx = saveEBX;
+        r.d.ebx = saveEBX;
 
         //     cmp    eax, edi
         //     jg     Label0x5f75                  ;Offset 0x5f75
-        if (r.x.eax > r.x.edi)
+        if (r.d.eax > r.d.edi)
             goto Label0x5f75;
 
         //     cmp    eax, edi
-        notEquals = r.x.eax != r.x.edi;
+        notEquals = r.d.eax != r.d.edi;
 
         //     mov    edi, eax
-        r.x.edi = r.x.eax;
+        r.d.edi = r.d.eax;
 
         //     jne    Label0x5f1c                  ;Offset 0x5f1c
         if (notEquals)
@@ -4219,11 +4217,11 @@ namespace ASM
 
         //     pop    eax
         //     push   eax
-        r.x.eax = saveEAX;
+        r.d.eax = saveEAX;
         
         //     cmp    eax, edx
         //     jge    Label0x5f75                  ;Offset 0x5f75
-        if (r.x.eax >= r.x.edx)
+        if (r.d.eax >= r.d.edx)
             goto Label0x5f75;
 
         // Label0x5f1c:                            ;Offset 0x5f1c
@@ -4231,19 +4229,19 @@ namespace ASM
 
         //     pop    eax
         //     push   eax
-        r.x.eax = saveEAX;
+        r.d.eax = saveEAX;
 
         //     mov    edx, eax
-        r.x.edx = r.x.eax;
+        r.d.edx = r.d.eax;
 
         //     xor    ebx, ebx
-        r.x.ebx = 0;
+        r.d.ebx = 0;
 
         //     mov    eax, ecx
-        r.x.eax = r.x.ecx;
+        r.d.eax = r.d.ecx;
 
         //     shr    eax, 10h
-        r.x.eax >>= 0x10;
+        r.d.eax >>= 0x10;
 
         //     mov    bx, ax
         r.w.bx = r.w.ax;
@@ -4267,11 +4265,11 @@ namespace ASM
         r.w.bx |= r.w.ax;
 
         //     xor    eax, eax
-        r.x.eax = 0;
+        r.d.eax = 0;
 
         //     cmp    edx, 000186a0h               ;100,000
         //     jg     Label0x5f4f                  ;Offset 0x5f4f
-        if (r.x.edx > 100000)
+        if (r.d.edx > 100000)
             goto Label0x5f4f;
 
         //     mov    ax, 0000h
@@ -4285,7 +4283,7 @@ namespace ASM
 
         //     cmp    edx, 000222e0h               ;140,000
         //     jg     Label0x5f5d                  ;Offset 0x5f5d
-        if (r.x.edx > 140000)
+        if (r.d.edx > 140000)
             goto Label0x5f5d;
 
         //     mov    ax, 0001h
@@ -4299,7 +4297,7 @@ namespace ASM
 
         //     cmp    edx, 0002bf20h               ;180,000
         //     jg     Label0x5f6b                  ;Offset 0x5f6b
-        if (r.x.edx > 180000)
+        if (r.d.edx > 180000)
             goto Label0x5f6b;
 
         //     mov    ax, 0002h
@@ -4318,16 +4316,16 @@ namespace ASM
     LABEL(CalculatePLL_MNPS, Label0x5f6e);
 
         //     shl    eax, 10h
-        r.x.eax <<= 0x10;
+        r.d.eax <<= 0x10;
 
         //     or     ebx, eax
-        r.x.ebx |= r.x.eax;
+        r.d.ebx |= r.d.eax;
 
         // Label0x5f75:                            ;Offset 0x5f75
     LABEL(CalculatePLL_MNPS, Label0x5f75);
 
         //     pop    eax
-        r.x.eax = saveEAX;
+        r.d.eax = saveEAX;
 
         //     inc    cl
         ++r.h.cl;
@@ -4363,7 +4361,7 @@ namespace ASM
         //     pop    eax
         //     ret
 
-        return r.x.ebx;
+        return r.d.ebx;
     }
 
     //
@@ -4494,14 +4492,14 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         PCI::Device_t mystique = 0;
         uint32_t saveEDX = 0;
         uint16_t saveCX = 0;
         uint16_t saveAX = 0;
 
-        r.x.ebx = mnps;
+        r.d.ebx = mnps;
         r.h.cl = PllAndClock;
         
         //     push   eax
@@ -4510,10 +4508,10 @@ namespace ASM
         //     push   edx
         
         //     mov    edx, ebx
-        r.x.edx = r.x.ebx;
+        r.d.edx = r.d.ebx;
 
         //     push   edx
-        saveEDX = r.x.edx;
+        saveEDX = r.d.edx;
 
         //     push   cx
         saveCX = r.w.cx;
@@ -4626,7 +4624,7 @@ namespace ASM
     LABEL(ConfigurePixelClocks, Label0x60eb);
 
         //     pop    edx
-        r.x.edx = saveEDX;
+        r.d.edx = saveEDX;
 
         //     push   ax
         saveAX = r.w.ax;
@@ -4653,7 +4651,7 @@ namespace ASM
         Shared::PCI::IndexedData::Write(mystique, r.h.cl, r.h.ch);
 
         //     shr    edx, 0dh
-        r.x.edx >>= 0x0D;
+        r.d.edx >>= 0x0D;
 
         //     mov    ch, dl
         r.h.ch = r.h.dl;
@@ -4819,7 +4817,7 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
 
         //     push dx
@@ -4971,7 +4969,7 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         r.h.cl = cl;
 
@@ -5038,7 +5036,7 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         PCI::Device_t mystique = 0;
 
@@ -5393,10 +5391,10 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         uint32_t saveEAX = 0;
-        r.x.eax = address;
+        r.d.eax = address;
         r.h.bl = bl;
 
         //     push  dx
@@ -5412,7 +5410,7 @@ namespace ASM
         //The above is literally doing nothing
 
         //     push  eax
-        saveEAX = r.x.eax;
+        saveEAX = r.d.eax;
 
         //     test  bl, 80h
         //     je    Label0x5a48                   ;Offset 0x5a48
@@ -5489,7 +5487,7 @@ namespace ASM
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         VesaMode* siPointer = nullptr;
         Hag::System::BDA::VideoParameterTable* axPointer = nullptr;
@@ -5508,7 +5506,7 @@ namespace ASM
         r.w.bx = r.w.ax;
 
         //     shl       ebx, 01h
-        r.x.ebx <<= 1;
+        r.d.ebx <<= 1;
 
         //     xor       dx, dx
         //     mov       ds, dx
@@ -5545,19 +5543,19 @@ namespace ASM
         VGA::MiscellaneousOutput::Write(~VGA::MiscellaneousOutput::VideoEnable);
 
         //     mov       edx, dword ptr [si]
-        r.x.edx = siPointer->FrequencyKHz;
+        r.d.edx = siPointer->FrequencyKHz;
         
         //     mov       cl, 2dh
         r.h.cl = 0x2D;  //Does nothing. stomped in function
 
         //     call      ConfigureAndSelectPLLSetC ;Offset 0x6178
-        ConfigureAndSelectPLLSetC(r.x.edx);
+        ConfigureAndSelectPLLSetC(r.d.edx);
 
         //     xor       dx, dx
         r.w.dx = 0;
 
         //     xor       eax, eax
-        r.x.eax = 0;
+        r.d.eax = 0;
 
         //     mov       ax, word ptr [si + 0ch]
         axPointer = siPointer->VideoParameters;
@@ -5583,7 +5581,7 @@ namespace ASM
         //     mov       word ptr es:[di + 08h], dx;0 AlphanumericCharsetOverride
         //     mov       word ptr es:[di + 0ah], dx;0
         //     shr       ebx, 01h
-        r.x.ebx >>= 1;
+        r.d.ebx >>= 1;
         //     and       bh, 80h
         r.h.bh &= 0x80;
 
@@ -5594,7 +5592,7 @@ namespace ASM
         r.h.dl |= r.h.bh;
 
         //     shl       ebx, 01h
-        r.x.ebx <<= 1;
+        r.d.ebx <<= 1;
 
         //     xor       ax, ax
         //     mov       ds, ax
@@ -5653,7 +5651,7 @@ namespace ASM
         Func0x6310(siPointer);
 
         //     shr       ebx, 01h
-        r.x.ebx >>= 1;
+        r.d.ebx >>= 1;
 
         //     and       bh, 80h
         r.h.bh &= 0x80;
@@ -5674,9 +5672,10 @@ namespace ASM
     LABEL(Func0x6518, Label0x65f2);
 
         //     xor       eax, eax
-        r.x.eax = 0;
+        r.d.eax = 0;
+
         //     call      SetStartAddress           ;Offset 0x5a28
-        SetStartAddress(r.x.eax, r.h.bl);
+        SetStartAddress(r.d.eax, r.h.bl);
 
         //     call      TurnScreenOn              ;Offset 0x3105
         TurnScreenOn();
@@ -5698,7 +5697,7 @@ namespace ASM
 
         bool ret = false;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         uint16_t saveBX = 0;
         r.w.ax = videoMode;
@@ -5890,7 +5889,7 @@ namespace ASM
         using namespace Hag;
         using namespace Hag::System;
 
-        REGPACK r;
+        REGS r;
         memset(&r, 0, sizeof(r));
         uint16_t saveAX = 0;
         r.h.al = videoMode;
@@ -7744,7 +7743,7 @@ namespace CPP
         ToggleScreenOnOff(previousScreenOffState);
     }
 
-    #pragma pack(push, 1);
+    #pragma pack(push, 1)
     struct PaletteData
     {
         Hag::System::BDA::VideoDisplayDataArea_t Mask;
@@ -7752,7 +7751,7 @@ namespace CPP
         uint16_t Count;
         uint8_t Colors[];
     };
-    #pragma pack(pop);
+    #pragma pack(pop)
 
     extern PaletteData* Palettes[];
 
@@ -7764,7 +7763,7 @@ namespace CPP
         uint8_t green = 0;
         uint8_t blue = 0;
         uint8_t greyscale = 0;
-        uint16_t colorIndex = 0;
+        //uint16_t colorIndex = 0;
 
         uint8_t* colors = Palettes[paletteIndex]->Colors;
 
@@ -8087,7 +8086,7 @@ namespace CPP
         using namespace Hag::System;
         BDA::VideoParameterControlBlock* videoParameterControlBlock = 
             BDA::VideoParameterControlBlockPointer::Get().ToPointer<BDA::VideoParameterControlBlock>();
-
+        (void)videoParameterControlBlock;
         //TODO
         //     mov   al, BDA_VPCB_GrahicsCharSetOverride;0xc
         //     call  LookupVideoParameterControlBlockPointer;Offset 0x317d
@@ -10944,13 +10943,25 @@ uint16_t ignorePorts[] =
     0x03DA
 };
 
+uint32_t ignoreMemory[] =
+{
+    (0x0000 << 4) + 0x007c,
+    (0x0000 << 4) + 0x007d,
+    (0x0000 << 4) + 0x007e,
+    (0x0000 << 4) + 0x007f,
+    (0x0000 << 4) + 0x010c,
+    (0x0000 << 4) + 0x010d,
+    (0x0000 << 4) + 0x010e,
+    (0x0000 << 4) + 0x010f,
+};
+
 int Diff(const char* name)
 {
     int ret = -1;
-    if (Hag::Testing::Mock::HasDifferences())
+    if (Hag::Testing::Mock::HasDifferences(ignoreMemory, sizeof(ignoreMemory) / sizeof(uint32_t)))
     {
         printf("\n%s >----------------\n", name);
-        Hag::Testing::Mock::Report(ignorePorts, sizeof(ignorePorts) / sizeof(uint16_t));
+        Hag::Testing::Mock::Report(ignorePorts, sizeof(ignorePorts) / sizeof(uint16_t), ignoreMemory, sizeof(ignoreMemory) / sizeof(uint32_t));
         printf("\n\n\n");
         ret = 0;
     }
@@ -11023,7 +11034,7 @@ void BDADump(FILE* fp, FILE* fpbin)
             int idx = 0;
             while (alphaNumericCharacterSetOverride->ApplicableVideoModes[idx] != 0xFF)
             {
-                fprintf(fp, "Applicable mode %02i            : 0x%02X\n", alphaNumericCharacterSetOverride->ApplicableVideoModes[idx]);
+                fprintf(fp, "Applicable mode %02i            : 0x%02X\n", idx, alphaNumericCharacterSetOverride->ApplicableVideoModes[idx]);
                 ++idx;
             }
         }
@@ -11038,7 +11049,7 @@ void BDADump(FILE* fp, FILE* fpbin)
             int idx = 0;
             while (graphicsCharacterSet->ApplicableVideoModes[idx] != 0xFF)
             {
-                fprintf(fp, "Applicable mode %02i            : 0x%02X\n", graphicsCharacterSet->ApplicableVideoModes[idx]);
+                fprintf(fp, "Applicable mode %02i            : 0x%02X\n", idx, graphicsCharacterSet->ApplicableVideoModes[idx]);
                 ++idx;
             }
         }
@@ -11062,7 +11073,7 @@ void BDADump(FILE* fp, FILE* fpbin)
                 int idx = 0;
                 while (secondaryAlpha->ApplicableModes[idx] != 0xFF)
                 {
-                    fprintf(fp, "Applicable mode %02i            : 0x%02X\n", secondaryAlpha->ApplicableModes[idx]);
+                    fprintf(fp, "Applicable mode %02i            : 0x%02X\n", idx, secondaryAlpha->ApplicableModes[idx]);
                     ++idx;
                 }
             }
@@ -11081,7 +11092,7 @@ void BDADump(FILE* fp, FILE* fpbin)
                 int idx = 0;
                 while (paletteProfile->ApplicableModes[idx] != 0xFF)
                 {
-                    fprintf(fp, "Applicable mode %02i            : 0x%02X\n", paletteProfile->ApplicableModes[idx]);
+                    fprintf(fp, "Applicable mode %02i            : 0x%02X\n", idx, paletteProfile->ApplicableModes[idx]);
                     ++idx;
                 }
             }
@@ -11401,7 +11412,7 @@ bool FindDevices(uint8_t bus, uint8_t slot, uint8_t function, void* context)
         for (uint8_t pciRegIdx = 0; pciRegIdx < 64; ++pciRegIdx)
         {
             uint32_t pciReg = PCI::Read32(bus, slot, function, pciRegIdx << 2);
-            fprintf(ctx->fp, "0x%02X: 0x%02X, 0x%02X, 0x%02X, 0x%02X,    0x%08X\n",
+            fprintf(ctx->fp, "0x%02X: 0x%02X, 0x%02X, 0x%02X, 0x%02X,    0x%08lX\n",
                     pciRegIdx,
                     uint8_t(pciReg),
                     uint8_t(pciReg >> 8),
@@ -11495,8 +11506,8 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "General control               : 0x%02X\n", PCI::Indexed::GeneralControl::Read(device));
     fprintf(fp, "Miscellaneous control         : 0x%02X\n", PCI::Indexed::MiscellaneousControl::Read(device));
     
-    fprintf(fp, "Panel mode (G400)             : 0x%02X\n", PCI::IndexedData::Read(device, 0x1F));
-    fprintf(fp, "MAFC delay (G400)             : 0x%02X\n", PCI::IndexedData::Read(device, 0x20));
+    fprintf(fp, "Panel mode (G400)             : 0x%02lX\n", PCI::IndexedData::Read(device, 0x1F));
+    fprintf(fp, "MAFC delay (G400)             : 0x%02lX\n", PCI::IndexedData::Read(device, 0x20));
     
     fprintf(fp, "General purpose IO control    : 0x%02X\n", PCI::Indexed::GeneralPurposeIOControl::Read(device));
     fprintf(fp, "General purpose data          : 0x%02X\n", PCI::Indexed::GeneralPurposeIOData::Read(device));
@@ -11524,19 +11535,19 @@ void MatroxDump(FILE* fp, FILE* fpbin, uint16_t baseIOPort)
     fprintf(fp, "Pixel PLL C P value           : 0x%02X\n", PCI::Indexed::PixelPLLP::ReadC(device));
     fprintf(fp, "Pixel PLL status              : 0x%02X\n", PCI::Indexed::PixelPLLStatus::Read(device));
 
-    fprintf(fp, "Keying operating mode (G200)  : 0x%02X\n", PCI::IndexedData::Read(device, 0x51));
-    fprintf(fp, "Color mask 0 red (G200)       : 0x%02X\n", PCI::IndexedData::Read(device, 0x52));
-    fprintf(fp, "Color mask 0 green (G200)     : 0x%02X\n", PCI::IndexedData::Read(device, 0x53));
-    fprintf(fp, "Color mask 0 blue (G200)      : 0x%02X\n", PCI::IndexedData::Read(device, 0x54));
-    fprintf(fp, "Color key 0 red (G200)        : 0x%02X\n", PCI::IndexedData::Read(device, 0x55));
-    fprintf(fp, "Color key 0 green (G200)      : 0x%02X\n", PCI::IndexedData::Read(device, 0x56));
-    fprintf(fp, "Color key 0 blue (G200)       : 0x%02X\n", PCI::IndexedData::Read(device, 0x57));
+    fprintf(fp, "Keying operating mode (G200)  : 0x%02lX\n", PCI::IndexedData::Read(device, 0x51));
+    fprintf(fp, "Color mask 0 red (G200)       : 0x%02lX\n", PCI::IndexedData::Read(device, 0x52));
+    fprintf(fp, "Color mask 0 green (G200)     : 0x%02lX\n", PCI::IndexedData::Read(device, 0x53));
+    fprintf(fp, "Color mask 0 blue (G200)      : 0x%02lX\n", PCI::IndexedData::Read(device, 0x54));
+    fprintf(fp, "Color key 0 red (G200)        : 0x%02lX\n", PCI::IndexedData::Read(device, 0x55));
+    fprintf(fp, "Color key 0 green (G200)      : 0x%02lX\n", PCI::IndexedData::Read(device, 0x56));
+    fprintf(fp, "Color key 0 blue (G200)       : 0x%02lX\n", PCI::IndexedData::Read(device, 0x57));
 
     for (uint16_t index = 0x00; index < 0x26; index += 3)
     {
-        fprintf(fp, "Cursor color %02i red (G200)    : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 0));
-        fprintf(fp, "Cursor color %02i green (G200)  : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 1));
-        fprintf(fp, "Cursor color %02i blue (G200)   : 0x%02X\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 2));
+        fprintf(fp, "Cursor color %02i red (G200)    : 0x%02lX\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 0));
+        fprintf(fp, "Cursor color %02i green (G200)  : 0x%02lX\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 1));
+        fprintf(fp, "Cursor color %02i blue (G200)   : 0x%02lX\n", (index/3) + 3, PCI::IndexedData::Read(device, 0x60 + index + 2));
     }
 
     if (fpbin != nullptr)
@@ -12412,11 +12423,11 @@ void VesaPrintTimings(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, 
     uint32_t verticalAddressLines = VerticalDisplayEnableEndLines(vesaMode, table);
     float refreshRateHz = RefreshRateHz(vesaMode, table);
 
-    printf("\n\nTiming Name         = %i x %i @ %.fHz;\n\n",
+    printf("\n\nTiming Name         = %lu x %lu @ %.fHz;\n\n",
         horizontalAddressPixels, verticalAddressLines, refreshRateHz);
 
-    printf("Hor Pixels          = %4i;         // Pixels\n", horizontalAddressPixels);
-    printf("Ver Pixels          = %4i;         // Pixels\n\n", verticalAddressLines);
+    printf("Hor Pixels          = %4lu;         // Pixels\n", horizontalAddressPixels);
+    printf("Ver Pixels          = %4lu;         // Pixels\n\n", verticalAddressLines);
 
     uint32_t horizontalTotalPixels = HorizontalTotalPixels(vesaMode, table);
     float horizontalFrequencyKhz = float(vesaMode.FrequencyKHz) / horizontalTotalPixels;
@@ -12432,16 +12443,16 @@ void VesaPrintTimings(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, 
     float pixelClockMHz = float(vesaMode.FrequencyKHz) / 1000.0f;
     float pixelTime = 1000.0f / pixelClockMHz;
 
-    printf("Pixel Clock         = %.3f;       // MHz      =    %.1f nsec ± 0.5%\n",
+    printf("Pixel Clock         = %.3f;       // MHz      =    %.1f nsec ± 0.5%%\n",
         pixelClockMHz, pixelTime);
 
     uint32_t characterWidth = CharacterClockInPixels(table);
     float characterTime = (characterWidth * 1000.0f) / pixelClockMHz;
 
-    printf("Character Width     = %i;            // Pixels   =   %.1f nsec\n",
+    printf("Character Width     = %lu;            // Pixels   =   %.1f nsec\n",
         characterWidth, characterTime);
 
-    printf("Scan Type           = %s;                // H Phase  =   ? %\n",
+    printf("Scan Type           = %s;                // H Phase  =   ? %%\n",
         IsInterlaced(vesaMode) ? "INTERLACED" : "NONINTERLACED");
 
     uint32_t horizontalBlankDurationPixels = HorizontalBlankEndPixels(vesaMode, table) - HorizontalBlankStartPixels(vesaMode, table);
@@ -12460,126 +12471,126 @@ void VesaPrintTimings(Hag::Matrox::Shared::Function::Mode::VideoMode& vesaMode, 
     float horizontalTotalTime = float(horizontalTotalPixels) / pixelClockMHz;
     uint32_t horizontalTotalChars = HorizontalTotalChars(vesaMode, table);
 
-    printf("Hor Total Time      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Total Time      = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalTotalTime, horizontalTotalChars, horizontalTotalPixels);
 
     float horizontalAddressTime = float(horizontalAddressPixels) / pixelClockMHz;
     uint32_t horizontalAddressChars = HorizontalDisplayEnableEndChars(table);
 
-    printf("Hor Addr Time       = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Addr Time       = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalAddressTime, horizontalAddressChars, horizontalAddressPixels);
 
     uint32_t horizontalBlankStartPixels = HorizontalBlankStartPixels(vesaMode, table);
     uint32_t horizontalBlankStartChars = HorizontalBlankStartChars(vesaMode, table);
     float horizontalBlankStartTime = float(horizontalBlankStartPixels) / pixelClockMHz;
 
-    printf("Hor Blank Start     = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Blank Start     = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalBlankStartTime, horizontalBlankStartChars, horizontalBlankStartPixels);
 
     uint32_t horizontalBlankDurationChars = HorizontalBlankEndChars(vesaMode, table) - HorizontalBlankStartChars(vesaMode, table);
     float horizontalBlankDurationTime = float(horizontalBlankDurationPixels) / pixelClockMHz;
 
-    printf("Hor Blank Time      =  %1.3f;       // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Blank Time      =  %1.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalBlankDurationTime, horizontalBlankDurationChars, horizontalBlankDurationPixels);
 
     uint32_t horizontalSyncStartChars = HorizontalSyncStartChars(vesaMode, table);
     uint32_t horizontalSyncStartPixels = HorizontalSyncStartPixels(vesaMode, table);
     float horizontalSyncStartTime = float(horizontalSyncStartPixels) / pixelClockMHz;
 
-    printf("Hor Sync Start      = %2.3f;       // (usec)   =  %4i chars =    %4i Pixels\n\n",
+    printf("Hor Sync Start      = %2.3f;       // (usec)   =  %4lu chars =    %4lu Pixels\n\n",
         horizontalSyncStartTime, horizontalSyncStartChars, horizontalSyncStartPixels);
 
     uint32_t horizontalRightBorderChars = HorizontalBlankStartChars(vesaMode, table) - HorizontalDisplayEnableEndChars(table);
     uint32_t horizontalRightBorderPixels = HorizontalBlankStartPixels(vesaMode, table) - HorizontalDisplayEnableEndPixels(table);
     float horizontalRightBorderTime = float(horizontalRightBorderPixels) / pixelClockMHz;
 
-    printf("// H Right Border   = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("// H Right Border   = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalRightBorderTime, horizontalRightBorderChars, horizontalRightBorderPixels);
 
     uint32_t horizontalFrontPorchChars = HorizontalSyncStartChars(vesaMode, table) - HorizontalBlankStartChars(vesaMode, table);
     uint32_t horizontalFrontPorchPixels = HorizontalSyncStartPixels(vesaMode, table) - HorizontalBlankStartPixels(vesaMode, table);
     float horizontalFrontPorchTime = float(horizontalFrontPorchPixels) / pixelClockMHz;
 
-    printf("// H Front Porch    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("// H Front Porch    = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalFrontPorchTime, horizontalFrontPorchChars, horizontalFrontPorchPixels);
 
     uint32_t horizontalSyncDurationChars = HorizontalSyncEndChars(vesaMode, table) - HorizontalSyncStartChars(vesaMode, table);
     uint32_t horizontalSyncDurationPixels = HorizontalSyncEndPixels(vesaMode, table) - HorizontalSyncStartPixels(vesaMode, table);
     float horizontalSyncDurationTime = float(horizontalSyncDurationPixels) / pixelClockMHz;
 
-    printf("Hor Sync Time       = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("Hor Sync Time       = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
     horizontalSyncDurationTime, horizontalSyncDurationChars, horizontalSyncDurationPixels);
 
     uint32_t horizontalBackPorchChars = HorizontalBlankEndChars(vesaMode, table) - HorizontalSyncEndChars(vesaMode, table);
     uint32_t horizontalBackPorchPixels = HorizontalBlankEndPixels(vesaMode, table) - HorizontalSyncEndPixels(vesaMode, table);
     float horizontalBackPorchTime = float(horizontalBackPorchPixels) / pixelClockMHz;
 
-    printf("// H Back Porch     = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n",
+    printf("// H Back Porch     = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n",
         horizontalBackPorchTime, horizontalBackPorchChars, horizontalBackPorchPixels);
 
     uint32_t horizontalLeftBorderChars = HorizontalTotalChars(vesaMode, table) - HorizontalBlankEndChars(vesaMode, table);
     uint32_t horizontalLeftBorderPixels = HorizontalTotalPixels(vesaMode, table) - HorizontalBlankEndPixels(vesaMode, table);
     float horizontalLeftBorderTime = float(horizontalLeftBorderPixels) / pixelClockMHz;
 
-    printf("// H Left Border    = %1.3f;        // (usec)   =  %4i chars =    %4i Pixels\n\n",
+    printf("// H Left Border    = %1.3f;        // (usec)   =  %4lu chars =    %4lu Pixels\n\n",
         horizontalLeftBorderTime, horizontalLeftBorderChars, horizontalLeftBorderPixels);
 
     float verticalTotalTime = 1000.0f / refreshRateHz;
 
-    printf("Ver Total Time      = %2.3f;       // (msec)   =  %4i lines     HT - (1.06xHA)\n",
+    printf("Ver Total Time      = %2.3f;       // (msec)   =  %4lu lines     HT - (1.06xHA)\n",
         verticalTotalTime, verticalTotalLines);
 
     float verticalAddressTime = (1000.0f * (float(verticalAddressLines) / verticalTotalLines)) / refreshRateHz;
     float extraCalculation = horizontalTotalTime - (1.06f * horizontalAddressTime);
 
-    printf("Ver Addr Time       = %2.3f;       // (msec)   =  %4i lines         = %1.2f\n",
+    printf("Ver Addr Time       = %2.3f;       // (msec)   =  %4lu lines         = %1.2f\n",
         verticalAddressTime, verticalAddressLines, extraCalculation);
 
     uint32_t verticalBlankStartLines = VerticalBlankStartLines(vesaMode, table);
     float verticalBlankStartTime = (1000.0f * (float(verticalBlankStartLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Blank Start     = %2.3f;       // (msec)   =  %4i lines\n",
+    printf("Ver Blank Start     = %2.3f;       // (msec)   =  %4lu lines\n",
         verticalBlankStartTime, verticalBlankStartLines);
 
     float verticalBlankDurationTime = (1000.0f * (float(verticalBlankDurationLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Blank Time      =  %1.3f;       // (msec)   =  %4i lines\n",
+    printf("Ver Blank Time      =  %1.3f;       // (msec)   =  %4lu lines\n",
         verticalBlankDurationTime, verticalBlankDurationLines);
 
     uint32_t verticalSyncStartLines = VerticalSyncStartLines(vesaMode, table);
     float verticalSyncStartTime = (1000.0f * (float(verticalSyncStartLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Sync Start      = %2.3f;       // (msec)   =  %4i lines\n\n",
+    printf("Ver Sync Start      = %2.3f;       // (msec)   =  %4lu lines\n\n",
         verticalSyncStartTime, verticalSyncStartLines);
 
     uint32_t verticalBottomBorderLines = VerticalBlankStartLines(vesaMode, table) - VerticalDisplayEnableEndLines(vesaMode, table);
     float verticalBottomBorderTime = (1000.0f * (float(verticalBottomBorderLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Bottom Border  = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("// V Bottom Border  = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalBottomBorderTime, verticalBottomBorderLines);
 
     uint32_t verticalFrontPorchLines = VerticalSyncStartLines(vesaMode, table) - VerticalBlankStartLines(vesaMode, table);
     float verticalFrontPorchTime = (1000.0f * (float(verticalFrontPorchLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Front Porch    = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("// V Front Porch    = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalFrontPorchTime, verticalFrontPorchLines);
     
     uint32_t verticalSyncDurationLines = VerticalSyncEndLines(vesaMode, table) - VerticalSyncStartLines(vesaMode, table);
     float verticalSyncDurationTime = (1000.0f * (float(verticalSyncDurationLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("Ver Sync Time       = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("Ver Sync Time       = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalSyncDurationTime, verticalSyncDurationLines);
 
     uint32_t verticalBackPorchLines = VerticalBlankEndLines(vesaMode, table) - VerticalSyncEndLines(vesaMode, table);
     float verticalBackPorchTime = (1000.0f * (float(verticalBackPorchLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Back Porch     = %1.3f;        // (msec)   =  %4i lines\n",
+    printf("// V Back Porch     = %1.3f;        // (msec)   =  %4lu lines\n",
         verticalBackPorchTime, verticalBackPorchLines);
 
     uint32_t verticalTopBorderLines = VerticalTotalLines(vesaMode, table) - VerticalBlankEndLines(vesaMode, table);
     float verticalTopBorderTime = (1000.0f * (float(verticalTopBorderLines) / verticalTotalLines)) / refreshRateHz;
 
-    printf("// V Top Border     = %1.3f;        // (msec)   =  %4i lines\n\n",
+    printf("// V Top Border     = %1.3f;        // (msec)   =  %4lu lines\n\n",
         verticalTopBorderTime, verticalTopBorderLines);
 }
 
@@ -12627,7 +12638,7 @@ void DumpModeSettings(uint16_t mode)
             }
             break;
         }
-        printf("//Frequency: 0x%08X, mnps: 0x%08X\n", frequency, mnps);
+        printf("//Frequency: 0x%08lX, mnps: 0x%08lX\n", frequency, mnps);
         printf("//Horizontal extensions: 0x%02X\n", Shared::CRTCExtension::HorizontalCounterExtensions::Read() & ~(Shared::CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff | Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalSyncOff));
         printf("//Vertical extensions: 0x%02X\n", Shared::CRTCExtension::VerticalCounterExtensions::Read());
         printf("{ // %X\n", mode);
@@ -12732,19 +12743,19 @@ int main(void)
     using namespace Hag;
     using namespace Hag::System;
     
-    static Device devices[] =
-    {
-        { 0x0519, "Matrox Millennium 2064W PCI" },
-        { 0x051A, "Matrox Mystique 1064SG PCI", },
-        { 0x051B, "Matrox Millennium II 2164W PCI" },
-        { 0x051F, "Matrox Millennium II 2164W AGP" },
-        { 0x0520, "Matrox G200 PCI" },
-        { 0x0521, "Matrox G200 AGP" },
-        { 0x0525, "Matrox G400/G450 AGP" },
-        { 0x0D10, "Matrox Ultima/Impression PCI" },
-        { 0x1001, "Matrox Productiva G100 AGP" },
-        { 0x1000, "Matrox Productiva G100 PCI" }
-    };
+    // static Device devices[] =
+    // {
+    //     { 0x0519, "Matrox Millennium 2064W PCI" },
+    //     { 0x051A, "Matrox Mystique 1064SG PCI", },
+    //     { 0x051B, "Matrox Millennium II 2164W PCI" },
+    //     { 0x051F, "Matrox Millennium II 2164W AGP" },
+    //     { 0x0520, "Matrox G200 PCI" },
+    //     { 0x0521, "Matrox G200 AGP" },
+    //     { 0x0525, "Matrox G400/G450 AGP" },
+    //     { 0x0D10, "Matrox Ultima/Impression PCI" },
+    //     { 0x1001, "Matrox Productiva G100 AGP" },
+    //     { 0x1000, "Matrox Productiva G100 PCI" }
+    // };
 
     Support::Allocator allocator;
     MatroxMystiqueMockConfigSetup(allocator);

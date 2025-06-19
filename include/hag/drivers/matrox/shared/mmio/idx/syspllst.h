@@ -5,7 +5,7 @@
 #include <hag/drivers/matrox/shared/mmio/idxdata.h>
 #include <hag/drivers/matrox/shared/idx/syspllst.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace MMIO { namespace Indexed
+namespace Hag::Matrox::Shared::MMIO::Indexed
 {
 
 namespace SystemPLLStatus
@@ -16,4 +16,4 @@ namespace SystemPLLStatus
     }
 }
 
-}}}}}
+}

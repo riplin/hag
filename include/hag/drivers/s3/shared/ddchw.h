@@ -8,7 +8,7 @@
 #include <hag/drivers/s3/shared/crtc/genout.h>
 #include <hag/drivers/s3/shared/sqrc/extseqd.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 namespace DDC
@@ -103,4 +103,4 @@ namespace DDC
 
 }
 
-}}}
+}

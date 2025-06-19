@@ -5,9 +5,9 @@
 #include <hag/types.h>
 
 
-namespace Hag { namespace VGA { namespace Sequencer
+namespace Hag::VGA::Sequencer
 {
 
 typedef uint8_t Register_t;
 
-}}}
+}

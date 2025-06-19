@@ -5,7 +5,7 @@
 #include <hag/system/sysasm.h>
 #include <hag/drivers/s3/shared/wregdata.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 namespace Register
@@ -53,4 +53,4 @@ namespace ReadRegisterData
 
 }
 
-}}}
+}

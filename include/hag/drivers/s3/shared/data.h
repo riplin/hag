@@ -16,7 +16,7 @@
 #include <hag/drivers/s3/shared/crtc/exsysct3.h>
 #include <hag/drivers/s3/shared/crtc/exverovf.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
 typedef uint8_t VESAFlagsAndFilter_t;
@@ -230,4 +230,4 @@ extern uint8_t MonochromePalette2[];
 
 }
 
-}}}
+}

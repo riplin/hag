@@ -5,7 +5,7 @@
 #include <hag/types.h>
 #include <hag/system/sysasm.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 namespace Register
@@ -49,4 +49,4 @@ namespace DACReadIndex
 
 }
 
-}}
+}

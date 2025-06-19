@@ -4,7 +4,7 @@
 
 #include <hag/math/fp/v4.h>
 
-namespace Hag { namespace Math {
+namespace Hag::Math {
 
 class m44
 {
@@ -136,4 +136,4 @@ private:
     v4 m_r3;
 };
 
-}}
+}

@@ -7,7 +7,7 @@
 #define HAG_IMPORT_SYSTEM                        \
     using namespace Shared::Function::System;
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function
+namespace Hag::Matrox::Shared::Function
 {
 
 namespace System
@@ -17,4 +17,4 @@ namespace System
     uint32_t GetMemorySize(); // Returns video memory size in bytes
 }
 
-}}}}
+}

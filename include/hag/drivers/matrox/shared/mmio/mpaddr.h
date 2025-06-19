@@ -11,7 +11,7 @@
 #include <hag/drivers/matrox/shared/regs/mpaddr5.h>
 #include <hag/drivers/matrox/shared/regs/mpaddr6.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace MMIO
+namespace Hag::Matrox::Shared::MMIO
 {
 
 namespace MultiPurposeAddress
@@ -74,4 +74,4 @@ namespace MultiPurposeAddress
     }
 }
 
-}}}}
+}

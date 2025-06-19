@@ -4,18 +4,18 @@
 
 #include <hag/drivers/s3/shared/bgcolor.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         BackgroundColor = 0x8120,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace BackgroundColor
+namespace MMIO::Packed::BackgroundColor
 {
     inline BackgroundColor_t& Get()
     {
@@ -26,6 +26,6 @@ namespace MMIO { namespace Packed { namespace BackgroundColor
     {
             Get() = backgroundColor;
     }
-}}}
+}
 
-}}}
+}

@@ -9,7 +9,7 @@
 #include <hag/drivers/matrox/shared/regs/cytop.h>
 #include <hag/drivers/matrox/shared/regs/cybot.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace MMIO
+namespace Hag::Matrox::Shared::MMIO
 {
 
 namespace Clipper
@@ -56,4 +56,4 @@ namespace Clipper
     }
 }
 
-}}}}
+}

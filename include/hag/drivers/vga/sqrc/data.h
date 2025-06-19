@@ -5,7 +5,7 @@
 #include <hag/drivers/vga/regtype.h>
 #include <hag/drivers/vga/sqrc/index.h>
 
-namespace Hag { namespace VGA
+namespace Hag::VGA
 {
 
 namespace Register
@@ -49,4 +49,4 @@ namespace SequencerData
 
 }
 
-}}
+}

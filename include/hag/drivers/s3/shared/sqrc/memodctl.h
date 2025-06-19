@@ -6,7 +6,7 @@
 #include <hag/drivers/vga/sqrc/memodctl.h>
 
 
-namespace Hag { namespace S3 { namespace Shared { namespace Sequencer
+namespace Hag::S3::Shared::Sequencer
 {
 
 namespace Register
@@ -48,4 +48,4 @@ namespace MemoryModeControl
 
 }
 
-}}}}
+}

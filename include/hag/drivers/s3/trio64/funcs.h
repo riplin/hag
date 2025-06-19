@@ -7,7 +7,7 @@
 #include <hag/drivers/s3/trio64/data.h>
 #include <hag/drivers/s3/trio64/trio64.h>
 
-namespace Hag { namespace S3 { namespace Trio64 
+namespace Hag::S3::Trio64 
 {
 
 typedef uint8_t VideoModeError_t;
@@ -113,4 +113,4 @@ void DrawTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x
 VideoMode_t ConvertVesaModeToLegacy(Vesa::VideoMode_t mode);
 VideoModeError_t CheckValidVideoMode(VideoMode_t mode);
 
-}}}
+}

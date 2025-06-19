@@ -3,7 +3,7 @@
 #include <hag/drivers/vga/data.h>
 #include <hag/drivers/s3/shared/data.h>
 
-namespace Hag { namespace S3 { namespace Shared { namespace Data
+namespace Hag::S3::Shared::Data
 {
 
 // uint8_t VideoModeOverrideTranslationTable1[] =
@@ -4402,4 +4402,4 @@ uint8_t Characters8x16[] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-}}}}
+}

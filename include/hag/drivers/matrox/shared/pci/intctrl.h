@@ -4,7 +4,7 @@
 
 #include <hag/system/pci.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI
+namespace Hag::Matrox::Shared::PCI
 {
 
 namespace Register
@@ -52,4 +52,4 @@ namespace InterruptControl
     inline void Write(System::PCI::Device_t device, InterruptControl_t value) { System::PCI::Write32(device, Register::InterruptControl, value); }
 }
 
-}}}}
+}

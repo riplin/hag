@@ -5,7 +5,7 @@
 #include <hag/types.h>
 #include <hag/system/sysasm.h>
 
-namespace Hag { namespace System { namespace KB
+namespace Hag::System::KB
 {
 
 namespace Register
@@ -55,4 +55,4 @@ namespace PortBStatus
     inline PortB_t Read() { return KB::Read(Register::PortB); }
 }
 
-}}}
+}

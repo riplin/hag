@@ -7,7 +7,7 @@
 #include <hag/drivers/matrox/shared/crtcext/hrcntext.h>
 #include <hag/drivers/matrox/shared/crtcext/vrcntext.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace Function
+namespace Hag::Matrox::Shared::Function
 {
 
 namespace System
@@ -102,7 +102,7 @@ namespace Mode
         };
     }
     
-    #pragma pack(push, 1);
+    #pragma pack(push, 1)
     struct PaletteData
     {
         Hag::System::BDA::VideoDisplayDataArea_t Mask;
@@ -150,10 +150,10 @@ namespace Mode
         Hag::Matrox::Shared::CRTCExtension::HorizontalCounterExtensions_t HorizontalCounterExtensions;
         Hag::Matrox::Shared::CRTCExtension::VerticalCounterExtensions_t VerticalCounterExtensions;
     };
-    #pragma pack(pop);
+    #pragma pack(pop)
 
     extern VideoMode s_VideoModes[];
     extern uint32_t s_VideoModeCount;
 }
 
-}}}}
+}

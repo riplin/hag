@@ -9,10 +9,7 @@
 #include <hag/drivers/matrox/shared/crtcext/hrcntext.h>
 #include <hag/drivers/matrox/shared/crtcext/vrcntext.h>
 
-namespace Hag { namespace Matrox { namespace Shared
-{
-
-namespace Function {namespace ModeSetting
+namespace Hag::Matrox::Shared::Function::ModeSetting
 {
 
 typedef uint8_t Scanlines_t;
@@ -185,15 +182,12 @@ struct ModeDescriptor
 
 #pragma pack(pop)
 
-}}
+}
 
-namespace Data
+namespace Hag::Matrox::Shared::Data
 {
 
 extern Function::ModeSetting::ModeDescriptor s_Descriptors[];
 extern uint32_t s_NumDescriptors;
 
 }
-
-
-}}}

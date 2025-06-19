@@ -4,7 +4,7 @@
 
 #include <hag/types.h>
 
-namespace Hag { namespace Testing { namespace TestPatterns
+namespace Hag::Testing::TestPatterns
 {
 
 extern void DrawTextPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
@@ -17,4 +17,4 @@ extern void Draw15BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemo
 extern void Draw16BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw32BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 
-}}}
+}

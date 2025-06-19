@@ -5,18 +5,18 @@
 #include <hag/drivers/s3/shared/curxpos.h>
 #include <hag/drivers/s3/shared/curypos.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         CurrentXYPosition = 0x8100,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace CurrentXYPosition
+namespace MMIO::Packed::CurrentXYPosition
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace CurrentXYPosition
     {
             Get() = (uint32_t(xPosition) << 16) | yPosition;
     }
-}}}
+}
 
-}}}
+}

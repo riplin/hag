@@ -5,7 +5,7 @@
 #include <hag/drivers/matrox/shared/idx/pclkctrl.h>
 #include <hag/drivers/matrox/shared/pci/ind/idxdata.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI { namespace Indexed
+namespace Hag::Matrox::Shared::PCI::Indexed
 {
 
 namespace PixelClockControl
@@ -21,4 +21,4 @@ namespace PixelClockControl
     }
 }
 
-}}}}}
+}

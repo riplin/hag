@@ -5,18 +5,18 @@
 #include <hag/drivers/s3/shared/patx.h>
 #include <hag/drivers/s3/shared/paty.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         PatternXY = 0x8168
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace PatternXY
+namespace MMIO::Packed::PatternXY
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace PatternXY
     {
             Get() = (uint32_t(patternX) << 16) | patternY;
     }
-}}}
+}
 
-}}}
+}

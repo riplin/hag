@@ -3,9 +3,8 @@
 #pragma once
 
 #include <hag/drivers/matrox/shared/crtcext/data.h>
-#include <hag/drivers/matrox/shared/crtc/regtype.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace CRTCExtension
+namespace Hag::Matrox::Shared::CRTCExtension
 {
 
 namespace Register
@@ -63,4 +62,4 @@ namespace HorizontalCounterExtensions
 
 }
 
-}}}}
+}

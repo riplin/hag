@@ -4,7 +4,7 @@
 
 #include <hag/system/pci.h>
 
-namespace Hag { namespace Matrox { namespace Shared { namespace PCI
+namespace Hag::Matrox::Shared::PCI
 {
 
 namespace Register
@@ -43,4 +43,4 @@ namespace ClassCode
     inline ClassCode_t Read(System::PCI::Device_t device) { return System::PCI::Read32(device, Register::ClassCode); }
 }
 
-}}}}
+}

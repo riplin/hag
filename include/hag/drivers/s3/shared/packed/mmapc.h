@@ -5,18 +5,18 @@
 #include <hag/drivers/s3/shared/majapcnt.h>
 #include <hag/drivers/s3/shared/wregdata.h>
 
-namespace Hag { namespace S3 { namespace Shared
+namespace Hag::S3::Shared
 {
 
-namespace Register { namespace Packed
+namespace Register::Packed
 {
     enum
     {
         MinorMajorAxisPixelCounts = 0x8148,
     };
-}}
+}
 
-namespace MMIO { namespace Packed { namespace MinorMajorAxisPixelCounts
+namespace MMIO::Packed::MinorMajorAxisPixelCounts
 {
     inline uint32_t& Get()
     {
@@ -27,6 +27,6 @@ namespace MMIO { namespace Packed { namespace MinorMajorAxisPixelCounts
     {
             Get() = (uint32_t(majorAxisPixelCount) << 16) | minorAxisPixelCount;
     }
-}}}
+}
 
-}}}
+}

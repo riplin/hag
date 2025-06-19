@@ -7,7 +7,7 @@
 
 #include <hag/testing/mock.h>
 
-namespace Hag { namespace System { namespace PCI
+namespace Hag::System::PCI
 {
     typedef uint16_t Device_t;
 
@@ -270,6 +270,48 @@ namespace HeaderType
     };
 }
 
+namespace Command
+{
+    enum
+    {
+        IOSpace =                       0x00000001, // I/O space. Controls device response to I/O SPACE accesses (VGA registers).
+        IOSpaceDisable =                0x00000000, // disable the device response
+        IOSpaceEnable =                 0x00000001, // enable the device response
+        MemorySpace =                   0x00000002, // Memory space. Controls device response to memory accesses (EPROM, VGA frame
+                                                    // buffer, MGA control aperture, MGA direct access aperture, and 8 MByte
+                                                    // Pseudo-DMA window).
+        MemorySpaceDisable =            0x00000000, // disable the device response
+        MemorySpaceEnable =             0x00000002, // enable the device response
+        BusMaster =                     0x00000004, // Bus master. Controls a device’s ability to act as a master on the PCI bus (used to
+                                                    // access system memory)
+        BusMasterDisable =              0x00000000, // prevents the device from generating PCI accesses
+        BusMasterEnable =               0x00000004, // allows the device to behave as a bus master
+        SpecialCycles =                 0x00000008, // If set to 1 the device can monitor Special Cycle operations; otherwise, the device will ignore them.
+        SpecialCyclesDisable =          0x00000000, // Ignore special cycles
+        SpecialCyclesEnable =           0x00000008, // Monitor special cycles
+
+        WriteAndInvalidate =            0x00000010, // If set to 1 the device can generate the Memory Write and Invalidate command;
+                                                    // otherwise, the Memory Write command must be used.
+        WriteAndInvalidateDisable =     0x00000000, // Don't send write and invalidate commands
+        WriteAndInvalidateEnable =      0x00000010, // Can send write and invalidate commands
+        VGAPaletteSnoop =               0x00000020,
+        VGAPaletteSnoopDisable =        0x00000000, // The device will treat palette write accesses like all other accesses.
+        VGAPaletteSnoopEnable =         0x00000020, // The device does not respond to palette register writes and will snoop the data.
+        ParityErrorResponse =           0x00000040,
+        ParityErrorResponseDisable =    0x00000000, // When an error is detected, the device will set bit 15 of the Status register (Detected Parity Error Status Bit), but will not assert the PERR# (Parity Error) pin and will continue operation as normal.
+        ParityErrorResponseEnable =     0x00000040, // If set to 1 the device will take its normal action when a parity error is detected.
+        SERR =                          0x00000100,
+        SERRDisable =                   0x00000000, // The SERR# driver is enabled
+        SERREnable =                    0x00000100, // The SERR# driver is disabled
+        FastBackToBack =                0x00000200,
+        FastBackToBackDisable =         0x00000000, // Fast back-to-back transactions are only allowed to the same agent.
+        FastBackToBackEnable =          0x00000200, // Allowed to generate fast back-to-back transactions.
+        Interrupt =                     0x00000400,
+        InterruptEnable =               0x00000000,
+        InterruptDisable =              0x00000400  // The assertion of the devices INTx# signal is disabled.
+    };
+}
+
 namespace Capability
 {
     enum
@@ -457,9 +499,9 @@ inline uint8_t GetHeader1SecondaryBus(uint8_t bus, uint8_t device, uint8_t funct
 
 typedef bool (*ScanBusCallback_t)(uint8_t bus, uint8_t slot, uint8_t function, void* context);
 
-void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context);
+extern void ScanBus(uint8_t bus, ScanBusCallback_t callback, void* context);
 
-bool FindDevice(uint16_t vendorId, uint16_t deviceId, uint8_t& bus, uint8_t& slot, uint8_t& function);
+extern bool FindDevice(uint16_t vendorId, uint16_t deviceId, uint8_t& bus, uint8_t& slot, uint8_t& function);
 
 inline bool FindDevice(uint16_t vendorId, uint16_t deviceId, Device_t& bsf)
 {
@@ -476,4 +518,4 @@ inline bool FindDevice(uint16_t vendorId, uint16_t deviceId, Device_t& bsf)
     return ret;
 }
 
-}}}
+}

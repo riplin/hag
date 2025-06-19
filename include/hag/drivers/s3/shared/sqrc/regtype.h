@@ -4,9 +4,9 @@
 
 #include <hag/drivers/vga/sqrc/regtype.h>
 
-namespace Hag { namespace S3 { namespace Shared { namespace Sequencer
+namespace Hag::S3::Shared::Sequencer
 {
 
 typedef VGA::Sequencer::Register_t Register_t;
 
-}}}}
+}

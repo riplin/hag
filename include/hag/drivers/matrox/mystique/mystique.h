@@ -38,9 +38,9 @@
 #include <hag/drivers/vga/crtc/enverbln.h>                  //CR16
 #include <hag/drivers/vga/crtc/modectrl.h>                  //CR17
 #include <hag/drivers/vga/crtc/linecomp.h>                  //CR18
-#include <hag/drivers/matrox/shared/crtc/cpudata.h>         //CR22
-#include <hag/drivers/matrox/shared/crtc/atadrdat.h>        //CR24
-#include <hag/drivers/matrox/shared/crtc/attraddr.h>        //CR26
+#include <hag/drivers/vga/crtc/cpulatch.h>                  //CR22
+#include <hag/drivers/vga/crtc/attridxf.h>                  //CR24
+#include <hag/drivers/vga/crtc/attridxi.h>                  //CR26
 
 #include <hag/drivers/vga/attribc/index.h>                  //ATTR Index 0x3C0
 #include <hag/drivers/vga/attribc/data.h>                   //ATTR Data  0x3C0, 0x3C1
@@ -244,7 +244,7 @@
 #include <hag/drivers/matrox/shared/funcs/modeset.h>
 #include <hag/drivers/matrox/shared/funcs/system.h>
 
-namespace Hag { namespace Matrox { namespace Mystique
+namespace Hag::Matrox::Mystique
 {
     HAG_IMPORT_SYSTEM;//Import initialization and shutdown.
     HAG_IMPORT_MODESETTING;//Import SetVideoMode.
@@ -266,7 +266,6 @@ namespace Hag { namespace Matrox { namespace Mystique
     namespace CRTController
     {
         IMPORTNAMESPACE(VGA::CRTController, Register);
-        IMPORTNAMESPACEANDTYPE(Shared::CRTController, Register);
     
         IMPORTNAMESPACEANDTYPE(VGA::CRTController, HorizontalTotal);
         IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, HorizontalDisplayEnd);
@@ -293,10 +292,10 @@ namespace Hag { namespace Matrox { namespace Mystique
         IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, EndVerticalBlank);
         IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CRTCModeControl);
         IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, LineCompare);
-        IMPORTNAMESPACEANDTYPE(Shared::CRTController, CPUReadLatch);
-        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::CRTController, AttributeAddressDataSelect);
-        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::CRTController, AttributeAddress);
-    }    
+        IMPORTNAMESPACEANDTYPE(VGA::CRTController, CPULatchData);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, AttributeIndexI);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, AttributeIndexF);
+    }
 
     IMPORTNAMESPACE(VGA, AttributeControllerIndex);
     IMPORTNAMESPACEANDTYPE(VGA, AttributeControllerData);
@@ -652,4 +651,4 @@ namespace Hag { namespace Matrox { namespace Mystique
 
     }
 
-}}}
+}
