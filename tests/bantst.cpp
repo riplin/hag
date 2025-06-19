@@ -2904,6 +2904,8 @@ void Func0x37b5(uint8_t bankIndex, uint8_t charHeight, uint16_t characterIndex)/
     {
         //     call      GetCharacterBankOffset    ;Offset 0x2267
         uint16_t offset = GetCharacterBankOffset(bankIndex, characterIndex);
+        (void)offset;
+
         //     sub       ch, ch
         //     mov       dx, VGA_GraphicsControllerIndex;Port 0x3ce
         //     mov       ax, VGA_GCTLIdx_ReadMapSelect OR (VGA_GCTL4_Map2 SHL 8);0x204
@@ -3023,7 +3025,7 @@ void GetPatch(uint8_t*& patch, uint8_t& charHeight)//Offset 0x1f29
 }
 
 //bl = bankIndex, bh = charHeight, di = patch
-uint16_t PatchFont(uint8_t bankIndex, uint8_t charHeight, uint8_t* patch)//Offset 0x1f63
+void PatchFont(uint8_t bankIndex, uint8_t charHeight, uint8_t* patch)//Offset 0x1f63
 {
     uint16_t bankOffset[] =
     {
@@ -3050,7 +3052,7 @@ uint16_t PatchFont(uint8_t bankIndex, uint8_t charHeight, uint8_t* patch)//Offse
     //     call      GetA000SelectorInES       ;Offset 0x3f4c
     //     mov       di, word ptr cs:[bx + Data0x2257];Offset 0x2257
     uint16_t offset = bankOffset[bankIndex];
-    uint8_t* ptr = FARPointer(0xa0000, offset).ToPointer<uint8_t>(256 * 0x20);
+    uint8_t* ptr = FARPointer(uint16_t(0xa0000), offset).ToPointer<uint8_t>(256 * 0x20);
 
     //     pop       bx
     //     mov       dl, 20h
@@ -3240,91 +3242,278 @@ void Func0x5b8()//Offset 0x5b8
     //     ret
 }
 
+bool ValidMode(Hag::VGA::VideoMode_t mode)//Offset 0x3f8d
+{
+    // pushaw
+    // push   es
+    // call   FindModeData                 ;Offset 0x40d9
+    ModeData* modeData = nullptr;
+    return FindModeData(mode, modeData);
+    // lahf
+    // test   ah, 01h
+    // pop    es
+    // popaw
+    // ret
+}
+
+bool Func0x4152(Hag::VGA::VideoMode_t mode)//Offset 0x4152
+{
+    // push   ax
+    // push   bx
+    // push   es
+    // and    al, 7fh
+    // call   FindModeData                 ;Offset 0x40d9
+    ModeData* modeData = nullptr;
+    FindModeData(mode, modeData);
+
+    // cmp    byte ptr es:[bx + 04h], 09h
+    return modeData->Flags != 9;
+    // pop    es
+    // pop    bx
+    // pop    ax
+    // ret
+}
+
+bool Func0x3f99(Hag::VGA::VideoMode_t mode)//Offset 0x3f99
+{
+    //     push   bx
+    //     push   es
+    //     call   FindModeData                 ;Offset 0x40d9
+    //     jb     Label0x3fac                  ;Offset 0x3fac
+    ModeData* modeData = nullptr;
+    if (FindModeData(mode, modeData))
+    {
+        //     cmp    byte ptr es:[bx + 04h], 01h
+        //     je     Label0x3fac                  ;Offset 0x3fac
+        if (modeData->Flags == 0x01)
+            return true;
+        //     cmp    byte ptr es:[bx + 04h], 03h
+        if (modeData->Flags == 0x03)
+            return true;
+        // Label0x3fac:                            ;Offset 0x3fac
+    }
+    //     pop    es
+    //     pop    bx
+    //     ret
+    return false;
+}
+
 bool SetupBDA(uint8_t mode)//Offset 0x2fc
 {
+    using namespace Hag;
+    using namespace Hag::System;
     //     mov       ah, al
     //     and       ax, (BDA_DM_DONT_CLEAR_SCREEN SHL 8) OR (0ffh XOR BDA_DM_DONT_CLEAR_SCREEN);0x807f
-    //     call      Func0x3f8d                ;Offset 0x3f8d
+    BDA::VideoModeOptions_t dontClearDisplay = mode & VGA::VideoMode::DontClearDisplay;
+    mode &= ~VGA::VideoMode::DontClearDisplay;
+
+    //     call      ValidMode                 ;Offset 0x3f8d
     //     jne       Label0x3cc                ;Offset 0x3cc
-    //     mov       byte ptr ds:[BDA_DisplayMode], al ;Offset 0x449
-    //     call      Func0x4152                ;Offset 0x4152
-    //     je        Label0x3cc                ;Offset 0x3cc
-    //     mov       cl, byte ptr ds:[BDA_VideoModeOptions];Offset 0x487
-    //     and       cl, NOT (BDA_VMO_Inactive OR BDA_VMO_DontClearDisplay);0x77
-    //     or        cl, ah
-    //     mov       byte ptr ds:[BDA_VideoModeOptions], cl;Offset 0x487
-    //     mov       bl, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
-    //     mov       bh, bl
-    //     and       bx, ((NOT BDA_DH_InitialVideoModeMask) SHL 8) OR BDA_DH_InitialVideoModeMask;0xcf30
-    //     mov       dx, VGA_CRTControllerIndexB;Port 0x3b4
-    //     test      byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489 0x1
-    //     je        Label0x36a                ;Offset 0x36a
-    //     or        bh, BDA_DH_80x25Monochrome;0x30
-    //     mov       bl, BDA_EFBS_CGAMono80x25_2;0xb
-    //     or        byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487 0x2
-    //     call      Func0x3f99                ;Offset 0x3f99
-    //     je        Label0x357                ;Offset 0x357
-    //     and       byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_Monochrome;Offset 0x487 0xfd
-    //     mov       dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
-    //     and       bh, NOT BDA_DH_40x25Color ;0xef
-    //     mov       bl, BDA_EFBS_MDAHiRes80x25_2;0x8
-    //     test      byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode200;Offset 0x489 0x80
-    //     jne       Label0x357                ;Offset 0x357
-    //     mov       bl, BDA_EFBS_MDAHiResEnhanced_2;0x9
-    // Label0x357:                             ;Offset 0x357
-    //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
-    //     mov       byte ptr ds:[BDA_DetectedHardware], bh;Offset 0x410
-    //     and       byte ptr ds:[BDA_EGAFeatureBitSwitches], NOT BDA_EFBS_AdapterTypeMask;Offset 0x488 0xf0
-    //     or        byte ptr ds:[BDA_EGAFeatureBitSwitches], bl;Offset 0x488
-    //     jmp       Label0x3b1                ;Offset 0x3b1
-    // Label0x36a:                             ;Offset 0x36a
-    //     call      Func0x3f99                ;Offset 0x3f99
-    //     je        Label0x391                ;Offset 0x391
-    //     cmp       bl, 30h
-    //     je        Label0x381                ;Offset 0x381
-    //     mov       dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
-    //     test      cl, 02h
-    //     jne       Label0x3b3                ;Offset 0x3b3
-    //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
-    //     jmp       Label0x3b1                ;Offset 0x3b1
-    // Label0x381:                             ;Offset 0x381
-    //     test      cl, 02h
-    //     je        Label0x3b3                ;Offset 0x3b3
-    //     mov       al, BDA_DM_80x25_Monochrome_Text;0x7
-    //     mov       byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
-    //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
-    //     jmp       Label0x3b1                ;Offset 0x3b1
-    // Label0x391:                             ;Offset 0x391
-    //     cmp       bl, 30h
-    //     jne       Label0x3a1                ;Offset 0x3a1
-    //     test      cl, 02h
-    //     je        Label0x3b3                ;Offset 0x3b3
-    //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
-    //     jmp       Label0x3b1                ;Offset 0x3b1
-    // Label0x3a1:                             ;Offset 0x3a1
-    //     test      cl, 02h
-    //     jne       Label0x3b3                ;Offset 0x3b3
-    //     sub       al, al                    ;BDA_DM_40x25_BW_Text
-    //     mov       byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
-    //     mov       word ptr ds:[BDA_VideoBaseIOPort], VGA_CRTControllerIndexD;Offset 0x463 Port 0x3d4
-    // Label0x3b1:                             ;Offset 0x3b1
-    //     clc
-    //     ret
-    // Label0x3b3:                             ;Offset 0x3b3
-    //     cbw
-    //     mov       bl, 0eh
-    //     cmp       al, 07h
-    //     je        Label0x3bc                ;Offset 0x3bc
-    //     mov       bl, 08h
-    // Label0x3bc:                             ;Offset 0x3bc
-    //     mov       byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484 0x18
-    //     mov       byte ptr ds:[BDA_PointHeightOfCharacterMatrix], bl;Offset 0x485
-    //     or        byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487 0x8
-    //     int       42h
-    // Label0x3cc:                             ;Offset 0x3cc
+    if (ValidMode(mode))
+    {
+        //     mov       byte ptr ds:[BDA_DisplayMode], al ;Offset 0x449
+        BDA::DisplayMode::Get() = mode;
+
+        //     call      Func0x4152                ;Offset 0x4152
+        //     je        Label0x3cc                ;Offset 0x3cc
+        if (Func0x4152(mode))
+        {
+            //     mov       cl, byte ptr ds:[BDA_VideoModeOptions];Offset 0x487
+            //     and       cl, NOT (BDA_VMO_Inactive OR BDA_VMO_DontClearDisplay);0x77
+            //     or        cl, ah
+            //     mov       byte ptr ds:[BDA_VideoModeOptions], cl;Offset 0x487
+            BDA::VideoModeOptions::Get() =
+                (BDA::VideoModeOptions::Get() &
+                ~(BDA::VideoModeOptions::Inactive | BDA::VideoModeOptions::DontClearDisplay)) |
+                dontClearDisplay;
+            
+            //     mov       bl, byte ptr ds:[BDA_DetectedHardware];Offset 0x410
+            //     mov       bh, bl
+            //     and       bx, ((NOT BDA_DH_InitialVideoModeMask) SHL 8) OR BDA_DH_InitialVideoModeMask;0xcf30
+            BDA::DetectedHardware_t initialVideoMode = BDA::DetectedHardware::Get() & BDA::DetectedHardware::InitialVideoModeMask;
+            BDA::DetectedHardware_t detectedHardware = BDA::DetectedHardware::Get() & ~BDA::DetectedHardware::InitialVideoModeMask;
+
+            //     mov       dx, VGA_CRTControllerIndexB;Port 0x3b4
+            VGA::Register_t crtControllerIndex = VGA::Register::CRTControllerIndexB;
+
+            //     test      byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_VGA;Offset 0x489 0x1
+            //     je        Label0x36a                ;Offset 0x36a
+            if ((BDA::VideoDisplayDataArea::Get() & BDA::VideoDisplayDataArea::VGA) != 0)
+            {
+                //     or        bh, BDA_DH_80x25Monochrome;0x30
+                detectedHardware |= BDA::DetectedHardware::Monochrome80x25;
+
+                //     mov       bl, BDA_EFBS_CGAMono80x25_2;0xb
+                BDA::EGAFeatureBitSwitches_t egaFeatureBitSwitches = BDA::EGAFeatureBitSwitches::CGAMono80x25_2;
+
+                //     or        byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Monochrome;Offset 0x487 0x2
+                BDA::VideoModeOptions::Get() |= BDA::VideoModeOptions::Monochrome;
+
+                //     call      Func0x3f99                ;Offset 0x3f99
+                //     je        Label0x357                ;Offset 0x357
+                if (!Func0x3f99(mode))
+                {
+                    //     and       byte ptr ds:[BDA_VideoModeOptions], NOT BDA_VMO_Monochrome;Offset 0x487 0xfd
+                    BDA::VideoModeOptions::Get() &= ~BDA::VideoModeOptions::Monochrome;
+
+                    //     mov       dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
+                    crtControllerIndex = VGA::Register::CRTControllerIndexD;
+
+                    //     and       bh, NOT BDA_DH_40x25Color ;0xef
+                    detectedHardware &= ~BDA::DetectedHardware::Color40x25;
+
+                    //     mov       bl, BDA_EFBS_MDAHiRes80x25_2;0x8
+                    egaFeatureBitSwitches = BDA::EGAFeatureBitSwitches::MDAHiRes80x25_2;
+
+                    //     test      byte ptr ds:[BDA_VideoDisplayDataArea], BDA_VDDA_LineMode200;Offset 0x489 0x80
+                    //     jne       Label0x357                ;Offset 0x357
+                    if ((BDA::VideoDisplayDataArea::Get() & BDA::VideoDisplayDataArea::LineMode200) == 0)
+                    {
+                        //     mov       bl, BDA_EFBS_MDAHiResEnhanced_2;0x9
+                        egaFeatureBitSwitches = BDA::EGAFeatureBitSwitches::MDAHiResEnhanced_2;
+
+                        // Label0x357:                             ;Offset 0x357
+                    }
+                }
+                //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
+                BDA::VideoBaseIOPort::Get() = crtControllerIndex;
+
+                //     mov       byte ptr ds:[BDA_DetectedHardware], bh;Offset 0x410
+                BDA::DetectedHardware::Get() = detectedHardware;
+
+                //     and       byte ptr ds:[BDA_EGAFeatureBitSwitches], NOT BDA_EFBS_AdapterTypeMask;Offset 0x488 0xf0
+                BDA::EGAFeatureBitSwitches::Get() &= BDA::EGAFeatureBitSwitches::FeatureConnectorMask;
+
+                //     or        byte ptr ds:[BDA_EGAFeatureBitSwitches], bl;Offset 0x488
+                BDA::EGAFeatureBitSwitches::Get() |= egaFeatureBitSwitches;
+
+                //     jmp       Label0x3b1                ;Offset 0x3b1
+                // Label0x36a:                             ;Offset 0x36a
+            }
+            else
+            {
+                //     call      Func0x3f99                ;Offset 0x3f99
+                //     je        Label0x391                ;Offset 0x391
+                if (!Func0x3f99(mode))
+                {
+                    //     cmp       bl, 30h
+                    //     je        Label0x381                ;Offset 0x381
+                    if (initialVideoMode != BDA::DetectedHardware::Monochrome80x25)
+                    {
+                        //     mov       dl, VGA_CRTControllerIndexD_lowbyte;Port 0x3d4
+                        crtControllerIndex = VGA::Register::CRTControllerIndexD;
+
+                        //     test      cl, 02h
+                        //     jne       Label0x3b3                ;Offset 0x3b3
+                        if ((BDA::VideoModeOptions::Get() & BDA::VideoModeOptions::Monochrome) == 0)
+                        {
+                            //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
+                            BDA::VideoBaseIOPort::Get() = crtControllerIndex;
+
+                            //     jmp       Label0x3b1                ;Offset 0x3b1
+                            return true;
+                        }
+                        else
+                        {
+                            // Label0x3b3:                             ;Offset 0x3b3
+                            //     cbw
+                            //     mov       bl, 0eh
+                            //     cmp       al, 07h
+                            //     je        Label0x3bc                ;Offset 0x3bc
+                            //     mov       bl, 08h
+                            // Label0x3bc:                             ;Offset 0x3bc
+                            //     mov       byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484 0x18
+                            //     mov       byte ptr ds:[BDA_PointHeightOfCharacterMatrix], bl;Offset 0x485
+                            //     or        byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487 0x8
+                            //     int       42h
+                            return false;
+                        }
+                        // Label0x381:                             ;Offset 0x381
+                    }
+                    else
+                    {
+                        //     test      cl, 02h
+                        //     je        Label0x3b3                ;Offset 0x3b3
+                        if ((BDA::VideoModeOptions::Get() & BDA::VideoModeOptions::Monochrome) == 0)
+                        {
+                            //     mov       al, BDA_DM_80x25_Monochrome_Text;0x7
+                            //     mov       byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
+                            BDA::DisplayMode::Get() = VGA::VideoMode::T80x25x1bppM;
+
+                            //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
+                            BDA::VideoBaseIOPort::Get() = crtControllerIndex;
+
+                            //     jmp       Label0x3b1                ;Offset 0x3b1
+                            return true;
+                        }
+                        else
+                        {
+                            // Label0x3b3:                             ;Offset 0x3b3
+                            //     cbw
+                            //     mov       bl, 0eh
+                            //     cmp       al, 07h
+                            //     je        Label0x3bc                ;Offset 0x3bc
+                            //     mov       bl, 08h
+                            // Label0x3bc:                             ;Offset 0x3bc
+                            //     mov       byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484 0x18
+                            //     mov       byte ptr ds:[BDA_PointHeightOfCharacterMatrix], bl;Offset 0x485
+                            //     or        byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487 0x8
+                            //     int       42h
+                            return false;
+                        }
+                        // Label0x391:                             ;Offset 0x391
+                    }
+                }
+                //     cmp       bl, 30h
+                //     jne       Label0x3a1                ;Offset 0x3a1
+                if (initialVideoMode == BDA::DetectedHardware::Monochrome80x25)
+                {
+                    //     test      cl, 02h
+                    //     je        Label0x3b3                ;Offset 0x3b3
+                    //     mov       word ptr ds:[BDA_VideoBaseIOPort], dx;Offset 0x463
+                    //     jmp       Label0x3b1                ;Offset 0x3b1
+                    return true;
+                    // Label0x3a1:                             ;Offset 0x3a1
+                }
+                //     test      cl, 02h
+                //     jne       Label0x3b3                ;Offset 0x3b3
+                if ((BDA::VideoModeOptions::Get() & BDA::VideoModeOptions::Monochrome) != 0)
+                {
+                    //     sub       al, al                    ;BDA_DM_40x25_BW_Text
+                    //     mov       byte ptr ds:[BDA_DisplayMode], al;Offset 0x449
+                    BDA::DisplayMode::Get() = VGA::VideoMode::T40x25x4bppG;
+
+                    //     mov       word ptr ds:[BDA_VideoBaseIOPort], VGA_CRTControllerIndexD;Offset 0x463 Port 0x3d4
+                    BDA::VideoBaseIOPort::Get() = VGA::Register::CRTControllerDataD;
+
+                    // Label0x3b1:                             ;Offset 0x3b1
+                }
+                else
+                {
+                    // Label0x3b3:                             ;Offset 0x3b3
+                    //     cbw
+                    //     mov       bl, 0eh
+                    //     cmp       al, 07h
+                    //     je        Label0x3bc                ;Offset 0x3bc
+                    //     mov       bl, 08h
+                    // Label0x3bc:                             ;Offset 0x3bc
+                    //     mov       byte ptr ds:[BDA_RowsOnScreen], 18h;Offset 0x484 0x18
+                    //     mov       byte ptr ds:[BDA_PointHeightOfCharacterMatrix], bl;Offset 0x485
+                    //     or        byte ptr ds:[BDA_VideoModeOptions], BDA_VMO_Inactive;Offset 0x487 0x8
+                    //     int       42h
+                    return false;
+                }
+            }
+            //     clc
+            //     ret
+            return true;
+
+            // Label0x3cc:                             ;Offset 0x3cc
+        }
+    }
     //     stc
     //     ret
-    return true;
+    return false;
 }
 
 void OutputListOfIndexedRegisters()//Offset 0x40a0
@@ -3339,8 +3528,11 @@ void OutputListOfIndexedRegisters()//Offset 0x40a0
     //     ret
 }
 
-void ApplyModeSettingsToVGARegisters()//Offset 0x431
+void ApplyModeSettingsToVGARegisters(Hag::System::BDA::VideoParameterTable& parameters)//Offset 0x431
 {
+    using namespace Hag;
+    using namespace Hag::System;
+
     // push      di
     // push      ds
     // push      es
@@ -3350,29 +3542,41 @@ void ApplyModeSettingsToVGARegisters()//Offset 0x431
     // mov       dx, VGA_SequenceIndex     ;Port 0x3c4
     // mov       ax, VGA_SEQIdx_Reset OR (VGA_SEQ0_AsyncReset SHL 8);0x100
     // out       dx, ax
+    VGA::Sequencer::Reset::Write(VGA::Sequencer::Reset::AsynchronousReset);
+    
     // mov       dl, VGA_MiscellaneousWrite_lowbyte;Port 0x3c2
     // mov       al, byte ptr [si + 09h]
     // out       dx, al
+    VGA::MiscellaneousOutput::Write(parameters.MiscellaneousOutputRegister);
+
     // mov       dl, VGA_SequenceIndex_lowbyte;Port 0x3c4
     // push      si
     // mov       cx, 0004h
     // mov       bl, 01h
     // lea       si, [si + 05h]
     // call      OutputListOfIndexedRegisters;Offset 0x40a0
+    VGA::SequencerData::Write(VGA::Sequencer::Register::ClockingMode, parameters.SequencerRegisters, sizeof(parameters.SequencerRegisters));
+
     // pop       si
     // mov       ax, VGA_SEQIdx_Reset OR ((VGA_SEQ0_AsyncReset OR VGA_SEQ0_SyncReset) SHL 8);0x300
     // out       dx, ax
+    VGA::Sequencer::Reset::Write(VGA::Sequencer::Reset::AsynchronousReset | VGA::Sequencer::Reset::SynchronousReset);
+
     // push      ds
     // call      GetBIOSDataSelectorInDS   ;Offset 0x3f40
     // mov       dx, word ptr ds:[BDA_VideoBaseIOPort];Offset 0x463
     // pop       ds
     // mov       ax, VGA_CRTCIdx_VertRetraceEnd OR (20h SHL 8);0x2011 Unlock CRTC registers 0-7
     // out       dx, ax
+    VGA::CRTController::VerticalRetraceEnd::Write(BDA::VideoBaseIOPort::Get(), VGA::CRTController::VerticalRetraceEnd::DisableVerticalInterrupt);
+    
     // sub       bl, bl
     // mov       cx, 0019h
     // push      si
     // lea       si, [si + 0ah]
     // call      OutputListOfIndexedRegisters;Offset 0x40a0
+    VGA::CRTControllerData::Write(BDA::VideoBaseIOPort::Get(), VGA::CRTController::Register::HorizontalTotal, parameters.CRTCRegisters, sizeof(parameters.CRTCRegisters));
+
     // pop       si
     // mov       dl, VGA_GraphicsControllerIndex_lowbyte;Port 0x3ce
     // sub       bl, bl
@@ -3380,10 +3584,14 @@ void ApplyModeSettingsToVGARegisters()//Offset 0x431
     // push      si
     // lea       si, [si + 37h]
     // call      OutputListOfIndexedRegisters;Offset 0x40a0
+    VGA::GraphicsControllerData::Write(VGA::GraphicsController::Register::SetResetData, parameters.GraphicsControllerRegisters, sizeof(parameters.GraphicsControllerRegisters));
+
     // pop       si
     // mov       dl, VGA_FeatureControlWD_lowbyte;Offset 0x3da
     // sub       al, al
     // out       dx, al
+    VGA::FeatureControl::Write(VGA::Register::FeatureControlWD, 0);
+
     // pop       es
     // pop       ds
     // pop       di
@@ -3417,7 +3625,7 @@ void SetVideoMode(uint8_t mode)//Offset 0x02C2
         Func0x3615();
 
         //     call      ApplyModeSettingsToVGARegisters;Offset 0x431
-        ApplyModeSettingsToVGARegisters();
+        ApplyModeSettingsToVGARegisters(parameters);
 
         //     call      TurnScreenOff             ;Offset 0x3f6a
         TurnScreenOff();
