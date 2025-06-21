@@ -37,7 +37,7 @@ namespace AttributeControllerData
         SYS_WritePortByte(Register::AttributeControllerDataW, value);
     }
 
-    inline void Write(AttributeController::Register_t startIndex, AttributeControllerData_t* values, uint8_t count)
+    inline void Write(AttributeController::Register_t startIndex, const AttributeControllerData_t* values, uint8_t count)
     {
         AttributeController::Register_t index = startIndex;
         for (uint8_t i = 0; i < count; ++i, ++index)

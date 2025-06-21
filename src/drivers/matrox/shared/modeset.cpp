@@ -1068,9 +1068,10 @@ namespace PixelClocksSettings
 void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)
 {
     //5.7.8.3 (A) Step 1: Force the screen off.
-    VGA::Sequencer::ClockingMode::Write(
-        VGA::Sequencer::ClockingMode::Read() |
-        VGA::Sequencer::ClockingMode::ScreenOff);
+    // Screen is already off.
+    // VGA::Sequencer::ClockingMode::Write(
+    //     VGA::Sequencer::ClockingMode::Read() |
+    //     VGA::Sequencer::ClockingMode::ScreenOff);
 
     //5.7.8.3 (A) Step 2: Set pixclkdis to '1' (disable the pixel clock and video clocks)
     Shared::PCI::Indexed::PixelClockControl::Write(System::s_Device,
@@ -1097,12 +1098,6 @@ void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)
     else if ((PllAndClock & PixelClocksSettings::Clock) == PixelClocksSettings::ClockVDOCLK)
         clockControl = Shared::Indexed::PixelClockControl::ClockVDCLK;
 
-    //5.7.8.3 (A) Step 3 (continued): Select another source for the pixel clock.
-    Shared::PCI::Indexed::PixelClockControl::Write(System::s_Device,
-        (Shared::PCI::Indexed::PixelClockControl::Read(System::s_Device) &
-        ~Shared::Indexed::PixelClockControl::ClockSelection) |
-        clockControl);
-
     //5.7.8.3 (A) Step 4: Wait until the clock source is locked onto its new frequency (the pixlock bit is '1')
     //                    for the pixel PLL, or for the VDCLK pin to become stable.
     SYS_ClearInterrupts();
@@ -1121,12 +1116,20 @@ void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)
             Shared::Indexed::PixelPLLStatus::FrequencyStatus;
     } while (frequencyLock == Shared::Indexed::PixelPLLStatus::FrequencyNotLocked);
 
+    //This step is moved (in contrast to the docs). Wait for the clock to stabilize before selecting it as source.
+    //5.7.8.3 (A) Step 3 (continued): Select another source for the pixel clock.
+    Shared::PCI::Indexed::PixelClockControl::Write(System::s_Device,
+        (Shared::PCI::Indexed::PixelClockControl::Read(System::s_Device) &
+        ~Shared::Indexed::PixelClockControl::ClockSelection) |
+        clockControl);
+
     //5.7.8.3 (A) Step 5: Set pixclkdis to '0' (enable the pixel and video clocks)
     Shared::PCI::Indexed::PixelClockControl::Write(System::s_Device,
         Shared::PCI::Indexed::PixelClockControl::Read(System::s_Device) &
         ~Shared::Indexed::PixelClockControl::ClockDisable);
 
-    VGA::Sequencer::ClockingMode::Write(VGA::Sequencer::ClockingMode::Read() & ~VGA::Sequencer::ClockingMode::ScreenOff);
+    // More set up to do, don't turn screen back on yet.
+    // VGA::Sequencer::ClockingMode::Write(VGA::Sequencer::ClockingMode::Read() & ~VGA::Sequencer::ClockingMode::ScreenOff);
 }
 
 SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, bool clearDisplay)

@@ -1,18 +1,23 @@
 //Copyright 2025-Present riplin
 
+#include <new>
 #include <dos.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
 
+#include <sys/nearptr.h>
 #include <support/allocatr.h>
 #include <hag/testing/mock.h>
+#include <hag/testing/testpat.h>
 
 #include <hag/system/bda.h>
 #include <hag/system/pci.h>
 #include <hag/system/pit.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/vesa/vidmodes.h>
+
+#include <hag/drivers/vga/modeset.h>
 
 #include <hag/system/keyboard.h>
 #include <hag/drivers/vga/vga.h>
@@ -453,16 +458,16 @@ Hag::System::BDA::VideoParameterTable s_VideoParameters[] =
 
 struct ModeData
 {
-    Hag::VGA::VideoMode_t LegacyMode;
-    uint8_t OtherTableIndex;//Also used as index into the video param table if unknown3 is 0
-    Hag::Vesa::VideoMode_t VesaMode;
-    uint8_t Flags;//Also index for palette setting. Instead of flags, perhaps type?
-    uint8_t Unknown1;
-    uint8_t BitsPerPixel;
-    uint16_t Width;//In pixels or chars
-    uint16_t Height;//In pixels or chars
-    uint16_t Stride;//Bytes per scan line
-    uint8_t CharacterHeight;
+    Hag::VGA::VideoMode_t LegacyMode;//0x00 
+    uint8_t OtherTableIndex;//0x01 Also used as index into the video param table if unknown3 is 0
+    Hag::Vesa::VideoMode_t VesaMode;//0x02
+    uint8_t Flags;//0x04 Also index for palette setting. Instead of flags, perhaps type?
+    uint8_t Unknown1;//0x05
+    uint8_t BitsPerPixel;//0x06
+    uint16_t Width;//0x07 In pixels or chars
+    uint16_t Height;//0x09 In pixels or chars
+    uint16_t Stride;//0x0b Bytes per scan line
+    uint8_t CharacterHeight;//0x0d
 };
 
 ModeData s_ModeData[] =
@@ -912,7 +917,7 @@ Hag::System::BDA::VideoParameterTable& GetVideoParameterTable()//Offset 0x35a7
 
     //     cmp       al, BDA_DM_320x200_256_Color_Graphics;0x13
     //     jbe       Label0x35c1               ;Offset 0x35c1
-    if (mode < VGA::VideoMode::G320x200x8bppC)
+    if (mode <= VGA::VideoMode::G320x200x8bppC)
         goto Label0x35c1;
 
     //     call      FindModeData              ;Offset 0x40d9
@@ -926,7 +931,7 @@ Hag::System::BDA::VideoParameterTable& GetVideoParameterTable()//Offset 0x35a7
 
     //     test      al, al
     //     jne       Label0x35c4               ;Offset 0x35c4
-    if (extraModeData->Unknown3 != 0)
+    if (mode != 0)
         goto Label0x35c4;
 
     //     mov       al, byte ptr ds:[BDA_DisplayMode];Offset 0x449
@@ -946,9 +951,7 @@ Hag::System::BDA::VideoParameterTable& GetVideoParameterTable()//Offset 0x35a7
     //     cbw
     //     shl       ax, 06h
     //     add       di, ax
-    return BDA::VideoParameterControlBlockPointer::Get()
-        .ToPointer<BDA::VideoParameterControlBlock>()->VideoParameters
-        .ToPointer<BDA::VideoParameterTable>(sizeof(BDA::VideoParameterTable) * (mode + 1))[mode];
+    return s_VideoParameters[mode];
 
     //     pop       si
     //     pop       bx
@@ -1972,20 +1975,22 @@ void Func0x363c()//Offset 0x363c
 
         //     pop       eax
         //saveEAX2
+        printf("saveEAX2 = 0x%08lX\n", saveEAX2);
 
         //     pop       edx
         //saveEAX
+        printf("saveEAX = 0x%08lX\n", saveEAX);
 
         //     test      cl, 04h
         //     je        Label0x36d4               ;Offset 0x36d4
         //     add       eax, edx
         if ((extraModeData->Unknown0 & 0x4) != 0)
-            saveEAX += saveEAX2;
+            saveEAX2 += saveEAX;
             
         // Label0x36d4:                            ;Offset 0x36d4
         //     lea       dx, [di + TDFX_IO_VideoScreenSize];0x98
         //     out       dx, eax
-        Shared::IO::VideoScreenSize::Write(baseAddress, saveEAX);
+        Shared::IO::VideoScreenSize::Write(baseAddress, saveEAX2);
 
         //     sub       eax, eax
         //     pop       ax
@@ -2006,7 +2011,7 @@ void Func0x363c()//Offset 0x363c
         //     out       dx, eax
         Shared::IO::VGAInit0::Write(baseAddress,
             (Shared::IO::VGAInit0::Read(baseAddress) & Shared::VGAInit0::WakeUpSelect) |
-            ((extraModeData->Unknown0 & 1) << 12) |
+            (uint32_t(extraModeData->Unknown0 & 1) << 12) |
             Shared::VGAInit0::ExtensionsEnabled);
 
         //     lea       dx, [di + TDFX_IO_VGAInit1];0x2c
@@ -2014,7 +2019,7 @@ void Func0x363c()//Offset 0x363c
         //     and       eax, 00000001h
         //     shl       eax, 14h
         //     out       dx, eax
-        Shared::IO::VGAInit1::Write(baseAddress, (extraModeData->Unknown0 & 1) << 20);
+        Shared::IO::VGAInit1::Write(baseAddress, uint32_t(extraModeData->Unknown0 & 1) << 20);
 
         //     lea       dx, [di + TDFX_IO_VideoProcessorConfig];0x5c
         //     mov       eax, ecx
@@ -3475,6 +3480,7 @@ bool SetupBDA(uint8_t mode)//Offset 0x2fc
                     return true;
                     // Label0x3a1:                             ;Offset 0x3a1
                 }
+
                 //     test      cl, 02h
                 //     jne       Label0x3b3                ;Offset 0x3b3
                 if ((BDA::VideoModeOptions::Get() & BDA::VideoModeOptions::Monochrome) != 0)
@@ -3665,48 +3671,108 @@ void SetVideoMode(uint8_t mode)//Offset 0x02C2
 }
 
 // inputs:
+//    ax = VESA mode
+
+bool FindVESAModeData(Hag::Vesa::VideoMode_t mode, ModeData*& modeData)//Offset 0x41a9
+{
+    modeData = nullptr;
+
+    //     call   FetchCustomDataPointer       ;Offset 0x40f6
+    //     les    bx, es:[bx + 04h]
+    // Find:                                   ;Offset 0x41b0
+    //     cmp    byte ptr es:[bx], 0ffh
+    //     je     NotFound                     ;Offset 0x41c3
+    //     cmp    word ptr es:[bx + 02h], ax
+    //     je     Found                        ;Offset 0x41c1
+    //     add    bx, 000eh
+    //     jmp    Find                         ;Offset 0x41b0
+    // Found:                                  ;Offset 0x41c1
+    //     clc
+    //     ret
+    for (uint32_t i = 0; i < sizeof(s_ModeData) / sizeof(ModeData); ++i)
+    {
+        if (mode == s_ModeData[i].VesaMode)
+        {
+            modeData = &s_ModeData[i];
+            return true;
+        }
+    }
+
+    // NotFound:                               ;Offset 0x41c3
+    //     sub    bx, bx
+    //     stc
+    //     ret
+    return false;
+
+}
+
+
+// inputs:
 //    ax = mode
 
 // outputs:
 //    al = legacy mode (byte)
 //    ah = extra data index
 
-void Func0x41ce()//Offset 0x41ce
+void Func0x41ce(Hag::Vesa::VideoMode_t vesaMode, Hag::VGA::VideoMode_t& mode, uint8_t& extraDataIndex)//Offset 0x41ce
 {
     //     push   bx
     //     push   es
+    mode = 0xff;
+    extraDataIndex = 0xff;
+
+    ModeData* modeData = nullptr;
     //     call   FindVESAModeData             ;Offset 0x41a9
-    //     mov    ax, 0ffffh
-    //     jb     Label0x41df                  ;Offset 0x41df
-    //     mov    al, byte ptr es:[bx]
-    //     mov    ah, byte ptr es:[bx + 01h]
-    // Label0x41df:                            ;Offset 0x41df
+    if (FindVESAModeData(vesaMode, modeData))
+    {
+        //     mov    ax, 0ffffh
+        //     jb     Label0x41df                  ;Offset 0x41df
+
+        //     mov    al, byte ptr es:[bx]
+        mode = modeData->LegacyMode;
+
+        //     mov    ah, byte ptr es:[bx + 01h]
+        extraDataIndex = modeData->OtherTableIndex;
+
+        // Label0x41df:                            ;Offset 0x41df
+    }
     //     pop    es
     //     pop    bx
     //     ret
 }
 
 //Check to see if there's enough memory for the mode.
-void Func0x3863()//Offset 0x3863
+bool Func0x3863(Hag::VGA::VideoMode_t mode)//Offset 0x3863
 {
     //     pushaw
     //     push      es
     //     call      FindModeData              ;Offset 0x40d9
     //     jb        Label0x3886               ;Offset 0x3886
-    //     mov       ax, word ptr es:[bx + 0bh];Bytes per scanline
-    //     mul       word ptr es:[bx + 09h]    ;Height in pixels or chars
-    //     mov       cx, 8000h
-    //     div       cx
-    //     add       dx, 0ffffh
-    //     adc       ax, 0000h
-    //     xchg      ax, dx
-    //     call      GetMemorySizeIn256KBlocks ;Offset 0x37fc
-    //     shl       ax, 03h
-    //     cmp       ax, dx
-    // Label0x3886:                            ;Offset 0x3886
+    ModeData* modeData = nullptr;
+    if (FindModeData(mode, modeData))
+    {
+        //     mov       ax, word ptr es:[bx + 0bh];Bytes per scanline
+        //     mul       word ptr es:[bx + 09h]    ;Height in pixels or chars
+        //     mov       cx, 8000h
+        //     div       cx
+        //     add       dx, 0ffffh
+        //     adc       ax, 0000h
+        //     xchg      ax, dx
+        uint16_t sizeIn32KBlocks = ((modeData->Stride * modeData->Height) + 32767) / 0x8000;
+
+        //     call      GetMemorySizeIn256KBlocks ;Offset 0x37fc
+        uint16_t systemMem = GetMemorySizeIn256KBlocks();
+
+        //     shl       ax, 03h
+        //     cmp       ax, dx
+        return (sizeIn32KBlocks << 3) < systemMem;
+
+        // Label0x3886:                            ;Offset 0x3886
+    }
     //     pop       es
     //     popaw
     //     ret
+    return false;
 }
 
 void Func0x3824()//Offset 0x3824
@@ -4145,7 +4211,773 @@ uint8_t MockBanshee::s_Config[256] =
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+Hag::Testing::Mock::PortAndValue TDfx_Banshee_DefaultPortValues [] =
+{
+    { 0x0062, 0x00 },
+    { 0x0061, 0x00 },
+    { 0x03C2, 0x70 },
+    { 0x03C4, 0xFF },
+    { 0x03C5, 0xFF },
+    { 0x03CA, 0x00 },
+    { 0x03CC, 0x67 },
+    { 0x03BA, 0xFF },
+    { 0x03DA, 0x01 },
+    { 0x03C3, 0xFF },
+    { 0x03C6, 0xFF },
+    { 0x03C7, 0x00 },
+    { 0x03C8, 0x00 },
+    { 0x03C9, 0x00 },
+    { 0x03D4, 0xFF },
+    { 0x03D5, 0xFF },
+    { 0x0102, 0xFF },
+    { 0x46E8, 0xFF },
+
+    { 0xD800, 0x1F },
+    { 0xD801, 0x00 },
+    { 0xD802, 0x00 },
+    { 0xD803, 0x00 },
+    { 0xD804, 0x40 },
+    { 0xD805, 0xFB },
+    { 0xD806, 0x80 },
+    { 0xD807, 0x01 },
+    { 0xD808, 0x00 },
+    { 0xD809, 0x00 },
+    { 0xD80A, 0x00 },
+    { 0xD80B, 0x00 },
+    { 0xD80C, 0xFF },
+    { 0xD80D, 0x3F },
+    { 0xD80E, 0x00 },
+    { 0xD80F, 0x00 },
+    { 0xD810, 0x00 },
+    { 0xD811, 0x00 },
+    { 0xD812, 0x00 },
+    { 0xD813, 0x00 },
+    { 0xD814, 0x01 },
+    { 0xD815, 0x00 },
+    { 0xD816, 0x00 },
+    { 0xD817, 0x0F },
+    { 0xD818, 0x6A },
+    { 0xD819, 0xA1 },
+    { 0xD81A, 0x17 },
+    { 0xD81B, 0x0C },
+    { 0xD81C, 0x31 },
+    { 0xD81D, 0x80 },
+    { 0xD81E, 0x54 },
+    { 0xD81F, 0x00 },
+    { 0xD820, 0x9E },
+    { 0xD821, 0x04 },
+    { 0xD822, 0x00 },
+    { 0xD823, 0x00 },
+    { 0xD824, 0xFB },
+    { 0xD825, 0x0F },
+    { 0xD826, 0x00 },
+    { 0xD827, 0x00 },
+    { 0xD828, 0x40 },
+    { 0xD829, 0x01 },
+    { 0xD82A, 0x00 },
+    { 0xD82B, 0x00 },
+    { 0xD82C, 0x00 },
+    { 0xD82D, 0x00 },
+    { 0xD82E, 0x00 },
+    { 0xD82F, 0x00 },
+    { 0xD830, 0x00 },
+    { 0xD831, 0x00 },
+    { 0xD832, 0x00 },
+    { 0xD833, 0x00 },
+    { 0xD834, 0x00 },
+    { 0xD835, 0x00 },
+    { 0xD836, 0x00 },
+    { 0xD837, 0x00 },
+    { 0xD838, 0x6F },
+    { 0xD839, 0x01 },
+    { 0xD83A, 0x00 },
+    { 0xD83B, 0x00 },
+    { 0xD83C, 0x1F },
+    { 0xD83D, 0x00 },
+    { 0xD83E, 0x00 },
+    { 0xD83F, 0x00 },
+    { 0xD840, 0x01 },
+    { 0xD841, 0x0C },
+    { 0xD842, 0x00 },
+    { 0xD843, 0x00 },
+    { 0xD844, 0x05 },
+    { 0xD845, 0x28 },
+    { 0xD846, 0x00 },
+    { 0xD847, 0x00 },
+    { 0xD848, 0x19 },
+    { 0xD849, 0x79 },
+    { 0xD84A, 0x00 },
+    { 0xD84B, 0x00 },
+    { 0xD84C, 0x00 },
+    { 0xD84D, 0x00 },
+    { 0xD84E, 0x00 },
+    { 0xD84F, 0x00 },
+    { 0xD850, 0x36 },
+    { 0xD851, 0x00 },
+    { 0xD852, 0x00 },
+    { 0xD853, 0x00 },
+    { 0xD854, 0x00 },
+    { 0xD855, 0x00 },
+    { 0xD856, 0x00 },
+    { 0xD857, 0x00 },
+    { 0xD858, 0x00 },
+    { 0xD859, 0x00 },
+    { 0xD85A, 0x00 },
+    { 0xD85B, 0x00 },
+    { 0xD85C, 0x00 },
+    { 0xD85D, 0x00 },
+    { 0xD85E, 0x00 },
+    { 0xD85F, 0x00 },
+    { 0xD860, 0x53 },
+    { 0xD861, 0x51 },
+    { 0xD862, 0x52 },
+    { 0xD863, 0x9F },
+    { 0xD864, 0x24 },
+    { 0xD865, 0x31 },
+    { 0xD866, 0xEE },
+    { 0xD867, 0x4E },
+    { 0xD868, 0x6E },
+    { 0xD869, 0xA6 },
+    { 0xD86A, 0x8F },
+    { 0xD86B, 0xEE },
+    { 0xD86C, 0xD3 },
+    { 0xD86D, 0xB0 },
+    { 0xD86E, 0x8D },
+    { 0xD86F, 0x43 },
+    { 0xD870, 0x00 },
+    { 0xD871, 0x00 },
+    { 0xD872, 0x00 },
+    { 0xD873, 0x00 },
+    { 0xD874, 0x07 },
+    { 0xD875, 0x00 },
+    { 0xD876, 0x00 },
+    { 0xD877, 0x00 },
+    { 0xD878, 0xE0 },
+    { 0xD879, 0x1B },
+    { 0xD87A, 0x78 },
+    { 0xD87B, 0x4F },
+    { 0xD87C, 0x00 },
+    { 0xD87D, 0x00 },
+    { 0xD87E, 0x00 },
+    { 0xD87F, 0x00 },
+    { 0xD880, 0x00 },
+    { 0xD881, 0x00 },
+    { 0xD882, 0x00 },
+    { 0xD883, 0x00 },
+    { 0xD884, 0x00 },
+    { 0xD885, 0x00 },
+    { 0xD886, 0x00 },
+    { 0xD887, 0x00 },
+    { 0xD888, 0x00 },
+    { 0xD889, 0x00 },
+    { 0xD88A, 0x00 },
+    { 0xD88B, 0x00 },
+    { 0xD88C, 0x00 },
+    { 0xD88D, 0x00 },
+    { 0xD88E, 0x00 },
+    { 0xD88F, 0x00 },
+    { 0xD890, 0x00 },
+    { 0xD891, 0x00 },
+    { 0xD892, 0x00 },
+    { 0xD893, 0x00 },
+    { 0xD894, 0x00 },
+    { 0xD895, 0x00 },
+    { 0xD896, 0x00 },
+    { 0xD897, 0x00 },
+    { 0xD898, 0x50 },
+    { 0xD899, 0x90 },
+    { 0xD89A, 0x01 },
+    { 0xD89B, 0x00 },
+    { 0xD89C, 0x00 },
+    { 0xD89D, 0x00 },
+    { 0xD89E, 0x00 },
+    { 0xD89F, 0x00 },
+    { 0xD8A0, 0x00 },
+    { 0xD8A1, 0x00 },
+    { 0xD8A2, 0x00 },
+    { 0xD8A3, 0x00 },
+    { 0xD8A4, 0x00 },
+    { 0xD8A5, 0x00 },
+    { 0xD8A6, 0x00 },
+    { 0xD8A7, 0x00 },
+    { 0xD8A8, 0x00 },
+    { 0xD8A9, 0x00 },
+    { 0xD8AA, 0x00 },
+    { 0xD8AB, 0x00 },
+    { 0xD8AC, 0x00 },
+    { 0xD8AD, 0x00 },
+    { 0xD8AE, 0x00 },
+    { 0xD8AF, 0x00 },
+    { 0xD8B0, 0x1F },
+    { 0xD8B1, 0x00 },
+    { 0xD8B2, 0x00 },
+    { 0xD8B3, 0x00 },
+    { 0xD8B4, 0x1F },
+    { 0xD8B5, 0x00 },
+    { 0xD8B6, 0x00 },
+    { 0xD8B7, 0x00 },
+    { 0xD8B8, 0x1F },
+    { 0xD8B9, 0x00 },
+    { 0xD8BA, 0x00 },
+    { 0xD8BB, 0x00 },
+    { 0xD8BC, 0x1F },
+    { 0xD8BD, 0x00 },
+    { 0xD8BE, 0x00 },
+    { 0xD8BF, 0x00 },
+    { 0xD8C0, 0x20 },
+    { 0xD8C1, 0xFF },
+    { 0xD8C2, 0x70 },
+    { 0xD8C3, 0xFF },
+    { 0xD8C4, 0x04 },
+    { 0xD8C5, 0x02 },
+    { 0xD8C6, 0xFF },
+    { 0xD8C7, 0x03 },
+    { 0xD8C8, 0x01 },
+    { 0xD8C9, 0x00 },
+    { 0xD8CA, 0x00 },
+    { 0xD8CB, 0xFF },
+    { 0xD8CC, 0x67 },
+    { 0xD8CD, 0xFF },
+    { 0xD8CE, 0x08 },
+    { 0xD8CF, 0xFF },
+    { 0xD8D0, 0x1F },
+    { 0xD8D1, 0x00 },
+    { 0xD8D2, 0x00 },
+    { 0xD8D3, 0x00 },
+    { 0xD8D4, 0x1C },
+    { 0xD8D5, 0xD8 },
+    { 0xD8D6, 0xFF },
+    { 0xD8D7, 0xFF },
+    { 0xD8D8, 0xFF },
+    { 0xD8D9, 0xFF },
+    { 0xD8DA, 0x05 },
+    { 0xD8DB, 0xFF },
+    { 0xD8DC, 0x1F },
+    { 0xD8DD, 0x00 },
+    { 0xD8DE, 0x00 },
+    { 0xD8DF, 0x00 },
+    { 0xD8E0, 0x00 },
+    { 0xD8E1, 0x00 },
+    { 0xD8E2, 0x00 },
+    { 0xD8E3, 0x00 },
+    { 0xD8E4, 0x00 },
+    { 0xD8E5, 0x00 },
+    { 0xD8E6, 0x00 },
+    { 0xD8E7, 0x00 },
+    { 0xD8E8, 0xA0 },
+    { 0xD8E9, 0x00 },
+    { 0xD8EA, 0x00 },
+    { 0xD8EB, 0x00 },
+    { 0xD8EC, 0x00 },
+    { 0xD8ED, 0x00 },
+    { 0xD8EE, 0x00 },
+    { 0xD8EF, 0x00 },
+    { 0xD8F0, 0x00 },
+    { 0xD8F1, 0x00 },
+    { 0xD8F2, 0x00 },
+    { 0xD8F3, 0x00 },
+    { 0xD8F4, 0x00 },
+    { 0xD8F5, 0x00 },
+    { 0xD8F6, 0x00 },
+    { 0xD8F7, 0x00 },
+    { 0xD8F8, 0x00 },
+    { 0xD8F9, 0x00 },
+    { 0xD8FA, 0x00 },
+    { 0xD8FB, 0x00 },
+    { 0xD8FC, 0xA2 },
+    { 0xD8FD, 0xD6 },
+    { 0xD8FE, 0x57 },
+    { 0xD8FF, 0x00 }
+};
+
+uint8_t TDfx_Banshee_AttributeControllerRegisters[] =
+{
+    0x00,
+    0x01,
+    0x02,
+    0x03,
+    0x04,
+    0x05,
+    0x14,
+    0x07,
+    0x38,
+    0x39,
+    0x3A,
+    0x3B,
+    0x3C,
+    0x3D,
+    0x3E,
+    0x3F,
+    0x0C,
+    0x00,
+    0x0F,
+    0x08,
+    0x00
+};
+
+uint8_t TDfx_Banshee_RamdacControllerRegisters[] =
+{
+    0x00, 0x00, 0x00, //0
+    0x00, 0x00, 0x2A, //1
+    0x00, 0x2A, 0x00, //2
+    0x00, 0x2A, 0x2A, //3
+    0x2A, 0x00, 0x00, //4
+    0x2A, 0x00, 0x2A, //5
+    0x2A, 0x2A, 0x00, //6
+    0x2A, 0x2A, 0x2A, //7
+    0x00, 0x00, 0x15, //8
+    0x00, 0x00, 0x3F, //9
+    0x00, 0x2A, 0x15, //10
+    0x00, 0x2A, 0x3F, //11
+    0x2A, 0x00, 0x15, //12
+    0x2A, 0x00, 0x3F, //13
+    0x2A, 0x2A, 0x15, //14
+    0x2A, 0x2A, 0x3F, //15
+    0x00, 0x15, 0x00, //16
+    0x00, 0x15, 0x2A, //17
+    0x00, 0x3F, 0x00, //18
+    0x00, 0x3F, 0x2A, //19
+    0x2A, 0x15, 0x00, //20
+    0x2A, 0x15, 0x2A, //21
+    0x2A, 0x3F, 0x00, //22
+    0x2A, 0x3F, 0x2A, //23
+    0x00, 0x15, 0x15, //24
+    0x00, 0x15, 0x3F, //25
+    0x00, 0x3F, 0x15, //26
+    0x00, 0x3F, 0x3F, //27
+    0x2A, 0x15, 0x15, //28
+    0x2A, 0x15, 0x3F, //29
+    0x2A, 0x3F, 0x15, //30
+    0x2A, 0x3F, 0x3F, //31
+    0x15, 0x00, 0x00, //32
+    0x15, 0x00, 0x2A, //33
+    0x15, 0x2A, 0x00, //34
+    0x15, 0x2A, 0x2A, //35
+    0x3F, 0x00, 0x00, //36
+    0x3F, 0x00, 0x2A, //37
+    0x3F, 0x2A, 0x00, //38
+    0x3F, 0x2A, 0x2A, //39
+    0x15, 0x00, 0x15, //40
+    0x15, 0x00, 0x3F, //41
+    0x15, 0x2A, 0x15, //42
+    0x15, 0x2A, 0x3F, //43
+    0x3F, 0x00, 0x15, //44
+    0x3F, 0x00, 0x3F, //45
+    0x3F, 0x2A, 0x15, //46
+    0x3F, 0x2A, 0x3F, //47
+    0x15, 0x15, 0x00, //48
+    0x15, 0x15, 0x2A, //49
+    0x15, 0x3F, 0x00, //50
+    0x15, 0x3F, 0x2A, //51
+    0x3F, 0x15, 0x00, //52
+    0x3F, 0x15, 0x2A, //53
+    0x3F, 0x3F, 0x00, //54
+    0x3F, 0x3F, 0x2A, //55
+    0x15, 0x15, 0x15, //56
+    0x15, 0x15, 0x3F, //57
+    0x15, 0x3F, 0x15, //58
+    0x15, 0x3F, 0x3F, //59
+    0x3F, 0x15, 0x15, //60
+    0x3F, 0x15, 0x3F, //61
+    0x3F, 0x3F, 0x15, //62
+    0x3F, 0x3F, 0x3F, //63
+    0x00, 0x00, 0x00, //64
+    0x00, 0x00, 0x00, //65
+    0x00, 0x00, 0x00, //66
+    0x00, 0x00, 0x00, //67
+    0x00, 0x00, 0x00, //68
+    0x00, 0x00, 0x00, //69
+    0x00, 0x00, 0x00, //70
+    0x00, 0x00, 0x00, //71
+    0x00, 0x00, 0x00, //72
+    0x00, 0x00, 0x00, //73
+    0x00, 0x00, 0x00, //74
+    0x00, 0x00, 0x00, //75
+    0x00, 0x00, 0x00, //76
+    0x00, 0x00, 0x00, //77
+    0x00, 0x00, 0x00, //78
+    0x00, 0x00, 0x00, //79
+    0x00, 0x00, 0x00, //80
+    0x00, 0x00, 0x00, //81
+    0x00, 0x00, 0x00, //82
+    0x00, 0x00, 0x00, //83
+    0x00, 0x00, 0x00, //84
+    0x00, 0x00, 0x00, //85
+    0x00, 0x00, 0x00, //86
+    0x00, 0x00, 0x00, //87
+    0x00, 0x00, 0x00, //88
+    0x00, 0x00, 0x00, //89
+    0x00, 0x00, 0x00, //90
+    0x00, 0x00, 0x00, //91
+    0x00, 0x00, 0x00, //92
+    0x00, 0x00, 0x00, //93
+    0x00, 0x00, 0x00, //94
+    0x00, 0x00, 0x00, //95
+    0x00, 0x00, 0x00, //96
+    0x00, 0x00, 0x00, //97
+    0x00, 0x00, 0x00, //98
+    0x00, 0x00, 0x00, //99
+    0x00, 0x00, 0x00, //100
+    0x00, 0x00, 0x00, //101
+    0x00, 0x00, 0x00, //102
+    0x00, 0x00, 0x00, //103
+    0x00, 0x00, 0x00, //104
+    0x00, 0x00, 0x00, //105
+    0x00, 0x00, 0x00, //106
+    0x00, 0x00, 0x00, //107
+    0x00, 0x00, 0x00, //108
+    0x00, 0x00, 0x00, //109
+    0x00, 0x00, 0x00, //110
+    0x00, 0x00, 0x00, //111
+    0x00, 0x00, 0x00, //112
+    0x00, 0x00, 0x00, //113
+    0x00, 0x00, 0x00, //114
+    0x00, 0x00, 0x00, //115
+    0x00, 0x00, 0x00, //116
+    0x00, 0x00, 0x00, //117
+    0x00, 0x00, 0x00, //118
+    0x00, 0x00, 0x00, //119
+    0x00, 0x00, 0x00, //120
+    0x00, 0x00, 0x00, //121
+    0x00, 0x00, 0x00, //122
+    0x00, 0x00, 0x00, //123
+    0x00, 0x00, 0x00, //124
+    0x00, 0x00, 0x00, //125
+    0x00, 0x00, 0x00, //126
+    0x00, 0x00, 0x00, //127
+    0x00, 0x00, 0x00, //128
+    0x00, 0x00, 0x00, //129
+    0x00, 0x00, 0x00, //130
+    0x00, 0x00, 0x00, //131
+    0x00, 0x00, 0x00, //132
+    0x00, 0x00, 0x00, //133
+    0x00, 0x00, 0x00, //134
+    0x00, 0x00, 0x00, //135
+    0x00, 0x00, 0x00, //136
+    0x00, 0x00, 0x00, //137
+    0x00, 0x00, 0x00, //138
+    0x00, 0x00, 0x00, //139
+    0x00, 0x00, 0x00, //140
+    0x00, 0x00, 0x00, //141
+    0x00, 0x00, 0x00, //142
+    0x00, 0x00, 0x00, //143
+    0x00, 0x00, 0x00, //144
+    0x00, 0x00, 0x00, //145
+    0x00, 0x00, 0x00, //146
+    0x00, 0x00, 0x00, //147
+    0x00, 0x00, 0x00, //148
+    0x00, 0x00, 0x00, //149
+    0x00, 0x00, 0x00, //150
+    0x00, 0x00, 0x00, //151
+    0x00, 0x00, 0x00, //152
+    0x00, 0x00, 0x00, //153
+    0x00, 0x00, 0x00, //154
+    0x00, 0x00, 0x00, //155
+    0x00, 0x00, 0x00, //156
+    0x00, 0x00, 0x00, //157
+    0x00, 0x00, 0x00, //158
+    0x00, 0x00, 0x00, //159
+    0x00, 0x00, 0x00, //160
+    0x00, 0x00, 0x00, //161
+    0x00, 0x00, 0x00, //162
+    0x00, 0x00, 0x00, //163
+    0x00, 0x00, 0x00, //164
+    0x00, 0x00, 0x00, //165
+    0x00, 0x00, 0x00, //166
+    0x00, 0x00, 0x00, //167
+    0x00, 0x00, 0x00, //168
+    0x00, 0x00, 0x00, //169
+    0x00, 0x00, 0x00, //170
+    0x00, 0x00, 0x00, //171
+    0x00, 0x00, 0x00, //172
+    0x00, 0x00, 0x00, //173
+    0x00, 0x00, 0x00, //174
+    0x00, 0x00, 0x00, //175
+    0x00, 0x00, 0x00, //176
+    0x00, 0x00, 0x00, //177
+    0x00, 0x00, 0x00, //178
+    0x00, 0x00, 0x00, //179
+    0x00, 0x00, 0x00, //180
+    0x00, 0x00, 0x00, //181
+    0x00, 0x00, 0x00, //182
+    0x00, 0x00, 0x00, //183
+    0x00, 0x00, 0x00, //184
+    0x00, 0x00, 0x00, //185
+    0x00, 0x00, 0x00, //186
+    0x00, 0x00, 0x00, //187
+    0x00, 0x00, 0x00, //188
+    0x00, 0x00, 0x00, //189
+    0x00, 0x00, 0x00, //190
+    0x00, 0x00, 0x00, //191
+    0x00, 0x00, 0x00, //192
+    0x00, 0x00, 0x00, //193
+    0x00, 0x00, 0x00, //194
+    0x00, 0x00, 0x00, //195
+    0x00, 0x00, 0x00, //196
+    0x00, 0x00, 0x00, //197
+    0x00, 0x00, 0x00, //198
+    0x00, 0x00, 0x00, //199
+    0x00, 0x00, 0x00, //200
+    0x00, 0x00, 0x00, //201
+    0x00, 0x00, 0x00, //202
+    0x00, 0x00, 0x00, //203
+    0x00, 0x00, 0x00, //204
+    0x00, 0x00, 0x00, //205
+    0x00, 0x00, 0x00, //206
+    0x00, 0x00, 0x00, //207
+    0x00, 0x00, 0x00, //208
+    0x00, 0x00, 0x00, //209
+    0x00, 0x00, 0x00, //210
+    0x00, 0x00, 0x00, //211
+    0x00, 0x00, 0x00, //212
+    0x00, 0x00, 0x00, //213
+    0x00, 0x00, 0x00, //214
+    0x00, 0x00, 0x00, //215
+    0x00, 0x00, 0x00, //216
+    0x00, 0x00, 0x00, //217
+    0x00, 0x00, 0x00, //218
+    0x00, 0x00, 0x00, //219
+    0x00, 0x00, 0x00, //220
+    0x00, 0x00, 0x00, //221
+    0x00, 0x00, 0x00, //222
+    0x00, 0x00, 0x00, //223
+    0x00, 0x00, 0x00, //224
+    0x00, 0x00, 0x00, //225
+    0x00, 0x00, 0x00, //226
+    0x00, 0x00, 0x00, //227
+    0x00, 0x00, 0x00, //228
+    0x00, 0x00, 0x00, //229
+    0x00, 0x00, 0x00, //230
+    0x00, 0x00, 0x00, //231
+    0x00, 0x00, 0x00, //232
+    0x00, 0x00, 0x00, //233
+    0x00, 0x00, 0x00, //234
+    0x00, 0x00, 0x00, //235
+    0x00, 0x00, 0x00, //236
+    0x00, 0x00, 0x00, //237
+    0x00, 0x00, 0x00, //238
+    0x00, 0x00, 0x00, //239
+    0x00, 0x00, 0x00, //240
+    0x00, 0x00, 0x00, //241
+    0x00, 0x00, 0x00, //242
+    0x00, 0x00, 0x00, //243
+    0x00, 0x00, 0x00, //244
+    0x00, 0x00, 0x00, //245
+    0x00, 0x00, 0x00, //246
+    0x00, 0x00, 0x00, //247
+    0x00, 0x00, 0x00, //248
+    0x00, 0x00, 0x00, //249
+    0x00, 0x00, 0x00, //250
+    0x00, 0x00, 0x00, //251
+    0x00, 0x00, 0x00, //252
+    0x00, 0x00, 0x00, //253
+    0x00, 0x00, 0x00, //254
+    0x00, 0x00, 0x00  //255
+};
+
+uint8_t TDfx_Banshee_CRTControllerRegisters[] =
+{
+    0x5F,
+    0x4F,
+    0x50,
+    0x82,
+    0x55,
+    0x81,
+    0xBF,
+    0x1F,
+    0x00,
+    0x4F,
+    0x0D,
+    0x0E,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x9C,
+    0x8E,
+    0x8F,
+    0x28,
+    0x1F,
+    0x96,
+    0xB9,
+    0xA3,
+    0xFF,
+    0x00,
+    0x00,
+    0x00,
+    0xD8,
+    0xD8,
+    0xD8,
+    0xD8
+};
+
+uint8_t TDfx_Banshee_CRTControllerRegisters_AndMask[] =
+{
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0x7F,
+    0xFF,
+    0x3F,
+    0x7F,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0x7F,
+    0xFF,
+    0xFF,
+    0xEF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+    0xFF,
+};
+
+uint8_t TDfx_Banshee_CRTControllerRegisters_OrMask[] =
+{
+    0x00,
+    0x00,
+    0x00,
+    0x80,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00
+};
+
+uint8_t TDfx_Banshee_GraphicsControllerRegisters[] =
+{
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x10,
+    0x0E,
+    0x00,
+    0xFF
+};
+
+uint8_t TDfx_Banshee_GraphicsControllerRegisters_AndMask[] =
+{
+    0x0F,
+    0x0F,
+    0x0F,
+    0x1F,
+    0x03,
+    0x7B,
+    0x0F,
+    0x0F,
+    0xFF
+};
+
+uint8_t TDfx_Banshee_SequencerControllerRegisters[] =
+{
+    0x03,
+    0x00,
+    0x03,
+    0x00,
+    0x02
+};
+
+uint8_t TDfx_Banshee_SequencerControllerRegisters_AndMask[] =
+{
+    0x03,
+    0x3D,
+    0x0F,
+    0x3F,
+    0x0E
+};
+
+void TDfxBansheeMockConfigSetup(Hag::IAllocator& allocator)
+{
+    using namespace Hag;
+    using namespace Hag::System;
+    using namespace Hag::Testing;
+    
+    //printf("Mock initialization...\n");
+
+    Hag::Testing::Mock::Initialize(allocator,
+        TDfx_Banshee_DefaultPortValues,
+        sizeof(TDfx_Banshee_DefaultPortValues) / sizeof(Mock::PortAndValue),
+        TDfx_Banshee_AttributeControllerRegisters,
+        TDfx_Banshee_RamdacControllerRegisters);
+
+    Mock::AddIndexedPort("CRT Controller B", Hag::VGA::Register::CRTControllerIndexB, 0xff, Hag::VGA::Register::CRTControllerDataB, sizeof(TDfx_Banshee_CRTControllerRegisters) / sizeof(uint8_t), TDfx_Banshee_CRTControllerRegisters, TDfx_Banshee_CRTControllerRegisters_OrMask, TDfx_Banshee_CRTControllerRegisters_AndMask);
+    Mock::AddIndexedPort("CRT Controller D", Hag::VGA::Register::CRTControllerIndexD, 0xff, Hag::VGA::Register::CRTControllerDataD, sizeof(TDfx_Banshee_CRTControllerRegisters) / sizeof(uint8_t), TDfx_Banshee_CRTControllerRegisters, TDfx_Banshee_CRTControllerRegisters_OrMask, TDfx_Banshee_CRTControllerRegisters_AndMask);
+    Mock::AddIndexedPort("Graphics Controller", Hag::VGA::Register::GraphicsControllerIndex, 0x0f, Hag::VGA::Register::GraphicsControllerData, 0x09, TDfx_Banshee_GraphicsControllerRegisters, nullptr, TDfx_Banshee_GraphicsControllerRegisters_AndMask);
+    Mock::AddIndexedPort("Sequence Controller", Hag::VGA::Register::SequencerIndex, 0x1f, Hag::VGA::Register::SequencerData, 0x05, TDfx_Banshee_SequencerControllerRegisters, nullptr, TDfx_Banshee_SequencerControllerRegisters_AndMask);
+    BDA::SystemBDA().DetectedHardware = 0x26; //Hack
+    BDA::SystemBDA().EGAFeatureBitSwitches = 0x09;
+    BDA::SystemBDA().VideoDisplayDataArea = 0x11;
+    BDA::SystemBDA().VideoModeOptions = 0x60;
+    BDA::SystemBDA().DisplayCombinationCodeTableIndex = 0x0B;
+
+    Mock::SetDefaultMemory((uint8_t*)&BDA::SystemBDA(), 0x0400, 0x100);//TODO: Should use something more static.
+
+    Mock::AddDualPortRegister("Miscellaneous Output", VGA::Register::MiscellaneousR, VGA::Register::MiscellaneousW);
+    Mock::AddDualPortRegister("Feature Control", VGA::Register::FeatureControlR, VGA::Register::FeatureControlWB, VGA::Register::FeatureControlWD);
+    Mock::PCI::RegisterDevice(0, ::new(allocator.Allocate(sizeof(MockBanshee))) MockBanshee(allocator));
+    Mock::PCI::RegisterDevice(1, ::new(allocator.Allocate(sizeof(MockBanshee))) MockBanshee(allocator));
+}
 #endif
+
+Hag::VGA::VideoMode_t TestModes[] =
+{
+    0x00,
+    0x01,
+    0x02,
+    0x03,
+    0x04,
+    0x05,
+    0x06,
+    0x07,
+    0x0D,
+    0x0E,
+    0x0F,
+    0x10,
+    0x11,
+    0x12,
+    0x13
+};
 
 Support::Device PCIDevices[] =
 {
@@ -4158,11 +4990,221 @@ Support::Device PCIDevices[] =
     { 0x0057, "3Dfx Voodoo 3/3000" }
 };
 
+void BansheeDump(FILE* fptext, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx::Shared;
+
+    if (fptext != nullptr) fprintf(fptext, "\nBanshee CRTC Registers:\n");
+
+    CRTController::HorizontalExtension_t horizontalExtension = CRTController::HorizontalExtension::Read(baseIOPort);
+    if (fptext != nullptr) fprintf(fptext, "Horizontal extension    : 0x%02X\n", horizontalExtension);
+    if (fpbin != nullptr) fwrite(&horizontalExtension, sizeof(horizontalExtension), 1, fpbin);
+
+    CRTController::VerticalExtension_t verticalExtension = CRTController::VerticalExtension::Read(baseIOPort);
+    if (fptext != nullptr) fprintf(fptext, "Vertical extension      : 0x%02X\n", verticalExtension);
+    if (fpbin != nullptr) fwrite(&verticalExtension, sizeof(verticalExtension), 1, fpbin);
+
+    CRTController::Extension0_t extension0 = CRTController::Extension0::Read(baseIOPort);
+    if (fptext != nullptr) fprintf(fptext, "Extension 0             : 0x%02X\n", extension0);
+    if (fpbin != nullptr) fwrite(&extension0, sizeof(extension0), 1, fpbin);
+
+    CRTController::Extension0_t extension1 = CRTController::Extension0::Read(baseIOPort);
+    if (fptext != nullptr) fprintf(fptext, "Extension 1             : 0x%02X\n", extension1);
+    if (fpbin != nullptr) fwrite(&extension1, sizeof(extension1), 1, fpbin);
+
+    CRTController::Extension0_t extension2 = CRTController::Extension0::Read(baseIOPort);
+    if (fptext != nullptr) fprintf(fptext, "Extension 2             : 0x%02X\n", extension2);
+    if (fpbin != nullptr) fwrite(&extension2, sizeof(extension2), 1, fpbin);
+
+    CRTController::Extension0_t extension3 = CRTController::Extension0::Read(baseIOPort);
+    if (fptext != nullptr) fprintf(fptext, "Extension 3             : 0x%02X\n", extension3);
+    if (fpbin != nullptr) fwrite(&extension3, sizeof(extension3), 1, fpbin);
+
+    if (fptext != nullptr) fprintf(fptext, "\nBanshee IO Range Registers:\n");
+
+    System::PCI::Device_t device = 0;
+    System::PCI::FindDevice(0x121a, 0x0003, device);
+    PCI::IOBaseAddress_t baseAddress = PCI::IOBaseAddress::GetBaseAddress(device);
+    if (fptext != nullptr) fprintf(fptext, "Base address offset     : 0x%04X\n", uint16_t(baseAddress));
+    if (fpbin != nullptr) fwrite(&baseAddress, sizeof(baseAddress), 1, fpbin);
+    for (uint16_t i = 0; i < 64; ++i)
+    {
+        uint32_t regValue = SYS_ReadPortDouble(baseAddress + (i << 2));
+        if (fptext != nullptr) fprintf(fptext, "Reg 0x%02X            : 0x%08lX\n", i, regValue);
+        if (fpbin != nullptr) fwrite(&regValue, sizeof(regValue), 1, fpbin);
+    }
+    if (fptext != nullptr) fprintf(fptext, "\n");
+
+    for (uint16_t i = 0; i < 256; ++i)
+    {
+        uint8_t regValue = SYS_ReadPortByte(baseAddress + i);
+        if (fptext != nullptr) fprintf(fptext, "{ 0x%04X, 0x%02X },\n", uint16_t(baseAddress + i), regValue);
+    }
+}
+
 int main(void)
 {
-    FILE* fp = fopen("pcidump.txt", "w");
-    Support::PCIDump(fp, NULL, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
+	__djgpp_nearptr_enable();
+    using namespace Hag;
+    using namespace Hag::System;
 
-    fclose(fp);
+#ifndef MOCK
+    VGA::ModeSetting::Initialize();
+
+    // REGS r;
+    // memset(&r, 0, sizeof(r));
+
+    // r.w.ax = 0x12;
+    // int86(0x10, &r, &r);
+    // VGA::Sequencer::EnableWritePlane::Write(0x0f);
+    // for (uint32_t i = 0; i < (640 * 480) / 8; ++i)
+    //     *FARPointer(uint16_t(0xa000), i).ToPointer<uint8_t>() = 0xff;
+    // Testing::TestPatterns::Draw4BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    //getchar();
+
+    // r.w.ax = 0x03;
+    // int86(0x10, &r, &r);
+    // getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Monochrome);
+    Testing::TestPatterns::DrawTextPattern(80, 25, FARPointer(uint16_t(0xb000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(40, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    Testing::TestPatterns::DrawTextPattern(40, 25, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    Testing::TestPatterns::DrawTextPattern(80, 25, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(80, 50, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    Testing::TestPatterns::DrawTextPattern(80, 50, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(640, 200, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Monochrome);
+    Testing::TestPatterns::Draw1BppPattern2(640, 200, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(640, 350, VGA::ModeSetting::BitsPerPixel::Bpp2, VGA::ModeSetting::Flags::Monochrome | VGA::ModeSetting::Flags::Planar);
+    Testing::TestPatterns::Draw2BppPlanarPattern(640, 350, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(640, 480, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Monochrome);
+    Testing::TestPatterns::Draw1BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp2);
+    Testing::TestPatterns::Draw2BppPattern(320, 200, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
+    Testing::TestPatterns::Draw4BppPattern(320, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(640, 200, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
+    Testing::TestPatterns::Draw4BppPattern(640, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(640, 350, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
+    Testing::TestPatterns::Draw4BppPattern(640, 350, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(640, 480, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
+    Testing::TestPatterns::Draw4BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp8);
+    Testing::TestPatterns::Draw8BppPattern(320, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp8, VGA::ModeSetting::Flags::Planar);
+    Testing::TestPatterns::Draw8BppPlanarPattern(320, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(320, 240, VGA::ModeSetting::BitsPerPixel::Bpp8, VGA::ModeSetting::Flags::Planar);
+    Testing::TestPatterns::Draw8BppPlanarPattern(320, 240, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+    VGA::ModeSetting::SetVideoMode(256, 256, VGA::ModeSetting::BitsPerPixel::Bpp8);
+    Testing::TestPatterns::Draw8BppPattern(256, 256, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
+
+    VGA::ModeSetting::Shutdown();
+
+    /*
+    REGS r;
+    memset(&r, 0, sizeof(r));
+
+    for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(Hag::VGA::VideoMode_t); ++modesIdx)
+    {
+        VGA::VideoMode_t mode = TestModes[modesIdx];
+
+        r.w.ax = 3;
+        int86(0x10, &r, &r);
+
+        r.w.ax = mode;
+        int86(0x10, &r, &r);
+
+        char name[15];
+        sprintf(name, "mode%04X.txt", mode);
+        FILE* fp = fopen(name, "w");
+        Support::PCIDump(fp, nullptr, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
+        Support::BDADump(fp, nullptr);
+        Support::VGADump(fp, nullptr, BDA::VideoBaseIOPort::Get());
+        BansheeDump(fp, nullptr, BDA::VideoBaseIOPort::Get());
+        fclose(fp);
+    }
+
+    r.w.ax = 3;
+    int86(0x10, &r, &r);
+*/
+#endif
+
+#ifdef MOCK
+    Support::Allocator allocator;
+    TDfxBansheeMockConfigSetup(allocator);
+
+    for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(Hag::VGA::VideoMode_t); ++modesIdx)
+    {
+        Testing::Mock::Reset();
+
+        VGA::VideoMode_t mode = TestModes[modesIdx];
+
+        printf("Setting video mode 0x%02X...\n", mode);
+        SetVideoMode(mode);
+
+        char name[15];
+        sprintf(name, "mode%04X.txt", mode);
+        FILE* fp = fopen(name, "w");
+        Support::PCIDump(fp, nullptr, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
+        Support::BDADump(fp, nullptr);
+        Support::VGADump(fp, nullptr, BDA::VideoBaseIOPort::Get());
+        BansheeDump(fp, nullptr, BDA::VideoBaseIOPort::Get());
+        fclose(fp);
+    }
+
+    Hag::Testing::Mock::Shutdown();
+#endif    
+	__djgpp_nearptr_disable();
     return 0;
 }

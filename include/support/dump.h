@@ -4,6 +4,7 @@
 
 #include <stdio.h>
 #include <hag/types.h>
+#include <hag/drivers/vga/regtype.h>
 
 namespace Support
 {
@@ -15,5 +16,7 @@ struct Device
 };
 
 extern void PCIDump(FILE* fptext, FILE* fpbin, uint16_t vendor, const char* vendorName, Device* devices, uint16_t deviceCount);
+extern void BDADump(FILE* fptext, FILE* fpbin);
+extern void VGADump(FILE* fptext, FILE* fpbin, Hag::VGA::Register_t baseIOPort);
 
 }

@@ -38,7 +38,7 @@ namespace SequencerData
         SYS_WritePortBytes(Register::SequencerIndex, sequenceIndex, value);
     }
 
-    inline void Write(Sequencer::Register_t startIndex, SequencerData_t* values, uint8_t count)
+    inline void Write(Sequencer::Register_t startIndex, const SequencerData_t* values, uint8_t count)
     {
         Sequencer::Register_t index = startIndex;
         for (uint8_t i = 0; i < count; ++i, ++index)

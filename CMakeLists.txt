@@ -8,6 +8,9 @@ set(CMAKE_GENERATOR Ninja)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 add_compile_options(-Wall -std=c++20 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals)
 
+#dxe's will need an export list
+add_link_options(-s)
+
 #How do i make this blasted thing do this conditionally???
 add_compile_options(-D MOCK)
 
@@ -32,6 +35,12 @@ add_library(hag
 add_library(hagsup
             support/allocatr.cpp
             support/dump.cpp
+           )
+
+add_library(vga
+            src/drivers/vga/modeset.cpp
+            src/drivers/vga/extmsdef.cpp
+            src/drivers/vga/data.cpp
            )
 
 add_library(s3t64
@@ -84,6 +93,7 @@ target_link_libraries(mystst
                       mystique
                       hagsup
                       hag
+                      vga
                      )
 
 add_executable(bantst
@@ -94,4 +104,5 @@ add_executable(bantst
 target_link_libraries(bantst
                       hagsup
                       hag
+                      vga
                      )

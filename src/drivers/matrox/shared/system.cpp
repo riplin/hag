@@ -19,7 +19,7 @@ namespace System
 {
 
 static uint16_t s_FontSelector = 0;
-    
+
 bool s_Initialized = false;
 Hag::System::PCI::Device_t s_Device = 0xFFFF;
 uint32_t s_MemorySize = 0;//Memory size in KB
@@ -28,7 +28,6 @@ FARPointer s_Font8x8Graphics;
 FARPointer s_Font8x16;
 FARPointer s_SystemFont;
 FARPointer s_SystemFontGraphics;
-
 
 uint8_t GetMemoryIn64KBlocks()
 {
@@ -124,8 +123,9 @@ bool Initialize()
     {
         uint16_t size = Data::Font8x8Size + Data::Font8x16Size;
     
-        if (!Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
-            return false;
+        Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device);
+        // if (!Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
+        //     return false;
 
         REGS r;
         memset(&r, 0, sizeof(r));

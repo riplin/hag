@@ -141,7 +141,7 @@ void DrawTextPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     }
 }
 
-void Draw1BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
+void Draw1BppPattern2(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     if (videoMemory == nullptr)
         return;
@@ -180,6 +180,43 @@ void Draw1BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     }
 }
 
+void Draw1BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
+{
+    if (videoMemory == nullptr)
+        return;
+
+    uint16_t pixelWidth = width >> 3;
+    uint16_t divisor = pixelWidth >> 2;//4 color bands
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint8_t borderColorY = 0x00;
+        borderColorY = y == 0 ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
+        {
+            uint8_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0x80 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
+            uint8_t color = 0;
+            switch((x / divisor) & 0x0003)
+            {
+                case 1:
+                    color = (y & 2) == 0 ? 0x33 : 0xCC;
+                    break;
+                case 2:
+                    color = (y & 1) == 0 ? 0x55 : 0xAA;
+                    break;
+                case 3:
+                    color = 0xFF;
+                    break;
+                default:
+                    break;
+            }
+            videoMemory[y * pixelWidth + x] = color | borderColor;
+        }
+    }
+}
+
 void Draw2BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     if (videoMemory == nullptr)
@@ -207,7 +244,7 @@ void Draw2BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     }
 }
 
-void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
+void Draw2BppPlanarPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     using namespace Hag::VGA;
 
@@ -216,6 +253,8 @@ void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 
     uint16_t pixelWidth = width >> 3;
     uint16_t divisor = pixelWidth >> 4;//16 color bands
+
+    Sequencer::EnableWritePlane::Write(0x01);
     for (uint32_t y = 0; y < height; ++y)
     {
         uint8_t borderColorY = 0x00;
@@ -228,20 +267,103 @@ void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
             borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
             uint8_t color = x / divisor;
             uint8_t plane0 = ((color & 1) == 0 ? 0x00 : 0xFF) | borderColor;
-            uint8_t plane1 = ((color & 2) == 0 ? 0x00 : 0xFF) | borderColor;
-            uint8_t plane2 = ((color & 4) == 0 ? 0x00 : 0xFF) | borderColor;
-            uint8_t plane3 = ((color & 8) == 0 ? 0x00 : 0xFF) | borderColor;
-            
-            Sequencer::EnableWritePlane::Write(0x01);
             videoMemory[y * pixelWidth + x] = plane0;
+        }
+    }
 
-            Sequencer::EnableWritePlane::Write(0x02);
+    Sequencer::EnableWritePlane::Write(0x04);
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint8_t borderColorY = 0x00;
+        borderColorY = y == 0 ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
+        {
+            uint8_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0x80 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
+            uint8_t color = x / divisor;
+            uint8_t plane1 = ((color & 2) == 0 ? 0x00 : 0xFF) | borderColor;
             videoMemory[y * pixelWidth + x] = plane1;
+        }
+    }
+}
 
-            Sequencer::EnableWritePlane::Write(0x04);
+
+void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
+{
+    using namespace Hag::VGA;
+
+    if (videoMemory == nullptr)
+        return;
+
+    uint16_t pixelWidth = width >> 3;
+    uint16_t divisor = pixelWidth >> 4;//16 color bands
+
+    Sequencer::EnableWritePlane::Write(0x01);
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint8_t borderColorY = 0x00;
+        borderColorY = y == 0 ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
+        {
+            uint8_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0x80 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
+            uint8_t color = x / divisor;
+            uint8_t plane0 = ((color & 1) == 0 ? 0x00 : 0xFF) | borderColor;
+            videoMemory[y * pixelWidth + x] = plane0;
+        }
+    }
+
+    Sequencer::EnableWritePlane::Write(0x02);
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint8_t borderColorY = 0x00;
+        borderColorY = y == 0 ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
+        {
+            uint8_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0x80 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
+            uint8_t color = x / divisor;
+            uint8_t plane1 = ((color & 2) == 0 ? 0x00 : 0xFF) | borderColor;
+            videoMemory[y * pixelWidth + x] = plane1;
+        }
+    }
+
+    Sequencer::EnableWritePlane::Write(0x04);
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint8_t borderColorY = 0x00;
+        borderColorY = y == 0 ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
+        {
+            uint8_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0x80 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
+            uint8_t color = x / divisor;
+            uint8_t plane2 = ((color & 4) == 0 ? 0x00 : 0xFF) | borderColor;
             videoMemory[y * pixelWidth + x] = plane2;
+        }
+    }
 
-            Sequencer::EnableWritePlane::Write(0x08);
+    Sequencer::EnableWritePlane::Write(0x08);
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint8_t borderColorY = 0x00;
+        borderColorY = y == 0 ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
+        for (uint32_t x = 0; x < pixelWidth; ++x)
+        {
+            uint8_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0x80 : 0x00;
+            borderColor |= x == uint32_t(pixelWidth - 1) ? 0x01 : 0x00;
+            uint8_t color = x / divisor;
+            uint8_t plane3 = ((color & 8) == 0 ? 0x00 : 0xFF) | borderColor;
             videoMemory[y * pixelWidth + x] = plane3;
         }
     }

@@ -9,7 +9,9 @@ namespace Hag::Testing::TestPatterns
 
 extern void DrawTextPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw1BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
+extern void Draw1BppPattern2(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw2BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
+extern void Draw2BppPlanarPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw4BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw8BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw8BppPlanarPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);

@@ -37,7 +37,7 @@ namespace GraphicsControllerData
         SYS_WritePortBytes(Register::GraphicsControllerIndex, gfxIndex, value);
     }
 
-    inline void Write(GraphicsController::Register_t startIndex, GraphicsControllerData_t* values, uint8_t count)
+    inline void Write(GraphicsController::Register_t startIndex, const GraphicsControllerData_t* values, uint8_t count)
     {
         GraphicsController::Register_t index = startIndex;
         for (uint8_t i = 0; i < count; ++i, ++index)
