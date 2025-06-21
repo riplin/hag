@@ -8,6 +8,9 @@
 namespace Hag::System::PIT
 {
 
+extern void Sleep(uint8_t count);//count * 8 * 1193 ticks time
+extern void MiniSleep();//1193 ticks time
+
 namespace Register
 {
     enum

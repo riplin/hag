@@ -83,35 +83,14 @@ void Shutdown()
     }
 }
 
-bool IsExtendedMode(const ModeDescriptor& modeDescriptor)
+bool IsExtendedMode(const ModeDescriptor& descriptor)
 {
     return false;
 }
 
 void IterateModeDescriptors(const DescriptorCallback_t& callback)
 {
-    SetVideoError_t error = SetVideoError::Success;
-    for (uint32_t i = 0; i < Data::s_NumDescriptors; ++i)
-    {
-        error = SetVideoError::Success;
-
-        ModeDescriptor& mode = Data::s_Descriptors[i];
-        
-        uint8_t bpp = mode.Bpp;
-        if (bpp == 15)
-            bpp = 16;
-
-        uint8_t shift = ((mode.Flags & Flags::MemoryOrganization) == Flags::Planar) ? 2 : 0;
-        uint32_t pages = (((mode.Width * mode.Height * bpp) >> (shift + 3)) + 0xffff) >> 16;
-
-        if (pages > GetNumberOf64KBPages())
-        {
-            error = SetVideoError::InsufficientVideoMemory;
-        }
-
-        if (!callback(Data::s_Descriptors[i], error))
-            break;
-    }
+    Data::IterateModeDescriptors(callback);
 }
 
 void SetupRAMDAC(const ModeDescriptor& descriptor)
@@ -212,7 +191,8 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
 
 void SetStartAddress(uint32_t startAddress)
 {
-
+    VGA::CRTController::StartAddressLow::Write(VGA::Register::CRTControllerIndexD, uint8_t(startAddress));
+    VGA::CRTController::StartAddressHigh::Write(VGA::Register::CRTControllerIndexD, uint8_t(startAddress >> 8));
 }
 
 void TurnMonitorOff()
@@ -225,12 +205,12 @@ void TurnMonitorOn()
 
 }
 
-void WriteExtensionRegisters(const VideoParameters& parameters)
+void WriteExtensionRegisters(const ModeDescriptor& descriptor)
 {
 
 }
 
-void SetupClock(const VideoParameters& parameters)
+void SetupClock(const ModeDescriptor& descriptor)
 {
 
 }

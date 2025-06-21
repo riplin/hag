@@ -188,7 +188,7 @@ namespace External
 {
     extern bool Initialize();
     extern void Shutdown();
-    extern bool IsExtendedMode(const ModeDescriptor& modeDescriptor);
+    extern bool IsExtendedMode(const ModeDescriptor& descriptor);
 
     typedef std::function<bool(const ModeDescriptor& descriptor, SetVideoError_t error)> DescriptorCallback_t;
 
@@ -211,9 +211,17 @@ namespace External
     extern void TurnMonitorOff();
     extern void TurnMonitorOn();
 
-    extern void WriteExtensionRegisters(const VideoParameters& parameters);
+    extern void WriteExtensionRegisters(const ModeDescriptor& descriptor);
 
-    extern void SetupClock(const VideoParameters& parameters);
+    extern void SetupClock(const ModeDescriptor& descriptor);
 }
+
+}
+
+namespace Hag::VGA::Data
+{
+
+    //Iterates the standard VGA modes + extra VGA modes.
+    extern bool IterateModeDescriptors(const ModeSetting::External::DescriptorCallback_t& callback);
 
 }

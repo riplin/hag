@@ -241,12 +241,12 @@
 #include <hag/drivers/matrox/shared/mmio/status.h>          //0x1E14
 
 //Functions
-#include <hag/drivers/matrox/shared/funcs/modeset.h>
+#include <hag/drivers/vga/modeset.h>
 #include <hag/drivers/matrox/shared/funcs/system.h>
 
 namespace Hag::Matrox::Mystique
 {
-    HAG_IMPORT_SYSTEM;//Import initialization and shutdown.
+    //HAG_IMPORT_SYSTEM;//Import initialization and shutdown.
     HAG_IMPORT_MODESETTING;//Import SetVideoMode.
 
     typedef Shared::Register_t Register_t;

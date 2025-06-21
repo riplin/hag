@@ -2,6 +2,7 @@
 
 #include <hag/drivers/vga/extmsapi.h>
 #include <hag/drivers/vga/vidmodes.h>
+#include <hag/drivers/vga/extmsapi.h>
 
 namespace Hag::VGA::Data
 {
@@ -971,5 +972,18 @@ ModeDescriptor s_Descriptors[] =
 };
 
 uint16_t s_NumDescriptors = sizeof(s_Descriptors) / sizeof(ModeDescriptor);
+
+bool IterateModeDescriptors(const ModeSetting::External::DescriptorCallback_t& callback)
+{
+    bool ret = true;
+    ModeSetting::SetVideoError_t error = ModeSetting::SetVideoError::Success;
+    for (uint32_t i = 0; i < s_NumDescriptors; ++i)
+    {
+        ret = callback(Data::s_Descriptors[i], error);
+        if(!ret)
+            break;
+    }
+    return ret;
+}
 
 }

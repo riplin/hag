@@ -4,13 +4,6 @@
 
 #include <hag/types.h>
 
-#define HAG_IMPORT_MODESETTING                                                                  \
-    using namespace Shared::Function::ModeSetting;                                              \
-    namespace Flags { using namespace Shared::Function::ModeSetting::Flags; }                   \
-    namespace RefreshRate { using namespace Shared::Function::ModeSetting::RefreshRate; }       \
-    namespace BitsPerPixel { using namespace Shared::Function::ModeSetting::BitsPerPixel; }     \
-    namespace SetVideoError { using namespace Shared::Function::ModeSetting::SetVideoError; }
-
 namespace Hag::Matrox::Shared::Function
 {
 

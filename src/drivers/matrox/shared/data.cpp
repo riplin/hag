@@ -2,14 +2,13 @@
 
 #include <hag/drivers/matrox/shared/data.h>
 
-
 namespace Hag::Matrox::Shared
 {
 
 namespace Data
 {
 
-PaletteData Data0x32f2 = 
+VGA::Data::PaletteData Data0x32f2 = 
 {
     Hag::System::BDA::VideoDisplayDataArea::GrayScale | Hag::System::BDA::VideoDisplayDataArea::MonochromeMonitor,
     0x00,
@@ -22,7 +21,7 @@ PaletteData Data0x32f2 =
     }
 };
 
-PaletteData Data0x3236 =
+VGA::Data::PaletteData Data0x3236 =
 {
     0x00,
     0x80,
@@ -35,7 +34,7 @@ PaletteData Data0x3236 =
     }
 };
 
-PaletteData Data0x337a =
+VGA::Data::PaletteData Data0x337a =
 {
     Hag::System::BDA::VideoDisplayDataArea::GrayScale | Hag::System::BDA::VideoDisplayDataArea::MonochromeMonitor,
     0x00,
@@ -48,7 +47,7 @@ PaletteData Data0x337a =
     }
 };
 
-PaletteData Data0x32be =
+VGA::Data::PaletteData Data0x32be =
 {
     0x00,
     0x80,
@@ -61,7 +60,7 @@ PaletteData Data0x32be =
     }
 };
 
-PaletteData Data0x3402 =
+VGA::Data::PaletteData Data0x3402 =
 {
     0x00,
     0x00,
@@ -74,7 +73,7 @@ PaletteData Data0x3402 =
     }
 };
 
-PaletteData Data0x3446 =
+VGA::Data::PaletteData Data0x3446 =
 {
     Hag::System::BDA::VideoDisplayDataArea::GrayScale | Hag::System::BDA::VideoDisplayDataArea::MonochromeMonitor,
     0x00,
@@ -84,7 +83,7 @@ PaletteData Data0x3446 =
     }
 };
 
-PaletteData Data0x345a =
+VGA::Data::PaletteData Data0x345a =
 {
     0x00,
     0x80,
@@ -94,7 +93,7 @@ PaletteData Data0x345a =
     }
 };
 
-PaletteData Data0x346e =
+VGA::Data::PaletteData Data0x346e =
 {
     0x00,
     0x80,
@@ -104,7 +103,7 @@ PaletteData Data0x346e =
     }
 };
 
-PaletteData Data0x3482 =
+VGA::Data::PaletteData Data0x3482 =
 {
     0x00,
     0x40,
@@ -154,25 +153,25 @@ PaletteData Data0x3482 =
     }
 };
 
-PalettePair PalettePair0[] =
+VGA::Data::PalettePair PalettePair0[] =
 {
     { &Data0x32f2, &Data0x3236, 0 },
     { nullptr, nullptr, 0 }
 };
 
-PalettePair PalettePair2[] =
+VGA::Data::PalettePair PalettePair2[] =
 {
     { &Data0x337a, &Data0x32be, 0 },
     { nullptr, nullptr, 0 }
 };
 
-PalettePair PalettePair4[] =
+VGA::Data::PalettePair PalettePair4[] =
 {
     { &Data0x3402, nullptr, 0 },
     { nullptr, nullptr, 0 }
 };
 
-PalettePair PalettePair578[] =
+VGA::Data::PalettePair PalettePair578[] =
 {
     { &Data0x3446, &Data0x345a, 0 },
     { &Data0x346e, nullptr, 16 },

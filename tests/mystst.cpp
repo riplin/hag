@@ -24,7 +24,8 @@
 
 #include "mode.h"
 #include <hag/drivers/matrox/shared/funcs/system.h>
-#include <hag/drivers/matrox/shared/funcs/modeset.h>
+//#include <hag/drivers/matrox/shared/funcs/modeset.h>
+#include <hag/drivers/vga/modeset.h>
 
 #include <hag/drivers/matrox/shared/miscout.h>              //0x3C2, 0x3CC
 
@@ -11597,9 +11598,9 @@ struct TestMode
     uint16_t LegacyMode;
     uint16_t Width;
     uint16_t Height;
-    Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel_t Bpp;
-    Hag::Matrox::Shared::Function::ModeSetting::Flags_t Flags;
-    Hag::Matrox::Shared::Function::ModeSetting::RefreshRate_t RefreshRate;
+    Hag::VGA::ModeSetting::BitsPerPixel_t Bpp;
+    Hag::VGA::ModeSetting::Flags_t Flags;
+    Hag::VGA::ModeSetting::RefreshRate_t RefreshRate;
 };
 
 TestMode TestModes[] =
@@ -11608,411 +11609,411 @@ TestMode TestModes[] =
         Hag::VGA::VideoMode::T40x25x4bppC,
         40,
         25,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//3
         Hag::VGA::VideoMode::T80x25x4bppC,
         80,
         25,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//6
         Hag::VGA::VideoMode::G640x200x1bppM,
         640,
         200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Monochrome |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//7
         Hag::VGA::VideoMode::T80x25x1bppM,
         80,
         25,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Monochrome |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//4
         Hag::VGA::VideoMode::G320x200x2bppC,
         320,
         200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp2,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp2,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//D
         Hag::VGA::VideoMode::G320x200x4bppC,
         320,
         200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Planar,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//E
         Hag::VGA::VideoMode::G640x200x4bppC,
         640,
         200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Planar,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//F
         Hag::VGA::VideoMode::G640x350x1bppM,
         640,
         350,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp2,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Monochrome |
+        Hag::VGA::ModeSetting::Flags::Planar,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//10
         Hag::VGA::VideoMode::G640x350x4bppC,
         640,
         350,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Planar,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//11
         Hag::VGA::VideoMode::G640x480x1bppM,
         640,
         480,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp1,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Monochrome |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Monochrome |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz
     },
     {//12
         Hag::VGA::VideoMode::G640x480x4bppC,
         640,
         480,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Planar,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz
     },
     {//13
         Hag::VGA::VideoMode::G320x200x8bppC,
         320,
         200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//100
         Hag::Vesa::VideoMode::G640x400x8bpp,
         640,
         400,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//101
         Hag::Vesa::VideoMode::G640x480x8bpp,
         640,
         480,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//102
         Hag::Vesa::VideoMode::G800x600x4bpp,
         800,
         600,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Planar,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Planar,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
     },
     {//103
         Hag::Vesa::VideoMode::G800x600x8bpp,
         800,
         600,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//105
         Hag::Vesa::VideoMode::G1024x768x8bpp,
         1024,
         768,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//107
         Hag::Vesa::VideoMode::G1280x1024x8bpp,
         1280,
         1024,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//108
         Hag::Vesa::VideoMode::T80x60x4bpp,
         80,
         60,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz
     },
     {//109
         Hag::Vesa::VideoMode::T132x25x4bpp,
         132,
         25,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
     },
     {//10A
         Hag::Vesa::VideoMode::T132x43x4bpp,
         132,
         43,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
     },
     {//10B
         Hag::Vesa::VideoMode::T132x50x4bpp,
         132,
         50,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
     },
     {//10C
         Hag::Vesa::VideoMode::T132x60x4bpp,
         132,
         60,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp4,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Text |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R60Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
     },
     {//110
         Hag::Vesa::VideoMode::G640x480x15bpp,
         640,
         480,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//111
         Hag::Vesa::VideoMode::G640x480x16bpp,
         640,
         480,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//112
         Hag::Vesa::VideoMode::G640x480x32bpp,
         640,
         480,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//113
         Hag::Vesa::VideoMode::G800x600x15bpp,
         800,
         600,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//114
         Hag::Vesa::VideoMode::G800x600x16bpp,
         800,
         600,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//115
         Hag::Vesa::VideoMode::G800x600x32bpp,
         800,
         600,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//116
         Hag::Vesa::VideoMode::G1024x768x15bpp,
         1024,
         768,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//117
         Hag::Vesa::VideoMode::G1024x768x16bpp,
         1024,
         768,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//118
         Hag::Vesa::VideoMode::G1024x768x32bpp,
         1024,
         768,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//119
         Hag::Vesa::VideoMode::G1280x1024x15bpp,
         1280,
         1024,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//11A
         Hag::Vesa::VideoMode::G1280x1024x16bpp,
         1280,
         1024,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//11B
         Hag::Vesa::VideoMode::G1280x1024x32bpp,
         1280,
         1024,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//11C
         Hag::Vesa::VideoMode::G1600x1200x8bpp,
         1600,
         1200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp8,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//11D
         Hag::Vesa::VideoMode::G1600x1200x15bpp,
         1600,
         1200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp15,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp15,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },
     {//11E
         Hag::Vesa::VideoMode::G1600x1200x16bpp,
         1600,
         1200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp16,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::LinearFramebuffer |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },/* Not supported on 4MB
     {//11F
         Hag::Vesa::VideoMode::G1600x1200x32bpp,
         1600,
         1200,
-        Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel::Bpp32,
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Graphics |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Color |
-        Hag::Matrox::Shared::Function::ModeSetting::Flags::Sequential,
-        Hag::Matrox::Shared::Function::ModeSetting::RefreshRate::R70Hz,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp32,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
     },*/
 };
 
@@ -12694,9 +12695,9 @@ void DumpModeSettings(uint16_t mode)
     }
 }
 
-bool PrintModeListCallback(uint16_t width, uint16_t height, Hag::Matrox::Shared::Function::ModeSetting::BitsPerPixel_t bpp, Hag::Matrox::Shared::Function::ModeSetting::Flags_t flags, Hag::Matrox::Shared::Function::ModeSetting::RefreshRate_t refreshRate, void* context)
+bool PrintModeListCallback(uint16_t width, uint16_t height, Hag::VGA::ModeSetting::BitsPerPixel_t bpp, Hag::VGA::ModeSetting::Flags_t flags, Hag::VGA::ModeSetting::RefreshRate_t refreshRate, void* context)
 {
-    using namespace Hag::Matrox::Shared::Function::ModeSetting;
+    using namespace Hag::VGA::ModeSetting;
 
     printf("%ix%i %i bpp %iHz", width, height, bpp, refreshRate);
 
@@ -12760,7 +12761,7 @@ int main(void)
     Support::Allocator allocator;
     MatroxMystiqueMockConfigSetup(allocator);
 
-    Hag::Matrox::Shared::Function::System::Initialize();
+    VGA::ModeSetting::Initialize();
     for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(TestMode); ++modesIdx)
     {
         Hag::Testing::Mock::Reset();
@@ -12769,30 +12770,30 @@ int main(void)
         if (testMode.LegacyMode == 0xFFFF)
             continue;
 
-        ModeSetting::SetVideoError_t error = ModeSetting::HasVideoMode(testMode.Width,
+        VGA::ModeSetting::SetVideoError_t error = VGA::ModeSetting::HasVideoMode(testMode.Width,
             testMode.Height,
             testMode.Bpp,
             testMode.Flags,
             testMode.RefreshRate);
 
-        if (error != ModeSetting::SetVideoError::Success)
+        if (error != VGA::ModeSetting::SetVideoError::Success)
         {
             printf("Mode 0x%02X skipped, ", testMode.LegacyMode);
             switch(error)
             {
-            case ModeSetting::SetVideoError::SystemNotInitialized:
+            case VGA::ModeSetting::SetVideoError::SystemNotInitialized:
                 printf("system not initialized.\n");
                 break;
-            case ModeSetting::SetVideoError::UnknownMode:
+            case VGA::ModeSetting::SetVideoError::UnknownMode:
                 printf("unknown mode.\n");
                 break;
-            case ModeSetting::SetVideoError::InsufficientVideoMemory:
+            case VGA::ModeSetting::SetVideoError::InsufficientVideoMemory:
                 printf("insufficient video memory.\n");
                 break;
-            case ModeSetting::SetVideoError::NotSupportedByRamdac:
+            case VGA::ModeSetting::SetVideoError::NotSupportedByRamdac:
                 printf("not supported by ramdac.\n");
                 break;
-            case ModeSetting::SetVideoError::NotSupportedByMonitor:
+            case VGA::ModeSetting::SetVideoError::NotSupportedByMonitor:
                 printf("not supported by monitor.\n");
                 break;
             }
@@ -12821,11 +12822,11 @@ int main(void)
 
         //printf("Instance 1---------------\n");
         Hag::Testing::Mock::SelectInstance(1);
-        if ((testMode.Flags & ModeSetting::Flags::Mode) == ModeSetting::Flags::Text)
+        if ((testMode.Flags & VGA::ModeSetting::Flags::Mode) == VGA::ModeSetting::Flags::Text)
         {
             CPP::UploadFont(CPP::Font8x16, 256, 16, 0, true);//Dirty memory because we are too efficient.
         }
-        Hag::Matrox::Shared::Function::ModeSetting::SetVideoMode(
+        VGA::ModeSetting::SetVideoMode(
             testMode.Width,
             testMode.Height,
             testMode.Bpp,
@@ -12840,7 +12841,7 @@ int main(void)
 
         Diff("SetMode");
     }
-    Hag::Matrox::Shared::Function::System::Shutdown();
+    VGA::ModeSetting::Shutdown();
 
     Hag::Testing::Mock::Shutdown();
 #endif

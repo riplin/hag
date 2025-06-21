@@ -5,6 +5,13 @@
 #include <hag/types.h>
 #include <functional>
 
+#define HAG_IMPORT_MODESETTING                                                     \
+    using namespace VGA::ModeSetting;                                              \
+    namespace Flags { using namespace VGA::ModeSetting::Flags; }                   \
+    namespace RefreshRate { using namespace VGA::ModeSetting::RefreshRate; }       \
+    namespace BitsPerPixel { using namespace VGA::ModeSetting::BitsPerPixel; }     \
+    namespace SetVideoError { using namespace VGA::ModeSetting::SetVideoError; }
+
 namespace Hag::VGA::ModeSetting
 {
 

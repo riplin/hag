@@ -1,9 +1,7 @@
 //Copyright 2025-Present riplin
 
 #include <hag/system/pit.h>
-#include <hag/system/machid.h>
 #include <hag/system/interrup.h>
-#include <hag/system/keyboard.h>
 #include <hag/drivers/vga/modeset.h>
 #include <hag/drivers/vga/extmsapi.h>
 
@@ -312,35 +310,6 @@ static void InitializeRAMDACPalette(const ModeDescriptor& descriptor)
     else
     {
         External::SetupRAMDAC(descriptor);
-
-        // VGA::DACWriteIndex::Write(0);
-        // switch(descriptor.Bpp)
-        // {
-        // case BitsPerPixel::Bpp32:
-        //     for (int idxcol = 0; idxcol < 256; ++idxcol)
-        //     {
-        //         VGA::RAMDACData::Write(idxcol);
-        //         VGA::RAMDACData::Write(idxcol);
-        //         VGA::RAMDACData::Write(idxcol);
-        //     }
-        //     break;
-        // case BitsPerPixel::Bpp16:
-        //     for (int idxcol = 0; idxcol < 256; ++idxcol)
-        //     {
-        //         VGA::RAMDACData::Write(idxcol << 3);
-        //         VGA::RAMDACData::Write(idxcol << 2);
-        //         VGA::RAMDACData::Write(idxcol << 3);
-        //     }
-        //     break;
-        // default:
-        //     for (int idxcol = 0; idxcol < 256; ++idxcol)
-        //     {
-        //         VGA::RAMDACData::Write(idxcol << 3);
-        //         VGA::RAMDACData::Write(idxcol << 3);
-        //         VGA::RAMDACData::Write(idxcol << 3);
-        //     }
-        //     break;
-        // }
     }
 }
 
@@ -380,72 +349,10 @@ static Sequencer::ClockingMode_t TurnScreenOff()
     return ToggleScreenOnOff(Sequencer::ClockingMode::ScreenOff);
 }
 
-static void SetupSquareWave()
-{
-    using namespace Hag::System;
-
-    PIT::Command::Write(PIT::Command::ModeSquareWaveGenerator | PIT::Command::LowByteHighByte | PIT::Command::SelectChannel2);
-    PIT::Data::WriteChannel2(0xA9);
-    PIT::Data::WriteChannel2(0x04);
-}
-
-/*
-static void Sleep(uint8_t count)//count * 8 * 1193 ticks time
-{
-    using namespace Hag::System;
-
-    SetupSquareWave();
-
-    KB::Register_t port = (BIOS::MachineID::Read() == 0xFC) ? KB::Register::PortB : KB::Register::PortXT;
-
-    count <<= 3;
-
-    if (count != 0)
-    {
-        KB::PortB_t orgValue = KB::PortBStatus::Read();
-        KB::PortBCommand::Write(orgValue |= KB::PortBCommand::Timer2GateSpeakerEnable);
-
-        do
-        {
-            volatile KB::PortB_t status;
-            do
-            {
-                status = KB::Read(port);
-            } while ((status & KB::PortBStatus::MirrorTimer2OutputCond) != 0);
-
-            do
-            {
-                status = KB::Read(port);
-            } while ((status & KB::PortBStatus::MirrorTimer2OutputCond) != 0);
-            --count;
-        } while (count != 0);
-
-        KB::PortBCommand::Write(orgValue);
-    }
-}
-*/
-
-static void MiniSleep()//1193 ticks time
-{
-    using namespace Hag::System;
-
-    SetupSquareWave();
-
-    KB::Register_t port = (BIOS::MachineID::Read() == 0xFC) ? KB::Register::PortB : KB::Register::PortXT;
-
-    KB::PortB_t orgValue = KB::PortBStatus::Read();
-    KB::PortBCommand::Write(orgValue |= KB::PortBCommand::Timer2GateSpeakerEnable);
-
-    volatile KB::PortB_t status;
-    do
-    {
-        status = KB::Read(port);
-    } while ((status & KB::PortBStatus::MirrorTimer2OutputCond) != 0);
-    KB::PortBCommand::Write(orgValue);
-}
-
 static void ApplyParameters(const ModeDescriptor& descriptor, Register_t baseVideoIOPort)
 {
+    using namespace Hag::System;
+
     SYS_ClearInterrupts();
     
     const VideoParameters& parameters = descriptor.GetParameters();
@@ -454,7 +361,7 @@ static void ApplyParameters(const ModeDescriptor& descriptor, Register_t baseVid
     SequencerData::Write(Sequencer::Register::ClockingMode, parameters.Config.Sequencer, sizeof(parameters.Config.Sequencer));
     MiscellaneousOutput::Write(parameters.GetMiscellaneousOutput());
     
-    MiniSleep();
+    PIT::MiniSleep();
 
     Sequencer::Reset::Write(Sequencer::Reset::AsynchronousReset | Sequencer::Reset::SynchronousReset);
 
@@ -486,13 +393,6 @@ static void ApplyParameters(const ModeDescriptor& descriptor, Register_t baseVid
         External::SetExtendedOffset(descriptor);
     else
         CRTController::ScreenOffset::Write(baseVideoIOPort, descriptor.CalculateVGAOffset());
-
-    // uint16_t offset = descriptor.CalculateOffset();
-    // VGA::CRTController::ScreenOffset::Write(baseVideoIOPort, uint8_t(offset));                                          //CR13
-    // Shared::CRTCExtension::AddressGeneratorExtensions::Write(((offset >> 4) &
-    //     Shared::CRTCExtension::AddressGeneratorExtensions::Offset9_8) |
-    //     (Shared::CRTCExtension::AddressGeneratorExtensions::Read() &
-    //     ~Shared::CRTCExtension::AddressGeneratorExtensions::Offset9_8));
 
     CRTController::UnderlineLocation::Write(baseVideoIOPort, parameters.Config.UnderlineLocation);                         //CR14
     CRTController::StartVerticalBlank::Write(baseVideoIOPort, parameters.Timings.Vertical.StartBlank);                     //CR15
@@ -535,7 +435,7 @@ static void ClearScreen(const ModeDescriptor& descriptor)
 
         if (((descriptor.Width * descriptor.Height * bpp) >> 3) > (64*1024))
         {
-            pages = External::GetNumberOf64KBPages();//System::s_MemorySize >> 6;
+            pages = External::GetNumberOf64KBPages();
         }
 
         uint16_t clearCount = 0x8000;
@@ -544,7 +444,6 @@ static void ClearScreen(const ModeDescriptor& descriptor)
 
         for (uint16_t page = 0; page < pages; ++page)
         {
-            //Shared::CRTCExtension::MemoryPage::Write(page);
             External::SelectPage(page);
 
             uint16_t* ptr = FARPointer(descriptor.Segment, 0x0000).ToPointer<uint16_t>(clearCount << 1);
@@ -558,7 +457,6 @@ static void ClearScreen(const ModeDescriptor& descriptor)
                 memset(ptr, 0, clearCount << 1);
             }
         }
-        //Shared::CRTCExtension::MemoryPage::Write(0);
         External::SelectPage(0);
 
         if ((descriptor.Flags & Flags::MemoryOrganization) == Flags::Planar)
@@ -574,10 +472,6 @@ static void ConfigureFontLoadMemoryMapping()
     Sequencer::MemoryModeControl::Write(
         Sequencer::MemoryModeControl::ExtendedMemoryAddress |
         Sequencer::MemoryModeControl::SequentialAddressingMode);
-    // Shared::Sequencer::MemoryModeControl::Write(
-    //     Hag::Matrox::Shared::Sequencer::MemoryModeControl::Unknown1 |
-    //     Hag::Matrox::Shared::Sequencer::MemoryModeControl::ExtendedMemoryAddress |
-    //     Hag::Matrox::Shared::Sequencer::MemoryModeControl::SequentialAddressingMode);
     
     GraphicsController::ReadPlaneSelect::Write(GraphicsController::ReadPlaneSelect::Plane3);
     GraphicsController::GraphicsControllerMode::Write(GraphicsController::GraphicsControllerMode::Mode0);
@@ -590,9 +484,6 @@ static void ConfigureTextMemoryMapping()
 
     Sequencer::EnableWritePlane::Write(Sequencer::EnableWritePlane::Plane1 | Sequencer::EnableWritePlane::Plane2);
     Sequencer::MemoryModeControl::Write(Sequencer::MemoryModeControl::ExtendedMemoryAddress);
-    // Shared::Sequencer::MemoryModeControl::Write(
-    //     Hag::Matrox::Shared::Sequencer::MemoryModeControl::Unknown1 |
-    //     Hag::Matrox::Shared::Sequencer::MemoryModeControl::ExtendedMemoryAddress);
 
     GraphicsController::ReadPlaneSelect::Write(GraphicsController::ReadPlaneSelect::Plane1);
     GraphicsController::GraphicsControllerMode::Write(GraphicsController::GraphicsControllerMode::OddEvenAddressing);
@@ -627,7 +518,9 @@ static void ApplyGraphicsCharacterSetOverride()
         {
             BDA::RowsOnScreen::Get() = graphicsCharacterSet->NumberOfCharacterRowsDisplayed - 1;
             BDA::PointHeightOfCharacterMatrix::Get() = graphicsCharacterSet->CharacterLength;
+            SYS_ClearInterrupts();
             InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = graphicsCharacterSet->CharacterFontDefinitionTable;
+            SYS_RestoreInterrupts();
         }
     }
 }
@@ -637,8 +530,9 @@ static void SetInterruptTableFontPointer(const ModeDescriptor& descriptor)
     using namespace Hag::System;
     if (GetNumberOfActiveScanlines(descriptor) != Scanlines::S200)
     {
+        SYS_ClearInterrupts();
         InterruptTable::Pointer<InterruptTable::CharacterTable>() = External::Get8x16Font();
-        //InterruptTable::Pointer<InterruptTable::CharacterTable>() = System::s_Font8x16;
+        SYS_RestoreInterrupts();
     }
     BDA::CursorScanLines::Get().End = 0;
     BDA::CursorScanLines::Get().Start = 0;
@@ -654,7 +548,6 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
     BDA::VideoBaseIOPort::Get() = descriptor.CrtController;
 
     External::DisableExtendedMode();
-    //ResetCRTCExtensionRegisters();
 
     BDA::ActiveDisplayNumber::Get() = 0;
     BDA::VideoBufferOffset::Get() = 0;
@@ -668,8 +561,6 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
 
     if (!External::IsExtendedMode(descriptor))
         BDA::VideoBufferSize::Get() = parameters.Config.VideoBufferSize;
-    // if (parameters.Timings.FrequencyKHz == 0)//Standard VGA
-    //     BDA::VideoBufferSize::Get() = parameters.Config.VideoBufferSize;
 
     BDA::CursorScanLines::Get().Start = parameters.Font.CursorStartScanLine;
     BDA::CursorScanLines::Get().End = parameters.Font.CursorEndScanLine;
@@ -680,8 +571,6 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
     
     if (External::IsExtendedMode(descriptor))
         External::ApplyExtendedModeSettings(descriptor);
-    // if (parameters.Timings.FrequencyKHz != 0)//Power Graphics mode
-    //     ApplyPowerGraphicsSettings(descriptor);
 
     InitializePalettes(descriptor);
 
@@ -693,7 +582,6 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
         {
             ConfigureFontLoadMemoryMapping();
             External::UploadFont(parameters.Font);
-            //UploadFont(parameters.Font);
             ConfigureTextMemoryMapping();
         }
     }
@@ -702,8 +590,6 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
 
     if (External::IsExtendedMode(descriptor))
         External::SetStartAddress(0);
-    // if (parameters.Timings.FrequencyKHz != 0)
-    //     SetStartAddress(0);
 
     InputStatus1::Read(BDA::VideoBaseIOPort::Get() + 0x06);
     AttributeControllerIndex::Write(AttributeControllerIndex::EnableVideoDisplay);
@@ -724,22 +610,13 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
     if (error != SetVideoError::Success)
         return error;
 
-    const VideoParameters& parameters = descriptor->GetParameters();
-
     TurnScreenOff();
     MiscellaneousOutput::Write(MiscellaneousOutput::Read() & ~MiscellaneousOutput::VideoEnable);
     //Turn monitor off
     External::TurnMonitorOff();
-    External::WriteExtensionRegisters(parameters);
-    // CRTCExtension::HorizontalCounterExtensions::Write(
-    //     parameters.Timings.HorizontalCounterExtensions |
-    //     CRTCExtension::HorizontalCounterExtensions::HorizontalSyncOff |
-    //     CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff);
-    // Shared::CRTCExtension::VerticalCounterExtensions::Write(parameters.Timings.VerticalCounterExtensions);
+    External::WriteExtensionRegisters(*descriptor);
 
-    External::SetupClock(parameters);
-    // if (parameters.Timings.FrequencyKHz != 0)
-    //     ConfigurePixelClocks(CalculatePLL_MNPS(parameters.Timings.FrequencyKHz), PixelClocksSettings::PLLSetC | PixelClocksSettings::ClockPLL);
+    External::SetupClock(*descriptor);
 
     BDA::VideoModeOptions_t videoModeOptions = BDA::VideoModeOptions::Get();
     if (clearDisplay)
@@ -754,10 +631,10 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
 
     descriptor = ConfigureEGAFeatureBitSwitchesAdapter(descriptor, videoModeOptions);
 
+    SYS_ClearInterrupts();
     InterruptTable::Pointer<InterruptTable::CharacterTable>() = External::Get8x8Font();
     InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = External::Get8x8GraphicsFont();
-    // InterruptTable::Pointer<InterruptTable::CharacterTable>() = System::s_Font8x8;
-    // InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = System::s_Font8x8Graphics;
+    SYS_RestoreInterrupts();
 
     videoModeOptions &= ~(BDA::VideoModeOptions::Unknown | BDA::VideoModeOptions::Inactive);
 
@@ -765,10 +642,6 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
 
     //Turn monitor on
     External::TurnMonitorOn();
-    // CRTCExtension::HorizontalCounterExtensions::Write(
-    //     CRTCExtension::HorizontalCounterExtensions::Read() &
-    //     ~(CRTCExtension::HorizontalCounterExtensions::HorizontalSyncOff |
-    //     CRTCExtension::HorizontalCounterExtensions::VerticalSyncOff));
     TurnScreenOn();
 
     return SetVideoError::Success;
