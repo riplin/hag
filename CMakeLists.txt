@@ -53,7 +53,6 @@ add_library(s3t64
 add_library(mystique
             src/drivers/vga/modeset.cpp
             src/drivers/vga/data.cpp
-            src/drivers/matrox/shared/data.cpp
             src/drivers/matrox/shared/modes.cpp
             src/drivers/matrox/shared/modeext.cpp
             src/drivers/matrox/shared/system.cpp

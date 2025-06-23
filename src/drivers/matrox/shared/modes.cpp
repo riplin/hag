@@ -1,6 +1,5 @@
 //Copyright 2025-Present riplin
 
-#include <hag/drivers/matrox/shared/data.h>
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/drivers/matrox/shared/funcs/modeset.h>

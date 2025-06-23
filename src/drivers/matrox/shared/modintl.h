@@ -4,7 +4,6 @@
 
 #include <hag/system/bda.h>
 #include <hag/drivers/vga/extmsapi.h>
-#include <hag/drivers/matrox/shared/data.h>
 #include <hag/drivers/matrox/shared/funcs/modeset.h>
 #include <hag/drivers/matrox/shared/crtcext/hrcntext.h>
 #include <hag/drivers/matrox/shared/crtcext/vrcntext.h>

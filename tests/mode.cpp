@@ -22,7 +22,6 @@
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
 
-#include <hag/drivers/matrox/shared/data.h>
 #include <hag/drivers/matrox/shared/miscout.h>              //0x3C2, 0x3CC
 #include <hag/drivers/matrox/shared/sqrc/memodctl.h>        //SR4
 
@@ -721,19 +720,19 @@ Hag::System::BDA::VideoParameterTable Mode1B5 =
 // Mode 0, 1
 ParameterFontPair Mode0And1Parameters[] =
 {
-    { &DefaultParameters, Data::Font8x8, 256, 8, 0, false },
-    { &Mode0And1SL350, Data::Font8x16, 256, 0, 0, true },
-    { &Mode0And1SL400, Data::Font8x16, 256, 16, 0, true },
-    { &DefaultParameters, Data::Font8x16, 256, 16, 0, true }
+    { &DefaultParameters, VGA::Data::Font8x8, 256, 8, 0, false },
+    { &Mode0And1SL350, VGA::Data::Font8x16, 256, 0, 0, true },
+    { &Mode0And1SL400, VGA::Data::Font8x16, 256, 16, 0, true },
+    { &DefaultParameters, VGA::Data::Font8x16, 256, 16, 0, true }
 };
 
 // Mode 2, 3
 ParameterFontPair Mode2And3Parameters[] =
 {
-    { &Mode2And3SL200, Data::Font8x8, 256, 8, 0, false },
-    { &Mode2And3SL350, Data::Font8x16, 256, 0, 0, true },
-    { &Mode2And3SL400, Data::Font8x16, 256, 16, 0, true },
-    { &DefaultParameters, Data::Font8x16, 256, 16, 0, true }
+    { &Mode2And3SL200, VGA::Data::Font8x8, 256, 8, 0, false },
+    { &Mode2And3SL350, VGA::Data::Font8x16, 256, 0, 0, true },
+    { &Mode2And3SL400, VGA::Data::Font8x16, 256, 16, 0, true },
+    { &DefaultParameters, VGA::Data::Font8x16, 256, 16, 0, true }
 };
 
 // Mode 4, 5
@@ -751,10 +750,10 @@ ParameterFontPair Mode6Parameters[] =
 // Mode 7
 ParameterFontPair Mode7Parameters[] =
 {
-    { &DefaultParameters, Data::Font8x8, 256, 8, 0, false },
-    { &Mode7SL350, Data::Font8x16, 256, 0, 0, false },
-    { &Mode7SL400, Data::Font8x16, 256, 16, 0, true },
-    { &DefaultParameters, Data::Font8x16, 256, 16, 0, true }
+    { &DefaultParameters, VGA::Data::Font8x8, 256, 8, 0, false },
+    { &Mode7SL350, VGA::Data::Font8x16, 256, 0, 0, false },
+    { &Mode7SL400, VGA::Data::Font8x16, 256, 16, 0, true },
+    { &DefaultParameters, VGA::Data::Font8x16, 256, 16, 0, true }
 };
 
 // Mode D
@@ -840,7 +839,7 @@ ParameterFontPair G1600x1200Parameters[] =
 //Vertical extensions: 0x00
 ParameterFontPair T80x50Parameters[] =
 {
-    { &Mode80x50, Data::Font8x8, 256, 8, 0, false }
+    { &Mode80x50, VGA::Data::Font8x8, 256, 8, 0, false }
 };
 
 //Mode: 1B8
@@ -960,27 +959,27 @@ ParameterFontPair Mode1B5Parameters[] =
 
 ParameterFontPair T80x60Parameters[] =
 {
-    { &T80x60, Data::Font8x8, 256, 8, 0, false }
+    { &T80x60, VGA::Data::Font8x8, 256, 8, 0, false }
 };
 
 ParameterFontPair T132x25Parameters[] =
 {
-    { &T132x25, Data::Font8x16, 256, 16, 0, true }
+    { &T132x25, VGA::Data::Font8x16, 256, 16, 0, true }
 };
 
 ParameterFontPair T132x43Parameters[] =
 {
-    { &T132x43, Data::Font8x8, 256, 8, 0, false }
+    { &T132x43, VGA::Data::Font8x8, 256, 8, 0, false }
 };
 
 ParameterFontPair T132x50Parameters[] =
 {
-    { &T132x50, Data::Font8x8, 256, 8, 0, false }
+    { &T132x50, VGA::Data::Font8x8, 256, 8, 0, false }
 };
 
 ParameterFontPair T132x60Parameters[] =
 {
-    { &T132x60, Data::Font8x8, 256, 8, 0, false }
+    { &T132x60, VGA::Data::Font8x8, 256, 8, 0, false }
 };
 
 // Mode Y

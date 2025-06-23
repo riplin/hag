@@ -8,7 +8,6 @@
 #include <hag/system/interrup.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/drivers/vga/extmsapi.h>
-#include <hag/drivers/matrox/shared/data.h>
 #include <hag/drivers/matrox/shared/pci/fbap.h>
 #include <hag/drivers/matrox/shared/pci/ctrlap.h>
 #include <hag/drivers/matrox/shared/pci/iloadap.h>

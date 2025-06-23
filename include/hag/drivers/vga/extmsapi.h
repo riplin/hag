@@ -61,6 +61,8 @@ struct FontConfiguration
     extern PalettePair CGAPair[];
     extern PalettePair HerculesPair[];
     extern PalettePair MCGAPairs[];
+    extern uint8_t Font8x8[];
+    extern uint8_t Font8x16[];
 
     extern FontConfiguration Font8x8Config;
     extern FontConfiguration Font8x8NoCursorConfig;
