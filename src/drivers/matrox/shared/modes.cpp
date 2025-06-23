@@ -82,32 +82,24 @@ VGA::ModeSetting::Configuration C27 = { 0x50, 0x0B, 0x08, 0x0000, 0x2F, { 0x01, 
 VGA::ModeSetting::Configuration C28 = { 0x50, 0x0B, 0x08, 0x0000, 0x2F, { 0x01, 0x0F, 0x00, 0x0E, }, 0x00, 0x40, 0x80, 0x00, 0xC3, 0xFF, G07, 0x41, 0x00, 0x0F, 0x00 };
 VGA::ModeSetting::Configuration C29 = { 0x50, 0x0B, 0x08, 0x0000, 0x2F, { 0x01, 0x0F, 0x00, 0x0E, }, 0x00, 0x40, 0x20, 0x00, 0xC3, 0xFF, G07, 0x41, 0x02, 0x0F, 0x00 };
 
-//Font Configurations:
-
-VGA::ModeSetting::FontConfiguration F00 = { Data::Font8x8, 0xFF, 0x08, 0x00, false, 0x07, 0x06, 0x07 };
-VGA::ModeSetting::FontConfiguration F02 = { Data::Font8x16, 0xFF, 0x10, 0x00, true, 0x0F, 0x0D, 0x0E };
-VGA::ModeSetting::FontConfiguration F06 = { Data::Font8x16, 0xFF, 0x00, 0x00, false, 0x00, 0x00, 0x00 };
-VGA::ModeSetting::FontConfiguration F07 = { Data::Font8x16, 0xFF, 0x00, 0x00, false, 0x01, 0x20, 0x00 };
-VGA::ModeSetting::FontConfiguration F08 = { Data::Font8x16, 0xFF, 0x00, 0x00, false, 0x00, 0x20, 0x00 };
-
 //Video Parameters:
 
-VGA::ModeSetting::VideoParameters P10 = { T07char80x60, C09, A02, F00 };
-VGA::ModeSetting::VideoParameters P11 = { T08char132x25, C10, A02, F02 };
-VGA::ModeSetting::VideoParameters P12 = { T09char132x43, C11, A02, F00 };
-VGA::ModeSetting::VideoParameters P13 = { T08char132x25, C12, A02, F00 };
-VGA::ModeSetting::VideoParameters P14 = { T10char132x60, C13, A02, F00 };
-VGA::ModeSetting::VideoParameters P23 = { T15pix800x600, C22, A02, F06 };
-VGA::ModeSetting::VideoParameters P28 = { T19pix320x400, C27, A07, F07 };
-VGA::ModeSetting::VideoParameters P29 = { T20pix320x480, C27, A07, F07 };
-VGA::ModeSetting::VideoParameters P30 = { T21pix400x600, C27, A07, F07 };
-VGA::ModeSetting::VideoParameters P31 = { T22pix512x768, C27, A07, F07 };
-VGA::ModeSetting::VideoParameters P32 = { T23pix640x400, C28, A07, F08 };
-VGA::ModeSetting::VideoParameters P33 = { T24pix640x480, C29, A07, F08 };
-VGA::ModeSetting::VideoParameters P34 = { T25pix800x600, C29, A07, F08 };
-VGA::ModeSetting::VideoParameters P35 = { T26pix1024x768, C29, A07, F08 };
-VGA::ModeSetting::VideoParameters P36 = { T27pix1280x1024, C29, A07, F08 };
-VGA::ModeSetting::VideoParameters P37 = { T28pix1600x1200, C29, A07, F08 };
+VGA::ModeSetting::VideoParameters P10 = { T07char80x60, C09, A02, VGA::Data::Font8x8Config };
+VGA::ModeSetting::VideoParameters P11 = { T08char132x25, C10, A02, VGA::Data::Font8x16PatchedConfig };
+VGA::ModeSetting::VideoParameters P12 = { T09char132x43, C11, A02, VGA::Data::Font8x8Config };
+VGA::ModeSetting::VideoParameters P13 = { T08char132x25, C12, A02, VGA::Data::Font8x8Config };
+VGA::ModeSetting::VideoParameters P14 = { T10char132x60, C13, A02, VGA::Data::Font8x8Config };
+VGA::ModeSetting::VideoParameters P23 = { T15pix800x600, C22, A02, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P28 = { T19pix320x400, C27, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P29 = { T20pix320x480, C27, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P30 = { T21pix400x600, C27, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P31 = { T22pix512x768, C27, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P32 = { T23pix640x400, C28, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P33 = { T24pix640x480, C29, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P34 = { T25pix800x600, C29, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P35 = { T26pix1024x768, C29, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P36 = { T27pix1280x1024, C29, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P37 = { T28pix1600x1200, C29, A07, VGA::Data::Font8x14NoCursorConfig };
 
 //Video Parameter Arrays:
 
@@ -143,7 +135,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         Hag::System::BDA::CRTModeControlRegValue::Mode2Or3Text | Hag::System::BDA::CRTModeControlRegValue::VideoEnabled | Hag::System::BDA::CRTModeControlRegValue::Blinking,
         0x30,
-        PalettePair0,
+        VGA::Data::EGAPair,
         PA04
     },
     { // Mode 109
@@ -159,7 +151,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         Hag::System::BDA::CRTModeControlRegValue::Mode2Or3Text | Hag::System::BDA::CRTModeControlRegValue::VideoEnabled | Hag::System::BDA::CRTModeControlRegValue::Blinking,
         0x30,
-        PalettePair0,
+        VGA::Data::EGAPair,
         PA05
     },
     { // Mode 10A
@@ -175,7 +167,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         Hag::System::BDA::CRTModeControlRegValue::Mode2Or3Text | Hag::System::BDA::CRTModeControlRegValue::VideoEnabled | Hag::System::BDA::CRTModeControlRegValue::Blinking,
         0x30,
-        PalettePair0,
+        VGA::Data::EGAPair,
         PA06
     },
     { // Mode 10B
@@ -191,7 +183,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         Hag::System::BDA::CRTModeControlRegValue::Mode2Or3Text | Hag::System::BDA::CRTModeControlRegValue::VideoEnabled | Hag::System::BDA::CRTModeControlRegValue::Blinking,
         0x30,
-        Data::PalettePair0,
+        VGA::Data::EGAPair,
         PA07
     },
     { // Mode 10C
@@ -207,7 +199,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         Hag::System::BDA::CRTModeControlRegValue::Mode2Or3Text | Hag::System::BDA::CRTModeControlRegValue::VideoEnabled | Hag::System::BDA::CRTModeControlRegValue::Blinking,
         0x30,
-        Data::PalettePair0,
+        VGA::Data::EGAPair,
         PA08
     },
     { // Mode 102
@@ -223,7 +215,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         0xFF,
         0xFF,
-        Data::PalettePair0,
+        VGA::Data::EGAPair,
         PA17
     },
     { // Mode 149
@@ -303,7 +295,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         0xFF,
         0xFF,
-        Data::PalettePair578,
+        VGA::Data::MCGAPairs,
         PA26
     },
     { // Mode 101
@@ -319,7 +311,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         0xFF,
         0xFF,
-        Data::PalettePair578,
+        VGA::Data::MCGAPairs,
         PA27
     },
     { // Mode 103
@@ -335,7 +327,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         0xFF,
         0xFF,
-        Data::PalettePair578,
+        VGA::Data::MCGAPairs,
         PA28
     },
     { // Mode 105
@@ -351,7 +343,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         0xFF,
         0xFF,
-        Data::PalettePair578,
+        VGA::Data::MCGAPairs,
         PA29
     },
     { // Mode 107
@@ -367,7 +359,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         0xFF,
         0xFF,
-        Data::PalettePair578,
+        VGA::Data::MCGAPairs,
         PA30
     },
     { // Mode 11C
@@ -383,7 +375,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
         VGA::ModeSetting::Scanlines::Invalid,
         0xFF,
         0xFF,
-        Data::PalettePair578,
+        VGA::Data::MCGAPairs,
         PA31
     },
     { // Mode 10D

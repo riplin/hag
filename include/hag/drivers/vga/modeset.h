@@ -2,8 +2,9 @@
 
 #pragma once
 
-#include <hag/types.h>
 #include <functional>
+#include <hag/types.h>
+#include <hag/ialloc.h>
 
 #define HAG_IMPORT_MODESETTING                                                     \
     using namespace VGA::ModeSetting;                                              \
@@ -78,7 +79,7 @@ namespace Hag::VGA::ModeSetting
         };
     };
 
-    bool Initialize();
+    bool Initialize(IAllocator& allocator);
     void Shutdown();
 
     typedef std::function<bool(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate)> VideoModeCallback_t;//Return true to continue receiving modes.

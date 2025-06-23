@@ -1,13 +1,13 @@
 //Copyright 2025-Present riplin
 
-#include <stdio.h>
 #include <pc.h>
-
+#include <stdio.h>
 #include <hag/color.h>
+#include <sys/nearptr.h>
 #include <hag/system/bda.h>
+#include <support/allocatr.h>
 #include <hag/math/fp/fpmath.h>
 #include <hag/drivers/matrox/mystique/mystique.h>
-#include <sys/nearptr.h>
 
 extern Hag::Math::v4 icoVecs[12];
 extern int32_t icoTri[20][3];
@@ -31,11 +31,14 @@ uint32_t colors[256];
 
 int main(void)
 {
-	__djgpp_nearptr_enable();
     using namespace Hag;
     using namespace Hag::Math;
     using namespace Hag::Color;
     using namespace Hag::Matrox;
+
+    __djgpp_nearptr_enable();
+
+    Support::Allocator allocator;
 
     // fp intensities[] =
     // {
@@ -58,7 +61,7 @@ int main(void)
     colorLerp(colors + 192, 63, Bpp32::RoyalPurple, Bpp32::Cream);
     colors[255] = Bpp32::Cream;
 
-    if (!Mystique::Initialize())
+    if (!Mystique::Initialize(allocator))
     {
         printf("Could not initialize Matrox Mystique.\n");
         return 1;

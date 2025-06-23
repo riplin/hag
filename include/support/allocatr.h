@@ -10,9 +10,11 @@ namespace Support
 class Allocator : public Hag::IAllocator
 {
 public:
-	virtual void* Allocate(uint32_t size);
-	virtual void Free(void* memory);
+	virtual void* Allocate(uint32_t size) override;
+	virtual void Free(void* memory) override;
 
+	virtual bool AllocDosMem(uint16_t size, uint16_t& selector, uint16_t& segment) override;
+	virtual bool FreeDosMem(uint16_t selector) override;
 };
 
 }

@@ -1,24 +1,103 @@
 //Copyright 2025-Present riplin
 
+#include <dpmi.h>
 #include <hag/system/pit.h>
 #include <hag/system/interrup.h>
 #include <hag/drivers/vga/modeset.h>
 #include <hag/drivers/vga/extmsapi.h>
 
+namespace Hag::VGA::Data
+{
+    extern uint8_t Font8x8[];
+    extern uint8_t Font8x16[];
+
+    extern uint16_t Font8x8Size;
+    extern uint16_t Font8x16Size;
+}
+
 namespace Hag::VGA::ModeSetting
 {
 
-bool Initialize()
+__dpmi_meminfo s_Apertures[8] = { 0 };
+
+bool DeclareAperture(uint32_t address, uint32_t size)
 {
-    return External::Initialize();
+    for (uint32_t i = 0; i < sizeof(s_Apertures) / sizeof(__dpmi_meminfo); ++i)
+    {
+        if ((s_Apertures[i].address == 0) && (s_Apertures[i].size == 0))
+        {
+            s_Apertures[i].address = address;
+            s_Apertures[i].size = size;
+            return __dpmi_physical_address_mapping(&s_Apertures[i]) == 0;
+        }
+    }
+    return false;
+}
+
+static bool s_Initialized = false;
+static IAllocator* s_Allocator = nullptr;
+static uint16_t s_FontSelector = 0;
+FARPointer s_Font8x8;
+FARPointer s_Font8x8Graphics;
+FARPointer s_Font8x16;
+FARPointer s_SystemFont;
+FARPointer s_SystemFontGraphics;
+
+bool Initialize(IAllocator& allocator)
+{
+    using namespace Hag::System;
+
+    if (!s_Initialized)
+    {
+        s_Allocator = &allocator;
+        uint16_t fontSegment = 0;
+        if (s_Allocator->AllocDosMem(Data::Font8x8Size + Data::Font8x16Size, s_FontSelector, fontSegment))
+        {
+            s_Font8x8.Set(fontSegment, 0x0000);
+            s_Font8x8Graphics.Set(fontSegment, Data::Font8x8Size >> 1);
+            s_Font8x16.Set(fontSegment, Data::Font8x8Size);
+            memcpy(s_Font8x8.ToPointer<uint8_t>(Data::Font8x8Size), Data::Font8x8, Data::Font8x8Size);
+            memcpy(s_Font8x16.ToPointer<uint8_t>(Data::Font8x16Size), Data::Font8x16, Data::Font8x16Size);
+
+            SYS_ClearInterrupts();
+            s_SystemFont = InterruptTable::Pointer<InterruptTable::CharacterTable>();
+            s_SystemFontGraphics = InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>();
+            SYS_RestoreInterrupts();
+
+            s_Initialized = true;
+
+            return External::Initialize(allocator);
+        }
+    }
+    return s_Initialized;
 }
 
 void Shutdown()
 {
-    External::Shutdown();
+    using namespace Hag::System;
+
+    if (s_Initialized)
+    {
+        External::Shutdown();
+
+        for (uint32_t i = 0; i < sizeof(s_Apertures) / sizeof(__dpmi_meminfo); ++i)
+        {
+            if ((s_Apertures[i].address != 0) && (s_Apertures[i].size != 0))
+            {
+                __dpmi_free_physical_address_mapping(&s_Apertures[i]);
+            }        
+        }
+
+        SYS_ClearInterrupts();
+        InterruptTable::Pointer<InterruptTable::CharacterTable>() = s_SystemFont;
+        InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = s_SystemFontGraphics;
+        SYS_RestoreInterrupts();
+
+        s_Allocator->FreeDosMem(s_FontSelector);
+        s_Initialized = false;
+    }
 }
 
-typedef std::function<bool(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate)> VideoModeCallback_t;//Return true to continue receiving modes.
 void EnumerateVideoModes(const VideoModeCallback_t& callback)
 {
 
@@ -212,7 +291,7 @@ static Scanlines_t GetNumberOfActiveScanlines(const ModeDescriptor& descriptor)
     return scanlines;
 }
 
-static void LoadColorPalette(const Data::PaletteData& palette)
+static void LoadMCGAPalette(const Data::PaletteData& palette)
 {
     using namespace Hag::System::BDA;
     uint8_t red = 0;
@@ -248,7 +327,7 @@ static void LoadColorPalette(const Data::PaletteData& palette)
     }
 }
 
-static void LoadCompressedPalette(const Data::PaletteData& palette)
+static void LoadEGAPalette(const Data::PaletteData& palette)
 {
     const uint8_t* colors = palette.Colors;
 
@@ -292,16 +371,15 @@ static void InitializeRAMDACPalette(const ModeDescriptor& descriptor)
 
             DACWriteIndex::Write(palettePair->StartIndex);
 
-            if (palette->Flags == 0x00)
+            switch(palette->Type)
             {
-                LoadCompressedPalette(*palette);
-            }
-            else if ((palette->Flags & 0x80) == 0x00)
-            {
-                LoadColorPalette(*palette);
-            }
-            else
-            {
+            case Data::PaletteType::EGA:
+                LoadEGAPalette(*palette);
+                break;
+            case Data::PaletteType::MCGA:
+                LoadMCGAPalette(*palette);
+                break;
+            default:
                 LoadMonochromePalette(*palette);
             }
             ++palettePair;
@@ -500,27 +578,30 @@ static void ConfigureTextMemoryMapping()
 static void ApplyGraphicsCharacterSetOverride()
 {
     using namespace Hag::System;
-    BDA::VideoParameterControlBlock* videoParameterControlBlock = 
-        BDA::VideoParameterControlBlockPointer::Get().ToPointer<BDA::VideoParameterControlBlock>();
-    
-    if (!videoParameterControlBlock->GraphicsCharacterSetOverride.IsNull())
+    if (!BDA::VideoParameterControlBlockPointer::Get().IsNull())
     {
-        BDA::GraphicsCharacterSet* graphicsCharacterSet = 
-            videoParameterControlBlock->GraphicsCharacterSetOverride.ToPointer<BDA::GraphicsCharacterSet>(sizeof(BDA::GraphicsCharacterSet) + 20);
-        uint8_t* videoModes = graphicsCharacterSet->ApplicableVideoModes;
-        while (*videoModes != 0xFF)
+        BDA::VideoParameterControlBlock* videoParameterControlBlock = 
+            BDA::VideoParameterControlBlockPointer::Get().ToPointer<BDA::VideoParameterControlBlock>();
+        
+        if (!videoParameterControlBlock->GraphicsCharacterSetOverride.IsNull())
         {
+            BDA::GraphicsCharacterSet* graphicsCharacterSet = 
+                videoParameterControlBlock->GraphicsCharacterSetOverride.ToPointer<BDA::GraphicsCharacterSet>(sizeof(BDA::GraphicsCharacterSet) + 20);
+            uint8_t* videoModes = graphicsCharacterSet->ApplicableVideoModes;
+            while (*videoModes != 0xFF)
+            {
+                if (*videoModes == BDA::DisplayMode::Get())
+                    break;
+                ++videoModes;
+            }
             if (*videoModes == BDA::DisplayMode::Get())
-                break;
-            ++videoModes;
-        }
-        if (*videoModes == BDA::DisplayMode::Get())
-        {
-            BDA::RowsOnScreen::Get() = graphicsCharacterSet->NumberOfCharacterRowsDisplayed - 1;
-            BDA::PointHeightOfCharacterMatrix::Get() = graphicsCharacterSet->CharacterLength;
-            SYS_ClearInterrupts();
-            InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = graphicsCharacterSet->CharacterFontDefinitionTable;
-            SYS_RestoreInterrupts();
+            {
+                BDA::RowsOnScreen::Get() = graphicsCharacterSet->NumberOfCharacterRowsDisplayed - 1;
+                BDA::PointHeightOfCharacterMatrix::Get() = graphicsCharacterSet->CharacterLength;
+                SYS_ClearInterrupts();
+                InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = graphicsCharacterSet->CharacterFontDefinitionTable;
+                SYS_RestoreInterrupts();
+            }
         }
     }
 }
@@ -531,12 +612,63 @@ static void SetInterruptTableFontPointer(const ModeDescriptor& descriptor)
     if (GetNumberOfActiveScanlines(descriptor) != Scanlines::S200)
     {
         SYS_ClearInterrupts();
-        InterruptTable::Pointer<InterruptTable::CharacterTable>() = External::Get8x16Font();
+        InterruptTable::Pointer<InterruptTable::CharacterTable>() = s_Font8x16;
         SYS_RestoreInterrupts();
     }
     BDA::CursorScanLines::Get().End = 0;
     BDA::CursorScanLines::Get().Start = 0;
     ApplyGraphicsCharacterSetOverride();
+}
+
+static void UploadFont(const Data::FontConfiguration& fontConfig)
+{
+    static uint8_t Bank[] = { 0x00, 0x40, 0x80, 0xC0, 0x20, 0x60, 0xA0, 0xE0 };
+
+    uint16_t offset = 0;
+    uint16_t count =fontConfig.CharacterCount + 1;
+    const uint8_t* font = fontConfig.Font;
+    do
+    {
+        FARPointer ptr(0xA000, offset + (uint16_t(Bank[fontConfig.BankIndex]) << 8));            
+        uint8_t span = fontConfig.CharacterHeight == 0 ? 16 : fontConfig.CharacterHeight;
+
+        do
+        {
+            if ((fontConfig.CharacterHeight == 0) &&
+                ((uint8_t(count) == 0x68) ||
+                (uint8_t(count) == 0x87) ||
+                (uint8_t(count) == 0x8F) ||
+                (uint8_t(count) == 0x90) ||
+                (uint8_t(count) == 0x96) ||
+                (uint8_t(count) == 0x99)))
+            {
+                memcpy(ptr.ToPointer<uint8_t>(8), font, 8);
+                ptr.Offset += 8;
+                font += 9;
+
+                memcpy(ptr.ToPointer<uint8_t>(7), font, 7);
+                ptr.Offset += 8;
+                font += 7;
+            }
+            else
+            {
+                memcpy(ptr.ToPointer<uint8_t>(span), font, span);
+                ptr.Offset += span;
+                font += span;
+            }
+
+            ptr.Offset += 32 - span;
+            --count;
+
+        } while (count != 0);
+
+        if (!fontConfig.Patch)
+            break;
+
+        offset = uint16_t(*font) << 5;
+        ++font;
+        ++count;
+    } while (offset != 0);
 }
 
 static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoModeOptions_t videoModeOptions)
@@ -581,7 +713,7 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
         if (parameters.Font.Font != nullptr)
         {
             ConfigureFontLoadMemoryMapping();
-            External::UploadFont(parameters.Font);
+            UploadFont(parameters.Font);
             ConfigureTextMemoryMapping();
         }
     }
@@ -632,8 +764,8 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
     descriptor = ConfigureEGAFeatureBitSwitchesAdapter(descriptor, videoModeOptions);
 
     SYS_ClearInterrupts();
-    InterruptTable::Pointer<InterruptTable::CharacterTable>() = External::Get8x8Font();
-    InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = External::Get8x8GraphicsFont();
+    InterruptTable::Pointer<InterruptTable::CharacterTable>() = s_Font8x8;
+    InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = s_Font8x8Graphics;
     SYS_RestoreInterrupts();
 
     videoModeOptions &= ~(BDA::VideoModeOptions::Unknown | BDA::VideoModeOptions::Inactive);

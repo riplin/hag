@@ -465,6 +465,32 @@ void Draw16BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
     }
 }
 
+void Draw24BppPattern(uint16_t width, uint16_t height, uint16_t stride, uint8_t* videoMemory)
+{
+    if (videoMemory == nullptr)
+        return;
+
+    for (uint32_t y = 0; y < height; ++y)
+    {
+        uint8_t borderColorY = 0x00;
+        borderColorY = y == 0 ? 0xFF : borderColorY;
+        borderColorY = y == uint32_t(height - 1) ? 0xFF : borderColorY;
+        uint8_t* mem = videoMemory + y * stride;
+        for (uint32_t x = 0; x < width; ++x)
+        {
+            uint8_t borderColor = borderColorY;
+            borderColor |= x == 0 ? 0xFFFFFFFF : 0x00;
+            borderColor |= x == uint32_t(width - 1) ? 0xFFFFFFFF : 0x00;
+            uint8_t blue = uint8_t(((y + 1) * 0xFF) / height);
+            uint32_t red = uint8_t(0xFF - blue);
+            uint32_t green = uint8_t(((x + 1) * 0xFF) / width);
+            *(mem++) = borderColor == 0x00 ? red : borderColor;
+            *(mem++) = borderColor == 0x00 ? green : borderColor;
+            *(mem++) = borderColor == 0x00 ? blue : borderColor;
+        }
+    }
+}
+
 void Draw32BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory)
 {
     if (videoMemory == nullptr)

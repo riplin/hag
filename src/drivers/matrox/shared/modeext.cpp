@@ -24,9 +24,9 @@
 namespace Hag::VGA::ModeSetting::External
 {
 
-bool Initialize()
+bool Initialize(IAllocator& allocator)
 {
-    return Matrox::Shared::Function::System::Initialize();
+    return Matrox::Shared::Function::System::Initialize(allocator);
 }
 
 void Shutdown()
@@ -154,72 +154,6 @@ uint16_t GetNumberOf64KBPages()
 void SelectPage(uint16_t page)
 {
     Matrox::Shared::CRTCExtension::MemoryPage::Write(page);
-}
-
-void UploadFont(const FontConfiguration& fontConfig)
-{
-    static uint8_t Bank[] = { 0x00, 0x40, 0x80, 0xC0, 0x20, 0x60, 0xA0, 0xE0 };
-
-    uint16_t offset = 0;
-    uint16_t count =fontConfig.CharacterCount + 1;
-    const uint8_t* font = fontConfig.Font;
-    do
-    {
-        FARPointer ptr(0xA000, offset + (uint16_t(Bank[fontConfig.BankIndex]) << 8));            
-        uint8_t span = fontConfig.CharacterHeight == 0 ? 16 : fontConfig.CharacterHeight;
-
-        do
-        {
-            if ((fontConfig.CharacterHeight == 0) &&
-                ((uint8_t(count) == 0x68) ||
-                (uint8_t(count) == 0x87) ||
-                (uint8_t(count) == 0x8F) ||
-                (uint8_t(count) == 0x90) ||
-                (uint8_t(count) == 0x96) ||
-                (uint8_t(count) == 0x99)))
-            {
-                memcpy(ptr.ToPointer<uint8_t>(8), font, 8);
-                ptr.Offset += 8;
-                font += 9;
-
-                memcpy(ptr.ToPointer<uint8_t>(7), font, 7);
-                ptr.Offset += 8;
-                font += 7;
-            }
-            else
-            {
-                memcpy(ptr.ToPointer<uint8_t>(span), font, span);
-                ptr.Offset += span;
-                font += span;
-            }
-
-            ptr.Offset += 32 - span;
-            --count;
-
-        } while (count != 0);
-
-        if (!fontConfig.Patch)
-            break;
-
-        offset = uint16_t(*font) << 5;
-        ++font;
-        ++count;
-    } while (offset != 0);
-}
-
-const FARPointer& Get8x8Font()
-{
-    return Matrox::Shared::Function::System::s_Font8x8;
-}
-
-const FARPointer& Get8x8GraphicsFont()
-{
-    return Matrox::Shared::Function::System::s_Font8x8Graphics;
-}
-
-const FARPointer& Get8x16Font()
-{
-    return Matrox::Shared::Function::System::s_Font8x16;
 }
 
 bool IsExtensionReg7Writeable()

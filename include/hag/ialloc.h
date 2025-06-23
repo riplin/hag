@@ -47,6 +47,8 @@ namespace Hag
             Free(obj);
         }
 
+        virtual bool AllocDosMem(uint16_t size, uint16_t& selector, uint16_t& segment) = 0;
+        virtual bool FreeDosMem(uint16_t selector) = 0;
     };
 
 }

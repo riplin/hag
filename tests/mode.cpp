@@ -18,6 +18,7 @@
 #include <hag/system/keyboard.h>
 #include <hag/system/interrup.h>
 #include <hag/drivers/vga/vidmodes.h>
+#include <hag/drivers/vga/extmsapi.h>
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
 
@@ -3078,7 +3079,7 @@ void SetInterruptTableFontPointer(VideoMode& videoMode)
     using namespace Hag::System;
     if (GetNumberOfActiveScanlines(videoMode) != Scanlines::S200)
     {
-        InterruptTable::Pointer<InterruptTable::CharacterTable>() = System::s_Font8x16;
+        InterruptTable::Pointer<InterruptTable::CharacterTable>() = VGA::ModeSetting::s_Font8x16;
     }
     BDA::CursorScanLines::Get().End = 0;
     BDA::CursorScanLines::Get().Start = 0;
@@ -3510,8 +3511,8 @@ bool Set(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, Ref
 
     videoMode = ConfigureEGAFeatureBitSwitchesAdapter(videoMode, videoModeOptions);
 
-    InterruptTable::Pointer<InterruptTable::CharacterTable>() = System::s_Font8x8;
-    InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = System::s_Font8x8Graphics;
+    InterruptTable::Pointer<InterruptTable::CharacterTable>() = VGA::ModeSetting::s_Font8x8;
+    InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = VGA::ModeSetting::s_Font8x8Graphics;
 
     videoModeOptions &= ~(BDA::VideoModeOptions::Unknown | BDA::VideoModeOptions::Inactive);
 

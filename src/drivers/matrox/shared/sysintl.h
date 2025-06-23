@@ -15,11 +15,6 @@ namespace System
 extern bool s_Initialized;
 extern Hag::System::PCI::Device_t s_Device;
 extern uint32_t s_MemorySize;//Memory size in KB
-extern FARPointer s_Font8x8;
-extern FARPointer s_Font8x8Graphics;
-extern FARPointer s_Font8x16;
-extern FARPointer s_SystemFont;
-extern FARPointer s_SystemFontGraphics;
 
 }
 

@@ -17,6 +17,7 @@ extern void Draw8BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemor
 extern void Draw8BppPlanarPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw15BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 extern void Draw16BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
+extern void Draw24BppPattern(uint16_t width, uint16_t height, uint16_t stride, uint8_t* videoMemory);
 extern void Draw32BppPattern(uint16_t width, uint16_t height, uint8_t* videoMemory);
 
 }

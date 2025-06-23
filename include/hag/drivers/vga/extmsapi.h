@@ -2,11 +2,12 @@
 
 #pragma once
 
+#include <functional>
 #include <hag/types.h>
+#include <hag/ialloc.h>
+#include <hag/system/bda.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/drivers/vga/modeset.h>
-#include <hag/system/bda.h>
-#include <functional>
 
 //See bottom of file for exension points.
 
@@ -15,10 +16,22 @@ namespace Hag::VGA::Data
 
 #pragma pack(push, 1)
 
+typedef uint8_t PaletteType_t;
+namespace PaletteType
+{
+    enum
+    {
+        EGA = 0x00,
+        MCGA = 0x01,
+        Monochrome = 0x02,
+    };
+}
+
 struct PaletteData
 {
     System::BDA::VideoDisplayDataArea_t Mask;
-    uint8_t Flags;
+
+    PaletteType_t Type;
     uint16_t Count;
     uint8_t Colors[];
 };
@@ -30,12 +43,44 @@ struct PalettePair
     uint8_t StartIndex;
 };
 
+struct FontConfiguration
+{
+    const uint8_t* Font;
+    uint8_t CharacterCount; //Add 1 (16 bit)
+    uint8_t CharacterHeight;
+    uint8_t BankIndex;
+    bool Patch;
+    VGA::CRTController::MaximumScanLine_t RenderHeight; //CR09
+    VGA::CRTController::CursorStartScanLine_t CursorStartScanLine; //CR0A
+    VGA::CRTController::CursorEndScanLine_t CursorEndScanLine; //CR0B
+};
+
 #pragma pack(pop)
 
+    extern PalettePair EGAPair[];
+    extern PalettePair CGAPair[];
+    extern PalettePair HerculesPair[];
+    extern PalettePair MCGAPairs[];
+
+    extern FontConfiguration Font8x8Config;
+    extern FontConfiguration Font8x8NoCursorConfig;
+    extern FontConfiguration Font8x14Config;
+    extern FontConfiguration Font8x14PatchedConfig;
+    extern FontConfiguration Font8x14NoCursorConfig;
+    extern FontConfiguration Font8x16PatchedConfig;
+    extern FontConfiguration Font8x16NoCursorConfig;
 }
 
 namespace Hag::VGA::ModeSetting
 {
+
+extern FARPointer s_Font8x8;
+extern FARPointer s_Font8x8Graphics;
+extern FARPointer s_Font8x16;
+extern FARPointer s_SystemFont;
+extern FARPointer s_SystemFontGraphics;
+
+extern bool DeclareAperture(uint32_t address, uint32_t size);
 
 typedef uint8_t Scanlines_t;
 namespace Scanlines
@@ -121,18 +166,6 @@ struct Configuration
     uint8_t CompressedPalette[];
 };
 
-struct FontConfiguration
-{
-    const uint8_t* Font;
-    uint8_t CharacterCount; //Add 1 (16 bit)
-    uint8_t CharacterHeight;
-    uint8_t BankIndex;
-    bool Patch;
-    VGA::CRTController::MaximumScanLine_t RenderHeight; //CR09
-    VGA::CRTController::CursorStartScanLine_t CursorStartScanLine; //CR0A
-    VGA::CRTController::CursorEndScanLine_t CursorEndScanLine; //CR0B
-};
-
 #pragma pack(pop)
 
 struct VideoParameters
@@ -140,7 +173,7 @@ struct VideoParameters
     const ResolutionTimings& Timings;
     const Configuration& Config;
     const VGA::AttributeControllerData_t* AttributePalette;
-    const FontConfiguration& Font;
+    const Data::FontConfiguration& Font;
 
     inline VGA::MiscellaneousOutput_t GetMiscellaneousOutput() const
     {
@@ -186,7 +219,7 @@ struct ModeDescriptor
 
 namespace External
 {
-    extern bool Initialize();
+    extern bool Initialize(IAllocator& allocator);
     extern void Shutdown();
     extern bool IsExtendedMode(const ModeDescriptor& descriptor);
 
@@ -198,11 +231,6 @@ namespace External
 
     extern uint16_t GetNumberOf64KBPages();
     extern void SelectPage(uint16_t page);
-
-    extern void UploadFont(const FontConfiguration& fontConfig);//Memory config is set up. Only upload.
-    extern const FARPointer& Get8x8Font();
-    extern const FARPointer& Get8x8GraphicsFont();
-    extern const FARPointer& Get8x16Font();
 
     extern void DisableExtendedMode();
     extern void ApplyExtendedModeSettings(const ModeDescriptor& descriptor);

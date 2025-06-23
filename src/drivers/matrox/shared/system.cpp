@@ -4,30 +4,26 @@
 #include <stdio.h>
 #include <string.h>
 #include <hag/system/pci.h>
+#include <hag/system/pit.h>
 #include <hag/system/interrup.h>
 #include <hag/drivers/vga/vga.h>
+#include <hag/drivers/vga/extmsapi.h>
 #include <hag/drivers/matrox/shared/data.h>
+#include <hag/drivers/matrox/shared/pci/fbap.h>
+#include <hag/drivers/matrox/shared/pci/ctrlap.h>
+#include <hag/drivers/matrox/shared/pci/iloadap.h>
 #include <hag/drivers/matrox/shared/funcs/system.h>
-
 #include <hag/drivers/matrox/shared/crtcext/misc.h>         //CER3
 #include <hag/drivers/matrox/shared/crtcext/mempg.h>        //CER4
 
-namespace Hag::Matrox::Shared::Function
+namespace Hag::Matrox::Shared::Function::System
 {
 
-namespace System
-{
-
-static uint16_t s_FontSelector = 0;
-
+    
 bool s_Initialized = false;
+static IAllocator* s_Allocator = nullptr;
 Hag::System::PCI::Device_t s_Device = 0xFFFF;
 uint32_t s_MemorySize = 0;//Memory size in KB
-FARPointer s_Font8x8;
-FARPointer s_Font8x8Graphics;
-FARPointer s_Font8x16;
-FARPointer s_SystemFont;
-FARPointer s_SystemFontGraphics;
 
 uint8_t GetMemoryIn64KBlocks()
 {
@@ -38,8 +34,7 @@ uint8_t GetMemoryIn64KBlocks()
 
     VGA::Sequencer::ClockingMode::Write(clockingMode | VGA::Sequencer::ClockingMode::ScreenOff);
 
-    //TODO: Speed sensitive!!!!!
-    for (uint16_t i = 0x4b0; i != 0x0000; --i);
+    Hag::System::PIT::MiniSleep();
 
     VGA::GraphicsController::MemoryMapModeControl_t memoryMapModeControl = VGA::GraphicsController::MemoryMapModeControl::Read();
 
@@ -117,71 +112,48 @@ uint8_t GetMemoryIn64KBlocks()
     return foundMem >> 8;
 }
 
-bool Initialize()
+bool Initialize(IAllocator& allocator)
 {
+    using namespace Hag::System;
+    
     if (!s_Initialized)
     {
-        uint16_t size = Data::Font8x8Size + Data::Font8x16Size;
-    
-        Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device);
-        // if (!Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
-        //     return false;
+        s_Allocator = &allocator;
 
-        REGS r;
-        memset(&r, 0, sizeof(r));
+        if (!Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
+            return false;
 
-        r.w.ax = 0x0100;
-        r.w.bx = (size + 15) >> 4;
-        int386(0x31, &r, &r);
+        s_MemorySize = GetMemoryIn64KBlocks() << 6;
+            
+        s_Initialized = true;
 
-        if ((r.w.flags & 0x01) == 0)
-        {
-            uint32_t fontSegment = r.w.ax;
-            s_FontSelector = r.w.dx;
+        s_Initialized &= VGA::ModeSetting::DeclareAperture(PCI::ControlAperture::Read(s_Device) &
+                                                            PCI::ControlAperture::BaseAddress,
+                                                            16 * 1024);
 
-            s_Font8x8 = FARPointer(fontSegment, 0x0000);
-            s_Font8x8Graphics = FARPointer(fontSegment, Data::Font8x8Size >> 1);
-            s_Font8x16 = FARPointer(fontSegment, Data::Font8x8Size);
-            memcpy(s_Font8x8.ToPointer<uint8_t>(Data::Font8x8Size), Data::Font8x8, Data::Font8x8Size);
-            memcpy(s_Font8x16.ToPointer<uint8_t>(Data::Font8x16Size), Data::Font8x16, Data::Font8x16Size);
+        s_Initialized &= VGA::ModeSetting::DeclareAperture(PCI::FrameBufferAperture::Read(s_Device) &
+                                                            PCI::FrameBufferAperture::BaseAddress,
+                                                            s_MemorySize << 10);
 
-            s_SystemFont = Hag::System::InterruptTable::Pointer<Hag::System::InterruptTable::CharacterTable>();
-            s_SystemFontGraphics = Hag::System::InterruptTable::Pointer<Hag::System::InterruptTable::GraphicsFont8x8>();
-
-            s_MemorySize = GetMemoryIn64KBlocks() << 6;
-
-            s_Initialized = true;
-        }
+        s_Initialized &= VGA::ModeSetting::DeclareAperture(PCI::ILOADAperture::Read(s_Device) &
+                                                            PCI::ILOADAperture::BaseAddress,
+                                                            8 * 1024 * 1024);
     }
     return s_Initialized;
 }
 
 void Shutdown()
 {
-    if (s_Initialized)
-    {
-        Hag::System::InterruptTable::Pointer<Hag::System::InterruptTable::CharacterTable>() = s_SystemFont;
-        Hag::System::InterruptTable::Pointer<Hag::System::InterruptTable::GraphicsFont8x8>() = s_SystemFontGraphics;
-
-        REGS r;
-        memset(&r, 0, sizeof(r));
-        r.w.ax = 0x0101;
-        r.w.dx = s_FontSelector;
-        int386(0x31, &r, &r);
-        s_Initialized = false;
-    }
+    //Nothing to do. Stay initialized.
 }
 
 uint32_t GetMemorySize()
 {
     uint32_t ret = 0;
     if (s_Initialized)
-    {
         ret = s_MemorySize << 10;
-    }
-    return ret;
-}
 
+    return ret;
 }
 
 }

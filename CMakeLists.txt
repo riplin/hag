@@ -12,7 +12,7 @@ add_compile_options(-Wall -std=c++20 -save-temps -U __STRICT_ANSI__ -Wno-array-b
 add_link_options(-s)
 
 #How do i make this blasted thing do this conditionally???
-#add_compile_options(-D MOCK)
+add_compile_options(-D MOCK)
 
 set (ENV{DJDIR} "${CMAKE_FIND_ROOT_PATH}/djgpp/")
 set (ENV{DXE_LD_LIBRARY_PATH} "${CMAKE_FIND_ROOT_PATH}/djgpp/lib/gcc/i586-pc-msdosdjgpp/12.1.0/")
@@ -58,6 +58,14 @@ add_library(mystique
             src/drivers/matrox/shared/modeext.cpp
             src/drivers/matrox/shared/system.cpp
            )
+
+add_library(banshee
+            src/drivers/vga/modeset.cpp
+            src/drivers/vga/data.cpp
+            src/drivers/3dfx/shared/modeext.cpp
+            src/drivers/3dfx/shared/system.cpp
+           )
+
 #add_custom_target(mystiquedxe 
 #                  COMMAND ${CMAKE_FIND_ROOT_PATH}/djgpp/i586-pc-msdosdjgpp/bin/dxe3gen
 #                  -o mystique.dxe
@@ -92,8 +100,8 @@ add_executable(mystst
 
 #libraries are linked in reverse order
 target_link_libraries(mystst
-                      mystique
                       hagsup
+                      mystique
                       hag
                      )
 
