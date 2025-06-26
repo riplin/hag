@@ -62,15 +62,24 @@ struct FontConfiguration
     extern PalettePair HerculesPair[];
     extern PalettePair MCGAPairs[];
     extern uint8_t Font8x8[];
+    extern uint8_t Font8x14[];
     extern uint8_t Font8x16[];
 
-    extern FontConfiguration Font8x8Config;
-    extern FontConfiguration Font8x8NoCursorConfig;
-    extern FontConfiguration Font8x14Config;
-    extern FontConfiguration Font8x14PatchedConfig;
-    extern FontConfiguration Font8x14NoCursorConfig;
-    extern FontConfiguration Font8x16PatchedConfig;
-    extern FontConfiguration Font8x16NoCursorConfig;
+    extern FontConfiguration FontConfig00;// = { Font8x8, 0xFF, 0x08, 0x00, false, 0x07, 0x06, 0x07 };
+    extern FontConfiguration FontConfig01;// = { Font8x16, 0xFF, 0x00, 0x00, false, 0x0D, 0x0B, 0x0C };
+    extern FontConfiguration FontConfig02;// = { Font8x16, 0xFF, 0x10, 0x00, true, 0x0F, 0x0D, 0x0E };
+    extern FontConfiguration FontConfig03;// = { Font8x16, 0xFF, 0x10, 0x00, true, 0x07, 0x06, 0x07 };
+    extern FontConfiguration FontConfig04;// = { Font8x16, 0xFF, 0x00, 0x00, true, 0x0D, 0x0B, 0x0C };
+    extern FontConfiguration FontConfig04b;// = { Font8x14, 0xFF, 0x0E, 0x00, true, 0x0D, 0x0B, 0x0C };
+    extern FontConfiguration FontConfig05;// = { Font8x16, 0xFF, 0x00, 0x00, false, 0x01, 0x00, 0x00 };
+    extern FontConfiguration FontConfig06;// = { Font8x16, 0xFF, 0x00, 0x00, false, 0x00, 0x00, 0x00 };
+    extern FontConfiguration FontConfig07;// = { Font8x16, 0xFF, 0x00, 0x00, false, 0x01, 0x20, 0x00 };
+    extern FontConfiguration FontConfig08;// = { Font8x16, 0xFF, 0x00, 0x00, false, 0x00, 0x20, 0x00 };
+    extern FontConfiguration FontConfig09;// = { Font8x8, 0xFF, 0x08, 0x00, true, 0x01, 0x00, 0x00 };
+    extern FontConfiguration FontConfig10;// = { Font8x8, 0xFF, 0x08, 0x00, false, 0x00, 0x00, 0x00 };
+    extern FontConfiguration FontConfig11;// = { Font8x14, 0xFF, 0x0E, 0x00, true, 0x00, 0x00, 0x00 };
+    extern FontConfiguration FontConfig12;// = { Font8x16, 0xFF, 0x10, 0x00, true, 0x00, 0x00, 0x00 };
+    extern FontConfiguration FontConfig13;// = { Font8x14, 0xFF, 0x09, 0x00, true, 0x08, 0x07, 0x08 };
 }
 
 namespace Hag::VGA::ModeSetting
@@ -197,6 +206,7 @@ struct ModeDescriptor
 {
     uint16_t Width;
     uint16_t Height;
+    uint16_t Stride;
     BitsPerPixel_t Bpp;
     Flags_t Flags;
     RefreshRate_t RefreshRate;
@@ -244,6 +254,8 @@ namespace External
     extern void WriteExtensionRegisters(const ModeDescriptor& descriptor);
 
     extern void SetupClock(const ModeDescriptor& descriptor);
+
+    extern void* GetLinearFrameBuffer();
 }
 
 }

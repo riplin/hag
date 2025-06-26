@@ -123,10 +123,8 @@ bool Initialize(IAllocator& allocator)
             return false;
 
         s_MemorySize = GetMemoryIn64KBlocks() << 6;
-            
-        s_Initialized = true;
 
-        s_Initialized &= VGA::ModeSetting::DeclareAperture(PCI::ControlAperture::Read(s_Device) &
+        s_Initialized = VGA::ModeSetting::DeclareAperture(PCI::ControlAperture::Read(s_Device) &
                                                             PCI::ControlAperture::BaseAddress,
                                                             16 * 1024);
 

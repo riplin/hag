@@ -1,10 +1,91 @@
 //Copyright 2025-Present riplin
 
+#include <stdio.h>
+#include <hag/farptr.h>
 #include <hag/testing/testpat.h>
+#include <hag/drivers/vga/modeset.h>
 #include <hag/drivers/vga/sqrc/enwrtpl.h>
 
 namespace Hag::Testing::TestPatterns
 {
+
+void TestVideoModes()
+{
+    using namespace Hag::VGA::ModeSetting;
+
+    EnumerateVideoModes([](uint16_t width, uint16_t height, uint16_t stride, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, uint16_t segment)
+    {
+        SetVideoError_t error = SetVideoMode(width, height, bpp, flags, refreshRate);
+        if (error != SetVideoError::Success)
+        {
+            SetVideoMode(80, 25, BitsPerPixel::Bpp4, Flags::Text);
+            printf("Error setting video mode %ix%ix%ibpp@%iHz\n", width, height, bpp, refreshRate);
+            printf("Aborting...\n");
+            return false;
+        }
+        if ((flags & Flags::Mode) == Flags::Text)
+        {
+            DrawTextPattern(width, height, FARPointer(segment, 0x0000).ToPointer<uint8_t>());
+        }
+        else
+        {
+            uint8_t* ptr;
+            if ((flags & Flags::LinearFramebuffer) != 0)
+                ptr = GetLinearFrameBufferAs<uint8_t>();
+            else
+                ptr = FARPointer(segment, 0x0000).ToPointer<uint8_t>();
+            if (ptr == nullptr)
+            {
+                SetVideoMode(80, 25, BitsPerPixel::Bpp4, Flags::Text);
+                printf("Error retrieving frame buffer for video mode %ix%ix%ibpp@%iHz\n", width, height, bpp, refreshRate);
+                printf("Aborting...\n");
+                return false;
+            }
+            switch (bpp)
+            {
+            case BitsPerPixel::Bpp1:
+                if (segment == 0xa000)
+                    Draw1BppPattern(width, height, ptr);
+                else
+                    Draw1BppPattern2(width, height, ptr);
+            break;
+            case BitsPerPixel::Bpp2:
+                if ((flags & Flags::MemoryOrganization) == Flags::Planar)
+                    Draw2BppPlanarPattern(width, height, ptr);
+                else
+                    Draw2BppPattern(width, height, ptr);
+            break;
+            case BitsPerPixel::Bpp4:
+                Draw4BppPattern(width, height, ptr);
+                break;
+            case BitsPerPixel::Bpp8:
+                if ((flags & Flags::MemoryOrganization) == Flags::Planar)
+                    Draw8BppPlanarPattern(width, height, ptr);
+                else
+                    Draw8BppPattern(width, height, ptr);
+                break;
+            case BitsPerPixel::Bpp15:
+                Draw15BppPattern(width, height, ptr);
+                break;
+            case BitsPerPixel::Bpp16:
+                Draw16BppPattern(width, height, ptr);
+                break;
+            case BitsPerPixel::Bpp24:
+                Draw24BppPattern(width, height, stride, ptr);
+                break;
+            case BitsPerPixel::Bpp32:
+                Draw32BppPattern(width, height, ptr);
+                break;
+            default:
+                break;
+            }
+        }
+        printf("Mode %ix%ix%ibpp@%iHz\n", width, height, bpp, refreshRate);
+        getchar();
+        SetVideoMode(80, 25, BitsPerPixel::Bpp4, Flags::Text);
+        return true;
+    });
+}
 
 struct CharAndAttr
 {

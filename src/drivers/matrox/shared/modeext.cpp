@@ -9,6 +9,7 @@
 #include <hag/drivers/matrox/shared/crtcext/misc.h>
 #include <hag/drivers/matrox/shared/crtcext/hrhlfcnt.h>
 #include <hag/drivers/matrox/shared/pci/opt.h>
+#include <hag/drivers/matrox/shared/pci/fbap.h>
 #include <hag/drivers/matrox/shared/pci/idx/miscctrl.h>
 #include <hag/drivers/matrox/shared/pci/idx/muxctrl.h>
 #include <hag/drivers/matrox/shared/pci/idx/genctrl.h>
@@ -48,6 +49,8 @@ bool IsExtendedMode(const ModeDescriptor& descriptor)
 
 void IterateModeDescriptors(const DescriptorCallback_t& callback)
 {
+    VGA::Data::IterateModeDescriptors(callback);
+    
     if (VGA::Data::IterateModeDescriptors(callback))
     {
         SetVideoError_t error = SetVideoError::Success;
@@ -57,7 +60,10 @@ void IterateModeDescriptors(const DescriptorCallback_t& callback)
 
             ModeDescriptor& mode = Matrox::Shared::Data::s_Descriptors[i];
 
-            uint32_t requiredMemory = (mode.Width * mode.Height * mode.Bpp) >> 3;
+            BitsPerPixel_t bpp = mode.Bpp;
+            if (bpp == BitsPerPixel::Bpp15)
+                bpp = BitsPerPixel::Bpp16;
+            uint32_t requiredMemory = (mode.Width * mode.Height * bpp) >> 3;
             if (requiredMemory > (Matrox::Shared::Function::System::s_MemorySize << 10))
             {
                 error = SetVideoError::InsufficientVideoMemory;
@@ -512,6 +518,11 @@ void SetupClock(const ModeDescriptor& descriptor)
         if (timings.FrequencyKHz != 0)
             ConfigurePixelClocks(CalculatePLL_MNPS(timings.FrequencyKHz), PixelClocksSettings::PLLSetC | PixelClocksSettings::ClockPLL);
     }
+}
+
+void* GetLinearFrameBuffer()
+{
+    return Matrox::Shared::PCI::FrameBufferAperture::GetAddress<void>(Matrox::Shared::Function::System::s_Device);
 }
 
 }

@@ -246,7 +246,7 @@
 
 namespace Hag::Matrox::Mystique
 {
-    //HAG_IMPORT_SYSTEM;//Import initialization and shutdown.
+    HAG_MATROX_SYSTEM;//Import System functions.
     HAG_IMPORT_MODESETTING;//Import SetVideoMode.
 
     typedef Shared::Register_t Register_t;

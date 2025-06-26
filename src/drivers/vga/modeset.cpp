@@ -9,9 +9,11 @@
 namespace Hag::VGA::Data
 {
     extern uint8_t Font8x8[];
+    extern uint8_t Font8x14[];
     extern uint8_t Font8x16[];
 
     extern uint16_t Font8x8Size;
+    extern uint16_t Font8x14Size;
     extern uint16_t Font8x16Size;
 }
 
@@ -39,6 +41,7 @@ static IAllocator* s_Allocator = nullptr;
 static uint16_t s_FontSelector = 0;
 FARPointer s_Font8x8;
 FARPointer s_Font8x8Graphics;
+FARPointer s_Font8x14;
 FARPointer s_Font8x16;
 FARPointer s_SystemFont;
 FARPointer s_SystemFontGraphics;
@@ -51,12 +54,14 @@ bool Initialize(IAllocator& allocator)
     {
         s_Allocator = &allocator;
         uint16_t fontSegment = 0;
-        if (s_Allocator->AllocDosMem(Data::Font8x8Size + Data::Font8x16Size, s_FontSelector, fontSegment))
+        if (s_Allocator->AllocDosMem(Data::Font8x8Size + Data::Font8x14Size + Data::Font8x16Size, s_FontSelector, fontSegment))
         {
             s_Font8x8.Set(fontSegment, 0x0000);
             s_Font8x8Graphics.Set(fontSegment, Data::Font8x8Size >> 1);
-            s_Font8x16.Set(fontSegment, Data::Font8x8Size);
+            s_Font8x14.Set(fontSegment, Data::Font8x8Size);
+            s_Font8x16.Set(fontSegment, Data::Font8x8Size + Data::Font8x14Size);
             memcpy(s_Font8x8.ToPointer<uint8_t>(Data::Font8x8Size), Data::Font8x8, Data::Font8x8Size);
+            memcpy(s_Font8x14.ToPointer<uint8_t>(Data::Font8x14Size), Data::Font8x14, Data::Font8x14Size);
             memcpy(s_Font8x16.ToPointer<uint8_t>(Data::Font8x16Size), Data::Font8x16, Data::Font8x16Size);
 
             SYS_ClearInterrupts();
@@ -106,7 +111,7 @@ void EnumerateVideoModes(const VideoModeCallback_t& callback)
         if (error != SetVideoError::Success)
             return true;
 
-        return callback(descriptor.Width, descriptor.Height, descriptor.Bpp, descriptor.Flags & Flags::PublicFlags, descriptor.RefreshRate);
+        return callback(descriptor.Width, descriptor.Height, descriptor.Stride, descriptor.Bpp, descriptor.Flags & Flags::PublicFlags, descriptor.RefreshRate, descriptor.Segment);
     });
 
 }
@@ -507,11 +512,7 @@ static void ClearScreen(const ModeDescriptor& descriptor)
         }
 
         uint16_t pages = 1;
-        uint16_t bpp = descriptor.Bpp;
-        if (bpp == 15)
-            bpp = 16;
-
-        if (((descriptor.Width * descriptor.Height * bpp) >> 3) > (64*1024))
+        if ((descriptor.Stride * descriptor.Height) > (64*1024))
         {
             pages = External::GetNumberOf64KBPages();
         }
@@ -728,10 +729,16 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
     
     if (descriptor.CRTModeControlRegValue != 0xFF)
         BDA::CRTModeControlRegValue::Get() = descriptor.CRTModeControlRegValue;
+    else
+        BDA::CRTModeControlRegValue::Get() = 0x00;
 
     if (descriptor.CGAColorPaletteMaskSetting != 0xFF)
         BDA::CGAColorPaletteMaskSetting::Get() = descriptor.CGAColorPaletteMaskSetting;
+    else
+        BDA::CGAColorPaletteMaskSetting::Get() = 0x00;
 }
+
+static const ModeDescriptor* s_CurrentDescriptor = nullptr;
 
 SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, bool clearDisplay)
 {
@@ -763,6 +770,8 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
 
     descriptor = ConfigureEGAFeatureBitSwitchesAdapter(descriptor, videoModeOptions);
 
+    s_CurrentDescriptor = descriptor;
+
     SYS_ClearInterrupts();
     InterruptTable::Pointer<InterruptTable::CharacterTable>() = s_Font8x8;
     InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>() = s_Font8x8Graphics;
@@ -778,6 +787,15 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
 
     return SetVideoError::Success;
 }
+
+void* GetLinearFrameBuffer()
+{
+    if ((s_CurrentDescriptor != nullptr) &&
+        ((s_CurrentDescriptor->Flags & Flags::LinearFramebuffer) != 0))
+        return External::GetLinearFrameBuffer();
+    return nullptr;
+}
+
 
 const VideoParameters& ModeDescriptor::GetParameters() const
 {

@@ -2,7 +2,7 @@
 
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
-#include <hag/drivers/matrox/shared/funcs/modeset.h>
+#include <hag/drivers/vga/extmsapi.h>
 #include "modintl.h"
 
 namespace Hag::Matrox::Shared::Data
@@ -83,22 +83,22 @@ VGA::ModeSetting::Configuration C29 = { 0x50, 0x0B, 0x08, 0x0000, 0x2F, { 0x01, 
 
 //Video Parameters:
 
-VGA::ModeSetting::VideoParameters P10 = { T07char80x60, C09, A02, VGA::Data::Font8x8Config };
-VGA::ModeSetting::VideoParameters P11 = { T08char132x25, C10, A02, VGA::Data::Font8x16PatchedConfig };
-VGA::ModeSetting::VideoParameters P12 = { T09char132x43, C11, A02, VGA::Data::Font8x8Config };
-VGA::ModeSetting::VideoParameters P13 = { T08char132x25, C12, A02, VGA::Data::Font8x8Config };
-VGA::ModeSetting::VideoParameters P14 = { T10char132x60, C13, A02, VGA::Data::Font8x8Config };
-VGA::ModeSetting::VideoParameters P23 = { T15pix800x600, C22, A02, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P28 = { T19pix320x400, C27, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P29 = { T20pix320x480, C27, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P30 = { T21pix400x600, C27, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P31 = { T22pix512x768, C27, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P32 = { T23pix640x400, C28, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P33 = { T24pix640x480, C29, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P34 = { T25pix800x600, C29, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P35 = { T26pix1024x768, C29, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P36 = { T27pix1280x1024, C29, A07, VGA::Data::Font8x14NoCursorConfig };
-VGA::ModeSetting::VideoParameters P37 = { T28pix1600x1200, C29, A07, VGA::Data::Font8x14NoCursorConfig };
+VGA::ModeSetting::VideoParameters P10 = { T07char80x60, C09, A02, VGA::Data::FontConfig00 };
+VGA::ModeSetting::VideoParameters P11 = { T08char132x25, C10, A02, VGA::Data::FontConfig02 };
+VGA::ModeSetting::VideoParameters P12 = { T09char132x43, C11, A02, VGA::Data::FontConfig00 };
+VGA::ModeSetting::VideoParameters P13 = { T08char132x25, C12, A02, VGA::Data::FontConfig00 };
+VGA::ModeSetting::VideoParameters P14 = { T10char132x60, C13, A02, VGA::Data::FontConfig00 };
+VGA::ModeSetting::VideoParameters P23 = { T15pix800x600, C22, A02, VGA::Data::FontConfig06 };
+VGA::ModeSetting::VideoParameters P28 = { T19pix320x400, C27, A07, VGA::Data::FontConfig07 };
+VGA::ModeSetting::VideoParameters P29 = { T20pix320x480, C27, A07, VGA::Data::FontConfig07 };
+VGA::ModeSetting::VideoParameters P30 = { T21pix400x600, C27, A07, VGA::Data::FontConfig07 };
+VGA::ModeSetting::VideoParameters P31 = { T22pix512x768, C27, A07, VGA::Data::FontConfig07 };
+VGA::ModeSetting::VideoParameters P32 = { T23pix640x400, C28, A07, VGA::Data::FontConfig08 };
+VGA::ModeSetting::VideoParameters P33 = { T24pix640x480, C29, A07, VGA::Data::FontConfig08 };
+VGA::ModeSetting::VideoParameters P34 = { T25pix800x600, C29, A07, VGA::Data::FontConfig08 };
+VGA::ModeSetting::VideoParameters P35 = { T26pix1024x768, C29, A07, VGA::Data::FontConfig08 };
+VGA::ModeSetting::VideoParameters P36 = { T27pix1280x1024, C29, A07, VGA::Data::FontConfig08 };
+VGA::ModeSetting::VideoParameters P37 = { T28pix1600x1200, C29, A07, VGA::Data::FontConfig08 };
 
 //Video Parameter Arrays:
 
@@ -124,6 +124,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 108
         80,
         60,
+        160,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
         VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCDisable | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -140,6 +141,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 109
         132,
         25,
+        264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
         VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCDisable | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -156,6 +158,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 10A
         132,
         43,
+        264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
         VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCDisable | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -172,6 +175,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 10B
         132,
         50,
+        264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
         VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCDisable | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -188,6 +192,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 10C
         132,
         60,
+        264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
         VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCDisable | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -204,6 +209,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 102
         800,
         600,
+        100,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Planar | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCDisable | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -220,6 +226,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 149
         320,
         200,
+        320,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -236,6 +243,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 148
         320,
         240,
+        320,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -252,6 +260,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 145
         400,
         300,
+        400,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter |Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R72Hz,
@@ -268,6 +277,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 143
         512,
         384,
+        512,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -284,6 +294,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 100
         640,
         400,
+        640,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -300,6 +311,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 101
         640,
         480,
+        640,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -316,6 +328,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 103
         800,
         600,
+        800,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -332,6 +345,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 105
         1024,
         768,
+        1024,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -348,6 +362,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 107
         1280,
         1024,
+        1280,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -364,6 +379,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 11C
         1600,
         1200,
+        1600,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -380,6 +396,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 10D
         320,
         200,
+        640,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -396,6 +413,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 139
         320,
         240,
+        640,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -412,6 +430,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 136
         400,
         300,
+        800,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R72Hz,
@@ -428,6 +447,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 134
         512,
         384,
+        1024,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -444,6 +464,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 121
         640,
         400,
+        1280,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -460,6 +481,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 110
         640,
         480,
+        1280,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -476,6 +498,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 113
         800,
         600,
+        1600,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -492,6 +515,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 116
         1024,
         768,
+        2048,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -508,6 +532,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 119
         1280,
         1024,
+        2560,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -524,6 +549,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 11D
         1600,
         1200,
+        3200,
         VGA::ModeSetting::BitsPerPixel::Bpp15,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -540,6 +566,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 10E
         320,
         200,
+        640,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -556,6 +583,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 1D9
         320,
         240,
+        640,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -572,6 +600,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 1D6
         400,
         300,
+        800,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R72Hz,
@@ -588,6 +617,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 1D4
         512,
         384,
+        1024,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -604,6 +634,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 122
         640,
         400,
+        1280,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -620,6 +651,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 111
         640,
         480,
+        1280,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -636,6 +668,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 114
         800,
         600,
+        1600,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -652,6 +685,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 117
         1024,
         768,
+        2048,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -668,6 +702,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 11A
         1280,
         1024,
+        2560,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -684,6 +719,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 11E
         1600,
         1200,
+        3200,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -700,6 +736,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 10F
         320,
         200,
+        1280,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -716,6 +753,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 1B8
         320,
         240,
+        1280,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R60Hz,
@@ -732,6 +770,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 1B5
         400,
         300,
+        1600,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R72Hz,
@@ -748,6 +787,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 1B3
         512,
         384,
+        2048,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -764,6 +804,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 124
         640,
         400,
+        2560,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -780,6 +821,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 112
         640,
         480,
+        2560,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -796,6 +838,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 115
         800,
         600,
+        3200,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -812,6 +855,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 118
         1024,
         768,
+        4096,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -828,6 +872,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 11B
         1280,
         1024,
+        5120,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,
@@ -844,6 +889,7 @@ VGA::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 11F
         1600,
         1200,
+        6400,
         VGA::ModeSetting::BitsPerPixel::Bpp32,
         VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::MAFCVGA | Function::ModeSetting::Flags::Matrox,
         VGA::ModeSetting::RefreshRate::R70Hz,

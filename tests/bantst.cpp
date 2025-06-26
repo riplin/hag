@@ -6,6 +6,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vector>
+#include <string>
+
 #include <dpmi.h>
 #include <sys/nearptr.h>
 #include <support/allocatr.h>
@@ -588,31 +591,31 @@ ExtraModeData s_ExtraModeData[] =
     { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x01
     { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x02
     { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x03
-    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x04
-    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x05
-    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x06
+    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x04-
+    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x05-
+    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x06-
     { 0x00, 0x00, 0x00, 0x00, 0x0000 }, // 0x07
     { 0x01, 0x00, 0x01, 0x00, 0x0000 }, // 0x08
     { 0x01, 0x00, 0x02, 0x00, 0x0000 }, // 0x09
     { 0x00, 0x00, 0x03, 0x00, 0xBC3E }, // 0x0a
     { 0x01, 0x00, 0x03, 0x00, 0xBC3E }, // 0x0b
     { 0x01, 0x51, 0xFF, 0x00, 0xB358 }, // 0x0c
-    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x0d
-    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x0e
+    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x0d-
+    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x0e-
     { 0x01, 0x00, 0xFF, 0x00, 0xE15D }, // 0x0f
     { 0x00, 0x00, 0x02, 0x00, 0x0000 }, // 0x10
-    { 0x00, 0x00, 0x00, 0x00, 0x0000 }, // 0x11
-    { 0x00, 0x00, 0x00, 0x00, 0x0000 }, // 0x12
+    { 0x00, 0x00, 0x00, 0x00, 0x0000 }, // 0x11-
+    { 0x00, 0x00, 0x00, 0x00, 0x0000 }, // 0x12-
     { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x13
     { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x14
     { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x15
     { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x16
-    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x17
-    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x18
-    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x19
-    { 0x00, 0x00, 0x02, 0x00, 0x0000 }, // 0x1a
-    { 0x00, 0x00, 0x02, 0x00, 0x0000 }, // 0x1b
-    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x1c
+    { 0x00, 0x00, 0x04, 0x00, 0x0000 }, // 0x17-
+    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x18-
+    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x19-
+    { 0x00, 0x00, 0x02, 0x00, 0x0000 }, // 0x1a-
+    { 0x00, 0x00, 0x02, 0x00, 0x0000 }, // 0x1b-
+    { 0x00, 0x00, 0x01, 0x00, 0x0000 }, // 0x1c-
     { 0x00, 0x00, 0xFF, 0x00, 0xAEF4 }, // 0x1d
     { 0x00, 0x00, 0xFF, 0x00, 0xAEF4 }, // 0x1e
     { 0x00, 0x00, 0xFF, 0x00, 0xAEF4 }, // 0x1f
@@ -3126,7 +3129,8 @@ void Func0x1f05()//Offset 0x1f05
     //     mov       dl, VGA_SequenceIndex_lowbyte;Port 0x3c4
     //     mov       ax, VGA_SEQIdx_MapMask OR ((VGA_SEQ2_Mask0 OR VGA_SEQ2_Mask1) SHL 8);0x302
     //     out       dx, ax
-    VGA::Sequencer::EnableWritePlane::Write(VGA::Sequencer::EnableWritePlane::Plane2);
+    VGA::Sequencer::EnableWritePlane::Write(VGA::Sequencer::EnableWritePlane::Plane1 |
+                                            VGA::Sequencer::EnableWritePlane::Plane2);
 
     //     mov       ax, VGA_SEQIdx_MemoryMode OR (VGA_SEQ4_MemSize256k SHL 8);0x204
     //     out       dx, ax
@@ -4321,13 +4325,63 @@ void ConfigureExtensionRegisters(Hag::System::PCI::Device_t device, ModeData* mo
 
 #ifdef MOCK
 
-int Diff(const char* name)
+uint16_t ignorePorts[] = 
+{
+    0x3CE,
+    0x3CF
+};
+
+uint16_t ignorePortsLegacy[] = 
+{
+    0x3C8,
+    0x3CE,
+    0x3CF,
+    0xD81C,
+    0xD81D,
+    0xD81E,
+    0xD81F,
+    0xD828,
+    0xD84C,
+    0xD84D,
+    0xD84E,
+    0xD84F,
+    0xD898,
+    0xD899,
+    0xD89A,
+    0xD89B,
+    0xD8E4,
+    0xD8E5,
+    0xD8E6,
+    0xD8E7,
+    0xD8E8,
+    0xD8E9,
+    0xD8EA,
+    0xD8EB
+};
+
+uint32_t ignoreMemory[] =
+{
+    (0x0000 << 4) + 0x007c,
+    (0x0000 << 4) + 0x007d,
+    (0x0000 << 4) + 0x007e,
+    (0x0000 << 4) + 0x007f,
+    (0x0000 << 4) + 0x010c,
+    (0x0000 << 4) + 0x010d,
+    (0x0000 << 4) + 0x010e,
+    (0x0000 << 4) + 0x010f,
+    (0x0000 << 4) + 0x04a8,
+    (0x0000 << 4) + 0x04a9,
+    (0x0000 << 4) + 0x04aa,
+    (0x0000 << 4) + 0x04ab,
+};
+
+int Diff(const char* name, uint16_t* ignorePorts, uint16_t ignorePortsCount)
 {
     int ret = -1;
-    if (Hag::Testing::Mock::HasDifferences())
+    if (Hag::Testing::Mock::HasDifferences(ignoreMemory, sizeof(ignoreMemory) / sizeof(uint32_t)))
     {
         printf("\n%s >----------------\n", name);
-        Hag::Testing::Mock::Report();
+        Hag::Testing::Mock::Report(ignorePorts, ignorePortsCount, ignoreMemory, sizeof(ignoreMemory) / sizeof(uint32_t));
         printf("\n\n\n");
         ret = 0;
     }
@@ -5201,6 +5255,7 @@ void TDfxBansheeMockConfigSetup(Hag::IAllocator& allocator)
     Mock::AddIndexedPort("Graphics Controller", Hag::VGA::Register::GraphicsControllerIndex, 0x0f, Hag::VGA::Register::GraphicsControllerData, 0x09, TDfx_Banshee_GraphicsControllerRegisters, nullptr, TDfx_Banshee_GraphicsControllerRegisters_AndMask);
     Mock::AddIndexedPort("Sequence Controller", Hag::VGA::Register::SequencerIndex, 0x1f, Hag::VGA::Register::SequencerData, 0x05, TDfx_Banshee_SequencerControllerRegisters, nullptr, TDfx_Banshee_SequencerControllerRegisters_AndMask);
     BDA::SystemBDA().DetectedHardware = 0x26; //Hack
+    BDA::SystemBDA().VideoBaseIOPort = 0x3d4;
     BDA::SystemBDA().EGAFeatureBitSwitches = 0x09;
     BDA::SystemBDA().VideoDisplayDataArea = 0x11;
     BDA::SystemBDA().VideoModeOptions = 0x60;
@@ -5247,22 +5302,22 @@ TestMode TestModes[] =
         Hag::VGA::ModeSetting::Flags::Sequential,
         Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
-    {//6
-        Hag::VGA::VideoMode::G640x200x1bppM,
-        640,
-        200,
-        Hag::VGA::ModeSetting::BitsPerPixel::Bpp1,
-        Hag::VGA::ModeSetting::Flags::Graphics |
-        Hag::VGA::ModeSetting::Flags::Monochrome |
-        Hag::VGA::ModeSetting::Flags::Sequential,
-        Hag::VGA::ModeSetting::RefreshRate::R70Hz
-    },
     {//7
         Hag::VGA::VideoMode::T80x25x1bppM,
         80,
         25,
         Hag::VGA::ModeSetting::BitsPerPixel::Bpp1,
         Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Monochrome |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
+    },
+    {//6
+        Hag::VGA::VideoMode::G640x200x1bppM,
+        640,
+        200,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp1,
+        Hag::VGA::ModeSetting::Flags::Graphics |
         Hag::VGA::ModeSetting::Flags::Monochrome |
         Hag::VGA::ModeSetting::Flags::Sequential,
         Hag::VGA::ModeSetting::RefreshRate::R70Hz
@@ -5276,6 +5331,16 @@ TestMode TestModes[] =
         Hag::VGA::ModeSetting::Flags::Color |
         Hag::VGA::ModeSetting::Flags::Sequential,
         Hag::VGA::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//13
+        Hag::VGA::VideoMode::G320x200x8bppC,
+        320,
+        200,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
     },
     {//D
         Hag::VGA::VideoMode::G320x200x4bppC,
@@ -5337,16 +5402,341 @@ TestMode TestModes[] =
         Hag::VGA::ModeSetting::Flags::Planar,
         Hag::VGA::ModeSetting::RefreshRate::R60Hz
     },
-    {//13
-        Hag::VGA::VideoMode::G320x200x8bppC,
+    {//100
+        Hag::Vesa::VideoMode::G640x400x8bpp,
+        640,
+        400,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz
+    },
+    {//101
+        Hag::Vesa::VideoMode::G640x480x8bpp,
+        640,
+        480,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//102
+        Hag::Vesa::VideoMode::G800x600x4bpp,
+        800,
+        600,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Planar,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//103
+        Hag::Vesa::VideoMode::G800x600x8bpp,
+        800,
+        600,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//105
+        Hag::Vesa::VideoMode::G1024x768x8bpp,
+        1024,
+        768,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//107
+        Hag::Vesa::VideoMode::G1280x1024x8bpp,
+        1280,
+        1024,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//108
+        Hag::Vesa::VideoMode::T80x60x4bpp,
+        80,
+        60,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz
+    },
+    {//109
+        Hag::Vesa::VideoMode::T132x25x4bpp,
+        132,
+        25,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//10A
+        Hag::Vesa::VideoMode::T132x43x4bpp,
+        132,
+        43,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//10B
+        Hag::Vesa::VideoMode::T132x50x4bpp,
+        132,
+        50,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
+    },
+    {//10C
+        Hag::Vesa::VideoMode::T132x60x4bpp,
+        132,
+        60,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp4,
+        Hag::VGA::ModeSetting::Flags::Text |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//111
+        Hag::Vesa::VideoMode::G640x480x16bpp,
+        640,
+        480,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//112
+        Hag::Vesa::VideoMode::G640x480x32bpp,
+        640,
+        480,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//114
+        Hag::Vesa::VideoMode::G800x600x16bpp,
+        800,
+        600,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//115
+        Hag::Vesa::VideoMode::G800x600x32bpp,
+        800,
+        600,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//117
+        Hag::Vesa::VideoMode::G1024x768x16bpp,
+        1024,
+        768,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//118
+        Hag::Vesa::VideoMode::G1024x768x32bpp,
+        1024,
+        768,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//11A
+        Hag::Vesa::VideoMode::G1280x1024x16bpp,
+        1280,
+        1024,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//11B
+        Hag::Vesa::VideoMode::G1280x1024x32bpp,
+        1280,
+        1024,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer |
+        Hag::VGA::ModeSetting::Flags::Sequential,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    {//180
+        0x78,
         320,
         200,
         Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
         Hag::VGA::ModeSetting::Flags::Graphics |
         Hag::VGA::ModeSetting::Flags::Color |
-        Hag::VGA::ModeSetting::Flags::Sequential,
-        Hag::VGA::ModeSetting::RefreshRate::R70Hz
-    }
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
+    },
+    { // Mode 181 parameter: 0x22
+        0x20,
+        320,
+        240,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 184 parameter: 0x23
+        0x23,
+        400,
+        300,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 187 parameter: 0x24
+        0x26,
+        512,
+        384,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp8,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 10E parameter: 0x21
+        0x79,//Hag::Vesa::VideoMode::G320x200x16bpp
+        320,
+        200,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
+    },
+    { // Mode 10F parameter: 0x21
+        0x7A,//Hag::Vesa::VideoMode::G320x200x32bpp
+        320,
+        200,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R70Hz,
+    },
+    { // Mode 182 parameter: 0x22
+        0x21,
+        320,
+        240,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 183 parameter: 0x22
+        0x22,
+        320,
+        240,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 185 parameter: 0x23
+        0x24,
+        400,
+        300,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 186 parameter: 0x23
+        0x25,
+        400,
+        300,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 188 parameter: 0x24
+        0x27,
+        512,
+        384,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp16,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
+    { // Mode 189 parameter: 0x24
+        0x28,
+        512,
+        384,
+        Hag::VGA::ModeSetting::BitsPerPixel::Bpp24,
+        Hag::VGA::ModeSetting::Flags::Graphics |
+        Hag::VGA::ModeSetting::Flags::Color |
+        Hag::VGA::ModeSetting::Flags::Sequential |
+        Hag::VGA::ModeSetting::Flags::LinearFramebuffer,
+        Hag::VGA::ModeSetting::RefreshRate::R60Hz,
+    },
 };
 
 Support::Device PCIDevices[] =
@@ -5488,7 +5878,36 @@ void BansheeDump(FILE* fptext, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
     }
 }
 
-//uint8_t GetVideoParameterTableIndex(Hag::VGA::VideoMode_t mode)//Offset 0x35d4
+uint8_t GetCorrectTableIndex(Hag::VGA::VideoMode_t mode)
+{
+    using namespace Hag;
+    using namespace Hag::System;
+    Hag::VGA::VideoMode_t originalMode = mode;
+
+    ModeData* modeData = nullptr;
+    ExtraModeData* extraModeData = nullptr;
+
+    if (mode <= VGA::VideoMode::G320x200x8bppC)
+        goto Label0x35c1;
+
+    FindModeData(mode, modeData);
+
+    extraModeData = GetExtraModeData(*modeData);
+    mode = extraModeData->Unknown3;
+
+    if (mode != 0)
+        goto Label0x35c4;
+
+    mode = originalMode;
+
+Label0x35c1:
+
+    mode = GetVideoParameterTableIndex(mode);
+
+Label0x35c4:
+
+    return mode;
+}
 
 void FindModes(Hag::VGA::VideoMode_t mode)
 {
@@ -5496,16 +5915,16 @@ void FindModes(Hag::VGA::VideoMode_t mode)
     BDA::VideoDisplayDataArea_t vdda = BDA::VideoDisplayDataArea::Get();
 
     BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode350;
-    uint8_t modeSL350 = GetVideoParameterTableIndex(mode);
+    uint8_t modeSL350 = GetCorrectTableIndex(mode);
 
     BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode200;
-    uint8_t modeSL200 = GetVideoParameterTableIndex(mode);
+    uint8_t modeSL200 = GetCorrectTableIndex(mode);
 
     BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode400;
-    uint8_t modeSL400 = GetVideoParameterTableIndex(mode);
+    uint8_t modeSL400 = GetCorrectTableIndex(mode);
 
     BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode400 | BDA::VideoDisplayDataArea::LineMode200;
-    uint8_t modeSL480 = GetVideoParameterTableIndex(mode);
+    uint8_t modeSL480 = GetCorrectTableIndex(mode);
     if ((modeSL200 == modeSL350) &&
         (modeSL200 == modeSL400) &&
         (modeSL200 == modeSL480))
@@ -5516,42 +5935,1121 @@ void FindModes(Hag::VGA::VideoMode_t mode)
     BDA::VideoDisplayDataArea::Get() = vdda;
 }
 
-Hag::Vesa::VideoMode_t vesaModes[] =
+uint32_t GetParameterIndices(Hag::VGA::VideoMode_t mode, uint16_t* parameterIndices)
 {
-    0x0100,
-    0x0101,
-    0x0102,
-    0x0103,
-    0x0105,
-    0x0107,
-    0x0108,
-    0x0109,
-    0x010A,
-    0x010B,
-    0x010C,
-    0x0180,
-    0x0181,
-    0x0184,
-    0x0187,
-    0x010E,
-    0x010F,
-    0x0182,
-    0x0183,
-    0x0185,
-    0x0186,
-    0x0188,
-    0x0189,
-    0x018A,
-    0x018B,
-    0x0111,
-    0x0112,
-    0x0114,
-    0x0115,
-    0x0117,
-    0x0118,
-    0x011A,
-    0x011B
+    using namespace Hag;
+    using namespace Hag::System;
+
+    uint32_t ret = 1;
+    BDA::VideoDisplayDataArea_t vdda = BDA::VideoDisplayDataArea::Get();
+
+    parameterIndices[0] =
+    parameterIndices[1] =
+    parameterIndices[2] =
+    parameterIndices[3] = 0xFFFF;
+
+    BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode350;
+    uint8_t modeSL350 = GetCorrectTableIndex(mode);
+
+    BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode200;
+    uint8_t modeSL200 = GetCorrectTableIndex(mode);
+
+    BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode400;
+    uint8_t modeSL400 = GetCorrectTableIndex(mode);
+
+    BDA::VideoDisplayDataArea::Get() = BDA::VideoDisplayDataArea::LineMode400 | BDA::VideoDisplayDataArea::LineMode200;
+    uint8_t modeSL480 = GetCorrectTableIndex(mode);
+
+
+    if (((modeSL200 == modeSL350) &&
+        (modeSL200 == modeSL400) &&
+        (modeSL200 == modeSL480)))
+    {
+        parameterIndices[0] = modeSL200;
+    }
+    else
+    {
+        parameterIndices[0] = modeSL200;
+        parameterIndices[1] = modeSL350;
+        parameterIndices[2] = modeSL400;
+        parameterIndices[3] = modeSL480;
+        ret = 4;
+    }
+
+    BDA::VideoDisplayDataArea::Get() = vdda;
+
+    return ret;
+}
+
+typedef std::string String_t;
+typedef std::vector<std::string> StringVector_t;
+
+StringVector_t s_HorizontalTimings;
+StringVector_t s_HorizontalTimingNames;
+
+uint8_t CharacterClockInPixels(Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    //Dot clock select bit is in bit 0.
+    uint8_t dotClockSelect = table.SequencerRegisters[VGA::Sequencer::Register::ClockingMode - 1] & VGA::Sequencer::ClockingMode::DotClockSelect;
+    //dotClockSelect == 0 -> 9 pixels, 1 -> 8 pixels.
+    return dotClockSelect == 0 ? 9 : 8;
+}
+
+uint32_t HorizontalDisplayEnableEndChars(Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    return table.CRTCRegisters[VGA::CRTController::Register::HorizontalDisplayEnd] + 1;
+}
+
+uint32_t HorizontalDisplayEnableEndPixels(Hag::System::BDA::VideoParameterTable& table)
+{
+    return HorizontalDisplayEnableEndChars(table) * CharacterClockInPixels(table);
+}
+
+bool IsExtendedMode(ModeData& modeData)
+{
+    return modeData.VesaMode >= 0x100;
+}
+
+uint8_t ScanlineDouble(Hag::System::BDA::VideoParameterTable& table)//Returns 0 if no doubling, 1 if there is.
+{
+    using namespace Hag;
+    return (table.CRTCRegisters[VGA::CRTController::Register::CRTCModeControl] & VGA::CRTController::CRTCModeControl::VerticalTotalDouble) >> 2;
+}
+
+uint32_t VerticalDisplayEnableEndLines(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+
+    uint32_t verticalDisplayEnd = table.CRTCRegisters[VGA::CRTController::Register::VerticalDisplayEnd];
+    //Extension bit 8 is in bit 1.
+    uint32_t verticalDisplayEndBit8 = table.CRTCRegisters[VGA::CRTController::Register::CRTCOverflow] & VGA::CRTController::CRTCOverflow::VerticalDisplayEndHigh1;
+    //Move to bit 8.
+    verticalDisplayEndBit8 <<= 7;
+    //Move bit in to place.
+    verticalDisplayEnd |= verticalDisplayEndBit8;
+    //Extension bit 9 is in bit 6.
+    uint32_t verticalDisplayEndBit9 = table.CRTCRegisters[VGA::CRTController::Register::CRTCOverflow] & VGA::CRTController::CRTCOverflow::VerticalDisplayEndHigh2;
+    //Move to bit 9.
+    verticalDisplayEndBit9 <<= 3;
+    //Move bit in to place.
+    verticalDisplayEnd |= verticalDisplayEndBit9;
+    if (IsExtendedMode(modeData))
+    {
+        ExtraModeData& extraModeData = *GetExtraModeData(modeData);
+        //Extension bit 10 is in bit 2.
+        uint32_t verticalDisplayEndBit10 = extraModeData.VerticalExtension & Shared::CRTController::VerticalExtension::VerticalDisplayEnableEnd10;
+        //Move to bit 10.
+        verticalDisplayEndBit10 <<= 8;
+        //Move bit in to place.
+        verticalDisplayEnd |= verticalDisplayEndBit10;
+    }
+    return (verticalDisplayEnd + 1) << ScanlineDouble(table);
+}
+
+String_t GenerateHorizontalName(uint16_t count, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+
+    char buf[20];
+    if (table.AttributeControllerRegisters[VGA::AttributeController::Register::AttributeMode] & 
+        VGA::AttributeController::AttributeMode::SelectGraphicsMode)
+    {
+        uint32_t width = HorizontalDisplayEnableEndPixels(table);
+        sprintf(buf, "H%02upix%lu", count, width);
+    }
+    else
+    {
+        uint32_t width = HorizontalDisplayEnableEndChars(table);
+        sprintf(buf, "H%02uchar%lu", count, width);
+    }
+    return String_t(buf);
+}
+
+String_t GenerateVerticalName(uint16_t count, ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    char buf[20];
+    if (table.AttributeControllerRegisters[VGA::AttributeController::Register::AttributeMode] & 
+        VGA::AttributeController::AttributeMode::SelectGraphicsMode)
+    {
+        uint32_t height = VerticalDisplayEnableEndLines(modeData, table);
+        sprintf(buf, "V%02uline%lu", count, height);
+    }
+    else
+    {
+        uint16_t charHeight = table.CRTCRegisters[VGA::CRTController::Register::MaximumScanLine] & VGA::CRTController::MaximumScanLine::MaximumScanLineCount;
+        uint32_t height = VerticalDisplayEnableEndLines(modeData, table) / (charHeight + 1);
+        sprintf(buf, "V%02uchar%lu", count, height);
+    }
+    return String_t(buf);
+}
+String_t GenerateGraphicName(uint16_t count)
+{
+    char buf[10];
+
+    sprintf(buf, "G%02u", count);
+
+    return String_t(buf);
+}
+
+String_t GenerateConfigurationName(uint16_t count)
+{
+    char buf[10];
+
+    sprintf(buf, "C%02u", count);
+
+    return String_t(buf);
+}
+
+String_t GenerateAttributeName(uint16_t count)
+{
+    char buf[10];
+
+    sprintf(buf, "A%02u", count);
+
+    return String_t(buf);
+}
+
+String_t GenerateFontConfigName(uint16_t count)
+{
+    char buf[10];
+
+    sprintf(buf, "F%02u", count);
+
+    return String_t(buf);
+}
+
+String_t GenerateParameterName(uint16_t count)
+{
+    char buf[10];
+
+    sprintf(buf, "P%02u", count);
+
+    return String_t(buf);
+}
+
+String_t GenerateParameterArrayName(uint16_t count)
+{
+    char buf[10];
+
+    sprintf(buf, "PA%02u", count);
+
+    return String_t(buf);
+}
+
+String_t GenerateResolutionName(uint16_t count, ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    char buf[20];
+    if (table.AttributeControllerRegisters[VGA::AttributeController::Register::AttributeMode] & 
+        VGA::AttributeController::AttributeMode::SelectGraphicsMode)
+    {
+        uint32_t width = HorizontalDisplayEnableEndPixels(table);
+        uint32_t height = VerticalDisplayEnableEndLines(modeData, table);
+        sprintf(buf, "T%02upix%lux%lu", count, width, height);
+    }
+    else
+    {
+        uint32_t width = HorizontalDisplayEnableEndChars(table);
+        uint16_t charHeight = table.CRTCRegisters[VGA::CRTController::Register::MaximumScanLine] & VGA::CRTController::MaximumScanLine::MaximumScanLineCount;
+        uint32_t height = VerticalDisplayEnableEndLines(modeData, table) / (charHeight + 1);
+        sprintf(buf, "T%02uchar%lux%lu", count, width, height);
+    }
+
+    return String_t(buf);
+}
+
+uint16_t PrintHorizontalTimings(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table, const char* name)
+{
+    char buf[100];
+    sprintf(buf, "{ 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X }",
+        table.CRTCRegisters[0x00],
+        table.CRTCRegisters[0x01],
+        table.CRTCRegisters[0x02],
+        table.CRTCRegisters[0x03] | 0x80,
+        table.CRTCRegisters[0x04],
+        table.CRTCRegisters[0x05]);
+
+    for (uint16_t idx = 0; idx < s_HorizontalTimings.size(); ++idx)
+    {
+        if (s_HorizontalTimings[idx] == buf)
+            return idx;
+    }
+
+    s_HorizontalTimings.push_back(buf);
+    s_HorizontalTimingNames.push_back(GenerateHorizontalName(s_HorizontalTimingNames.size(), table));
+
+    return s_HorizontalTimings.size() - 1;
+}
+
+StringVector_t s_VerticalTimings;
+StringVector_t s_VerticalTimingNames;
+
+uint16_t PrintVerticalTimings(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table, const char* name)
+{
+    using namespace Hag;
+    char buf[100];
+    sprintf(buf, "{ 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X }",
+        table.CRTCRegisters[0x06],
+        table.CRTCRegisters[0x07],
+        table.CRTCRegisters[0x09] & VGA::CRTController::MaximumScanLine::StartVerticalBlankHigh,
+        table.CRTCRegisters[0x10],
+        table.CRTCRegisters[0x11] & VGA::CRTController::VerticalRetraceEnd::VerticalRetraceEndCount,
+        table.CRTCRegisters[0x12],
+        table.CRTCRegisters[0x15],
+        table.CRTCRegisters[0x16]);
+
+    for (uint16_t idx = 0; idx < s_VerticalTimings.size(); ++idx)
+    {
+        if (s_VerticalTimings[idx] == buf)
+            return idx;
+    }
+
+    s_VerticalTimings.push_back(buf);
+    s_VerticalTimingNames.push_back(GenerateVerticalName(s_VerticalTimingNames.size(), modeData, table));
+
+    return s_VerticalTimings.size() - 1;
+}
+
+StringVector_t s_ResolutionTimings;
+StringVector_t s_ResolutionTimingNames;
+
+uint16_t PrintResolutionTimings(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table, const char* name, uint16_t horNameIdx, uint16_t verNameIdx)
+{
+    using namespace Hag;
+
+    char buf[150];
+
+    ExtraModeData& extraModeData = *GetExtraModeData(modeData);
+
+    uint8_t config = extraModeData.Unknown0 & 0x07;
+
+    sprintf(buf, "{ %s, %s, 0x%02X, 0x%02X, 0x%04X, 0x%02X, 0x%02X, 0x%02X }",
+        s_HorizontalTimingNames[horNameIdx].c_str(),
+        s_VerticalTimingNames[verNameIdx].c_str(),
+        table.MiscellaneousOutputRegister & (VGA::MiscellaneousOutput::SelectNegativeHorizontalSyncPulse | VGA::MiscellaneousOutput::SelectNegativeVerticalSyncPulse),
+        table.CRTCRegisters[0x09] & VGA::CRTController::MaximumScanLine::DoubleScan,
+        uint16_t(extraModeData.PLLControl0),
+        config,
+        0,//Horizontal extension...
+        extraModeData.VerticalExtension);
+
+    for (uint16_t idx = 0; idx < s_ResolutionTimings.size(); ++idx)
+    {
+        if (s_ResolutionTimings[idx] == buf)
+            return idx;
+    }
+
+    s_ResolutionTimings.push_back(buf);
+    s_ResolutionTimingNames.push_back(GenerateResolutionName(s_ResolutionTimings.size(), modeData, table));
+
+    return s_ResolutionTimings.size() - 1;
+}
+
+StringVector_t s_Graphics;
+StringVector_t s_GraphicNames;
+
+uint16_t PrintGraphicsData(Hag::System::BDA::VideoParameterTable& table, const char* name)
+{
+    char buf[100];
+    sprintf(buf, "{ 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X }",
+        table.GraphicsControllerRegisters[0x00],
+        table.GraphicsControllerRegisters[0x01],
+        table.GraphicsControllerRegisters[0x02],
+        table.GraphicsControllerRegisters[0x03],
+        table.GraphicsControllerRegisters[0x04],
+        table.GraphicsControllerRegisters[0x05],
+        table.GraphicsControllerRegisters[0x06],
+        table.GraphicsControllerRegisters[0x07],
+        table.GraphicsControllerRegisters[0x08]);
+
+    for (uint16_t idx = 0; idx < s_Graphics.size(); ++idx)
+    {
+        if (s_Graphics[idx] == buf)
+            return idx;
+    }
+
+    s_Graphics.push_back(buf);
+    s_GraphicNames.push_back(GenerateGraphicName(s_GraphicNames.size()));
+
+    return s_Graphics.size() - 1;
+}
+
+StringVector_t s_Configurations;
+StringVector_t s_ConfigurationNames;
+
+uint16_t PrintConfiguration(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table, const char* name, uint16_t gfxNameIdx)
+{
+    using namespace Hag;
+
+    char buf[200];
+
+    sprintf(buf, "{ 0x%02X, 0x%02X, 0x%02X, 0x%04X, 0x%02X, { 0x%02X, 0x%02X, 0x%02X, 0x%02X, }, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, %s, 0x%02X, 0x%02X, 0x%02X, 0x%02X }",
+        table.NumCharacterColumns,
+        table.NumScreenRowsMinus1,
+        table.CharacterMatrixHeightInPoints,
+        table.VideoBufferSize,
+        table.MiscellaneousOutputRegister & ~(VGA::MiscellaneousOutput::SelectNegativeHorizontalSyncPulse | VGA::MiscellaneousOutput::SelectNegativeVerticalSyncPulse),
+        table.SequencerRegisters[0],
+        table.SequencerRegisters[1],
+        table.SequencerRegisters[2],
+        table.SequencerRegisters[3],
+        table.CRTCRegisters[0x08],
+        table.CRTCRegisters[0x09] & VGA::CRTController::MaximumScanLine::LineCompareHigh,
+        table.CRTCRegisters[0x11] & ~VGA::CRTController::VerticalRetraceEnd::VerticalRetraceEndCount,
+        table.CRTCRegisters[0x14],
+        table.CRTCRegisters[0x17],
+        table.CRTCRegisters[0x18],
+        s_GraphicNames[gfxNameIdx].c_str(),
+        table.AttributeControllerRegisters[0x10],
+        table.AttributeControllerRegisters[0x11],
+        table.AttributeControllerRegisters[0x12],
+        table.AttributeControllerRegisters[0x13]);
+
+    for (uint16_t idx = 0; idx < s_Configurations.size(); ++idx)
+    {
+        if (s_Configurations[idx] == buf)
+            return idx;
+    }
+
+    s_Configurations.push_back(buf);
+    s_ConfigurationNames.push_back(GenerateConfigurationName(s_ConfigurationNames.size()));
+
+    return s_Configurations.size() - 1;
+}
+
+StringVector_t s_Attributes;
+StringVector_t s_AttributeNames;
+
+uint16_t PrintAttributeData(Hag::System::BDA::VideoParameterTable& table, const char* name)
+{
+    char buf[150];
+    sprintf(buf, "{ 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X }",
+        table.AttributeControllerRegisters[0x00],
+        table.AttributeControllerRegisters[0x01],
+        table.AttributeControllerRegisters[0x02],
+        table.AttributeControllerRegisters[0x03],
+        table.AttributeControllerRegisters[0x04],
+        table.AttributeControllerRegisters[0x05],
+        table.AttributeControllerRegisters[0x06],
+        table.AttributeControllerRegisters[0x07],
+        table.AttributeControllerRegisters[0x08],
+        table.AttributeControllerRegisters[0x09],
+        table.AttributeControllerRegisters[0x0A],
+        table.AttributeControllerRegisters[0x0B],
+        table.AttributeControllerRegisters[0x0C],
+        table.AttributeControllerRegisters[0x0D],
+        table.AttributeControllerRegisters[0x0E],
+        table.AttributeControllerRegisters[0x0F]);
+
+    for (uint16_t idx = 0; idx < s_Attributes.size(); ++idx)
+    {
+        if (s_Attributes[idx] == buf)
+            return idx;
+    }
+
+    s_Attributes.push_back(buf);
+    s_AttributeNames.push_back(GenerateAttributeName(s_AttributeNames.size()));
+
+    return s_Attributes.size() - 1;
+}
+
+StringVector_t s_FontConfigs;
+StringVector_t s_FontConfigNames;
+
+uint16_t PrintFontConfig(ModeData& modeData, const char* name, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+
+    uint8_t charHeight = table.CharacterMatrixHeightInPoints;
+
+    const char* fontName = "Font8x8";
+    if (charHeight > 8)
+        fontName = "Font8x14";
+    if (charHeight > 15)
+        fontName = "Font8x16";
+
+    char buf[100];
+
+    uint8_t renderHeight = table.CRTCRegisters[0x09] & VGA::CRTController::MaximumScanLine::MaximumScanLineCount;
+    uint8_t start = table.CRTCRegisters[0x0A];
+    uint8_t end = table.CRTCRegisters[0x0B];
+
+    sprintf(buf, "{ VGA::Data::%s, 0xFF, 0x%02X, 0x%02X, %s, 0x%02X, 0x%02X, 0x%02X }",
+        fontName,
+        charHeight,
+        0,
+        !Is8Dot() ? "true" : "false",
+        renderHeight,
+        start,
+        end);
+
+    for (uint16_t idx = 0; idx < s_FontConfigs.size(); ++idx)
+    {
+        if (s_FontConfigs[idx] == buf)
+            return idx;
+    }
+
+    s_FontConfigs.push_back(buf);
+    s_FontConfigNames.push_back(GenerateFontConfigName(s_FontConfigNames.size()));
+
+    return s_FontConfigs.size() - 1;
+}
+
+StringVector_t s_Parameters;
+StringVector_t s_ParameterNames;
+
+uint16_t PrintVideoParameters(const char* name, uint16_t resNameIdx, uint16_t cfgNameIdx, uint16_t atrNameIdx, uint16_t fntNameIdx)
+{
+    char buf[100];
+    sprintf(buf, "{ %s, %s, %s, %s }",
+        s_ResolutionTimingNames[resNameIdx].c_str(),
+        s_ConfigurationNames[cfgNameIdx].c_str(),
+        s_AttributeNames[atrNameIdx].c_str(),
+        s_FontConfigNames[fntNameIdx].c_str());
+
+    for (uint16_t idx = 0; idx < s_Parameters.size(); ++idx)
+    {
+        if (s_Parameters[idx] == buf)
+            return idx;
+    }
+
+    s_Parameters.push_back(buf);
+    s_ParameterNames.push_back(GenerateParameterName(s_ParameterNames.size()));
+
+    return s_Parameters.size() - 1;
+}
+
+StringVector_t s_ParameterArrays;
+StringVector_t s_ParameterArrayNames;
+
+uint16_t PrintVideoParametersArray(const char* name, bool multi, uint16_t* parameterNameIndices)
+{
+    char buf[100];
+    if (multi)
+    {
+        sprintf(buf, "{ &%s, &%s, &%s, &%s }",
+            s_ParameterNames[parameterNameIndices[0]].c_str(),
+            s_ParameterNames[parameterNameIndices[1]].c_str(),
+            s_ParameterNames[parameterNameIndices[2]].c_str(),
+            s_ParameterNames[parameterNameIndices[3]].c_str());
+    }
+    else
+    {
+        sprintf(buf, "{ &%s }",
+            s_ParameterNames[parameterNameIndices[0]].c_str());
+    }
+
+    for (uint16_t idx = 0; idx < s_ParameterArrays.size(); ++idx)
+    {
+        if (s_ParameterArrays[idx] == buf)
+            return idx;
+    }
+
+    s_ParameterArrays.push_back(buf);
+    s_ParameterArrayNames.push_back(GenerateParameterArrayName(s_ParameterArrayNames.size()));
+
+    return s_ParameterArrays.size() - 1;
+}
+
+struct ModeToName
+{
+    uint16_t mode;
+    const char* name;
 };
+
+ModeToName modeToName[] = 
+{
+    { 0x00, "T40x25x4bppG" },
+    { 0x01, "T40x25x4bppC" },
+    { 0x02, "T80x25x4bppG" },
+    { 0x03, "T80x25x4bppC" },
+    { 0x04, "G320x200x2bppC" },
+    { 0x05, "G320x200x2bppG" },
+    { 0x06, "G640x200x1bppM" },
+    { 0x07, "T80x25x1bppM" },
+    { 0x0D, "G320x200x4bppC" },
+    { 0x0E, "G640x200x4bppC" },
+    { 0x0F, "G640x350x1bppM" },
+    { 0x10, "G640x350x4bppC" },
+    { 0x11, "G640x480x1bppM" },
+    { 0x12, "G640x480x4bppC" },
+    { 0x13, "G320x200x8bppC" },
+    { 0x100, "G640x400x8bpp" },
+    { 0x101, "G640x480x8bpp" },
+    { 0x102, "G800x600x4bpp" },
+    { 0x103, "G800x600x8bpp" },
+    { 0x104, "G1024x768x4bpp" },
+    { 0x105, "G1024x768x8bpp" },
+    { 0x106, "G1280x1024x4bpp" },
+    { 0x107, "G1280x1024x8bpp" },
+    { 0x108, "T80x60x4bpp" },
+    { 0x109, "T132x25x4bpp" },
+    { 0x10A, "T132x43x4bpp" },
+    { 0x10B, "T132x50x4bpp" },
+    { 0x10C, "T132x60x4bpp" },
+    { 0x10D, "G320x200x15bpp" },
+    { 0x10E, "G320x200x16bpp" },
+    { 0x10F, "G320x200x32bpp" },
+    { 0x110, "G640x480x15bpp" },
+    { 0x111, "G640x480x16bpp" },
+    { 0x112, "G640x480x32bpp" },
+    { 0x113, "G800x600x15bpp" },
+    { 0x114, "G800x600x16bpp" },
+    { 0x115, "G800x600x32bpp" },
+    { 0x116, "G1024x768x15bpp" },
+    { 0x117, "G1024x768x16bpp" },
+    { 0x118, "G1024x768x32bpp" },
+    { 0x119, "G1280x1024x15bpp" },
+    { 0x11A, "G1280x1024x16bpp" },
+    { 0x11B, "G1280x1024x32bpp" },
+    { 0x11C, "G1600x1200x8bpp" },
+    { 0x11D, "G1600x1200x15bpp" },
+    { 0x11E, "G1600x1200x16bpp" },
+    { 0x11F, "G1600x1200x32bpp" },
+    { 0x121, "G640x400x15bpp" },
+    { 0x122, "G640x400x16bpp" },
+    { 0x124, "G640x400x32bpp" },
+    { 0x123, "G640x400x24bpp" },
+    { 0x1B3, "G512x384x32bpp" },
+    { 0x1B5, "G400x300x32bpp" },
+    { 0x1B8, "G320x240x32bpp" },
+    { 0x1D4, "G512x384x16bpp" },
+    { 0x1D6, "G400x300x16bpp" },
+    { 0x1D9, "G320x240x16bpp" },
+    { 0x1E4, "G512x384x15bpp" },
+    { 0x1E6, "G400x300x15bpp" },
+    { 0x1E9, "G320x240x15bpp" },
+    { 0x1F3, "G512x384x8bpp" },
+    { 0x1F5, "G400x300x8bpp" },
+    { 0x1F8, "G320x240x8bpp" },
+    { 0x1F9, "G320x200x8bpp" },
+};
+
+uint32_t GetFrequencyKHz(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+    uint8_t clockSelect = table.MiscellaneousOutputRegister & VGA::MiscellaneousOutput::ClockSelect;
+    if (clockSelect == VGA::MiscellaneousOutput::ClockSelect25p175MHz)
+    {
+        return 25175;
+    }
+    else if (clockSelect == VGA::MiscellaneousOutput::ClockSelect28p322MHz)
+    {
+        return 28322;
+    }
+    else
+    {
+        ExtraModeData& extraModeData = *GetExtraModeData(modeData);
+        uint8_t N = uint8_t((extraModeData.PLLControl0 & Shared::PLLControl0::NMultiplier) >> Shared::PLLControl0::Shift::NMultiplier);
+        uint8_t M = uint8_t((extraModeData.PLLControl0 & Shared::PLLControl0::MInputDivider) >> Shared::PLLControl0::Shift::MInputDivider);
+        uint8_t K = uint8_t((extraModeData.PLLControl0 & Shared::PLLControl0::KPostDivider) >> Shared::PLLControl0::Shift::KPostDivider);
+        return CalculatePLLFrequency(N, M, K) / 1000;
+    }
+}
+
+uint32_t HorizontalTotalChars(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    uint32_t horizontalTotal = table.CRTCRegisters[VGA::CRTController::Register::HorizontalTotal];
+    if (IsExtendedMode(modeData))
+    {
+        //Extension bit 8 is in bit 0.
+        uint32_t horizontalTotalBit8 = 0;
+        //Move to bit 8.
+        horizontalTotalBit8 <<= 8;
+        //Move bit in to place.
+        horizontalTotal |= horizontalTotalBit8;
+    }
+    return horizontalTotal + 5;
+}
+
+uint32_t HorizontalTotalPixels(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    return HorizontalTotalChars(modeData, table) * CharacterClockInPixels(table);
+}
+
+uint32_t VerticalTotalLines(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+
+    uint32_t verticalTotal = table.CRTCRegisters[VGA::CRTController::Register::VerticalTotal];
+    //Extension bit 8 is in bit 0.
+    uint32_t verticalTotalBit8 = table.CRTCRegisters[VGA::CRTController::Register::CRTCOverflow] & VGA::CRTController::CRTCOverflow::VerticalTotalHigh1;
+    //Move to bit 8.
+    verticalTotalBit8 <<= 8;
+    //Move bit in to place.
+    verticalTotal |= verticalTotalBit8;
+    //Extension bit 9 is in bit 5.
+    uint32_t verticalTotalBit9 = table.CRTCRegisters[VGA::CRTController::Register::CRTCOverflow] & VGA::CRTController::CRTCOverflow::VerticalTotalHigh2;
+    //Move to bit 9.
+    verticalTotalBit9 <<= 4;
+    //Move bit in to place.
+    verticalTotal |= verticalTotalBit9;
+    if (IsExtendedMode(modeData))
+    {
+        ExtraModeData& extraModeData = *GetExtraModeData(modeData);
+
+        //Extension bit 10 is in bit 0.
+        uint32_t verticalTotalBit10 = extraModeData.VerticalExtension & Shared::CRTController::VerticalExtension::VerticalTotal10;
+        //Move to bit 10.
+        verticalTotalBit10 <<= 10;
+        //Move bit in to place.
+        verticalTotal |= verticalTotalBit10;
+    }
+    return (verticalTotal + 2) << ScanlineDouble(table);
+}
+
+float RefreshRateHz(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table)
+{
+    uint32_t horizontalTotalPixels = HorizontalTotalPixels(modeData, table);
+    uint32_t verticalTotalLines = VerticalTotalLines(modeData, table);
+    float refreshRate = (float(GetFrequencyKHz(modeData, table)) / (horizontalTotalPixels * verticalTotalLines)) * 1000.0f;
+
+    return refreshRate;
+}
+
+uint16_t GetSegment(ModeData& modeData)//Offset 0x3740
+{
+    switch (modeData.Flags)
+    {
+    case 0x00:
+    case 0x02:
+        return 0xb800;
+    case 0x01:
+        return 0xb000;
+    default:
+        return 0xa000;
+    }
+}
+
+void PrintDescriptor2(ModeData& modeData, Hag::System::BDA::VideoParameterTable& table, const char* name, const char* parameterArrayName)
+{
+    using namespace Hag;
+
+    uint16_t bpp = modeData.BitsPerPixel;
+    if (bpp == 0)
+        bpp = 1;
+    if (modeData.LegacyMode == 0x0F)
+        bpp = 2;
+    bool text = ((table.AttributeControllerRegisters[VGA::AttributeController::Register::AttributeMode] &
+        VGA::AttributeController::AttributeMode::SelectGraphicsMode) == 0) && (modeData.Width < 200);
+    bool color = (table.AttributeControllerRegisters[VGA::AttributeController::Register::AttributeMode] &
+        VGA::AttributeController::AttributeMode::SelectMonochromeAttributes) == 0;
+        // Modes: 0x0F, 0x0D, 0x0E, 0x10, 0x12, (Y, X)
+        //        0x0102 0x0108 0x0109 0x010A 0x010B 0x010C
+    bool sequential = (modeData.LegacyMode != 0x0F) &&
+                      (modeData.LegacyMode != 0x0D) &&
+                      (modeData.LegacyMode != 0x0E) &&
+                      (modeData.LegacyMode != 0x10) &&
+                      (modeData.LegacyMode != 0x12) &&
+                      (modeData.VesaMode != 0x102) &&
+                      (modeData.VesaMode != 0x108) &&
+                      (modeData.VesaMode != 0x109) &&
+                      (modeData.VesaMode != 0x10A) &&
+                      (modeData.VesaMode != 0x10B) &&
+                      (modeData.VesaMode != 0x10C);
+    bool linearFrameBuffer = (modeData.VesaMode >= 0x100) &&
+                             (modeData.VesaMode != 0x102) &&
+                             (modeData.VesaMode != 0x108) &&
+                             (modeData.VesaMode != 0x109) &&
+                             (modeData.VesaMode != 0x10A) &&
+                             (modeData.VesaMode != 0x10B) &&
+                             (modeData.VesaMode != 0x10C);
+
+    uint16_t parameterIndices[4] = {0,0,0,0};
+    uint16_t parametercount = GetParameterIndices(modeData.LegacyMode, parameterIndices);
+    float refreshFreq = RefreshRateHz(modeData, table);
+    uint16_t refreshRate = uint16_t(refreshFreq + 0.5f);
+    if (refreshRate == 59)
+        refreshRate = 60;
+    if (refreshRate == 71)
+        refreshRate = 72;
+
+    static uint8_t CRTControlRegValues[]=
+    {
+        0x2C,
+        0x28,
+        0x2D,
+        0x29,
+        0x2A,
+        0x2E,
+        0x1E,
+        0x29
+    };
+
+    uint8_t crtModeControlRegValue = 0xFF;
+    uint8_t cgaColorPaletteMaskSetting = 0xFF;
+    if (modeData.LegacyMode <= VGA::VideoMode::T80x25x1bppM)
+    {
+        crtModeControlRegValue = CRTControlRegValues[modeData.LegacyMode];
+        cgaColorPaletteMaskSetting = 0x3f;
+
+        if (modeData.LegacyMode != VGA::VideoMode::G640x200x1bppM)
+            cgaColorPaletteMaskSetting = 0x30;
+    }
+    char params[75];
+    if (parametercount == 1)
+        sprintf(params, "parameter: 0x%02X", parameterIndices[0]);
+    else
+        sprintf(params, "parameter: 0x%02X, 0x%02X, 0x%02X, 0x%02X", parameterIndices[0], parameterIndices[1], parameterIndices[2], parameterIndices[3]);
+
+    printf("    { // Mode %s %s\n", name, params);
+    printf("        %i,\n", modeData.Width);
+    printf("        %i,\n", modeData.Height);
+    printf("        VGA::ModeSetting::BitsPerPixel::Bpp%i,\n", modeData.BitsPerPixel);
+    printf("        ");
+    printf(text ? "VGA::ModeSetting::Flags::Text | " : "VGA::ModeSetting::Flags::Graphics | ");
+    printf(color ? "VGA::ModeSetting::Flags::Color | " : "VGA::ModeSetting::Flags::Monochrome | ");
+    printf(sequential ? "VGA::ModeSetting::Flags::Sequential | " : "VGA::ModeSetting::Flags::Planar | ");
+    printf(linearFrameBuffer ? "VGA::ModeSetting::Flags::LinearFramebuffer | " : "");
+    printf((parametercount == 1) ? "VGA::ModeSetting::Flags::SingleParameter" : "VGA::ModeSetting::Flags::MultiParameter");
+    if (modeData.VesaMode >= 0x100) printf(" | Function::ModeSetting::Flags::TDfx,\n"); else printf(",\n");
+    printf("        VGA::ModeSetting::RefreshRate::R%iHz,\n", refreshRate);
+    printf("        ");
+    bool videoModeFound = false;
+    for (uint32_t i = 0; i < sizeof(modeToName) / sizeof(ModeToName); ++i)
+    {
+        if (modeData.VesaMode == modeToName[i].mode)
+        {
+            videoModeFound = true;
+            if (modeData.VesaMode < 0x100)
+            {
+                printf("Hag::VGA::VideoMode::%s,\n", modeToName[i].name);
+            }
+            else
+            {
+                printf("0x%02X,//Hag::Vesa::VideoMode::%s\n", modeData.LegacyMode, modeToName[i].name);
+            }
+
+            break;
+        }
+    }
+
+    if (!videoModeFound)
+    {
+        printf("0x%02X,\n", modeData.LegacyMode);
+    }
+
+    printf("        0x%04X,\n", GetSegment(modeData));
+
+    if (color)
+    {
+        printf("        VGA::Register::CRTControllerIndexD,\n");
+    }
+    else
+    {
+        printf("        VGA::Register::CRTControllerIndexB,\n");
+    }
+
+    if (color)
+    {
+        printf("        Hag::System::BDA::DetectedHardware::Color80x25,\n");
+    }
+    else
+    {
+        printf("        Hag::System::BDA::DetectedHardware::Monochrome80x25,\n");
+    }
+    uint16_t sl = (parametercount == 1) ? 0 : VerticalDisplayEnableEndLines(modeData, table) >> ScanlineDouble(table);
+    switch(sl)
+    {
+    case 200:
+        printf("        VGA::ModeSetting::Scanlines::S200,\n");
+        break;
+    case 350:
+        printf("        VGA::ModeSetting::Scanlines::S350,\n");
+        break;
+    case 400:
+        printf("        VGA::ModeSetting::Scanlines::S400,\n");
+        break;
+    case 480:
+        printf("        VGA::ModeSetting::Scanlines::S480,\n");
+        break;
+    default:
+        printf("        VGA::ModeSetting::Scanlines::Invalid,\n");
+        break;
+    }
+
+    if (crtModeControlRegValue == 0xFF)
+    {
+        printf("        0xFF");
+    }
+    else
+    {
+        bool firstPrinted = false;
+        printf("        ");
+        if ((crtModeControlRegValue & Hag::System::BDA::CRTModeControlRegValue::Mode2Or3Text) != 0)
+        {
+            printf("Hag::System::BDA::CRTModeControlRegValue::Mode2Or3Text");
+            firstPrinted = true;
+        }
+        if ((crtModeControlRegValue & Hag::System::BDA::CRTModeControlRegValue::Mode4Or5Graphics) != 0)
+        {
+            if (firstPrinted)
+            {
+                printf(" | ");
+            }
+            printf("Hag::System::BDA::CRTModeControlRegValue::Mode4Or5Graphics");
+            firstPrinted = true;
+        }
+        if ((crtModeControlRegValue & Hag::System::BDA::CRTModeControlRegValue::Monochrome) != 0)
+        {
+            if (firstPrinted)
+            {
+                printf(" | ");
+            }
+            printf("Hag::System::BDA::CRTModeControlRegValue::Monochrome");
+            firstPrinted = true;
+        }
+        if ((crtModeControlRegValue & Hag::System::BDA::CRTModeControlRegValue::VideoEnabled) != 0)
+        {
+            if (firstPrinted)
+            {
+                printf(" | ");
+            }
+            printf("Hag::System::BDA::CRTModeControlRegValue::VideoEnabled");
+            firstPrinted = true;
+        }
+        if ((crtModeControlRegValue & Hag::System::BDA::CRTModeControlRegValue::GraphicsOperation) != 0)
+        {
+            if (firstPrinted)
+            {
+                printf(" | ");
+            }
+            printf("Hag::System::BDA::CRTModeControlRegValue::GraphicsOperation");
+            firstPrinted = true;
+        }
+        if ((crtModeControlRegValue & Hag::System::BDA::CRTModeControlRegValue::Blinking) != 0)
+        {
+            if (firstPrinted)
+            {
+                printf(" | ");
+            }
+            printf("Hag::System::BDA::CRTModeControlRegValue::Blinking");
+            firstPrinted = true;
+        }
+        if (!firstPrinted)
+        {
+            printf("0x00");
+        }
+    }
+    printf(",\n");
+
+    printf("        0x%02X,\n", cgaColorPaletteMaskSetting);
+
+    printf("        ");
+
+    uint16_t index = modeData.Flags;
+    if (index > 9)
+        index = 9;
+        
+    switch(index)
+    {
+    case 0:         // Text 4bpp    EGA
+        printf("VGA::Data::EGAPair,\n");
+        break;
+    case 1:         // hercules
+        printf("VGA::Data::HerculesPair,\n");
+        break;
+    case 2:         // CGA
+        printf("VGA::Data::CGAPair,\n");
+        break;
+    case 3:         // hercules
+        printf("VGA::Data::HerculesPair,\n");
+        break;
+    case 4:         // EGA
+        printf("VGA::Data::EGAPair,\n");
+        break;
+    case 5:         // Graphics 4bpp    CGA
+        printf("VGA::Data::CGAPair,\n");
+        break;
+    case 6:         // Graphics 8bpp    MCGA
+        printf("VGA::Data::MCGAPairs,\n");
+        break;
+    default:
+        printf("nullptr,\n");
+        break;
+    }
+    printf("        %s,\n", parameterArrayName);
+    printf("        0x%02X\n", table.CRTCRegisters[VGA::CRTController::Register::ScreenOffset]);
+    printf("    },\n");
+}
+
+void PrintNewModeSettings()
+{
+    using namespace Hag::System;
+
+    char name[100];
+    char subname[50];
+    std::vector<uint16_t> parameterArrayNameIndices;
+
+    for (uint32_t i = 0; i < sizeof(s_ModeData) / sizeof(ModeData); ++i)
+    {
+        ModeData& mode = s_ModeData[i];
+
+        uint16_t parameterIndices[4] = {0,0,0,0};
+        uint32_t loopCount = GetParameterIndices(mode.LegacyMode, parameterIndices);
+
+        uint16_t parameterNameIndices[4] = {0,0,0,0};
+        for (uint32_t tableIdx = 0; tableIdx < loopCount; ++tableIdx)
+        {
+            if (parameterIndices[tableIdx] >= (sizeof(s_VideoParameters) / sizeof(Hag::System::BDA::VideoParameterTable)))
+                printf("OUT OF BOUNDS: 0x%04X\n", parameterIndices[tableIdx]);
+            BDA::VideoParameterTable& table = s_VideoParameters[parameterIndices[tableIdx]];
+
+            sprintf(subname, "%X", mode.VesaMode);
+
+            if (loopCount > 1)
+            {
+                const char* sl = "200";
+                if (tableIdx == 1)
+                    sl = "350";
+                if (tableIdx == 2)
+                    sl = "400";
+                if (tableIdx == 3)
+                    sl = "480";
+                
+                sprintf(name, "Mode%sSL%s", subname, sl);
+            }
+            else
+            {
+                sprintf(name, "Mode%s", subname);
+            }
+            uint16_t horNameIdx = PrintHorizontalTimings(mode, table, name);
+            uint16_t verNameIdx = PrintVerticalTimings(mode, table, name);
+            uint16_t resNameIdx = PrintResolutionTimings(mode, table, name, horNameIdx, verNameIdx);
+            uint16_t gfxNameIdx = PrintGraphicsData(table, name);
+            uint16_t cfgNameIdx = PrintConfiguration(mode, table, name, gfxNameIdx);
+            uint16_t atrNameIdx = PrintAttributeData(table, name);
+            uint16_t fntNameIdx = PrintFontConfig(mode, name, table);
+            uint16_t parNameIdx = PrintVideoParameters(name, resNameIdx, cfgNameIdx, atrNameIdx, fntNameIdx);
+            parameterNameIndices[tableIdx] = parNameIdx;
+            sprintf(name, "Mode%s", subname);
+        }
+        parameterArrayNameIndices.push_back(PrintVideoParametersArray(name, loopCount > 1, parameterNameIndices));
+    }
+
+    printf("\n\n\n//Horizontal timings:\n\n");
+    for (StringVector_t::iterator
+         itr = s_HorizontalTimings.begin(),
+         nitr = s_HorizontalTimingNames.begin();
+         (itr != s_HorizontalTimings.end()) &&
+         (nitr != s_HorizontalTimingNames.end());
+         ++itr, ++nitr)
+    {
+        printf("VGA::ModeSetting::HorizontalTimings %s = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Vertical timings:\n\n");
+    for (StringVector_t::iterator
+        itr = s_VerticalTimings.begin(),
+        nitr = s_VerticalTimingNames.begin();
+        (itr != s_VerticalTimings.end()) &&
+        (nitr != s_VerticalTimingNames.end());
+        ++itr, ++nitr)
+    {
+        printf("VGA::ModeSetting::VerticalTimings %s = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Resolution timings:\n\n");
+    for (StringVector_t::iterator
+        itr = s_ResolutionTimings.begin(),
+        nitr = s_ResolutionTimingNames.begin();
+        (itr != s_ResolutionTimings.end()) &&
+        (nitr != s_ResolutionTimingNames.end());
+        ++itr, ++nitr)
+    {
+        printf("Function::ModeSetting::ResolutionTimings %s = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Graphics:\n\n");
+    for (StringVector_t::iterator
+        itr = s_Graphics.begin(),
+        nitr = s_GraphicNames.begin();
+        (itr != s_Graphics.end()) &&
+        (nitr != s_GraphicNames.end());
+        ++itr, ++nitr)
+    {
+        printf("VGA::GraphicsControllerData_t %s[] = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Attributes:\n\n");
+    for (StringVector_t::iterator
+        itr = s_Attributes.begin(),
+        nitr = s_AttributeNames.begin();
+        (itr != s_Attributes.end()) &&
+        (nitr != s_AttributeNames.end());
+        ++itr, ++nitr)
+    {
+        printf("VGA::AttributeControllerData_t %s[] = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Configurations:\n\n");
+    for (StringVector_t::iterator
+        itr = s_Configurations.begin(),
+        nitr = s_ConfigurationNames.begin();
+        (itr != s_Configurations.end()) &&
+        (nitr != s_ConfigurationNames.end());
+        ++itr, ++nitr)
+    {
+        printf("VGA::ModeSetting::Configuration %s = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Font Configurations:\n\n");
+    for (StringVector_t::iterator
+        itr = s_FontConfigs.begin(),
+        nitr = s_FontConfigNames.begin();
+        (itr != s_FontConfigs.end()) &&
+        (nitr != s_FontConfigNames.end());
+        ++itr, ++nitr)
+    {
+        printf("VGA::Data::FontConfiguration %s = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Video Parameters:\n\n");
+    for (StringVector_t::iterator
+        itr = s_Parameters.begin(),
+        nitr = s_ParameterNames.begin();
+        (itr != s_Parameters.end()) &&
+        (nitr != s_ParameterNames.end());
+        ++itr, ++nitr)
+    {
+        printf("VGA::ModeSetting::VideoParameters %s = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\n//Video Parameter Arrays:\n\n");
+    for (StringVector_t::iterator
+        itr = s_ParameterArrays.begin(),
+        nitr = s_ParameterArrayNames.begin();
+        (itr != s_ParameterArrays.end()) &&
+        (nitr != s_ParameterArrayNames.end());
+        ++itr, ++nitr)
+    {
+        printf("const VGA::ModeSetting::VideoParameters* %s[] = %s;\n", nitr->c_str(), itr->c_str());
+    }
+
+    printf("\nFunction::ModeSetting::ModeDescriptor s_Descriptors[] =\n{\n");
+    for (uint32_t i = 0; i < sizeof(s_ModeData) / sizeof(ModeData); ++i)
+    {
+        ModeData& mode = s_ModeData[i];
+
+        sprintf(name, "%X", mode.VesaMode);
+            
+        uint16_t parameterIndices[4] = {0,0,0,0};
+        GetParameterIndices(mode.LegacyMode, parameterIndices);
+
+        BDA::VideoParameterTable& table = s_VideoParameters[parameterIndices[0]];
+
+        PrintDescriptor2(mode, table, name, s_ParameterArrayNames[parameterArrayNameIndices[i]].c_str());
+    }
+    printf("};\n");
+
+}
 
 int main(void)
 {
@@ -5568,108 +7066,96 @@ int main(void)
 
 #ifndef MOCK
 
-    REGS r;
-    memset(&r, 0, sizeof(r));
+    //PrintNewModeSettings();
 
-    // r.w.ax = 0x12;
-    // int86(0x10, &r, &r);
-    // VGA::Sequencer::EnableWritePlane::Write(0x0f);
-    // for (uint32_t i = 0; i < (640 * 480) / 8; ++i)
-    //     *FARPointer(uint16_t(0xa000), i).ToPointer<uint8_t>() = 0xff;
-    // Testing::TestPatterns::Draw4BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    //getchar();
-    
-    /*
-    for (uint16_t modesIdx = 0; modesIdx < sizeof(vesaModes) / sizeof(Vesa::VideoMode_t); ++modesIdx)
-    {
-        Vesa::VideoMode_t vesaMode = vesaModes[modesIdx];
-        
-        //SetSuperVGAVideoMode(vesaMode);
+    VGA::ModeSetting::Initialize(allocator);
 
-        r.w.ax = 0x03;
-        int86(0x10, &r, &r);
-        
-        r.w.ax = 0x4f02;
-        r.w.bx = vesaMode;
-        int86(0x10, &r, &r);
-
-        char name[15];
-        sprintf(name, "vesa%04X.txt", vesaMode);
-        FILE* fp = fopen(name, "w");
-        Support::PCIDump(fp, nullptr, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
-        Support::BDADump(fp, nullptr);
-        Support::VGADump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        BansheeDump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        fclose(fp);
-    }
-    */
+    Testing::TestPatterns::TestVideoModes();
 
     /*
     SetVideoMode(0x03);
-    SetVideoMode(0x07);
+    //SetVideoMode(0x07);
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Monochrome);
     Testing::TestPatterns::DrawTextPattern(80, 25, FARPointer(uint16_t(0xb000), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x01);
+    //SetVideoMode(0x01);
+    VGA::ModeSetting::SetVideoMode(40, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
     Testing::TestPatterns::DrawTextPattern(40, 25, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
     getchar();
 
-    SetVideoMode(0x03);
-    SetVideoMode(0x03);
+    SetVideoMode(0x07);
+    //SetVideoMode(0x03);
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
     Testing::TestPatterns::DrawTextPattern(80, 25, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x06);
+    //SetVideoMode(0x06);
+    VGA::ModeSetting::SetVideoMode(640, 200, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Monochrome);
     Testing::TestPatterns::Draw1BppPattern2(640, 200, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x0f);
+    //SetVideoMode(0x0f);
+    VGA::ModeSetting::SetVideoMode(640, 350, VGA::ModeSetting::BitsPerPixel::Bpp2, VGA::ModeSetting::Flags::Monochrome | VGA::ModeSetting::Flags::Planar);
     Testing::TestPatterns::Draw2BppPlanarPattern(640, 350, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
     getchar();
-
+   
     SetVideoMode(0x03);
-    SetVideoMode(0x11);
+    //SetVideoMode(0x11);
+    VGA::ModeSetting::SetVideoMode(640, 480, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Monochrome);
     Testing::TestPatterns::Draw1BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x04);
+    //SetVideoMode(0x04);
+    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp2);
     Testing::TestPatterns::Draw2BppPattern(320, 200, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x0d);
+    //SetVideoMode(0x0d);
+    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
     Testing::TestPatterns::Draw4BppPattern(320, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
     getchar();
-
+   
     SetVideoMode(0x03);
-    SetVideoMode(0x0e);
+    //SetVideoMode(0x0e);
+    VGA::ModeSetting::SetVideoMode(640, 200, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
     Testing::TestPatterns::Draw4BppPattern(640, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x10);
+    //SetVideoMode(0x10);
+    VGA::ModeSetting::SetVideoMode(640, 350, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
     Testing::TestPatterns::Draw4BppPattern(640, 350, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x12);
+    //SetVideoMode(0x12);
+    VGA::ModeSetting::SetVideoMode(640, 480, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
     Testing::TestPatterns::Draw4BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
     getchar();
 
     SetVideoMode(0x03);
-    SetVideoMode(0x13);
+    //SetVideoMode(0x13);
+    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp8);
     Testing::TestPatterns::Draw8BppPattern(320, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
     getchar();
 
+    REGS r;
+    memset(&r, 0, sizeof(r));
+
+    r.w.ax = 0x03;
+    int86(0x10, &r, &r);
+
     */
 
-    // r.w.ax = 0x03;
-    // int86(0x10, &r, &r);
+    VGA::ModeSetting::Shutdown();
 
+    /*
     Hag::System::PCI::Device_t device = 0;
     uint8_t* fb = nullptr;
     bool success = false;
@@ -5701,6 +7187,7 @@ int main(void)
     }
 
     SetVideoMode(0x03);
+    */
 
     /*
     REGS r;
@@ -5737,80 +7224,8 @@ int main(void)
 
     for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(TestMode); ++modesIdx)
     {
-        Testing::Mock::Reset();
-
-        Hag::Testing::Mock::SelectInstance(0);
-
-        ModeData* modeData = nullptr;
-        FindModeData(TestModes[modesIdx].LegacyMode, modeData);
-
-        printf("Setting video mode 0x%02X %ix%ix%i...\n", TestModes[modesIdx].LegacyMode, modeData->Width, modeData->Height, modeData->BitsPerPixel);
-        FindModes(TestModes[modesIdx].LegacyMode);
-
-        SetVideoMode(TestModes[modesIdx].LegacyMode);
-
-        bool patch = !Is8Dot();
-        uint8_t* font = nullptr;
-        uint8_t charHeight = 0;
-        GetFontAndCharHeight(font, charHeight);
-        const char* fontName = "8x8";
-        if (font == Font8x14)
-            fontName = "8x14";
-        if (font == Font8x16)
-            fontName = "8x16";
-        printf("Font: %s, char height: %i, patched: %s\n", fontName, charHeight, patch ? "yes" : "no");
-        printf("Maximum scanline: 0x%02X\n", VGA::CRTController::MaximumScanLine::Read(BDA::VideoBaseIOPort::Get()) & VGA::CRTController::MaximumScanLine::MaximumScanLineCount);
-        printf("Cursor start: 0x%02X\n", VGA::CRTController::CursorStartScanLine::Read(BDA::VideoBaseIOPort::Get()));
-        printf("Cursor end: 0x%02X\n", VGA::CRTController::CursorEndScanLine::Read(BDA::VideoBaseIOPort::Get()));
-        printf("\n");
-    }
-
-    for (uint16_t modesIdx = 0; modesIdx < sizeof(vesaModes) / sizeof(Vesa::VideoMode_t); ++modesIdx)
-    {
-        Testing::Mock::Reset();
-
-        Vesa::VideoMode_t vesaMode = vesaModes[modesIdx];
-        ModeData* modeData = nullptr;
-        FindVESAModeData(vesaMode, modeData);
+        Hag::Testing::Mock::Reset();
         
-        printf("Setting vesa mode 0x%04X: %ix%ix%ibpp...\n", vesaMode, modeData->Width, modeData->Height, modeData->BitsPerPixel);
-
-        FindModes(modeData->LegacyMode);
-
-        Hag::Testing::Mock::SelectInstance(0);
-
-        SetSuperVGAVideoMode(vesaMode);
-
-        // char name[15];
-        // sprintf(name, "vesa%04X.txt", vesaMode);
-        // FILE* fp = fopen(name, "w");
-        // Support::PCIDump(fp, nullptr, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
-        // Support::BDADump(fp, nullptr);
-        // Support::VGADump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        // BansheeDump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        // fclose(fp);
-
-        bool patch = !Is8Dot();
-        uint8_t* font = nullptr;
-        uint8_t charHeight = 0;
-        GetFontAndCharHeight(font, charHeight);
-        const char* fontName = "8x8";
-        if (font == Font8x14)
-            fontName = "8x14";
-        if (font == Font8x16)
-            fontName = "8x16";
-        printf("Font: %s, char height: %i, patched: %s\n", fontName, charHeight, patch ? "yes" : "no");
-        printf("Maximum scanline: 0x%02X\n", VGA::CRTController::MaximumScanLine::Read(BDA::VideoBaseIOPort::Get()) & VGA::CRTController::MaximumScanLine::MaximumScanLineCount);
-        printf("Cursor start: 0x%02X\n", VGA::CRTController::CursorStartScanLine::Read(BDA::VideoBaseIOPort::Get()));
-        printf("Cursor end: 0x%02X\n", VGA::CRTController::CursorEndScanLine::Read(BDA::VideoBaseIOPort::Get()));
-        printf("\n");
-    }
-
-    /*
-    for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(TestMode); ++modesIdx)
-    {
-        Testing::Mock::Reset();
-
         TestMode& testMode = TestModes[modesIdx];
         if (testMode.LegacyMode == 0xFFFF)
             continue;
@@ -5845,56 +7260,68 @@ int main(void)
             continue;
         }
 
-        Hag::Testing::Mock::SelectInstance(0);
-        printf("Setting video mode 0x%02X...\n", testMode.LegacyMode);
+        ModeData* modeData = nullptr;
+        if (testMode.LegacyMode < 0x100)
+        {
+            FindModeData(testMode.LegacyMode, modeData);
+        }
+        else
+        {
+            FindVESAModeData(testMode.LegacyMode, modeData);
+        }
 
-        VGA::DACWriteIndex::Write(0);
-        for (uint16_t i = 0; i < 256 * 3; ++i)
-            VGA::RAMDACData::Write(0);
-
-        SetVideoMode(testMode.LegacyMode);
+        uint16_t* ignore = nullptr;
+        uint16_t ignoreCount = 0;
+        if (testMode.LegacyMode < 0x14)
+        {
+            printf("Setting video mode 0x%02X %ix%ix%i...\n", testMode.LegacyMode, modeData->Width, modeData->Height, modeData->BitsPerPixel);
+            SetVideoMode(testMode.LegacyMode);
+            ignore = ignorePortsLegacy;
+            ignoreCount = sizeof(ignorePortsLegacy) / sizeof(uint16_t);
+        }
+        else
+        {
+            printf("Setting vesa mode 0x%02X %ix%ix%i...\n", testMode.LegacyMode, modeData->Width, modeData->Height, modeData->BitsPerPixel);
+            SetSuperVGAVideoMode(modeData->VesaMode);
+            ignore = ignorePorts;
+            ignoreCount = sizeof(ignorePorts) / sizeof(uint16_t);
+        }
+        //FindModes(modeData->LegacyMode);
         PIT::Sleep(1);
         memset(FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
         memset(FARPointer(uint16_t(0xb000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
 
+        // bool patch = !Is8Dot();
+        // uint8_t* font = nullptr;
+        // uint8_t charHeight = 0;
+        // GetFontAndCharHeight(font, charHeight);
+        // const char* fontName = "8x8";
+        // if (font == Font8x14)
+        //     fontName = "8x14";
+        // if (font == Font8x16)
+        //     fontName = "8x16";
+        // printf("Font: %s, char height: %i, patched: %s\n", fontName, charHeight, patch ? "yes" : "no");
+        // printf("Maximum scanline: 0x%02X\n", VGA::CRTController::MaximumScanLine::Read(BDA::VideoBaseIOPort::Get()) & VGA::CRTController::MaximumScanLine::MaximumScanLineCount);
+        // printf("Cursor start: 0x%02X\n", VGA::CRTController::CursorStartScanLine::Read(BDA::VideoBaseIOPort::Get()));
+        // printf("Cursor end: 0x%02X\n", VGA::CRTController::CursorEndScanLine::Read(BDA::VideoBaseIOPort::Get()));
+        // printf("\n");
+
         Hag::Testing::Mock::SelectInstance(1);
-
-        VGA::DACWriteIndex::Write(0);
-        for (uint16_t i = 0; i < 256 * 3; ++i)
-            VGA::RAMDACData::Write(0);
-
-        VGA::ModeSetting::SetVideoMode(
-            testMode.Width,
-            testMode.Height,
-            testMode.Bpp,
-            testMode.Flags,
-            testMode.RefreshRate);
+        VGA::ModeSetting::SetVideoMode(testMode.Width, testMode.Height, testMode.Bpp, testMode.Flags, testMode.RefreshRate);
         memset(FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
         memset(FARPointer(uint16_t(0xb000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
         GetMemorySizeIn256KBlocks();
+        TDfx::Shared::CRTController::Extension1::Write(BDA::VideoBaseIOPort::Get(), 0);
+        VGA::DACWriteIndex::Write(0);
+        BDA::EGAFeatureBitSwitches::Get();
 
-        // char name[15];
-        // sprintf(name, "vode%04X.txt", testMode.LegacyMode);
-        // FILE* fp = fopen(name, "w");
-        // Support::PCIDump(fp, nullptr, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
-        // Support::BDADump(fp, nullptr);
-        // Support::VGADump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        // BansheeDump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        // fclose(fp);
+        if (testMode.Bpp > 15)
+        {
+            Func0x1d6d(Data0x740f, 0x00, 0xf8);//0x2E8
+        }
 
-
-        //Diff("SetMode");
-
-        // char name[15];
-        // sprintf(name, "mode%04X.txt", mode);
-        // FILE* fp = fopen(name, "w");
-        // Support::PCIDump(fp, nullptr, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
-        // Support::BDADump(fp, nullptr);
-        // Support::VGADump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        // BansheeDump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        // fclose(fp);
+        Diff("SetMode", ignore, ignoreCount);
     }
-    */
 
     VGA::ModeSetting::Shutdown();
 
@@ -5903,320 +7330,3 @@ int main(void)
 	__djgpp_nearptr_disable();
     return 0;
 }
-
-/*
-Setting video mode 0x01 40x25x4...
-SL200: 0x01, SL350: 0x14, SL400: 0x17, SL480 0x01
-Font: 8x16, char height: 16, patched: yes
-Maximum scanline: 0x0F
-Cursor start: 0x0D
-Cursor end: 0x0E
-
-Setting video mode 0x03 80x25x4...
-SL200: 0x03, SL350: 0x16, SL400: 0x18, SL480 0x03
-Font: 8x16, char height: 16, patched: yes
-Maximum scanline: 0x0F
-Cursor start: 0x0D
-Cursor end: 0x0E
-
-Setting video mode 0x06 640x200x1...
-All scanlines: 0x06
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x01
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x07 80x25x0...
-SL200: 0x07, SL350: 0x07, SL400: 0x19, SL480 0x19
-Font: 8x16, char height: 16, patched: yes
-Maximum scanline: 0x0F
-Cursor start: 0x0D
-Cursor end: 0x0E
-
-Setting video mode 0x04 320x200x2...
-All scanlines: 0x04
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x01
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x0D 320x200x4...
-All scanlines: 0x0D
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x0E 640x200x4...
-All scanlines: 0x0E
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x0F 640x350x1...
-All scanlines: 0x11
-Font: 8x14, char height: 14, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x10 640x350x4...
-All scanlines: 0x12
-Font: 8x14, char height: 14, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x11 640x480x1...
-All scanlines: 0x1A
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x12 640x480x4...
-All scanlines: 0x1B
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting video mode 0x13 320x200x8...
-All scanlines: 0x1C
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x01
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0100: 640x400x8bpp...
-All scanlines: 0x08
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0101: 640x480x8bpp...
-All scanlines: 0x09
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0102: 800x600x4bpp...
-All scanlines: 0x0A
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0103: 800x600x8bpp...
-All scanlines: 0x0B
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0105: 1024x768x8bpp...
-All scanlines: 0x0F
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0107: 1280x1024x8bpp...
-All scanlines: 0x0C
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0108: 80x60x4bpp...
-All scanlines: 0x10
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x07
-Cursor start: 0x06
-Cursor end: 0x07
-
-Setting vesa mode 0x0109: 132x25x4bpp...
-All scanlines: 0x1D
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x0F
-Cursor start: 0x0D
-Cursor end: 0x0E
-
-Setting vesa mode 0x010A: 132x43x4bpp...
-All scanlines: 0x1E
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x08
-Cursor start: 0x07
-Cursor end: 0x08
-
-Setting vesa mode 0x010B: 132x50x4bpp...
-All scanlines: 0x1F
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x07
-Cursor start: 0x06
-Cursor end: 0x07
-
-Setting vesa mode 0x010C: 132x60x4bpp...
-All scanlines: 0x20
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x07
-Cursor start: 0x06
-Cursor end: 0x07
-
-Setting vesa mode 0x0180: 320x200x8bpp...
-All scanlines: 0x21
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0181: 320x240x8bpp...
-All scanlines: 0x22
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0184: 400x300x8bpp...
-All scanlines: 0x23
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0187: 512x384x8bpp...
-All scanlines: 0x24
-Font: 8x14, char height: 14, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x010E: 320x200x16bpp...
-All scanlines: 0x25
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x010F: 320x200x24bpp...
-All scanlines: 0x26
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0182: 320x240x16bpp...
-All scanlines: 0x27
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0183: 320x240x24bpp...
-All scanlines: 0x28
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0185: 400x300x16bpp...
-All scanlines: 0x29
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0186: 400x300x24bpp...
-All scanlines: 0x2A
-Font: 8x8, char height: 8, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0188: 512x384x16bpp...
-All scanlines: 0x2B
-Font: 8x14, char height: 14, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0189: 512x384x24bpp...
-All scanlines: 0x2C
-Font: 8x14, char height: 14, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x018A: 640x400x16bpp...
-All scanlines: 0x2D
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x018B: 640x400x24bpp...
-All scanlines: 0x2E
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0111: 640x480x16bpp...
-All scanlines: 0x2F
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0112: 640x480x24bpp...
-All scanlines: 0x30
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0114: 800x600x16bpp...
-All scanlines: 0x31
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0115: 800x600x24bpp...
-All scanlines: 0x32
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0117: 1024x768x16bpp...
-All scanlines: 0x33
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x0118: 1024x768x24bpp...
-All scanlines: 0x34
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x011A: 1280x1024x16bpp...
-All scanlines: 0x35
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-
-Setting vesa mode 0x011B: 1280x1024x24bpp...
-All scanlines: 0x36
-Font: 8x16, char height: 16, patched: no
-Maximum scanline: 0x00
-Cursor start: 0x00
-Cursor end: 0x00
-*/

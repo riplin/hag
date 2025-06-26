@@ -6,16 +6,6 @@
 
 //Default implementation for stock VGA modes.
 
-namespace Hag::VGA::Data
-{
-    extern ModeSetting::ModeDescriptor s_Descriptors[];
-    extern uint16_t s_NumDescriptors;
-    extern uint8_t Font8x8[];
-    extern uint16_t Font8x8Size;
-    extern uint8_t Font8x16[];
-    extern uint16_t Font8x16Size;
-}
-
 namespace Hag::VGA::ModeSetting::External
 {
 
@@ -71,8 +61,7 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
 
 void SetStartAddress(uint32_t startAddress)
 {
-    VGA::CRTController::StartAddressLow::Write(VGA::Register::CRTControllerIndexD, uint8_t(startAddress));
-    VGA::CRTController::StartAddressHigh::Write(VGA::Register::CRTControllerIndexD, uint8_t(startAddress >> 8));
+
 }
 
 void TurnMonitorOff()
@@ -93,6 +82,11 @@ void WriteExtensionRegisters(const ModeDescriptor& descriptor)
 void SetupClock(const ModeDescriptor& descriptor)
 {
 
+}
+
+void* GetLinearFrameBuffer()
+{
+    return nullptr;
 }
 
 }

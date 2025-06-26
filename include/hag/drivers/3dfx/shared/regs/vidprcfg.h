@@ -73,7 +73,32 @@ namespace VideoProcessorConfiguration
         OverlayFilterPointSample            = 0x00000000,
         OverlayFilter2x2Dither              = 0x00010000,   // 2x2 dither subtract followed by 2x2 box filter (for 3d only)
         OverlayFilter4x4Dither              = 0x00020000,   // 4x4 dither subtract followed by 4x1 tap filter (for 3d only)
-        OverlayFilterBilinearScaling        = 0x00030000
+        OverlayFilterBilinearScaling        = 0x00030000,
+        DesktopPixelFormat                  = 0x001c0000,
+        DesktopPixelFormat8BitPalettized    = 0x00000000,
+        DesktopPixelFormat565Undithered     = 0x00040000,
+        DesktopPixelFormatRGB24Packed       = 0x00080000,
+        DesktopPixelFormatRGB32             = 0x000c0000,
+        OverlayPixelFormat                  = 0x00e00000,
+        OverlayPixelFormat8BitPalettized    = 0x00000000,
+        OverlayPixelFormat565Undithered     = 0x00200000,
+        OverlayPixelFormatRGB24Packed       = 0x00400000,
+        OverlayPixelFormatRGB32             = 0x00600000,
+        DesktopMemoryLayout                 = 0x01000000,
+        DesktopMemoryLinear                 = 0x00000000,
+        DesktopMemoryTiled                  = 0x01000000,
+        OverlayMemoryLayout                 = 0002000000,
+        OverlayMemoryLinear                 = 0x00000000,
+        OverlayMemoryTiled                  = 0x02000000,
+        RefreshMode                         = 0x04000000,
+        Refresh1X                           = 0x00000000,
+        Refresh2X                           = 0x04000000,
+        HardwareCursor                      = 0x08000000,
+        HardwareCursorDisable               = 0x00000000,
+        HardwareCursorEnable                = 0x08000000,
+        BackendDeinterlacing                = 0x40000000,
+        BackendDeinterlacingDisabled        = 0x00000000,
+        BackendDeinterlacingEnabled         = 0x40000000
     };
 
     namespace Shift

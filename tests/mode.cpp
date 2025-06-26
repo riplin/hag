@@ -4015,7 +4015,7 @@ StringVector_t s_FontConfigNames;
 uint16_t PrintFontConfig(ParameterFontPair& paramFont, const char* name)
 {
     printf("FontConfiguration %sFont = { Data::%s, 0xFF, ", name,
-        (paramFont.Font == Data::Font8x8) ? "Font8x8" : "Font8x16");
+        (paramFont.Font == VGA::Data::Font8x8) ? "Font8x8" : "Font8x16");
     printf("0x%02X, ", paramFont.CharacterHeight);
     printf("0x%02X, ", paramFont.BankIndex);
     printf("%s, ", paramFont.Patch ? "true" : "false");
@@ -4026,7 +4026,7 @@ uint16_t PrintFontConfig(ParameterFontPair& paramFont, const char* name)
     char buf[100];
 
     sprintf(buf, "{ Data::%s, 0xFF, 0x%02X, 0x%02X, %s, 0x%02X, 0x%02X, 0x%02X }",
-        (paramFont.Font == Data::Font8x8) ? "Font8x8" : "Font8x16",
+        (paramFont.Font == VGA::Data::Font8x8) ? "Font8x8" : "Font8x16",
         paramFont.CharacterHeight,
         paramFont.BankIndex,
         paramFont.Patch ? "true" : "false",
