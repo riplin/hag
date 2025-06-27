@@ -3821,7 +3821,7 @@ uint32_t CalculatePLLFrequency(uint8_t N, uint8_t M, uint8_t K)//Offset 0x3ee4
     // mov    cl, bl
     // mov    bl, 01h
     // shl    bl, cl
-    //2 << K;
+    //1 << K;
     
     // mov    eax, 00da7a64h
     //14318180;
@@ -3837,7 +3837,7 @@ uint32_t CalculatePLLFrequency(uint8_t N, uint8_t M, uint8_t K)//Offset 0x3ee4
     // sub    edx, edx
     // movzx  ecx, bl
     // idiv   ecx
-    //((14318180 * (N + 2)) / (M + 2)) / (2 << K);
+    //((14318180 * (N + 2)) / (M + 2)) / (1 << K);
 
     // pop    edx
     // pop    ecx
@@ -3846,7 +3846,7 @@ uint32_t CalculatePLLFrequency(uint8_t N, uint8_t M, uint8_t K)//Offset 0x3ee4
     return uint32_t(((uint64_t(14318180) * (N + 2)) / (M + 2)) / (1 << K));
 }
 
-uint32_t Func0x3e83(uint32_t frequency)//Offset 0x3e83
+uint32_t PLLFromFrequency(uint32_t frequency)//Offset 0x3e83
 {
     REGS r;
     memset(&r, 0, sizeof(r));
@@ -3909,7 +3909,7 @@ uint32_t Func0x3e83(uint32_t frequency)//Offset 0x3e83
     if (aboveOrEqual)
         goto Label0x3eb2;
     //     neg    eax
-    r.d.eax = ~r.d.eax;
+    r.d.eax = -r.d.eax;
 
     // Label0x3eb2:                            ;Offset 0x3eb2
     Label0x3eb2:
@@ -3980,7 +3980,7 @@ uint32_t Func0x3e83(uint32_t frequency)//Offset 0x3e83
     r.h.ah = r.h.ch;
 
     //     ret
-    return r.d.eax;
+    return r.w.ax;
 }
 
 void SetAndSelectVideoPLL(uint32_t frequency)//Offset 0x3e64
@@ -3989,7 +3989,7 @@ void SetAndSelectVideoPLL(uint32_t frequency)//Offset 0x3e64
     using namespace Hag::TDfx;
     // pushad
     // call   Func0x3e83                   ;Offset 0x3e83
-    uint32_t pllControl0 = Func0x3e83(frequency);
+    uint32_t pllControl0 = PLLFromFrequency(frequency);
 
     // call   GetIOBaseAddress             ;Offset 0x3d69
     uint16_t baseAddress = GetIOBaseAddress();
@@ -7072,150 +7072,8 @@ int main(void)
 
     Testing::TestPatterns::TestVideoModes();
 
-    /*
-    SetVideoMode(0x03);
-    //SetVideoMode(0x07);
-    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Monochrome);
-    Testing::TestPatterns::DrawTextPattern(80, 25, FARPointer(uint16_t(0xb000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x01);
-    VGA::ModeSetting::SetVideoMode(40, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
-    Testing::TestPatterns::DrawTextPattern(40, 25, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x07);
-    //SetVideoMode(0x03);
-    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
-    Testing::TestPatterns::DrawTextPattern(80, 25, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x06);
-    VGA::ModeSetting::SetVideoMode(640, 200, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Monochrome);
-    Testing::TestPatterns::Draw1BppPattern2(640, 200, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x0f);
-    VGA::ModeSetting::SetVideoMode(640, 350, VGA::ModeSetting::BitsPerPixel::Bpp2, VGA::ModeSetting::Flags::Monochrome | VGA::ModeSetting::Flags::Planar);
-    Testing::TestPatterns::Draw2BppPlanarPattern(640, 350, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-   
-    SetVideoMode(0x03);
-    //SetVideoMode(0x11);
-    VGA::ModeSetting::SetVideoMode(640, 480, VGA::ModeSetting::BitsPerPixel::Bpp1, VGA::ModeSetting::Flags::Monochrome);
-    Testing::TestPatterns::Draw1BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x04);
-    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp2);
-    Testing::TestPatterns::Draw2BppPattern(320, 200, FARPointer(uint16_t(0xb800), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x0d);
-    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
-    Testing::TestPatterns::Draw4BppPattern(320, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-   
-    SetVideoMode(0x03);
-    //SetVideoMode(0x0e);
-    VGA::ModeSetting::SetVideoMode(640, 200, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
-    Testing::TestPatterns::Draw4BppPattern(640, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x10);
-    VGA::ModeSetting::SetVideoMode(640, 350, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
-    Testing::TestPatterns::Draw4BppPattern(640, 350, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x12);
-    VGA::ModeSetting::SetVideoMode(640, 480, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Planar);
-    Testing::TestPatterns::Draw4BppPattern(640, 480, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    SetVideoMode(0x03);
-    //SetVideoMode(0x13);
-    VGA::ModeSetting::SetVideoMode(320, 200, VGA::ModeSetting::BitsPerPixel::Bpp8);
-    Testing::TestPatterns::Draw8BppPattern(320, 200, FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>());
-    getchar();
-
-    REGS r;
-    memset(&r, 0, sizeof(r));
-
-    r.w.ax = 0x03;
-    int86(0x10, &r, &r);
-
-    */
-
     VGA::ModeSetting::Shutdown();
 
-    /*
-    Hag::System::PCI::Device_t device = 0;
-    uint8_t* fb = nullptr;
-    bool success = false;
-    ModeData* modeData = nullptr;
-
-    if (Hag::System::PCI::FindDevice(0x121a, 0x0003, device))
-    {
-        if (FindVESAModeData(0x0115, modeData))
-        {
-            SetSuperVGAVideoMode(0x0115);
-
-            __dpmi_meminfo mapping;
-            mapping.address = Hag::TDfx::Shared::PCI::FrameBufferBaseAddress::Read(device) &
-                              Hag::TDfx::Shared::PCI::FrameBufferBaseAddress::Address;
-
-            mapping.size = 16 * 1024 * 1024;//TODO...
-            if (__dpmi_physical_address_mapping(&mapping) == 0)
-            {
-                success = true;
-                fb = (uint8_t*)(mapping.address + __djgpp_conventional_base);
-            }
-        }
-    }
-
-    if (success)
-    {
-        Hag::Testing::TestPatterns::Draw24BppPattern(modeData->Width, modeData->Height, modeData->Stride, fb);
-        getchar();
-    }
-
-    SetVideoMode(0x03);
-    */
-
-    /*
-    REGS r;
-    memset(&r, 0, sizeof(r));
-
-    for (uint16_t modesIdx = 0; modesIdx < sizeof(TestModes) / sizeof(Hag::VGA::VideoMode_t); ++modesIdx)
-    {
-        VGA::VideoMode_t mode = TestModes[modesIdx];
-
-        r.w.ax = 3;
-        int86(0x10, &r, &r);
-
-        r.w.ax = mode;
-        int86(0x10, &r, &r);
-
-        char name[15];
-        sprintf(name, "mode%04X.txt", mode);
-        FILE* fp = fopen(name, "w");
-        Support::PCIDump(fp, nullptr, 0x121a, "3Dfx", PCIDevices, sizeof(PCIDevices) / sizeof(Support::Device));
-        Support::BDADump(fp, nullptr);
-        Support::VGADump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        BansheeDump(fp, nullptr, BDA::VideoBaseIOPort::Get());
-        fclose(fp);
-    }
-
-    r.w.ax = 3;
-    int86(0x10, &r, &r);
-*/
 #endif
 
 #ifdef MOCK
@@ -7270,6 +7128,8 @@ int main(void)
             FindVESAModeData(testMode.LegacyMode, modeData);
         }
 
+        Hag::Testing::Mock::SelectInstance(0);
+
         uint16_t* ignore = nullptr;
         uint16_t ignoreCount = 0;
         if (testMode.LegacyMode < 0x14)
@@ -7286,25 +7146,9 @@ int main(void)
             ignore = ignorePorts;
             ignoreCount = sizeof(ignorePorts) / sizeof(uint16_t);
         }
-        //FindModes(modeData->LegacyMode);
         PIT::Sleep(1);
         memset(FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
         memset(FARPointer(uint16_t(0xb000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
-
-        // bool patch = !Is8Dot();
-        // uint8_t* font = nullptr;
-        // uint8_t charHeight = 0;
-        // GetFontAndCharHeight(font, charHeight);
-        // const char* fontName = "8x8";
-        // if (font == Font8x14)
-        //     fontName = "8x14";
-        // if (font == Font8x16)
-        //     fontName = "8x16";
-        // printf("Font: %s, char height: %i, patched: %s\n", fontName, charHeight, patch ? "yes" : "no");
-        // printf("Maximum scanline: 0x%02X\n", VGA::CRTController::MaximumScanLine::Read(BDA::VideoBaseIOPort::Get()) & VGA::CRTController::MaximumScanLine::MaximumScanLineCount);
-        // printf("Cursor start: 0x%02X\n", VGA::CRTController::CursorStartScanLine::Read(BDA::VideoBaseIOPort::Get()));
-        // printf("Cursor end: 0x%02X\n", VGA::CRTController::CursorEndScanLine::Read(BDA::VideoBaseIOPort::Get()));
-        // printf("\n");
 
         Hag::Testing::Mock::SelectInstance(1);
         VGA::ModeSetting::SetVideoMode(testMode.Width, testMode.Height, testMode.Bpp, testMode.Flags, testMode.RefreshRate);

@@ -111,7 +111,7 @@ void EnumerateVideoModes(const VideoModeCallback_t& callback)
         if (error != SetVideoError::Success)
             return true;
 
-        return callback(descriptor.Width, descriptor.Height, descriptor.Stride, descriptor.Bpp, descriptor.Flags & Flags::PublicFlags, descriptor.RefreshRate, descriptor.Segment);
+        return callback(descriptor.Width, descriptor.Height, descriptor.Stride, descriptor.Bpp, descriptor.Flags & Flags::PublicFlags, descriptor.Segment);
     });
 
 }
@@ -121,24 +121,41 @@ static const ModeDescriptor* GetModeDescriptor(uint16_t width, uint16_t height, 
     error = SetVideoError::UnknownMode;
     const ModeDescriptor* returnDescriptor = nullptr;
 
+    //Little bit sanity checking.
+    if ((refreshRate > RefreshRate::DontCare) &&
+        ((refreshRate < 50) || (refreshRate > 100)))
+    {
+        error = SetVideoError::RefreshRateNotSupported;
+        return nullptr;
+    }
+
     External::IterateModeDescriptors([&](const ModeDescriptor& descriptor, SetVideoError_t internalError)
     {
         bool ret = true;
         if (descriptor.Width == width &&
             descriptor.Height == height &&
             descriptor.Bpp == bpp &&
-            (descriptor.Flags & Flags::PublicFlags) == flags &&
-            ((descriptor.RefreshRate == refreshRate) || refreshRate == RefreshRate::DontCare))
+            (descriptor.Flags & Flags::PublicFlags) == flags)
         {
+            RefreshRate_t currentRefreshRate = (refreshRate == RefreshRate::DontCare) ? descriptor.RefreshRate : refreshRate;
+
             if (internalError != SetVideoError::Success)
             {
                 error = internalError;//Mode exists, but not usable for some reason. perhaps there is another.
             }
-            else
+            else 
             {
-                error = SetVideoError::Success;
-                returnDescriptor = &descriptor;
-                ret = false;//= stop iteration
+                internalError = External::SupportsRefreshRate(descriptor, currentRefreshRate);
+                if (internalError != SetVideoError::Success)
+                {
+                    error = internalError;
+                }
+                else
+                {
+                    error = SetVideoError::Success;
+                    returnDescriptor = &descriptor;
+                    ret = false;//= stop iteration
+                }
             }
         }
         return ret;
@@ -432,7 +449,7 @@ static Sequencer::ClockingMode_t TurnScreenOff()
     return ToggleScreenOnOff(Sequencer::ClockingMode::ScreenOff);
 }
 
-static void ApplyParameters(const ModeDescriptor& descriptor, Register_t baseVideoIOPort)
+static void ApplyParameters(const ModeDescriptor& descriptor, Register_t baseVideoIOPort, RefreshRate_t refreshRate)
 {
     using namespace Hag::System;
 
@@ -442,7 +459,12 @@ static void ApplyParameters(const ModeDescriptor& descriptor, Register_t baseVid
 
     Sequencer::Reset::Write(Sequencer::Reset::AsynchronousReset);
     SequencerData::Write(Sequencer::Register::ClockingMode, parameters.Config.Sequencer, sizeof(parameters.Config.Sequencer));
-    MiscellaneousOutput::Write(parameters.GetMiscellaneousOutput());
+    MiscellaneousOutput_t miscOutput = parameters.GetMiscellaneousOutput();
+    if (refreshRate != descriptor.RefreshRate)//Custom timing
+    {
+        miscOutput |= MiscellaneousOutput::ClockSelect;
+    }
+    MiscellaneousOutput::Write(miscOutput);
     
     PIT::MiniSleep();
 
@@ -672,7 +694,7 @@ static void UploadFont(const Data::FontConfiguration& fontConfig)
     } while (offset != 0);
 }
 
-static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoModeOptions_t videoModeOptions)
+static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoModeOptions_t videoModeOptions, RefreshRate_t refreshRate)
 {
     using namespace Hag::System;
 
@@ -698,7 +720,7 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
     BDA::CursorScanLines::Get().Start = parameters.Font.CursorStartScanLine;
     BDA::CursorScanLines::Get().End = parameters.Font.CursorEndScanLine;
 
-    ApplyParameters(descriptor, BDA::VideoBaseIOPort::Get());
+    ApplyParameters(descriptor, BDA::VideoBaseIOPort::Get(), refreshRate);
 
     AttributeController::PixelPadding::Write(0);
     
@@ -729,13 +751,9 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
     
     if (descriptor.CRTModeControlRegValue != 0xFF)
         BDA::CRTModeControlRegValue::Get() = descriptor.CRTModeControlRegValue;
-    else
-        BDA::CRTModeControlRegValue::Get() = 0x00;
 
     if (descriptor.CGAColorPaletteMaskSetting != 0xFF)
         BDA::CGAColorPaletteMaskSetting::Get() = descriptor.CGAColorPaletteMaskSetting;
-    else
-        BDA::CGAColorPaletteMaskSetting::Get() = 0x00;
 }
 
 static const ModeDescriptor* s_CurrentDescriptor = nullptr;
@@ -755,7 +773,7 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
     External::TurnMonitorOff();
     External::WriteExtensionRegisters(*descriptor);
 
-    External::SetupClock(*descriptor);
+    External::SetupClock(*descriptor, refreshRate);
 
     BDA::VideoModeOptions_t videoModeOptions = BDA::VideoModeOptions::Get();
     if (clearDisplay)
@@ -779,7 +797,7 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
 
     videoModeOptions &= ~(BDA::VideoModeOptions::Unknown | BDA::VideoModeOptions::Inactive);
 
-    ApplyMode(*descriptor, videoModeOptions);
+    ApplyMode(*descriptor, videoModeOptions, refreshRate);
 
     //Turn monitor on
     External::TurnMonitorOn();

@@ -19,6 +19,11 @@ void Shutdown()
 
 }
 
+SetVideoError_t SupportsRefreshRate(const ModeDescriptor& descriptor, RefreshRate_t refreshRate)
+{
+    return (descriptor.RefreshRate == refreshRate) ? SetVideoError::Success : SetVideoError::RefreshRateNotSupported;
+}
+
 bool IsExtendedMode(const ModeDescriptor& descriptor)
 {
     return false;

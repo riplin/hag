@@ -47,6 +47,139 @@ bool IsExtendedMode(const ModeDescriptor& descriptor)
     return false;
 }
 
+uint8_t CharacterClockInPixels(const ModeDescriptor& descriptor)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::Matrox;
+
+    const VideoParameters& table = descriptor.GetParameters();
+
+    //Dot clock select bit is in bit 0.
+    uint8_t dotClockSelect = table.Config.Sequencer[Sequencer::Register::ClockingMode - 1] & Sequencer::ClockingMode::DotClockSelect;
+    //dotClockSelect == 0 -> 9 pixels, 1 -> 8 pixels.
+    uint8_t characterClockInPixels = dotClockSelect == 1 ? 8 : 9;
+
+    return characterClockInPixels;
+}
+
+uint8_t ScanlineDouble(const ModeDescriptor& descriptor)//Returns 0 if no doubling, 1 if there is.
+{
+    using namespace Hag::VGA;
+    using namespace Hag::Matrox;
+
+    const VideoParameters& table = descriptor.GetParameters();
+
+    //Scan line bit is in bit 2.
+    uint8_t scanlineDouble = table.Config.CRTCModeControl & CRTController::CRTCModeControl::VerticalTotalDouble;
+    //move to bit 0.
+    scanlineDouble >>= 2;
+
+    return scanlineDouble;
+}
+
+uint32_t HorizontalTotalChars(const ModeDescriptor& descriptor)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::Matrox;
+
+    const VideoParameters& table = descriptor.GetParameters();
+
+    uint32_t horizontalTotal = table.Timings.Horizontal.Total;
+    if (IsExtendedMode(descriptor))
+    {
+        const Matrox::Shared::Function::ModeSetting::ResolutionTimings& timings =
+            *(const Matrox::Shared::Function::ModeSetting::ResolutionTimings*)&descriptor.GetParameters().Timings;
+
+        //Extension bit 8 is in bit 0.
+        uint32_t horizontalTotalBit8 = timings.HorizontalCounterExtensions & Shared::CRTCExtension::HorizontalCounterExtensions::HorizontalTotal8;
+        //Move to bit 8.
+        horizontalTotalBit8 <<= 8;
+        //Move bit in to place.
+        horizontalTotal |= horizontalTotalBit8;
+    }
+    horizontalTotal += 5;
+
+    if (table.Config.Sequencer[VGA::Sequencer::Register::ClockingMode - 1] & VGA::Sequencer::ClockingMode::InternalCharacterClock)
+        horizontalTotal <<= 1;
+
+    return horizontalTotal;
+}
+
+uint32_t HorizontalTotalPixels(const ModeDescriptor& descriptor)
+{
+    return HorizontalTotalChars(descriptor) * CharacterClockInPixels(descriptor);
+}
+
+uint32_t VerticalTotalLines(const ModeDescriptor& descriptor)
+{
+    using namespace Hag::VGA;
+    using namespace Hag::Matrox;
+
+    const VideoParameters& table = descriptor.GetParameters();
+
+    uint32_t verticalTotal = table.Timings.Vertical.Total;
+    //Extension bit 8 is in bit 0.
+    uint32_t verticalTotalBit8 = table.Timings.Vertical.Overflow & CRTController::CRTCOverflow::VerticalTotalHigh1;
+    //Move to bit 8.
+    verticalTotalBit8 <<= 8;
+    //Move bit in to place.
+    verticalTotal |= verticalTotalBit8;
+    //Extension bit 9 is in bit 5.
+    uint32_t verticalTotalBit9 = table.Timings.Vertical.Overflow & CRTController::CRTCOverflow::VerticalTotalHigh2;
+    //Move to bit 9.
+    verticalTotalBit9 <<= 4;
+    //Move bit in to place.
+    verticalTotal |= verticalTotalBit9;
+    if (IsExtendedMode(descriptor))
+    {
+        const Matrox::Shared::Function::ModeSetting::ResolutionTimings& timings =
+            *(const Matrox::Shared::Function::ModeSetting::ResolutionTimings*)&descriptor.GetParameters().Timings;
+
+        //Extension bits 11 and 10 are in bits 1 and 0.
+        uint32_t verticalTotalBits11And10 = timings.VerticalCounterExtensions & Shared::CRTCExtension::VerticalCounterExtensions::VerticalTotal11_10;
+        //Move to bits 11 and 10.
+        verticalTotalBits11And10 <<= 10;
+        //Move bits in to place.
+        verticalTotal |= verticalTotalBits11And10;
+    }
+    return (verticalTotal + 2) << ScanlineDouble(descriptor);
+}
+
+//Returns 0 for stock clocks.
+uint32_t CalculateFrequency(const ModeDescriptor& descriptor, RefreshRate_t refreshRate)
+{
+    uint32_t frequency = 0;
+    if ((descriptor.Flags & Matrox::Shared::Function::ModeSetting::Flags::ModeType) ==
+        Matrox::Shared::Function::ModeSetting::Flags::Matrox)
+    {
+        Matrox::Shared::Function::ModeSetting::ResolutionTimings& timings =
+            *(Matrox::Shared::Function::ModeSetting::ResolutionTimings*)&descriptor.Parameters[0]->Timings;
+        
+        frequency = timings.FrequencyKHz * 1000;
+    }
+    if (descriptor.RefreshRate != refreshRate)
+    {
+        uint32_t pixelTotal = HorizontalTotalPixels(descriptor) * VerticalTotalLines(descriptor);
+        frequency = pixelTotal * refreshRate;
+    }
+    return frequency;
+}
+
+SetVideoError_t SupportsRefreshRate(const ModeDescriptor& descriptor, RefreshRate_t refreshRate)
+{
+    //TODO monitor filter.
+    if ((descriptor.Flags & Matrox::Shared::Function::ModeSetting::Flags::ModeType) ==
+        Matrox::Shared::Function::ModeSetting::Flags::Matrox)
+    {
+        uint32_t frequency = CalculateFrequency(descriptor, refreshRate);
+        return (frequency < 135000000) ? SetVideoError::Success : SetVideoError::NotSupportedByRamdac;//TODO: Mystique 220 == 220000000Hz.
+    }
+    else
+    {
+        return descriptor.RefreshRate == refreshRate ? SetVideoError::Success : SetVideoError::RefreshRateNotSupported;
+    }
+}
+
 void IterateModeDescriptors(const DescriptorCallback_t& callback)
 {
     VGA::Data::IterateModeDescriptors(callback);
@@ -60,23 +193,11 @@ void IterateModeDescriptors(const DescriptorCallback_t& callback)
 
             ModeDescriptor& mode = Matrox::Shared::Data::s_Descriptors[i];
 
-            BitsPerPixel_t bpp = mode.Bpp;
-            if (bpp == BitsPerPixel::Bpp15)
-                bpp = BitsPerPixel::Bpp16;
-            uint32_t requiredMemory = (mode.Width * mode.Height * bpp) >> 3;
+            uint32_t requiredMemory = mode.Stride * mode.Height;
             if (requiredMemory > (Matrox::Shared::Function::System::s_MemorySize << 10))
             {
                 error = SetVideoError::InsufficientVideoMemory;
             }
-            else
-            {
-                Matrox::Shared::Function::ModeSetting::ResolutionTimings& timings =
-                    *(Matrox::Shared::Function::ModeSetting::ResolutionTimings*)&mode.Parameters[0]->Timings;
-
-                if (timings.FrequencyKHz >= 220000)//TODO: we should have this number live somewhere.
-                    error = SetVideoError::NotSupportedByRamdac;
-            }
-            //TODO monitor filter.
 
             if (!callback(Matrox::Shared::Data::s_Descriptors[i], error))
                 break;
@@ -507,16 +628,14 @@ void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)
         ~Shared::Indexed::PixelClockControl::ClockDisable);
 }
 
-void SetupClock(const ModeDescriptor& descriptor)
+void SetupClock(const ModeDescriptor& descriptor, RefreshRate_t refreshRate)
 {
     if ((descriptor.Flags & Matrox::Shared::Function::ModeSetting::Flags::ModeType) ==
         Matrox::Shared::Function::ModeSetting::Flags::Matrox)
     {
-        Matrox::Shared::Function::ModeSetting::ResolutionTimings& timings =
-            *(Matrox::Shared::Function::ModeSetting::ResolutionTimings*)&descriptor.Parameters[0]->Timings;
-
-        if (timings.FrequencyKHz != 0)
-            ConfigurePixelClocks(CalculatePLL_MNPS(timings.FrequencyKHz), PixelClocksSettings::PLLSetC | PixelClocksSettings::ClockPLL);
+        uint32_t frequency = CalculateFrequency(descriptor, refreshRate);
+        if (frequency)
+            ConfigurePixelClocks(CalculatePLL_MNPS(frequency / 1000), PixelClocksSettings::PLLSetC | PixelClocksSettings::ClockPLL);
     }
 }
 

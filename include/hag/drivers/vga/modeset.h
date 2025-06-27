@@ -74,15 +74,16 @@ namespace Hag::VGA::ModeSetting
             SystemNotInitialized = 0x01,
             UnknownMode = 0x02,
             InsufficientVideoMemory = 0x03,
-            NotSupportedByRamdac = 0x04,
-            NotSupportedByMonitor = 0x05,
+            RefreshRateNotSupported = 0x04,
+            NotSupportedByRamdac = 0x05,
+            NotSupportedByMonitor = 0x06,
         };
     };
 
     bool Initialize(IAllocator& allocator);
     void Shutdown();
 
-    typedef std::function<bool(uint16_t width, uint16_t height, uint16_t stride, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, uint16_t segment)> VideoModeCallback_t;//Return true to continue receiving modes.
+    typedef std::function<bool(uint16_t width, uint16_t height, uint16_t stride, BitsPerPixel_t bpp, Flags_t flags, uint16_t segment)> VideoModeCallback_t;//Return true to continue receiving modes.
     void EnumerateVideoModes(const VideoModeCallback_t& callback);
 
     SetVideoError_t HasVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare);

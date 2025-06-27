@@ -177,8 +177,6 @@ struct Configuration
     uint8_t CompressedPalette[];
 };
 
-#pragma pack(pop)
-
 struct VideoParameters
 {
     const ResolutionTimings& Timings;
@@ -224,6 +222,7 @@ struct ModeDescriptor
     CRTController::ScreenOffset_t CalculateVGAOffset() const; //Provides default offset calculation for standard VGA modes.
 };
 
+#pragma pack(pop)
 
 // These functions need to be implemented by any driver wishing to provide video mode setting.
 // Once those functions are implemented, simply linking in the modeset.cpp file will provide proper
@@ -233,6 +232,9 @@ namespace External
 {
     extern bool Initialize(IAllocator& allocator);
     extern void Shutdown();
+
+    extern SetVideoError_t SupportsRefreshRate(const ModeDescriptor&descriptor, RefreshRate_t refreshRate);
+
     extern bool IsExtendedMode(const ModeDescriptor& descriptor);
 
     typedef std::function<bool(const ModeDescriptor& descriptor, SetVideoError_t error)> DescriptorCallback_t;
@@ -253,7 +255,7 @@ namespace External
 
     extern void WriteExtensionRegisters(const ModeDescriptor& descriptor);
 
-    extern void SetupClock(const ModeDescriptor& descriptor);
+    extern void SetupClock(const ModeDescriptor& descriptor, RefreshRate_t refreshRate);
 
     extern void* GetLinearFrameBuffer();
 }

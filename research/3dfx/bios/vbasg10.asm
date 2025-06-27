@@ -61,7 +61,7 @@ jmp trampoline                          ;Offset 0x52
                         DB 000h, 000h, 000h, 000h, 000h, 000h, 000h
 
 ;Offset 0x50
-                        DW 076F7h       ;This is probably a pointer
+                        DW offset ROMConfigTable ;0x76F7
 
 trampoline:                             ;Offset 0x52
 jmp entry                               ;Offset 0xa1
@@ -10714,7 +10714,7 @@ Data0x740f              DB 000h, 000h, 000h, 000h, 000h, 02Ah, 000h, 02Ah, 000h,
                         DB 00Fh, 010h, 00Bh, 00Dh, 010h, 00Bh, 00Ch, 010h
 
 ;Offset 0x76f7
-                        DW offset PCIInitDefault;Offset 0x7cf9
+ROMConfigTable          DW offset OEMConfigTable;Offset 0x7cf9
 
 ;Offset 0x76f9
                         DW offset VideoOverrideTable;Offset 0x776b
@@ -11017,6 +11017,7 @@ Mem16384KMessagePointer DW offset Mem16384KMessageLength
                         DB 000h
 
 ;Offset 0x7cf9
+OEMConfigTable:
 PCIInitDefault          DD 00180F840h
 
 ;Offset 0x7cfd
