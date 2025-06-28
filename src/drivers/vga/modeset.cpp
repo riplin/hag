@@ -767,6 +767,9 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
     if (error != SetVideoError::Success)
         return error;
 
+    if (refreshRate == RefreshRate::DontCare)
+        refreshRate = descriptor->RefreshRate;
+
     TurnScreenOff();
     MiscellaneousOutput::Write(MiscellaneousOutput::Read() & ~MiscellaneousOutput::VideoEnable);
     //Turn monitor off

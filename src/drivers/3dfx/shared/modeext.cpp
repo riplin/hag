@@ -16,7 +16,10 @@
 #include <hag/drivers/3dfx/shared/io/vgainit1.h>
 #include <hag/drivers/3dfx/shared/io/viddostr.h>
 #include <hag/drivers/3dfx/shared/io/vidprcfg.h>
+#include <hag/drivers/3dfx/shared/pci/ctbaddr.h>
 #include <hag/drivers/3dfx/shared/pci/fbbaddr.h>
+
+#include <hag/drivers/3dfx/shared/mmio2d/clip.h>
 
 namespace Hag::VGA::ModeSetting::External
 {
@@ -357,6 +360,15 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
         IO::DRAMInit1::Write(Function::System::s_IOBaseAddress,
             IO::DRAMInit1::Read(Function::System::s_IOBaseAddress) |
             DRAMInit1::SGRAMRefreshEnable);
+
+        MMIO2D::Clip::WriteClip0Min(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
+                                    (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
+        MMIO2D::Clip::WriteClip0Max(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
+                                    (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
+        MMIO2D::Clip::WriteClip1Min(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
+                                    (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
+        MMIO2D::Clip::WriteClip1Max(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
+                                    (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
     }
 }
 

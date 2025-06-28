@@ -122,7 +122,9 @@ namespace LineStyle
     enum
     {
         RepeatCount =       0x000000ff,
-        StippleSize =       0x00001f00
+        StippleSize =       0x00001f00,
+        StartFrac =         0x00ff0000,// 23:16 Start position - fractional part
+        StartInt =          0x1f000000,// 28:24 Start position - integer part
     };
 
     namespace Shift
@@ -130,7 +132,9 @@ namespace LineStyle
         enum
         {
             RepeatCount = 0x00,
-            StippleSize = 0x08
+            StippleSize = 0x08,
+            StartFrac = 0x10,
+            StartInt = 0x18
         };
     }
 }
