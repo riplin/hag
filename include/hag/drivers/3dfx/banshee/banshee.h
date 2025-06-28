@@ -104,6 +104,7 @@
 #include <hag/drivers/3dfx/shared/mmio2d/color.h>
 #include <hag/drivers/3dfx/shared/mmio2d/dstfmt.h>
 #include <hag/drivers/3dfx/shared/mmio2d/intctrl.h>
+#include <hag/drivers/3dfx/shared/mmio2d/lncharea.h>
 #include <hag/drivers/3dfx/shared/mmio2d/lnstl.h>
 #include <hag/drivers/3dfx/shared/mmio2d/lnstp.h>
 #include <hag/drivers/3dfx/shared/mmio2d/pattern.h>
@@ -256,6 +257,16 @@ namespace Hag::TDfx::Banshee
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, SourceFormat);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Status);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, XY);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, ScreenBlitLaunch);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, ScreenStretchBlitLaunch);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, HostBlitLaunch);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, HostStretchBlitLaunch);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, RectangleFillLaunch);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, LineLaunch);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, PolyLineLaunch);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, PolygonLaunch);
+
+        typedef Shared::TwoD::LaunchCommand_t LaunchCommand_t;
     }
 
     namespace MMIO2D
@@ -277,6 +288,7 @@ namespace Hag::TDfx::Banshee
         IMPORTNAMESPACE(Shared::MMIO2D, SourceFormat);
         IMPORTNAMESPACE(Shared::MMIO2D, Status);
         IMPORTNAMESPACE(Shared::MMIO2D, XY);
+        IMPORTNAMESPACE(Shared::MMIO2D, LaunchArea);
     }
 
 //IO Addresses from IOAddressBase
