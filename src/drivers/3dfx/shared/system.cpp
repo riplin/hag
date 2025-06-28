@@ -7,6 +7,7 @@
 #include <hag/drivers/vga/vga.h>
 #include <hag/drivers/vga/extmsapi.h>
 
+#include <hag/drivers/3dfx/shared/pci/ctbaddr.h>
 #include <hag/drivers/3dfx/shared/pci/iobaddr.h>
 #include <hag/drivers/3dfx/shared/pci/fbbaddr.h>
 #include <hag/drivers/3dfx/shared/io/drminit0.h>
@@ -48,8 +49,11 @@ bool Initialize(IAllocator& allocator)
         
         s_MemorySize = GetMemoryIn64KBlocks() << 6;
         s_Initialized = VGA::ModeSetting::DeclareAperture(PCI::FrameBufferBaseAddress::Read(s_Device) &
-                                                            PCI::FrameBufferBaseAddress::Address,
-                                                            s_MemorySize << 10);
+                                                          PCI::FrameBufferBaseAddress::Address,
+                                                          s_MemorySize << 10);
+        s_Initialized = VGA::ModeSetting::DeclareAperture(PCI::ControlBaseAddress::Read(s_Device) &
+                                                          PCI::ControlBaseAddress::Address,
+                                                          6 * 1024 * 1024);
     }
     return s_Initialized;
 }

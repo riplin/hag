@@ -39,6 +39,9 @@
 #include <hag/drivers/vga/crtc/enverbln.h>                  //CR16
 #include <hag/drivers/vga/crtc/modectrl.h>                  //CR17
 #include <hag/drivers/vga/crtc/linecomp.h>                  //CR18
+#include <hag/drivers/vga/crtc/cpulatch.h>                  //CR22
+#include <hag/drivers/vga/crtc/attridxf.h>                  //CR24
+#include <hag/drivers/vga/crtc/attridxi.h>                  //CR26
 
 #include <hag/drivers/vga/attribc/index.h>                  //ATTR Index 0x3C0
 #include <hag/drivers/vga/attribc/data.h>                   //ATTR Data  0x3C0, 0x3C1
@@ -79,8 +82,203 @@
 #include <hag/drivers/vga/gfxc/coldc.h>                     //GR7
 #include <hag/drivers/vga/gfxc/bitmask.h>                   //GR8
 
+#include <hag/drivers/3dfx/shared/io/dacmode.h>
+#include <hag/drivers/3dfx/shared/io/drminit0.h>
+#include <hag/drivers/3dfx/shared/io/drminit1.h>
+#include <hag/drivers/3dfx/shared/io/pllctrl0.h>
+#include <hag/drivers/3dfx/shared/io/pllctrl1.h>
+#include <hag/drivers/3dfx/shared/io/pllctrl2.h>
+#include <hag/drivers/3dfx/shared/io/vgainit0.h>
+#include <hag/drivers/3dfx/shared/io/vgainit1.h>
+#include <hag/drivers/3dfx/shared/io/viddostr.h>
+#include <hag/drivers/3dfx/shared/io/viddsa.h>
+#include <hag/drivers/3dfx/shared/io/vidprcfg.h>
+#include <hag/drivers/3dfx/shared/io/vidscrs.h>
+
+#include <hag/drivers/3dfx/shared/mmio2d/baseaddr.h>
+#include <hag/drivers/3dfx/shared/mmio2d/breserr.h>
+#include <hag/drivers/3dfx/shared/mmio2d/clip.h>
+#include <hag/drivers/3dfx/shared/mmio2d/cmd.h>
+#include <hag/drivers/3dfx/shared/mmio2d/cmdextra.h>
+#include <hag/drivers/3dfx/shared/mmio2d/colkey.h>
+#include <hag/drivers/3dfx/shared/mmio2d/color.h>
+#include <hag/drivers/3dfx/shared/mmio2d/dstfmt.h>
+#include <hag/drivers/3dfx/shared/mmio2d/intctrl.h>
+#include <hag/drivers/3dfx/shared/mmio2d/lnstl.h>
+#include <hag/drivers/3dfx/shared/mmio2d/lnstp.h>
+#include <hag/drivers/3dfx/shared/mmio2d/pattern.h>
+#include <hag/drivers/3dfx/shared/mmio2d/rop.h>
+#include <hag/drivers/3dfx/shared/mmio2d/size.h>
+#include <hag/drivers/3dfx/shared/mmio2d/srcfmt.h>
+#include <hag/drivers/3dfx/shared/mmio2d/status.h>
+#include <hag/drivers/3dfx/shared/mmio2d/xy.h>
+
 namespace Hag::TDfx::Banshee
 {
+
+    typedef Shared::Register_t Register_t;
+
+    namespace Register
+    {
+        using namespace VGA::Register;
+        using namespace Shared::Register;
+    }
+    
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, FeatureControl);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, InputStatus1);
+
+    IMPORTNAMESPACE(VGA, CRTControllerIndex);
+    IMPORTNAMESPACEANDTYPE(VGA, CRTControllerData);
+    
+    namespace CRTController
+    {
+        IMPORTNAMESPACE(VGA::CRTController, Register);
+    
+        IMPORTNAMESPACEANDTYPE(VGA::CRTController, HorizontalTotal);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, HorizontalDisplayEnd);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, StartHorizontalBlank);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, EndHorizontalBlank);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, StartHorizontalSyncPosition);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, EndHorizontalSyncPosition);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, VerticalTotal);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CRTCOverflow);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, PresetRowScan);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, MaximumScanLine);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CursorStartScanLine);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CursorEndScanLine);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, StartAddressHigh);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, StartAddressLow);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CursorLocationAddressHigh);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CursorLocationAddressLow);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, VerticalRetraceStart);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, VerticalRetraceEnd);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, VerticalDisplayEnd);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, ScreenOffset);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, UnderlineLocation);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, StartVerticalBlank);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, EndVerticalBlank);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, CRTCModeControl);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, LineCompare);
+        IMPORTNAMESPACEANDTYPE(VGA::CRTController, CPULatchData);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, AttributeIndexI);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::CRTController, AttributeIndexF);
+    }
+
+    IMPORTNAMESPACE(VGA, AttributeControllerIndex);
+    IMPORTNAMESPACEANDTYPE(VGA, AttributeControllerData);
+
+    namespace AttributeController
+    {
+        IMPORTNAMESPACE(VGA::AttributeController, Register);
+    
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, AttributeMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, BorderColor);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, ColorPlane);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, HorizontalPixelPanning);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, Palette);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::AttributeController, PixelPadding);
+    }
+
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, MiscellaneousOutput);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, InputStatus0);
+    IMPORTNAMESPACEANDTYPE(VGA, VideoSubsystemEnable);
+
+    IMPORTNAMESPACE(VGA, SequencerIndex);
+    IMPORTNAMESPACEANDTYPE(VGA, SequencerData);
+    
+    namespace Sequencer
+    {
+        IMPORTNAMESPACE(VGA::Sequencer, Register);
+    
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, Reset);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, ClockingMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, EnableWritePlane);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, CharacterFontSelect);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::Sequencer, MemoryModeControl);
+    }
+
+    IMPORTNAMESPACEANDTYPE(VGA, DACMask);
+    IMPORTNAMESPACEANDTYPE(VGA, DACReadIndex);
+    IMPORTNAMESPACEANDTYPEANDSHIFT(VGA, DACStatus);
+    IMPORTNAMESPACEANDTYPE(VGA, DACWriteIndex);
+    IMPORTNAMESPACEANDTYPE(VGA, RAMDACData);    
+
+    IMPORTNAMESPACE(VGA, GraphicsControllerIndex);
+    IMPORTNAMESPACEANDTYPE(VGA, GraphicsControllerData);
+
+    namespace GraphicsController
+    {
+        IMPORTNAMESPACEANDTYPE(VGA::GraphicsController, Register);
+    
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, SetResetData);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, EnableSetResetData);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, ColorCompare);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, RasterOperationRotateCount);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, ReadPlaneSelect);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, GraphicsControllerMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, MemoryMapModeControl);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, ColorDontCare);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(VGA::GraphicsController, BitMask);
+    }
+
+    namespace IO
+    {
+        IMPORTNAMESPACE(Shared::IO, DACMode);
+        IMPORTNAMESPACE(Shared::IO, DRAMInit0);
+        IMPORTNAMESPACE(Shared::IO, DRAMInit1);
+        IMPORTNAMESPACE(Shared::IO, PLLControl0);
+        IMPORTNAMESPACE(Shared::IO, PLLControl1);
+        IMPORTNAMESPACE(Shared::IO, PLLControl2);
+        IMPORTNAMESPACE(Shared::IO, VGAInit0);
+        IMPORTNAMESPACE(Shared::IO, VGAInit1);
+        IMPORTNAMESPACE(Shared::IO, VideoDesktopOverlayStride);
+        IMPORTNAMESPACE(Shared::IO, VideoDesktopStartAddress);
+        IMPORTNAMESPACE(Shared::IO, VideoProcessorConfiguration);
+        IMPORTNAMESPACE(Shared::IO, VideoScreenSize);
+    }
+
+    namespace TwoD
+    {
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, BaseAddress);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, BresenhamError);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Clip);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Command);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, CommandExtra);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, ColorKey);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Color);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, DestinationFormat);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, InterruptControl);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, LineStyle);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, LineStipple);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Pattern);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, RasterOperation);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Size);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, SourceFormat);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Status);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, XY);
+    }
+
+    namespace MMIO2D
+    {
+        IMPORTNAMESPACE(Shared::MMIO2D, BaseAddress);
+        IMPORTNAMESPACE(Shared::MMIO2D, BresenhamError);
+        IMPORTNAMESPACE(Shared::MMIO2D, Clip);
+        IMPORTNAMESPACE(Shared::MMIO2D, Command);
+        IMPORTNAMESPACE(Shared::MMIO2D, CommandExtra);
+        IMPORTNAMESPACE(Shared::MMIO2D, ColorKey);
+        IMPORTNAMESPACE(Shared::MMIO2D, Color);
+        IMPORTNAMESPACE(Shared::MMIO2D, DestinationFormat);
+        IMPORTNAMESPACE(Shared::MMIO2D, InterruptControl);
+        IMPORTNAMESPACE(Shared::MMIO2D, LineStyle);
+        IMPORTNAMESPACE(Shared::MMIO2D, LineStipple);
+        IMPORTNAMESPACE(Shared::MMIO2D, Pattern);
+        IMPORTNAMESPACE(Shared::MMIO2D, RasterOperation);
+        IMPORTNAMESPACE(Shared::MMIO2D, Size);
+        IMPORTNAMESPACE(Shared::MMIO2D, SourceFormat);
+        IMPORTNAMESPACE(Shared::MMIO2D, Status);
+        IMPORTNAMESPACE(Shared::MMIO2D, XY);
+    }
+
 //IO Addresses from IOAddressBase
 
 // 0x00 - 0x03 status Register
@@ -141,5 +339,59 @@ namespace Hag::TDfx::Banshee
 // 0xf8 - 0xfb vidInStride register.
 // 0xfc - 0xff vidCurrOverlayStartAddr register.
 
+//2D Register Map
+//
+// All 2D registers can be read, and all registers except for the status register are fully write-able. Reading a
+// 2D register will always return the value that will be used if a new operation is begun without writing a
+// new value to that register. This value will either be the last value written to the register, or, if an operation
+// has been performed since the value was written, the value after all operations have completed.
+// All registers for the 2D section are unsigned unless specified otherwise.
+//
+// Memory Base 0: Offset 0x0100000
+//
+// Register Name        Address     Reg     Bits    R/W     Description
+//--------------------------------------------------------------------------------------------------------------------
+// status               0x000(0)    0x0     31:0    R       Banshee status register
+// intCtrl              0x004(4)    0x1     31:0    R/W     Interrupt control and status
+// clip0Min             0x008(8)    0x2     28:0    R/W     Min X & Y clip values when clip select is 0
+// clip0Max             0x00c(12)   0x3     28:0    R/W     Max X & Y clip values when clip select is 0
+// dstBaseAddr          0x010(16)   0x4     23:0    R/W     Destination base address
+// dstFormat            0x014(20)   0x5     17:0    R/W     Destination stride and bits per pixel
+// srcColorkeyMin       0x018(24)   0x6     23:0    R/W     Source Colorkey range (min)
+// srcColorkeyMax       0x01c(28)   0x7     23:0    R/W     Source Colorkey range (max)
+// dstColorkeyMin       0x020(32)   0x8     23:0    R/W     Destination Colorkey range (min)
+// dstColorkeyMax       0x024(36)   0x9     23:0    R/W     Destination Colorkey range (max)
+// bresError0           0x028(40)   0xA     31:0    R/W     Initial error for lines, right edges & stretch blt x
+// bresError1           0x02c(44)   0xB     31:0    R/W     Initial error for left poly edges & stretch blt y
+// rop                  0x030(48)   0xC     31:0    R/W     4 Ternary Raster operations
+// srcBaseAddr          0x034(52)   0xD     23:0    R/W     Source base address
+// commandExtra         0x038(56)   0xE     31:0    R/W     Extra control bits
+// lineStipple          0x03c(60)   0xF     31:0    R/W     Monochrome pattern for lines
+// lineStyle            0x040(64)   0x10    28:0    R/W     Style register for lines
+// pattern0Alias        0x044(68)   0x11    31:0    R/W     Alias to colorPattern(0)
+// pattern1Alias        0x048(72)   0x12    31:0    R/W     Alias to colorPattern(1)
+// clip1Min             0x04c(76)   0x13    28:0    R/W     Min X & Y clip values when clip select is 1
+// clip1Max             0x050(80)   0x14    28:0    R/W     Max X & Y clip values when clip select is 1
+// srcFormat            0x054(84)   0x15    18:0    R/W     Source stride and bits per pixel
+// srcSize              0x058(88)   0x16    28:0    R/W     Height and width of source for stretch blts
+// srcXY                0x05c(92)   0x17    28:0    R/W     Starting pixel of blt source data
+//                                                          Starting position for lines
+//                                                          Top-most point for a polygon fill
+// colorBack            0x060(96)   0x18    31:0    R/W     Background color
+// colorFore            0x064(100)  0x19    31:0    R/W     Foreground color
+// dstSize              0x068(104)  0x1A    28:0    R/W     Destination width and height for blts and
+//                                                          rectangle fills
+// dstXY                0x06c(108)  0x1B    28:0    R/W     Starting X and Y of destination for blts
+//                                                          End point for lines
+// command              0x070(112)  0x1C    31:0    R/W     2D command mode & control bits
+// RESERVED             0x074(116)  0x1D    31:0            Do not write
+// RESERVED             0x078(120)  0x1E    31:0            Do not write
+// RESERVED             0x07c(124)  0x1F    31:0            Do not write
+// launchArea           0x080(128)  0x20    31:0    R       Initiates 2D commands
+//                      to          to
+//                      0x0ff(255)  0x3F
+// colorPattern         0x100(256)  0x40    31:0    R/W     Pattern Registers (64 entries)
+//                      to          to
+//                      0x1fc(508)  
 
 }

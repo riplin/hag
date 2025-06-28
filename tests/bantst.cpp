@@ -27,6 +27,8 @@
 #include <hag/drivers/vga/vga.h>
 #include <support/dump.h>
 
+#include <hag/drivers/3dfx/banshee/banshee.h>
+
 #include <hag/drivers/3dfx/shared/crtc/ext0.h>
 #include <hag/drivers/3dfx/shared/crtc/ext1.h>
 #include <hag/drivers/3dfx/shared/crtc/ext2.h>
@@ -7163,7 +7165,6 @@ int main(void)
         {
             Func0x1d6d(Data0x740f, 0x00, 0xf8);//0x2E8
         }
-
         Diff("SetMode", ignore, ignoreCount);
     }
 
