@@ -27,16 +27,16 @@ namespace Size
 
     enum
     {
-        BltWidth = 0x00001fff,
-        BltHeight = 0x1fff0000
+        Width = 0x00001fff,
+        Height = 0x1fff0000
     };
 
     namespace Shift
     {
         enum
         {
-            BltWidth = 0x00,
-            BltHeight = 0x10
+            Width = 0x00,
+            Height = 0x10
         };
     }
 

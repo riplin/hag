@@ -283,39 +283,7 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
             descriptor.Height << (((timings.Config & Function::ModeSetting::Configuration::HalfMode) != 0) ? 13 : 12) |
             (descriptor.Width & VideoScreenSize::Width));
 
-        uint16_t stride = 0;
-        if ((descriptor.Flags & Flags::Mode) == Flags::Text)
-        {
-            stride = descriptor.Width << 1;
-        }
-        else
-        {
-            VGA::ModeSetting::BitsPerPixel_t bpp = descriptor.Bpp;
-            if (bpp == BitsPerPixel::Bpp15)
-                bpp = BitsPerPixel::Bpp16;
-            
-            stride = (descriptor.Width * bpp) >> 3;
-            if (bpp == BitsPerPixel::Bpp4)
-                stride >>= 2;
-            if (bpp == BitsPerPixel::Bpp24)
-            {
-                //Power of 2
-                stride = (descriptor.Width * bpp) >> 3;
-                uint8_t shift = 0;
-                uint8_t bits = 0;
-                while (stride != 0)
-                {
-                    bits += stride & 1;
-                    stride >>= 1;
-                    ++shift;
-                }
-                stride = 1 << (shift - 1);
-                if (bits > 1)
-                    stride <<= 1;
-            }
-        }
-
-        IO::VideoDesktopOverlayStride::Write(Function::System::s_IOBaseAddress, stride);
+        IO::VideoDesktopOverlayStride::Write(Function::System::s_IOBaseAddress, descriptor.Stride);
 
         IO::VGAInit0::Write(Function::System::s_IOBaseAddress,
             (IO::VGAInit0::Read(Function::System::s_IOBaseAddress) & VGAInit0::WakeUpSelect) |
@@ -451,3 +419,44 @@ void* GetLinearFrameBuffer()
 }
 
 }
+
+
+
+/*
+
+//Stride calculation...
+
+        uint16_t stride = 0;
+        if ((descriptor.Flags & Flags::Mode) == Flags::Text)
+        {
+            stride = descriptor.Width << 1;
+        }
+        else
+        {
+            VGA::ModeSetting::BitsPerPixel_t bpp = descriptor.Bpp;
+            if (bpp == BitsPerPixel::Bpp15)
+                bpp = BitsPerPixel::Bpp16;
+            
+            stride = (descriptor.Width * bpp) >> 3;
+            if (bpp == BitsPerPixel::Bpp4)
+                stride >>= 2;
+            if (bpp == BitsPerPixel::Bpp24)
+            {
+                //Power of 2
+                stride = (descriptor.Width * bpp) >> 3;
+                uint8_t shift = 0;
+                uint8_t bits = 0;
+                while (stride != 0)
+                {
+                    bits += stride & 1;
+                    stride >>= 1;
+                    ++shift;
+                }
+                stride = 1 << (shift - 1);
+                if (bits > 1)
+                    stride <<= 1;
+            }
+        }
+
+
+*/

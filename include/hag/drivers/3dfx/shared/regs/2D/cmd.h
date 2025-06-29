@@ -102,8 +102,12 @@ namespace Command
         ReversibleLines =                       0x00000200, // (1=reversible, 0=non-reversible)
         IncrementDestinationXStart =            0x00000400, // Increment destination x-start after blt or rectangle command (1=increment, 0=don’t)
         IncrementDestinationYStart =            0x00000800, // Increment destination y-start after blt or rectangle command (1=increment, 0=don’t)
-        Stipple =                               0x00001000, // Stipple line mode (1 = stippled lines, 0 = solid lines)
+        LineStyle =                             0x00001000, // Stipple line mode (1 = stippled lines, 0 = solid lines)
+        LineSolid =                             0x00000000,
+        LineStipple =                           0x00001000,
         PatternFormat =                         0x00002000, // Pattern Format (1 = monochrome, 0 = color)
+        PatternColor =                          0x00000000,
+        PAtternMonochrome =                     0x00002000,
         XDirection =                            0x00004000, // X direction (0 = left to right, 1 = right to left)
         YDirection =                            0x00008000, // Y direction (0 = top to bottom, 1 = bottom to top)
         TransparentMonochrome =                 0x00010000, // Transparent monochrome (1 = transparent, 0 = opaque)

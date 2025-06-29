@@ -114,6 +114,33 @@
 #include <hag/drivers/3dfx/shared/mmio2d/status.h>
 #include <hag/drivers/3dfx/shared/mmio2d/xy.h>
 
+#include <hag/drivers/3dfx/shared/fifo/agpgaddr.h>
+#include <hag/drivers/3dfx/shared/fifo/agpgstrd.h>
+#include <hag/drivers/3dfx/shared/fifo/agphadh.h>
+#include <hag/drivers/3dfx/shared/fifo/agphadl.h>
+#include <hag/drivers/3dfx/shared/fifo/agpmvcmd.h>
+#include <hag/drivers/3dfx/shared/fifo/agprqsz.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdamax.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdamin.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdbaddr.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdbsize.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdbump.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdfdpth.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdfthrs.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdhcnt.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdhint.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdrdpth.h>
+#include <hag/drivers/3dfx/shared/fifo/cmdrdptl.h>
+#include <hag/drivers/3dfx/shared/fifo/pck0.h>
+#include <hag/drivers/3dfx/shared/fifo/pck1.h>
+#include <hag/drivers/3dfx/shared/fifo/pck2.h>
+#include <hag/drivers/3dfx/shared/fifo/pck3.h>
+#include <hag/drivers/3dfx/shared/fifo/pck4.h>
+#include <hag/drivers/3dfx/shared/fifo/pck5.h>
+#include <hag/drivers/3dfx/shared/fifo/pck6.h>
+#include <hag/drivers/3dfx/shared/fifo/yuvbaddr.h>
+#include <hag/drivers/3dfx/shared/fifo/yuvstride.h>
+
 namespace Hag::TDfx::Banshee
 {
 
@@ -289,6 +316,36 @@ namespace Hag::TDfx::Banshee
         IMPORTNAMESPACE(Shared::MMIO2D, Status);
         IMPORTNAMESPACE(Shared::MMIO2D, XY);
         IMPORTNAMESPACE(Shared::MMIO2D, LaunchArea);
+    }
+
+    namespace Fifo
+    {
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPGraphicsAddress);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPGraphicsStride);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPHostAddressHigh);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPHostAddressLow);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPMoveCommand);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPRequestSize);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandAMax);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandAMin);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandBaseAddress);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandBaseSize);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandBump);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandFifoDepth);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandFifoFetchThreshhold);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandHoleCount);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandHoleInterrupt);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandReadPointerHigh);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, CommandReadPointerLow);
+        IMPORTNAMESPACE(Shared::Fifo, Packet0);
+        IMPORTNAMESPACE(Shared::Fifo, Packet1);
+        IMPORTNAMESPACE(Shared::Fifo, Packet2);
+        IMPORTNAMESPACE(Shared::Fifo, Packet3);
+        IMPORTNAMESPACE(Shared::Fifo, Packet4);
+        IMPORTNAMESPACE(Shared::Fifo, Packet5);
+        IMPORTNAMESPACE(Shared::Fifo, Packet6);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, YUVBaseAddress);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, YUVStride);
     }
 
 //IO Addresses from IOAddressBase
