@@ -20,6 +20,7 @@
 #include <hag/drivers/3dfx/shared/pci/fbbaddr.h>
 
 #include <hag/drivers/3dfx/shared/mmio2d/clip.h>
+#include <hag/drivers/3dfx/shared/mmio2d/dstfmt.h>
 
 namespace Hag::VGA::ModeSetting::External
 {
@@ -310,6 +311,8 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
             videoProcessorConfiguration = VideoProcessorConfiguration::DesktopPixelFormatRGB32;
         }
 
+        uint8_t* baseAddress2d = TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device);
+
         if ((timings.Config & Function::ModeSetting::Configuration::ExtendedVideoShiftOut) != 0)
         {
             videoProcessorConfiguration |= VideoProcessorConfiguration::Enable |
@@ -321,6 +324,34 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
 
             videoProcessorConfiguration |=  (timings.Config & (Function::ModeSetting::Configuration::Interlace |
                                                             Function::ModeSetting::Configuration::HalfMode)) << 2;
+            
+            TwoD::DestinationFormat_t bpp2D = 0;
+            switch(descriptor.Bpp)
+            {
+            case BitsPerPixel::Bpp8:
+                bpp2D = TwoD::DestinationFormat::Bpp8;
+                break;
+            case BitsPerPixel::Bpp16:
+                bpp2D = TwoD::DestinationFormat::Bpp16;
+                break;
+            case BitsPerPixel::Bpp24:
+                bpp2D = TwoD::DestinationFormat::Bpp24;
+                break;
+            case BitsPerPixel::Bpp32:
+                bpp2D = TwoD::DestinationFormat::Bpp32;
+                break;
+            default:
+                break;
+            }
+            
+            MMIO2D::DestinationFormat::Write(baseAddress2d, descriptor.Stride | bpp2D);
+
+            MMIO2D::Clip::WriteClip0Min(baseAddress2d, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
+            MMIO2D::Clip::WriteClip0Max(baseAddress2d, (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
+            MMIO2D::Clip::WriteClip1Min(baseAddress2d, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
+            MMIO2D::Clip::WriteClip1Max(baseAddress2d, (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
+
+            //TODO: the 3D core probably needs this setup as well.
         }
 
         IO::VideoProcessorConfiguration::Write(Function::System::s_IOBaseAddress, videoProcessorConfiguration);
@@ -328,15 +359,6 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
         IO::DRAMInit1::Write(Function::System::s_IOBaseAddress,
             IO::DRAMInit1::Read(Function::System::s_IOBaseAddress) |
             DRAMInit1::SGRAMRefreshEnable);
-
-        MMIO2D::Clip::WriteClip0Min(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
-                                    (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
-        MMIO2D::Clip::WriteClip0Max(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
-                                    (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
-        MMIO2D::Clip::WriteClip1Min(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
-                                    (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
-        MMIO2D::Clip::WriteClip1Max(TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device),
-                                    (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
     }
 }
 

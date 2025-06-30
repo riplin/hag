@@ -11,6 +11,7 @@
 
 #include <dpmi.h>
 #include <sys/nearptr.h>
+#include <hag/color.h>
 #include <support/allocatr.h>
 #include <hag/testing/mock.h>
 #include <hag/testing/testpat.h>
@@ -49,6 +50,7 @@
 #include <hag/drivers/3dfx/shared/io/pllctrl1.h>
 #include <hag/drivers/3dfx/shared/io/pllctrl2.h>
 
+#include <hag/drivers/3dfx/shared/pci/ctbaddr.h>
 #include <hag/drivers/3dfx/shared/pci/fbbaddr.h>
 #include <hag/drivers/3dfx/shared/pci/iobaddr.h>
 
@@ -7053,6 +7055,75 @@ void PrintNewModeSettings()
 
 }
 
+#include "../src/drivers/3dfx/shared/sysintl.h"
+
+void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t foreground, Hag::Color32_t background)
+{
+    using namespace Hag::TDfx;
+
+    uint8_t* baseAddress = Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Shared::Function::System::s_Device);
+
+    Shared::MMIO2D::BaseAddress::WriteDestination(baseAddress, 0);
+    Shared::MMIO2D::BaseAddress::WriteSource(baseAddress, 0);
+
+    // srcXY <= 0x00020003                             // line start-point = (3, 2)
+    Shared::MMIO2D::XY::WriteSource(baseAddress, x0 | (uint32_t(y0) << Shared::TwoD::XY::Shift::Y));
+    Shared::MMIO2D::XY::WriteDestination(baseAddress, x1 | (uint32_t(y1) << Shared::TwoD::XY::Shift::Y));
+
+    // lineStipple <= 0x00000006                       // bit mask is 110 binary
+    Shared::MMIO2D::LineStipple::Write(baseAddress, 0x00000006);
+    //Shared::MMIO2D::LineStipple::Write(baseAddress, 0x00000000);
+
+    // lineStyle <= 0x02010202                         // start position = 2 1/3, repeat count = 2, bit-mask size=2
+    Shared::MMIO2D::LineStyle::Write(baseAddress, 0x02010202);
+    //Shared::MMIO2D::LineStyle::Write(baseAddress, 0x00000000);
+
+    // colorBack <= BLACK
+    Shared::MMIO2D::Color::WriteBackground(baseAddress, background);
+
+    // colorFore <= GREY
+    Shared::MMIO2D::Color::WriteForeground(baseAddress, foreground);
+
+    Shared::MMIO2D::CommandExtra::Write(baseAddress, 0);
+
+    // command <= LINE_MODE || OPAQUE
+    SYS_Barrier();
+    Shared::MMIO2D::Command::Write(baseAddress,
+                                   Shared::TwoD::Command::CommandPolyLine
+                                   | Shared::TwoD::Command::InitiateCommand
+                                   | Shared::TwoD::Command::LineStipple
+                                   | Shared::TwoD::Command::PatternFormat
+                                   | (Shared::TwoD::Rop::Source << Shared::TwoD::Command::Shift::RasterOperation0)
+                                  );
+
+    // launch <= 0x000c0016                            // line end-point = (22,12)
+    //*Shared::MMIO2D::LaunchArea::Get(baseAddress) = Shared::TwoD::LineLaunch_t(x1 | (uint32_t(y1) << Shared::TwoD::LineLaunch::Shift::Y));
+}
+
+void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+
+    uint32_t left = min(x0, x1) << Shared::TwoD::XY::Shift::X;
+    uint32_t top = min(y0, y1) << Shared::TwoD::XY::Shift::Y;
+    uint32_t width = (max(x0, x1) - left) << Shared::TwoD::Size::Shift::Width;
+    uint32_t height = (max(y0, y1) - top) << Shared::TwoD::Size::Shift::Height;
+
+    uint8_t* baseAddress = Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Shared::Function::System::s_Device);
+
+    Shared::MMIO2D::Color::WriteForeground(baseAddress, color);
+    Shared::MMIO2D::XY::WriteDestination(baseAddress, left | top);
+    Shared::MMIO2D::Size::WriteDestination(baseAddress, width | height);
+    Shared::MMIO2D::CommandExtra::Write(baseAddress, 0);
+    SYS_Barrier();
+    Shared::MMIO2D::Command::Write(baseAddress,
+                                   Shared::TwoD::Command::CommandRectangleFill
+                                   | Shared::TwoD::Command::InitiateCommand
+                                   | (Shared::TwoD::Rop::Source << Shared::TwoD::Command::Shift::RasterOperation0)
+                                  );
+}
+
 int main(void)
 {
     using namespace Hag;
@@ -7072,8 +7143,18 @@ int main(void)
 
     VGA::ModeSetting::Initialize(allocator);
 
-    Testing::TestPatterns::TestVideoModes();
+    //Testing::TestPatterns::TestVideoModes();
+    uint16_t width = 800;
+    uint16_t stride = 4096;
+    uint16_t height = 600;
+    VGA::ModeSetting::SetVideoMode(width, height, VGA::ModeSetting::BitsPerPixel::Bpp24, VGA::ModeSetting::Flags::LinearFramebuffer);
 
+    Testing::TestPatterns::Draw24BppPattern(width, height, stride, VGA::ModeSetting::GetLinearFrameBufferAs<uint8_t>());
+    DrawRectangle(20, 25, 625, 520, Color::Bpp32::RoyalPurple);
+    DrawLine(30, 35, 615, 510, Color::Bpp32::BabyBlue, Color::Bpp32::Lime);
+    getchar();
+
+    VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
     VGA::ModeSetting::Shutdown();
 
 #endif
