@@ -78,7 +78,38 @@ namespace Hag::VGA::ModeSetting
             NotSupportedByRamdac = 0x05,
             NotSupportedByMonitor = 0x06,
         };
-    };
+    }
+
+    typedef uint8_t SetupBuffersError_t;
+    namespace SetupBuffersError
+    {
+        enum
+        {
+            Success = 0x00,
+            IllegalBufferCount = 0x01,
+            ModeNotSet = 0x02,
+            DepthBufferNotSupported = 0x03,
+            DepthBufferFormatNotSupported = 0x04,
+            NotEnoughMemory = 0x05,
+        };
+    }
+
+    typedef uint8_t Buffers_t;
+    namespace Buffers
+    {
+        enum
+        {
+            ImageBuffers = 0x03,
+            SingleBuffer = 0x01,
+            DoubleBuffer = 0x02,
+            TripleBuffer = 0x03,
+            DepthBuffer = 0x0c,
+            DepthNone = 0x00,
+            Depth8Bpp = 0x04,
+            Depth16Bpp = 0x08,
+            Depth32Bpp = 0x0c
+        };
+    }
 
     bool Initialize(IAllocator& allocator);
     void Shutdown();
@@ -88,6 +119,10 @@ namespace Hag::VGA::ModeSetting
 
     SetVideoError_t HasVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare);
     SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare, bool clearDisplay = true);
+    SetupBuffersError_t SetupBuffers(Buffers_t buffers);
+
+    void SwapScreen2D(bool waitForVSync);
+
     void* GetLinearFrameBuffer();
 
     template <typename T> T* GetLinearFrameBufferAs() { return (T*)GetLinearFrameBuffer(); }

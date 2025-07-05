@@ -6,10 +6,22 @@ set (CMAKE_CXX_COMPILER_RANLIB ${CMAKE_FIND_ROOT_PATH}/djgpp/i586-pc-msdosdjgpp/
 
 set(CMAKE_GENERATOR Ninja)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
-add_compile_options(-Wall -std=c++20 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals)
+
+add_compile_options(-Wall -std=c++23 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals -msse1)
+
+add_compile_options(
+    "$<$<CONFIG:RELEASE>:-DRELEASE>"
+    "$<$<CONFIG:DEBUG>:-DDEBUG>"
+)
+
+add_compile_options(
+    "$<$<CONFIG:RELEASE>:-O3>"
+)
 
 #dxe's will need an export list
-add_link_options(-s)
+add_link_options(
+    "$<$<CONFIG:RELEASE>:-s>"
+)
 
 #How do i make this blasted thing do this conditionally???
 #add_compile_options(-D MOCK)
@@ -31,6 +43,7 @@ add_library(hag
             src/system/pit.cpp
             src/testing/mock.cpp
             src/testing/testpat.cpp
+            src/testing/log.cpp
            )
 
 add_library(hagsup
@@ -64,6 +77,7 @@ add_library(banshee
             src/drivers/3dfx/shared/modes.cpp
             src/drivers/3dfx/shared/modeext.cpp
             src/drivers/3dfx/shared/system.cpp
+            src/drivers/3dfx/shared/fifodefr.cpp
            )
 
 #add_custom_target(mystiquedxe 
@@ -111,6 +125,17 @@ add_executable(bantst
 
 #libraries are linked in reverse order
 target_link_libraries(bantst
+                      banshee
+                      hagsup
+                      hag
+                     )
+
+add_executable(bansh
+               tests/bansh.cpp
+              )
+
+#libraries are linked in reverse order
+target_link_libraries(bansh
                       banshee
                       hagsup
                       hag

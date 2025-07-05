@@ -7,14 +7,7 @@
 namespace Hag::TDfx::Shared::Fifo
 {
 
-// Banshee supports two full CMDFIFO streams and each individually can be located in frame buffer
-// memory or AGP space. Each CMDFIFO has its own base address register set, that defines the starting
-// address, memory space, and size of the CMDFIFO. The CMDFIFO registers contain a write only bump
-// register that increments the write pointer by the amount written to the cmdBump register. Each
-// CMDFIFO contains a read pointer, write pointer, and freespace count of the fifo itself, so the CPU can
-// monitor the progress and fullness of the CMDFIFO. Ordering between the two CMDFIFO’s is first come,
-// first served.
-
+typedef uint32_t Command_t;
 namespace Register
 {
     enum
@@ -68,42 +61,3 @@ namespace Register
 // yuvStride            0x104(260) 12:0     R/W     Y, U and V planes stride value
 // crc1                 0x120(288) 31:0     R/W     CRC in control path (for testing purposes only)
 // crc2                 0x130(304) 31:0     R       Video CRC output.
-
-// XXXXXXXOXXOXXXOOXO
-// ^ ^   ^         ^
-// | |   |         |
-// | |   |         +--- amax
-// | |   |
-// | |   +------------- amin
-// | |
-// | +----------------- rdptr
-// |
-// +------------------- base addr
-
-// X = written location     O = unwritten location
-
-// The command registers define the location, size, and fifo management method of the command fifo. The
-// command fifo starts at the address defined in the cmdBaseAddr[01] register and occupies N 4k byte
-// pages defined in the cmdBaseSize register. The command fifo can be located either in AGP or frame
-// buffer memory which is defined in the cmdBaseSize register. CmdRdPtr points to the last executed
-// entry in the command fifo. Amin is a pointer that walks through the fifo until it reaches an unwritten
-// location. The rdptr can not access any entry beyond the amin pointer. The amax pointer is set to the
-// furthest address location of a given write. The hole counter is basically the number of unwritten locations
-// between the amax register and the amin register. When the hole counter is zero, the amin register is set to
-// the value of the amax register, thus allowing the read pointer to advance to the new amin register value.
-// The depth of the fifo is calculated by the difference between amax and rdptr.
-
-// Or, put another way (from the perspective of a driver writer):
-
-// When hole counting is enabled (hardware manages command fifo depth), the memory controller takes
-// special action whenever a write occurs between the command fifo base and the base + size. As writes
-// occur in this region, five variables are fiddled: readPtr, depth, aMin, aMax, and holeCount. As ordered
-// writes happen, both aMin and aMax increment, as does depth and readPtr. In this state, the difference
-// between aMin/aMax and the readPtr is the depth. When the depth is nonzero, the readPtr advances as
-// commands are read from the buffer. When/if an out-of-order write occurs, aMin stops incrementing, but
-// aMax continues to increment as addresses written go up. The readPtr will not pass aMin, so the depth
-// begins to decrement. Once the readPtr has caught up with aMin, the depth sits at zero. If aMax ever has
-// to skip (due to an out-of-order write), the hole count is incremented. As out-of-order data gets written
-// between aMin and aMax, the hole count is decremented. When the holeCount goes to zero, the difference
-// between aMin and aMax is added to the depth, and aMin is set to be the same as aMax. This causes
-// command processing to resume.

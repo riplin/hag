@@ -644,4 +644,17 @@ void* GetLinearFrameBuffer()
     return Matrox::Shared::PCI::FrameBufferAperture::GetAddress<void>(Matrox::Shared::Function::System::s_Device);
 }
 
+SetupBuffersError_t SetupBuffers(Buffers_t buffers)
+{
+    //TODO: properly implement this.
+    if ((buffers & Buffers::DepthBuffer) != 0)
+        return SetupBuffersError::DepthBufferNotSupported;
+    return (buffers != Buffers::SingleBuffer) ? SetupBuffersError::NotEnoughMemory : SetupBuffersError::Success;
+}
+
+void SwapScreen2D(bool waitForVSync)
+{
+    //TODO
+}
+
 }

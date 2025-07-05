@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 
 // CMDFIFO Packet Type 3
 // CMDFIFO Packet Type 3 is a variable length packet, requiring a minimum of 3 32-bit words, and a
@@ -101,6 +101,7 @@ namespace Hag::TDfx::Shared::Fifo::Packet3
         CommandStrip =          0x00000008,
         CommandContinueStrip =  0x00000010,
         NumVertex =             0x000003c0,
+        ParameterMask =         0x003ffc00,
         SetupRGB =              0x00000400,
         SetupAlpha =            0x00000800,
         SetupZ =                0x00001000,
@@ -120,7 +121,84 @@ namespace Hag::TDfx::Shared::Fifo::Packet3
         CullingNegative =       0x01000000,
         FanSignCorrection =     0x02000000,
         SignCorrectionEnable =  0x00000000,
-        SignCorrectionDisable = 0x02000000
+        SignCorrectionDisable = 0x02000000,
+        Color =                 0x10000000,
+        ColorFull =             0x00000000,
+        ColorPacked =           0x10000000,
+        Padding =               0xe0000000
     };
 
+    namespace Shift
+    {
+        enum
+        {
+            PacketType =            0x00,
+            Command =               0x03,
+            NumVertex =             0x06,
+            ParameterMask =         0x0a,
+            Mode =                  0x16,
+            Culling =               0x17,
+            CullingSign =           0x18,
+            FanSignCorrection =     0x19,
+            Color =                 0x1c,
+            Padding =               0x1d
+        };
+    }
+
+    inline Command_t Word0_Triangle(uint8_t numVertex, Command_t ParameterMask, Command_t sMode, uint8_t padding)
+    {
+        return PacketType |
+               CommandTriangle |
+               (Command_t(numVertex) << Shift::NumVertex) |
+               sMode |
+               (Command_t(padding) << Shift::Padding);
+    }
+
+    inline Command_t Word0_PackedColorTriangle(uint8_t numVertex, Command_t ParameterMask, Command_t sMode, uint8_t padding)
+    {
+        return PacketType |
+               CommandTriangle |
+               ColorPacked |
+               (Command_t(numVertex) << Shift::NumVertex) |
+               sMode |
+               (Command_t(padding) << Shift::Padding);
+    }
+
+    inline Command_t Word0_Strip(uint8_t numVertex, Command_t ParameterMask, Command_t sMode, uint8_t padding)
+    {
+        return PacketType |
+               CommandStrip |
+               (Command_t(numVertex) << Shift::NumVertex) |
+               sMode |
+               (Command_t(padding) << Shift::Padding);
+    }
+
+    inline Command_t Word0_PackedColorStrip(uint8_t numVertex, Command_t ParameterMask, Command_t sMode, uint8_t padding)
+    {
+        return PacketType |
+               CommandStrip |
+               ColorPacked |
+               (Command_t(numVertex) << Shift::NumVertex) |
+               sMode |
+               (Command_t(padding) << Shift::Padding);
+    }
+
+    inline Command_t Word0_StripContinuance(uint8_t numVertex, Command_t ParameterMask, Command_t sMode, uint8_t padding)
+    {
+        return PacketType |
+               CommandContinueStrip |
+               (Command_t(numVertex) << Shift::NumVertex) |
+               sMode |
+               (Command_t(padding) << Shift::Padding);
+    }
+
+    inline Command_t Word0_PackedColorStripContinuance(uint8_t numVertex, Command_t ParameterMask, Command_t sMode, uint8_t padding)
+    {
+        return PacketType |
+               CommandContinueStrip |
+               ColorPacked |
+               (Command_t(numVertex) << Shift::NumVertex) |
+               sMode |
+               (Command_t(padding) << Shift::Padding);
+    }
 }

@@ -54,6 +54,12 @@
 #include <hag/drivers/3dfx/shared/pci/fbbaddr.h>
 #include <hag/drivers/3dfx/shared/pci/iobaddr.h>
 
+#include <hag/drivers/3dfx/shared/fifo/fifodrct.h>
+#include <hag/drivers/3dfx/shared/fifo/fifodefr.h>
+#include <hag/drivers/3dfx/shared/fifo/fifofunc.h>
+
+#include <hag/testing/log.h>
+
 Hag::System::BDA::VideoParameterTable s_VideoParameters[] =
 {
     {
@@ -7060,6 +7066,7 @@ void PrintNewModeSettings()
 void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t foreground, Hag::Color32_t background)
 {
     using namespace Hag::TDfx;
+    LOG("main", "DrawLine");
 
     uint8_t* baseAddress = Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Shared::Function::System::s_Device);
 
@@ -7100,10 +7107,49 @@ void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t
     //*Shared::MMIO2D::LaunchArea::Get(baseAddress) = Shared::TwoD::LineLaunch_t(x1 | (uint32_t(y1) << Shared::TwoD::LineLaunch::Shift::Y));
 }
 
-void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
+void DrawLineFifoDirect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t foreground, Hag::Color32_t background)
+{
+    using namespace Hag::TDfx;
+    LOG("main", "DrawLineFifoDirect");
+
+    Shared::Fifo::Direct::TwoD::SetSourceXY<0>(x0, y0);
+
+    Shared::Fifo::Direct::TwoD::SetDestinationXY<0>(x1, y1);
+
+    Shared::Fifo::Direct::TwoD::SetLineStippleAndStyle<0>(0x00000006, 0x02010202);
+    Shared::Fifo::Direct::TwoD::SetColors<0>(foreground, background);
+    Shared::Fifo::Direct::TwoD::SetCommandAndExtra<0>(
+                                   Shared::TwoD::Command::CommandPolyLine
+                                   | Shared::TwoD::Command::InitiateCommand
+                                   | Shared::TwoD::Command::LineStipple
+                                   | Shared::TwoD::Command::PatternFormat,
+                                    Shared::TwoD::Rop::Source, 0);
+}
+
+void DrawLineFifoDeferred(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t foreground, Hag::Color32_t background)
+{
+    using namespace Hag::TDfx;
+    LOG("main", "DrawLineFifoDeferred");
+
+    Shared::Fifo::Deferred::TwoD::SetSourceXY(x0, y0);
+    Shared::Fifo::Deferred::TwoD::SetDestinationXY(x1, y1);
+    Shared::Fifo::Deferred::TwoD::SetLineStippleAndStyle(0x00000006, 0x02010202);
+    Shared::Fifo::Deferred::TwoD::SetColors(foreground, background);
+    Shared::Fifo::Deferred::TwoD::SetCommandAndExtra(
+                                   Shared::TwoD::Command::CommandPolyLine
+                                   | Shared::TwoD::Command::InitiateCommand
+                                   | Shared::TwoD::Command::LineStipple
+                                   | Shared::TwoD::Command::PatternFormat,
+                                    Shared::TwoD::Rop::Source, 0);
+    
+    Shared::Fifo::Deferred::TwoD::Commit(0);
+}
+
+void FillRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
 {
     using namespace Hag;
     using namespace Hag::TDfx;
+    LOG("main", "FillRectangle");
 
     uint32_t left = min(x0, x1) << Shared::TwoD::XY::Shift::X;
     uint32_t top = min(y0, y1) << Shared::TwoD::XY::Shift::Y;
@@ -7124,6 +7170,103 @@ void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Colo
                                   );
 }
 
+void FillRectangleFifoDirect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+    LOG("main", "FillRectangleFifoDirect");
+
+    uint32_t left = min(x0, x1);
+    uint32_t top = min(y0, y1);
+    uint32_t width = (max(x0, x1) - left);
+    uint32_t height = (max(y0, y1) - top);
+
+    Shared::Fifo::Direct::TwoD::SetForegroundColor<0>(color);
+    Shared::Fifo::Direct::TwoD::SetDestinationRect<0>(left, top, width, height);
+    Shared::Fifo::Direct::TwoD::SetCommandAndExtra<0>(
+        Shared::TwoD::Command::CommandRectangleFill | Shared::TwoD::Command::InitiateCommand,
+        Shared::TwoD::Rop::Source, 0);
+}
+
+void FillRectangleFifoDeferred(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+    LOG("main", "FillRectangleFifoDeferred");
+
+    uint32_t left = min(x0, x1);
+    uint32_t top = min(y0, y1);
+    uint32_t width = (max(x0, x1) - left);
+    uint32_t height = (max(y0, y1) - top);
+
+    Shared::Fifo::Deferred::TwoD::SetForegroundColor(color);
+    Shared::Fifo::Deferred::TwoD::SetDestinationRect(left, top, width, height);
+    Shared::Fifo::Deferred::TwoD::SetCommandAndExtra(
+        Shared::TwoD::Command::CommandRectangleFill | Shared::TwoD::Command::InitiateCommand,
+        Shared::TwoD::Rop::Source, 0);
+    
+    Shared::Fifo::Deferred::TwoD::Commit(0);
+}
+
+void DrawRectangleFifoDirect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+    LOG("main", "DrawRectangleFifoDirect");
+
+    uint32_t left = min(x0, x1);
+    uint32_t top = min(y0, y1);
+    uint32_t right = max(x0, x1);
+    uint32_t bottom = max(y0, y1);
+
+    Shared::Fifo::Direct::TwoD::SetSourceXY<0>(left, top);
+    Shared::Fifo::Direct::TwoD::SetForegroundColor<0>(color);
+    Shared::Fifo::Direct::TwoD::SetCommandAndExtra<0>(
+        Shared::TwoD::Command::CommandPolyLine,
+        Shared::TwoD::Rop::Source, 0);
+
+    Shared::Fifo::Command_t points[4] =
+    {
+        (right << Shared::TwoD::PolygonLaunch::Shift::X) | (top << Shared::TwoD::PolygonLaunch::Shift::Y),
+        (right << Shared::TwoD::PolygonLaunch::Shift::X) | (bottom << Shared::TwoD::PolygonLaunch::Shift::Y),
+        (left << Shared::TwoD::PolygonLaunch::Shift::X) | (bottom << Shared::TwoD::PolygonLaunch::Shift::Y),
+        (left << Shared::TwoD::PolygonLaunch::Shift::X) | (top << Shared::TwoD::PolygonLaunch::Shift::Y)
+    };
+
+    Shared::Fifo::Function::WriteLaunchArea<0>(points, sizeof(points) / sizeof(Shared::Fifo::Command_t));
+}
+
+void DrawRectangleFifoDeferred(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
+{
+    using namespace Hag;
+    using namespace Hag::TDfx;
+    LOG("main", "DrawRectangleFifoDeferred");
+
+    uint32_t left = min(x0, x1);
+    uint32_t top = min(y0, y1);
+    uint32_t right = max(x0, x1);
+    uint32_t bottom = max(y0, y1);
+
+    Shared::Fifo::Deferred::TwoD::SetSourceXY(left, top);
+    Shared::Fifo::Deferred::TwoD::SetForegroundColor(color);
+    Shared::Fifo::Deferred::TwoD::SetCommandAndExtra(
+        Shared::TwoD::Command::CommandPolyLine,
+        Shared::TwoD::Rop::Source, 0);
+
+    Shared::Fifo::Deferred::TwoD::Commit(0);
+
+    Shared::Fifo::Command_t points[4] =
+    {
+        (right << Shared::TwoD::PolygonLaunch::Shift::X) | (top << Shared::TwoD::PolygonLaunch::Shift::Y),
+        (right << Shared::TwoD::PolygonLaunch::Shift::X) | (bottom << Shared::TwoD::PolygonLaunch::Shift::Y),
+        (left << Shared::TwoD::PolygonLaunch::Shift::X) | (bottom << Shared::TwoD::PolygonLaunch::Shift::Y),
+        (left << Shared::TwoD::PolygonLaunch::Shift::X) | (top << Shared::TwoD::PolygonLaunch::Shift::Y)
+    };
+
+    Shared::Fifo::Function::WriteLaunchArea<0>(points, sizeof(points) / sizeof(Shared::Fifo::Command_t));
+}
+
+
 int main(void)
 {
     using namespace Hag;
@@ -7139,20 +7282,34 @@ int main(void)
 
 #ifndef MOCK
 
+    LOG_CONFIGURE("bantst.txt");
+
     //PrintNewModeSettings();
 
     VGA::ModeSetting::Initialize(allocator);
 
     //Testing::TestPatterns::TestVideoModes();
+
     uint16_t width = 800;
-    uint16_t stride = 4096;
+    //uint16_t stride = 4096;
     uint16_t height = 600;
     VGA::ModeSetting::SetVideoMode(width, height, VGA::ModeSetting::BitsPerPixel::Bpp24, VGA::ModeSetting::Flags::LinearFramebuffer);
+    VGA::ModeSetting::SetupBuffers(VGA::ModeSetting::Buffers::Depth16Bpp | VGA::ModeSetting::Buffers::DoubleBuffer);
 
-    Testing::TestPatterns::Draw24BppPattern(width, height, stride, VGA::ModeSetting::GetLinearFrameBufferAs<uint8_t>());
-    DrawRectangle(20, 25, 625, 520, Color::Bpp32::RoyalPurple);
-    DrawLine(30, 35, 615, 510, Color::Bpp32::BabyBlue, Color::Bpp32::Lime);
-    getchar();
+    //Testing::TestPatterns::Draw24BppPattern(width, height, stride, VGA::ModeSetting::GetLinearFrameBufferAs<uint8_t>());
+    do
+    {
+        //FillRectangleFifoDirect(20, 25, 625, 520, Color::Bpp32::RoyalPurple);
+        FillRectangleFifoDeferred(0, 0, width, height, Color::Bpp32::RoyalPurple);
+
+        //DrawRectangleFifoDirect(30, 35, 615, 510, Color::Bpp32::White);
+        DrawRectangleFifoDeferred(10, 10, width - 10, height - 10, Color::Bpp32::White);
+        
+        //DrawLineFifoDirect(30, 35, 615, 510, Color::Bpp32::BabyBlue, Color::Bpp32::Lime);
+        DrawLineFifoDeferred(15, 15, width - 15, height - 15, Color::Bpp32::White, Color::Bpp32::Black);
+
+        VGA::ModeSetting::SwapScreen2D(true);
+    } while (!kbhit());
 
     VGA::ModeSetting::SetVideoMode(80, 25, VGA::ModeSetting::BitsPerPixel::Bpp4, VGA::ModeSetting::Flags::Text);
     VGA::ModeSetting::Shutdown();
@@ -7235,6 +7392,7 @@ int main(void)
 
         Hag::Testing::Mock::SelectInstance(1);
         VGA::ModeSetting::SetVideoMode(testMode.Width, testMode.Height, testMode.Bpp, testMode.Flags, testMode.RefreshRate);
+        VGA::ModeSetting::SetupBuffers(VGA::ModeSetting::Buffers::DoubleBuffer | VGA::ModeSetting::Buffers::Depth16Bpp);
         memset(FARPointer(uint16_t(0xa000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
         memset(FARPointer(uint16_t(0xb000), 0x0000).ToPointer<uint8_t>(0x10000), 0, 0x10000);
         GetMemorySizeIn256KBlocks();

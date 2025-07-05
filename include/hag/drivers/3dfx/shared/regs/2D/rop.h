@@ -15,6 +15,7 @@ namespace Register
     };
 }
 
+typedef uint8_t Rop_t;
 namespace Rop
 {
     enum

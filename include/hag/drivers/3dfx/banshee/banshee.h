@@ -140,9 +140,15 @@
 #include <hag/drivers/3dfx/shared/fifo/pck6.h>
 #include <hag/drivers/3dfx/shared/fifo/yuvbaddr.h>
 #include <hag/drivers/3dfx/shared/fifo/yuvstride.h>
+#include <hag/drivers/3dfx/shared/fifo/fifodrct.h>
+#include <hag/drivers/3dfx/shared/fifo/fifodefr.h>
+#include <hag/drivers/3dfx/shared/fifo/fifofunc.h>
+
+#include <hag/drivers/vga/modeset.h>
 
 namespace Hag::TDfx::Banshee
 {
+    HAG_IMPORT_MODESETTING;
 
     typedef Shared::Register_t Register_t;
 
@@ -293,6 +299,7 @@ namespace Hag::TDfx::Banshee
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, PolyLineLaunch);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, PolygonLaunch);
 
+        IMPORTNAMESPACE(Shared::TwoD, Rop);
         typedef Shared::TwoD::LaunchCommand_t LaunchCommand_t;
     }
 
@@ -320,6 +327,8 @@ namespace Hag::TDfx::Banshee
 
     namespace Fifo
     {
+        typedef Shared::Fifo::Command_t Command_t;
+        
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPGraphicsAddress);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPGraphicsStride);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, AGPHostAddressHigh);
@@ -346,6 +355,18 @@ namespace Hag::TDfx::Banshee
         IMPORTNAMESPACE(Shared::Fifo, Packet6);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, YUVBaseAddress);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::Fifo, YUVStride);
+
+        namespace Direct
+        {
+            IMPORTNAMESPACE(Shared::Fifo::Direct, TwoD);
+        }
+
+        namespace Deferred
+        {
+            IMPORTNAMESPACE(Shared::Fifo::Deferred, TwoD);
+        }
+
+        using namespace Shared::Fifo::Function;
     }
 
 //IO Addresses from IOAddressBase

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 
 // CMDFIFO Packet Type 1
 // CMDFIFO Packet Type 1 is a variable length packet that allows writes to either a common address, or to
@@ -56,4 +56,22 @@ namespace Hag::TDfx::Shared::Fifo::Packet1
         WordCount =         0xffff0000,
     };
 
+    namespace Shift
+    {
+        enum
+        {
+            PacketType =        0x00,
+            RegisterBase =      0x03,
+            RegisterType =      0x0e,
+            Chip =              0x0b,
+            Increment =         0x0f,
+            WordCount =         0x10
+        };
+    };
+
+    inline Command_t Word0_2D(Command_t reg, Command_t chip, uint16_t words) { return Type2D | PacketType | (reg << Shift::RegisterBase) | (chip << Shift::Chip) | (Command_t(words) << Shift::WordCount); }
+    inline Command_t Word0_2DIncrement(Command_t reg, Command_t chip, uint16_t words) { return Type2D | PacketType | Increment | (reg << Shift::RegisterBase) | (chip << Shift::Chip) | (Command_t(words) << Shift::WordCount); }
+    inline Command_t Word0_3D(Command_t reg, Command_t chip, uint16_t words) { return Type3D | PacketType | (reg << Shift::RegisterBase) | (chip << Shift::Chip) | (Command_t(words) << Shift::WordCount); }
+    inline Command_t Word0_3DIncrement(Command_t reg, Command_t chip, uint16_t words) { return Type3D | PacketType | Increment | (reg << Shift::RegisterBase) | (chip << Shift::Chip) | (Command_t(words) << Shift::WordCount); }
+    
 }

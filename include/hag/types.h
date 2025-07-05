@@ -24,9 +24,30 @@ typedef unsigned int uint18_t;
 typedef unsigned int uint19_t;
 typedef unsigned int uint20_t;
 
+#ifndef forceinline
+#define forceinline __attribute__((always_inline)) inline
+#endif
+
+#define HAG_LIKELY [[likely]]
+#define HAG_UNLIKELY [[unlikely]]
+
 namespace Hag
 {
     template<typename T> T min(T a, T b) { return a < b ? a : b; }
     template<typename T> T max(T a, T b) { return a > b ? a : b; }
     template<typename T> T abs(T a) { return a < T(0) ? -a : a; }
+    template<typename T> T alignup(T a, T alignment) { return (a + (alignment - 1)) & ~(alignment - 1); }
+    template<typename T> T aligndown(T a, T alignment) { return a & ~(alignment - 1); }
+
+    consteval int numbits(int val)
+    {
+        int ret = 0;
+        while (val != 0)
+        {
+            ret += val & 1;
+            val >>= 1;
+        }
+        return ret;
+    }
+
 }

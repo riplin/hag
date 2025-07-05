@@ -2,7 +2,9 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <initializer_list>
+#include <hag/testing/log.h>
+#include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 
 // CMDFIFO Packet Type 4
 // CMDFIFO Packet Type 4 is a variable length packet, requiring a minimum of 2 32-bit words, and a
@@ -56,7 +58,100 @@ namespace Hag::TDfx::Shared::Fifo::Packet4
         Chip =                  0x00001800,
         Register =              0x000007f8,
         GeneralRegisterMask =   0x1fff8000,
-        Number =                0xe0000000
+        Padding =               0xe0000000
     };
+
+    namespace Shift
+    {
+        enum
+        {
+            PacketType = 0x00,
+            RegisterBase = 0x03,
+            RegisterType = 0x0e,
+            Chip = 0x0b,
+            GeneralRegisterMask = 0xf,
+            Padding = 0x1d
+        };
+    }
+
+    inline Command_t Word0_2D(uint16_t regBase, uint16_t regMask, uint8_t padding)
+    {
+        return PacketType |
+               Type2D |
+               (Command_t(regBase) << Shift::RegisterBase) |
+               (Command_t(regMask) << Shift::GeneralRegisterMask) |
+               (Command_t(padding) << Shift::Padding);
+    }
+    
+    inline Command_t Word0_3D(uint16_t regBase, uint16_t regMask, uint8_t padding)
+    {
+        return PacketType |
+               Type3D |
+               (Command_t(regBase) << Shift::RegisterBase) |
+               (Command_t(regMask) << Shift::GeneralRegisterMask) |
+               (Command_t(padding) << Shift::Padding);
+    }
+
+    template <uint16_t BaseRegister, auto... Regs>
+    struct Registers
+    {
+        static consteval unsigned int base() { return BaseRegister; }
+        static consteval std::size_t length() { return sizeof...(Regs); }
+
+        static consteval int numbits(int val)
+        {
+            int ret = 0;
+            while (val != 0)
+            {
+                ret += val & 1;
+                val >>= 1;
+            }
+            return ret;
+        }
+
+        static consteval bool valid()
+        {
+            bool v = true;
+            for (auto reg : {Regs...})
+            {
+                v &= (reg >= BaseRegister) && (reg < (BaseRegister + numbits(GeneralRegisterMask)));
+            }
+            return v;
+        }
+
+        static consteval Command_t bits()
+        {
+            Command_t ret = 0;
+            for (auto reg : {Regs...})
+            {
+                ret |= 1 << (reg - BaseRegister);
+            }
+            return ret;
+        }
+    };
+
+    template <typename Regs, typename... Vals>
+    forceinline void Emit(Command_t volatile* ptr, uint8_t padding, Vals... vals)
+    {
+        static_assert(Regs::length() == sizeof...(Vals), "Number of registers must match number of arguments");
+        static_assert(sizeof...(Vals) > 0, "Must write at least one register");
+        static_assert(Regs::valid(), "Registers are out of bound");
+
+        int index = 0;
+        ptr[index] = (Regs::bits() << Shift::GeneralRegisterMask) |
+                     (Regs::base() << Shift::RegisterBase) |
+                     (Command_t(padding) << Shift::Padding) |
+                     PacketType;
+        LOG("Fifo", "Packet4: header: 0x%08lX", ptr[index]);
+
+        ++index;
+        for (auto val : {vals...})
+        {
+            LOG("Fifo", "Packet4: register: 0x%08lX", val);
+
+            ptr[index] = val;
+            ++index;
+        }
+    }
 
 }

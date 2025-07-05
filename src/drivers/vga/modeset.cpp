@@ -45,6 +45,7 @@ FARPointer s_Font8x14;
 FARPointer s_Font8x16;
 FARPointer s_SystemFont;
 FARPointer s_SystemFontGraphics;
+const ModeDescriptor* s_CurrentDescriptor = nullptr;
 
 bool Initialize(IAllocator& allocator)
 {
@@ -756,8 +757,6 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
         BDA::CGAColorPaletteMaskSetting::Get() = descriptor.CGAColorPaletteMaskSetting;
 }
 
-static const ModeDescriptor* s_CurrentDescriptor = nullptr;
-
 SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, bool clearDisplay)
 {
     using namespace Hag::System;
@@ -815,6 +814,22 @@ void* GetLinearFrameBuffer()
         ((s_CurrentDescriptor->Flags & Flags::LinearFramebuffer) != 0))
         return External::GetLinearFrameBuffer();
     return nullptr;
+}
+
+SetupBuffersError_t SetupBuffers(Buffers_t buffers)
+{
+    if (s_CurrentDescriptor == nullptr)
+        return SetupBuffersError::ModeNotSet;
+
+    if ((buffers & Buffers::ImageBuffers) == 0)
+        return SetupBuffersError::IllegalBufferCount;
+
+    return External::SetupBuffers(buffers);
+}
+
+void SwapScreen2D(bool waitForVSync)
+{
+    External::SwapScreen2D(waitForVSync);
 }
 
 

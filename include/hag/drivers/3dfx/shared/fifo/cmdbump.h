@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <hag/system/sysasm.h>
 #include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 
 namespace Hag::TDfx::Shared::Fifo
@@ -38,6 +39,7 @@ namespace CommandBump
     template <int V>
     void Write(uint8_t* baseAddress, CommandBump_t value)
     {
+        SYS_Barrier();
         *((CommandBump_t volatile *)(baseAddress + Shared::Fifo::Register::Base + ((V == 0) ? Register::CommandBump0 : Register::CommandBump1))) = value;
     }
 

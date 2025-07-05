@@ -85,12 +85,6 @@ struct FontConfiguration
 namespace Hag::VGA::ModeSetting
 {
 
-extern FARPointer s_Font8x8;
-extern FARPointer s_Font8x8Graphics;
-extern FARPointer s_Font8x16;
-extern FARPointer s_SystemFont;
-extern FARPointer s_SystemFontGraphics;
-
 extern bool DeclareAperture(uint32_t address, uint32_t size);
 
 typedef uint8_t Scanlines_t;
@@ -224,6 +218,15 @@ struct ModeDescriptor
 
 #pragma pack(pop)
 
+// External refrerences to internal mode setting state.
+
+extern FARPointer s_Font8x8;
+extern FARPointer s_Font8x8Graphics;
+extern FARPointer s_Font8x16;
+extern FARPointer s_SystemFont;
+extern FARPointer s_SystemFontGraphics;
+extern const ModeDescriptor* s_CurrentDescriptor;
+
 // These functions need to be implemented by any driver wishing to provide video mode setting.
 // Once those functions are implemented, simply linking in the modeset.cpp file will provide proper
 // mode setting.
@@ -258,6 +261,8 @@ namespace External
     extern void SetupClock(const ModeDescriptor& descriptor, RefreshRate_t refreshRate);
 
     extern void* GetLinearFrameBuffer();
+    extern SetupBuffersError_t SetupBuffers(Buffers_t buffers);
+    extern void SwapScreen2D(bool waitForVSync);
 }
 
 }

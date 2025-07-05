@@ -107,7 +107,7 @@ namespace Command
         LineStipple =                           0x00001000,
         PatternFormat =                         0x00002000, // Pattern Format (1 = monochrome, 0 = color)
         PatternColor =                          0x00000000,
-        PAtternMonochrome =                     0x00002000,
+        PatternMonochrome =                     0x00002000,
         XDirection =                            0x00004000, // X direction (0 = left to right, 1 = right to left)
         YDirection =                            0x00008000, // Y direction (0 = top to bottom, 1 = bottom to top)
         TransparentMonochrome =                 0x00010000, // Transparent monochrome (1 = transparent, 0 = opaque)

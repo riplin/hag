@@ -1,7 +1,6 @@
 //Copyright 2025-Present riplin
 
 #include <dos.h>
-#include <stdio.h>
 #include <hag/system/interrup.h>
 #include <hag/drivers/vga/extmsapi.h>
 #include "modintl.h"
@@ -173,7 +172,6 @@ SetVideoError_t SupportsRefreshRate(const ModeDescriptor& descriptor, RefreshRat
     if ((descriptor.Flags & TDfx::Shared::Function::ModeSetting::Flags::TDfx) != 0)
     {
         uint32_t frequency = CalculateFrequency(descriptor, refreshRate);
-        printf("Frequency %ix%ix%ibpp@%iHz: %lu\n", descriptor.Width, descriptor.Height, descriptor.Bpp, refreshRate, frequency);
         return (frequency < 250000000) ? SetVideoError::Success : SetVideoError::NotSupportedByRamdac;
     }
     else
@@ -255,6 +253,8 @@ void DisableExtendedMode()
 
     IO::VGAInit1::Write(Function::System::s_IOBaseAddress,
         IO::VGAInit1::Read(Function::System::s_IOBaseAddress) & ~VGAInit1::EnableChain4Mode);
+
+    Function::System::CleanUpBuffers();
 }
 
 void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
@@ -344,6 +344,7 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
                 break;
             }
             
+            //TODO: the 3D core probably needs this setup as well.
             MMIO2D::DestinationFormat::Write(baseAddress2d, descriptor.Stride | bpp2D);
 
             MMIO2D::Clip::WriteClip0Min(baseAddress2d, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
@@ -351,7 +352,6 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
             MMIO2D::Clip::WriteClip1Min(baseAddress2d, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
             MMIO2D::Clip::WriteClip1Max(baseAddress2d, (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
 
-            //TODO: the 3D core probably needs this setup as well.
         }
 
         IO::VideoProcessorConfiguration::Write(Function::System::s_IOBaseAddress, videoProcessorConfiguration);
@@ -437,7 +437,17 @@ void SetupClock(const ModeDescriptor& descriptor, RefreshRate_t refreshRate)
 
 void* GetLinearFrameBuffer()
 {
-    return TDfx::Shared::PCI::FrameBufferBaseAddress::GetBaseAddressAs<void>(TDfx::Shared::Function::System::s_Device);
+    return TDfx::Shared::Function::System::s_LinearFrameBuffer;
+}
+
+SetupBuffersError_t SetupBuffers(Buffers_t buffers)
+{
+    return TDfx::Shared::Function::System::SetupBuffers(buffers);
+}
+
+void SwapScreen2D(bool waitForVSync)
+{
+    TDfx::Shared::Function::System::SwapScreen2D(waitForVSync);
 }
 
 }

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include <hag/system/sysasm.h>
 #include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 
 namespace Hag::TDfx::Shared::Fifo
@@ -28,6 +29,7 @@ namespace CommandBaseSize
     {
         Size =          0x000000ff, // Size of CmdFifo in 4k byte pages. (0=4k, 1 = 8k, etc…). Default is 0x0.
         Enable =        0x00000100, // CMDFIFO_? enable (0=disable, 1=enable). Default is 0x0.
+        Disable =       0x00000000,
         Location =      0x00000200, // CMDFIFO_0 resides in AGP (0=frame buffer memory, 1=AGP memory). Default is 0x0.
         Framebuffer =   0x00000000,
         AGP =           0x00000200,
@@ -56,6 +58,7 @@ namespace CommandBaseSize
     template <int V>
     void Write(uint8_t* baseAddress, CommandBaseSize_t value)
     {
+        SYS_Barrier();
         *((CommandBaseSize_t volatile *)(baseAddress + Shared::Fifo::Register::Base + ((V == 0) ? Register::CommandBaseSize0 : Register::CommandBaseSize1))) = value;
     }
 
