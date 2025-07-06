@@ -5,7 +5,6 @@
 #include <initializer_list>
 
 #ifdef DEBUG
-//#if 1
 
 #define LOG_CONFIGURE(fileName) \
 Hag::Testing::Log::Configure(fileName);

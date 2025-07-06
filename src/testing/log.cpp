@@ -1,7 +1,6 @@
 //Copyright 2025-Present riplin
 
 #ifdef DEBUG
-//#if 1
 
 #include <unordered_set>
 #include <stdarg.h>

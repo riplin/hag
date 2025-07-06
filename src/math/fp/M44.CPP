@@ -2,7 +2,8 @@
 
 #include <hag/math/fp/M44.H>
 
-namespace Hag::Math {
+namespace Hag::Math
+{
 
 m44 m44::Identity(v4(1, 0, 0, 0),
                   v4(0, 1, 0, 0),

@@ -2,7 +2,8 @@
 
 #include <hag/types.h>
 
-namespace Hag::Math {
+namespace Hag::Math
+{
 
 int32_t s_sinTable[] =
 {

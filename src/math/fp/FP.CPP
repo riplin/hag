@@ -2,7 +2,8 @@
 
 #include <hag/math/fp/fpmath.h>
 
-namespace Hag::Math {
+namespace Hag::Math
+{
 
 fp fp::Pi          = fp::Divide( 314159265, 100000000);
 fp fp::HalfPi      = fp::Divide( 314159265, 200000000);

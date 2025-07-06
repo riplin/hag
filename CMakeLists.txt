@@ -7,7 +7,7 @@ set (CMAKE_CXX_COMPILER_RANLIB ${CMAKE_FIND_ROOT_PATH}/djgpp/i586-pc-msdosdjgpp/
 set(CMAKE_GENERATOR Ninja)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
-add_compile_options(-Wall -std=c++23 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals -msse1)
+add_compile_options(-Wall -std=c++23 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals)
 
 add_compile_options(
     "$<$<CONFIG:RELEASE>:-DRELEASE>"
@@ -38,6 +38,8 @@ add_library(hag
             src/math/fp/fp.cpp
             src/math/fp/fptables.cpp
             src/math/fp/m44.cpp
+            src/math/flt/flt.cpp
+            src/math/flt/m44.cpp
             src/system/bda.cpp
             src/system/pci.cpp
             src/system/pit.cpp

@@ -4,7 +4,8 @@
 
 #include <hag/math/fp/v2.h>
 
-namespace Hag::Math {
+namespace Hag::Math
+{
 
 class v3
 {
