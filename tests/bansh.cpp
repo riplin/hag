@@ -6,37 +6,50 @@
 
 #include <hag/color.h>
 #include <hag/testing/log.h>
-#include <hag/math/flt/fltmath.h>
+#include <hag/math/math.h>
 #include <hag/drivers/3dfx/banshee/banshee.h>
 
-extern Hag::Math::flt::v4 icoVecs[12];
+// #include <xmmintrin.h>
+// #ifdef __SSE__
+// #error blah
+// #endif
+
+// __m128 a = { 0.0f, 1.0f, 2.0f, 3.0f };
+// __m128 b = { 4.0f, 5.0f, 6.0f, 7.0f };
+
+// __m128 c = _mm_add_ps(a, b);
+
+// LOG("test", "c: %0.4f, %0.4f, %0.4f, %0.4f", c[0], c[1], c[2], c[3]);
+
+
+extern Hag::Math::v4 icoVecs[12];
 extern uint32_t icoTri[20][3];
-extern Hag::Math::flt::v4 icoNorm[20];
+extern Hag::Math::v4 icoNorm[20];
 
 void setupNormals();
 void colorLerp(Hag::Color32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB);
 
-typedef std::function<void(Hag::Color32_t color, const Hag::Math::flt::v4* triangle)> TriangleRender_t;
-void RenderModel(const Hag::Math::flt::v3& val,
+typedef std::function<void(Hag::Color32_t color, const Hag::Math::v4* triangle)> TriangleRender_t;
+void RenderModel(const Hag::Math::v3& val,
                  uint16_t screenCenterX,
                  uint16_t screenCenterY,
-                 const Hag::Math::flt::v4& light,
-                 const Hag::Math::flt::v3& modelTranslate,
-                 const Hag::Math::flt::m44& scale,
-                 const Hag::Math::flt::m44& proj,
-                 const Hag::Math::flt::v4* vectors,
-                 Hag::Math::flt::v4* tempVectors,
+                 const Hag::Math::v4& light,
+                 const Hag::Math::v3& modelTranslate,
+                 const Hag::Math::m44& scale,
+                 const Hag::Math::m44& proj,
+                 const Hag::Math::v4* vectors,
+                 Hag::Math::v4* tempVectors,
                  uint32_t vectorCount,
                  const uint32_t(*indices)[3],
-                 const Hag::Math::flt::v4* normals,
-                 Hag::Math::flt::v4* tempNormals,
+                 const Hag::Math::v4* normals,
+                 Hag::Math::v4* tempNormals,
                  uint32_t indexCount,
                 const TriangleRender_t& triangleRender);
 
 void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void FillRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-void DrawTriangle(const Hag::Math::flt::v4* vectors);
+void DrawTriangle(const Hag::Math::v4* vectors);
 
 uint32_t colors[256];
 
@@ -58,19 +71,19 @@ int main(void)
     colorLerp(colors + 192, 63, Bpp32::RoyalPurple, Bpp32::Cream);
     colors[255] = Bpp32::Cream;
 
-    flt::v3 val(0);
-    flt::v3 inc(flt::Pi / 100, flt::Pi / 75, flt::Pi / 55);
+    v3 val(0);
+    v3 inc(Pi / 100, Pi / 75, Pi / 55);
 
-    flt::v4 icor[12];
-    flt::v4 icon[20];
+    v4 icor[12];
+    v4 icon[20];
     setupNormals();
 
-    flt::m44 scale = flt::m44::Scale(flt::v3(1.5f, 1.5f, 1.5f));
-    flt::m44 proj = flt::m44::Projection(width, height, flt::ToRad(90), flt::One, 250);
+    m44 scale = m44::Scale(v3(1.5f, 1.5f, 1.5f));
+    m44 proj = m44::Projection(width, height, ToRad(90), One, 250);
     float scrX = width >> 1;
     float scrY = height >> 1;
 
-    flt::v4 light = flt::v4(flt::v3(1.0f).Normalize(), 0);
+    v4 light = v4(v3(1.0f).Normalize(), 0);
     
     Support::Allocator allocator;
     Banshee::Initialize(allocator);
@@ -90,23 +103,23 @@ int main(void)
                     scrX,
                     scrY,
                     light,
-                    flt::v3(0, 0, 90),
+                    v3(0, 0, 90),
                     scale,
                     proj,
                     icoVecs,
                     icor,
-                    sizeof(icoVecs) / sizeof(flt::v4),
+                    sizeof(icoVecs) / sizeof(v4),
                     icoTri,
                     icoNorm,
                     icon,
                     sizeof(icoTri) / sizeof(uint32_t[3]),
-                    [](Color32_t color, const flt::v4* triangle)
+                    [](Color32_t color, const v4* triangle)
             {
                 Banshee::Fifo::Deferred::TwoD::SetForegroundColor(color);
                 DrawTriangle(triangle);
             });
 
-        val = (val + inc) % flt::TwoPi;        
+        val = (val + inc) % TwoPi;        
 
         Banshee::SwapScreen2D(true);
     } while (!kbhit());
@@ -182,7 +195,7 @@ void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     Shared::Fifo::Deferred::TwoD::Commit(0);
 }
 
-void DrawTriangle(const Hag::Math::flt::v4* vectors)
+void DrawTriangle(const Hag::Math::v4* vectors)
 {
     using namespace Hag;
     using namespace Hag::TDfx;
@@ -249,11 +262,11 @@ float pZ = 85.0650808352039932f;
 float nX = -pX;
 float nZ = -pZ;
 
-Hag::Math::flt::v4 icoVecs[12] =
+Hag::Math::v4 icoVecs[12] =
 {
-    Hag::Math::flt::v4(nX,  0, pZ, 1), Hag::Math::flt::v4(pX,  0, pZ, 1), Hag::Math::flt::v4(nX,  0, nZ, 1), Hag::Math::flt::v4(pX,  0, nZ, 1),
-    Hag::Math::flt::v4( 0, pZ, pX, 1), Hag::Math::flt::v4( 0, pZ, nX, 1), Hag::Math::flt::v4( 0, nZ, pX, 1), Hag::Math::flt::v4( 0, nZ, nX, 1),
-    Hag::Math::flt::v4(pZ, pX,  0, 1), Hag::Math::flt::v4(nZ, pX,  0, 1), Hag::Math::flt::v4(pZ, nX,  0, 1), Hag::Math::flt::v4(nZ, nX,  0, 1),
+    Hag::Math::v4(nX,  0, pZ, 1), Hag::Math::v4(pX,  0, pZ, 1), Hag::Math::v4(nX,  0, nZ, 1), Hag::Math::v4(pX,  0, nZ, 1),
+    Hag::Math::v4( 0, pZ, pX, 1), Hag::Math::v4( 0, pZ, nX, 1), Hag::Math::v4( 0, nZ, pX, 1), Hag::Math::v4( 0, nZ, nX, 1),
+    Hag::Math::v4(pZ, pX,  0, 1), Hag::Math::v4(nZ, pX,  0, 1), Hag::Math::v4(pZ, nX,  0, 1), Hag::Math::v4(nZ, nX,  0, 1),
 };
 
 uint32_t icoTri[20][3] =
@@ -264,7 +277,7 @@ uint32_t icoTri[20][3] =
     {6, 10,  1}, {9, 11, 0}, {9, 2, 11}, { 9, 5, 2}, {7, 11, 2},
 };
 
-Hag::Math::flt::v4 icoNorm[20];
+Hag::Math::v4 icoNorm[20];
 
 void setupNormals()
 {
@@ -278,7 +291,7 @@ void setupNormals()
     }
 }
 
-bool isBackFace(const Hag::Math::flt::v4& vec0, const Hag::Math::flt::v4& vec1, const Hag::Math::flt::v4& vec2)
+bool isBackFace(const Hag::Math::v4& vec0, const Hag::Math::v4& vec1, const Hag::Math::v4& vec2)
 {
     using namespace Hag::Math::flt;
     float d01x = (vec1.x() - vec0.x());
@@ -288,19 +301,19 @@ bool isBackFace(const Hag::Math::flt::v4& vec0, const Hag::Math::flt::v4& vec1, 
     return d01x * d02y - d01y * d02x >= 0;
 }
 
-void RenderModel(const Hag::Math::flt::v3& val,
+void RenderModel(const Hag::Math::v3& val,
                  uint16_t screenCenterX,
                  uint16_t screenCenterY,
-                 const Hag::Math::flt::v4& light,
-                 const Hag::Math::flt::v3& modelTranslate,
-                 const Hag::Math::flt::m44& scale,
-                 const Hag::Math::flt::m44& proj,
-                 const Hag::Math::flt::v4* vectors,
-                 Hag::Math::flt::v4* tempVectors,
+                 const Hag::Math::v4& light,
+                 const Hag::Math::v3& modelTranslate,
+                 const Hag::Math::m44& scale,
+                 const Hag::Math::m44& proj,
+                 const Hag::Math::v4* vectors,
+                 Hag::Math::v4* tempVectors,
                  uint32_t vectorCount,
                  const uint32_t(*indices)[3],
-                 const Hag::Math::flt::v4* normals,
-                 Hag::Math::flt::v4* tempNormals,
+                 const Hag::Math::v4* normals,
+                 Hag::Math::v4* tempNormals,
                  uint32_t indexCount,
                  const TriangleRender_t& triangleRender)
 {
@@ -310,17 +323,17 @@ void RenderModel(const Hag::Math::flt::v3& val,
 
     LOG("main", "RenderModel");
 
-    flt::m44 rot = flt::m44::RotateZ(val.z()) *
-                    flt::m44::RotateY(val.y()) *
-                    flt::m44::RotateX(val.x());
+    m44 rot = m44::RotateZ(val.z()) *
+                    m44::RotateY(val.y()) *
+                    m44::RotateX(val.x());
 
-    flt::m44 trans = proj * flt::m44::Translate(modelTranslate) * rot * scale;
+    m44 trans = proj * m44::Translate(modelTranslate) * rot * scale;
 
     for (uint32_t i = 0; i < vectorCount; ++i)
     {
-        flt::v4 t = trans * vectors[i];
-        float invZ = flt::One / t.z();
-        tempVectors[i] = flt::v4(t.x() * invZ + screenCenterX, t.y() * invZ + screenCenterY, t.z(), t.w());
+        v4 t = trans * vectors[i];
+        float invZ = One / t.z();
+        tempVectors[i] = v4(t.x() * invZ + screenCenterX, t.y() * invZ + screenCenterY, t.z(), t.w());
     }
 
     for (uint32_t i = 0; i < indexCount; ++i)
@@ -328,7 +341,7 @@ void RenderModel(const Hag::Math::flt::v3& val,
         tempNormals[i] = rot * normals[i];
     }
 
-    flt::v4 tri[3];
+    v4 tri[3];
 
     for (uint32_t i = 0; i < indexCount; ++i)
     {

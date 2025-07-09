@@ -2,7 +2,8 @@
 
 #pragma once
 
-#include <hag/drivers/3dfx/shared/regs/2D/status.h>
+#include <hag/drivers/3dfx/shared/regs/2D/2dbase.h>
+#include <hag/drivers/3dfx/shared/regs/status.h>
 
 namespace Hag::TDfx::Shared::MMIO2D
 {
@@ -10,9 +11,9 @@ namespace Hag::TDfx::Shared::MMIO2D
 namespace Status
 {
     
-    inline Shared::TwoD::Status_t Read(uint8_t* baseAddress)
+    inline Shared::Status_t Read(uint8_t* baseAddress)
     {
-        return *((Shared::TwoD::Status_t volatile *)(baseAddress + Shared::TwoD::Register::Base + Shared::TwoD::Register::Status));
+        return *((Shared::Status_t volatile *)(baseAddress + Shared::TwoD::Register::Base + Shared::Register::Status));
     }
 
 }

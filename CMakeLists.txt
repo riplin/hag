@@ -8,6 +8,7 @@ set(CMAKE_GENERATOR Ninja)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
 add_compile_options(-Wall -std=c++23 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals)
+# -march=pentium3 -msse
 
 add_compile_options(
     "$<$<CONFIG:RELEASE>:-DRELEASE>"

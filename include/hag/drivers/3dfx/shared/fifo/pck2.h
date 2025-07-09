@@ -14,7 +14,6 @@
 #include <hag/drivers/3dfx/shared/regs/2D/colkey.h>
 #include <hag/drivers/3dfx/shared/regs/2D/color.h>
 #include <hag/drivers/3dfx/shared/regs/2D/dstfmt.h>
-#include <hag/drivers/3dfx/shared/regs/2D/intctrl.h>
 #include <hag/drivers/3dfx/shared/regs/2D/lncharea.h>
 #include <hag/drivers/3dfx/shared/regs/2D/lnstl.h>
 #include <hag/drivers/3dfx/shared/regs/2D/lnstp.h>
@@ -22,7 +21,6 @@
 #include <hag/drivers/3dfx/shared/regs/2D/rop.h>
 #include <hag/drivers/3dfx/shared/regs/2D/size.h>
 #include <hag/drivers/3dfx/shared/regs/2D/srcfmt.h>
-#include <hag/drivers/3dfx/shared/regs/2D/status.h>
 #include <hag/drivers/3dfx/shared/regs/2D/xy.h>
 
 // CMDFIFO Packet Type 2

@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include <hag/drivers/3dfx/shared/regs/2D/2dbase.h>
+#include <hag/types.h>
 
-namespace Hag::TDfx::Shared::TwoD
+namespace Hag::TDfx::Shared
 {
 
 namespace Register

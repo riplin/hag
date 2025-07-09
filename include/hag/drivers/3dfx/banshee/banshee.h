@@ -95,6 +95,8 @@
 #include <hag/drivers/3dfx/shared/io/vidprcfg.h>
 #include <hag/drivers/3dfx/shared/io/vidscrs.h>
 
+#include <hag/drivers/3dfx/shared/mmio2d/status.h>
+#include <hag/drivers/3dfx/shared/mmio2d/intctrl.h>
 #include <hag/drivers/3dfx/shared/mmio2d/baseaddr.h>
 #include <hag/drivers/3dfx/shared/mmio2d/breserr.h>
 #include <hag/drivers/3dfx/shared/mmio2d/clip.h>
@@ -103,7 +105,6 @@
 #include <hag/drivers/3dfx/shared/mmio2d/colkey.h>
 #include <hag/drivers/3dfx/shared/mmio2d/color.h>
 #include <hag/drivers/3dfx/shared/mmio2d/dstfmt.h>
-#include <hag/drivers/3dfx/shared/mmio2d/intctrl.h>
 #include <hag/drivers/3dfx/shared/mmio2d/lncharea.h>
 #include <hag/drivers/3dfx/shared/mmio2d/lnstl.h>
 #include <hag/drivers/3dfx/shared/mmio2d/lnstp.h>
@@ -111,8 +112,10 @@
 #include <hag/drivers/3dfx/shared/mmio2d/rop.h>
 #include <hag/drivers/3dfx/shared/mmio2d/size.h>
 #include <hag/drivers/3dfx/shared/mmio2d/srcfmt.h>
-#include <hag/drivers/3dfx/shared/mmio2d/status.h>
 #include <hag/drivers/3dfx/shared/mmio2d/xy.h>
+
+#include <hag/drivers/3dfx/shared/mmio3d/status.h>
+#include <hag/drivers/3dfx/shared/mmio3d/intctrl.h>
 
 #include <hag/drivers/3dfx/shared/fifo/agpgaddr.h>
 #include <hag/drivers/3dfx/shared/fifo/agpgstrd.h>
@@ -273,6 +276,8 @@ namespace Hag::TDfx::Banshee
 
     namespace TwoD
     {
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, Status);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, InterruptControl);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, BaseAddress);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, BresenhamError);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Clip);
@@ -281,14 +286,12 @@ namespace Hag::TDfx::Banshee
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, ColorKey);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Color);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, DestinationFormat);
-        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, InterruptControl);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, LineStyle);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, LineStipple);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Pattern);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, RasterOperation);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Size);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, SourceFormat);
-        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, Status);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, XY);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, ScreenBlitLaunch);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::TwoD, ScreenStretchBlitLaunch);
@@ -303,8 +306,16 @@ namespace Hag::TDfx::Banshee
         typedef Shared::TwoD::LaunchCommand_t LaunchCommand_t;
     }
 
+    namespace ThreeD
+    {
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, Status);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, InterruptControl);
+    }
+
     namespace MMIO2D
     {
+        IMPORTNAMESPACE(Shared::MMIO2D, Status);
+        IMPORTNAMESPACE(Shared::MMIO2D, InterruptControl);
         IMPORTNAMESPACE(Shared::MMIO2D, BaseAddress);
         IMPORTNAMESPACE(Shared::MMIO2D, BresenhamError);
         IMPORTNAMESPACE(Shared::MMIO2D, Clip);
@@ -313,16 +324,20 @@ namespace Hag::TDfx::Banshee
         IMPORTNAMESPACE(Shared::MMIO2D, ColorKey);
         IMPORTNAMESPACE(Shared::MMIO2D, Color);
         IMPORTNAMESPACE(Shared::MMIO2D, DestinationFormat);
-        IMPORTNAMESPACE(Shared::MMIO2D, InterruptControl);
         IMPORTNAMESPACE(Shared::MMIO2D, LineStyle);
         IMPORTNAMESPACE(Shared::MMIO2D, LineStipple);
         IMPORTNAMESPACE(Shared::MMIO2D, Pattern);
         IMPORTNAMESPACE(Shared::MMIO2D, RasterOperation);
         IMPORTNAMESPACE(Shared::MMIO2D, Size);
         IMPORTNAMESPACE(Shared::MMIO2D, SourceFormat);
-        IMPORTNAMESPACE(Shared::MMIO2D, Status);
         IMPORTNAMESPACE(Shared::MMIO2D, XY);
         IMPORTNAMESPACE(Shared::MMIO2D, LaunchArea);
+    }
+    
+    namespace MMIO3D
+    {
+        IMPORTNAMESPACE(Shared::MMIO3D, Status);
+        IMPORTNAMESPACE(Shared::MMIO3D, InterruptControl);
     }
 
     namespace Fifo
@@ -483,5 +498,295 @@ namespace Hag::TDfx::Banshee
 // colorPattern         0x100(256)  0x40    31:0    R/W     Pattern Registers (64 entries)
 //                      to          to
 //                      0x1fc(508)  
+
+
+// 3D Memory Mapped Register Set
+
+// A 4Mbyte (22-bit) FBI memory mapped register address is divided into the following fields:
+
+// +--------+---------+--------+--------+----------+------+
+// | AltMap | Swizzle |  Wrap  |  Chip  | Register | Byte |
+// +--------+---------+--------+--------+----------+------+
+// |   21   |   20    | 19  14 | 13  10 | 9      2 | 1  0 |
+// +--------+---------+--------+--------+----------+------+
+
+// The chip field selects one or more of the Banshee chips (FBI and/or TREX) to be accessed. Each bit in
+// the chip field selects one chip for writing, with FBI controlled by the lsb of the chip field, and TREX#2
+// controlled by the msb of the chip field. Note the chip field value of 0x0 selects all chips. The following
+// table shows the chip field mappings: The current generation of Banshee only supports 1 TREX, so only
+// bits 1:0 are valid, future generation of Banshee will support additional TREX cores.
+
+// Chip Field      SST-1 Chip Accessed
+// 0000            FBI + all TREX chips
+// 0001            FBI
+// 0010            TREX #0
+// 0011            FBI + TREX #0
+// 0100            TREX #1
+// 0101            FBI + TREX #1
+// 0110            TREX #0 + TREX #1
+// 0111            FBI + TREX #0 + TREX #1
+// 1000            TREX #2
+// 1001            FBI + TREX #2
+// 1010            TREX #0 + TREX #2
+// 1011            FBI + TREX #0 + TREX #2
+// 1100            TREX #1 + TREX #2
+// 1101            FBI + TREX #1 + TREX #2
+// 1110            TREX #0 + TREX #1 + TREX #2
+// 1111            FBI + all TREX chips
+
+
+// Note that TREX #0 is always connected to FBI in the system level diagrams of section 3, and TREX #1 is
+// attached to TREX #0, etc. By utilizing the different chip fields, software can precisely control the data
+// presented to individual chips which compose the Banshee graphics subsystem. Note that for reads, the
+// chip field is ignored, and read data is always read from FBI. The register field selects the register to be
+// accessed from the table below. All accesses to the memory mapped registers must be 32-bit accesses. No
+// byte (8-bit) or halfword (16-bit) accesses are allowed to the memory mapped registers, so the byte (2-bit)
+// field of all memory mapped register accesses must be 0x0. As a result, to modify individual bits of a 32-
+// bit register, the entire 32-bit word must be written with valid bits in all positions.
+
+// The table below shows the Banshee register set. The register set shown below is the address map when
+// triangle registers address aliasing (remapping) is disabled(fbiinit3(0)=0). When The chip column
+// illustrates which registers are stored in which chips. For the registers which are stored in TREX, the %
+// symbol specifies that the register is unconditionally written to TREX regardless of the chip address.
+// Similarly, the * symbol specifies that the register is only written to a given TREX if specified in the chip
+// address. The R/W column illustrates the read/write status of individual registers. Reading from a register
+// which is “write only” returns undefined data. Also, reading from a register that is TREX specific returns
+// undefined data. Reads from all other memory mapped registers only contain valid data in the bits stored
+// by the registers, and undefined/reserved bits in a given register must be masked by software. The sync
+// column indicates whether the graphics processor must wait for the current command to finish before
+// loading a particular register from the FIFO. A “yes” in the sync column means the graphics processor
+// will flush the data pipeline before loading the register -- this will result in a small performance
+// degradation when compared to those registers which do not need synchronization. The FIFO column
+// indicates whether a write to a particular register will be pushed into the PCI bus FIFO. Care must be
+// taken when writing to those registers not pushed into the FIFO in order to prevent race conditions between
+// FIFOed and non-FIFOed registers. Also note that reads are not pushed into the PCI bus FIFO, and
+// reading FIFOed registers will return the current value of the register, irrespective of pending writes to the
+// register present in the FIFO.
+
+
+// Memory Base 0: Offset 0x0200000
+
+// Register Name   Address     Reg     Bits    Chip        R/W     Sync?       Description
+//                             Num                                 /Fifo?
+// status          0x000(0)    0x0     31:0    FBI         R        No / n/a   Banshee Status
+// intrCtrl        0x004(4)    0x1     31:0    FBI         R/W      No / No    Interrupt Status and Control
+// vertexAx        0x008(8)    0x2     15:0    FBI+TREX%     W      No / Yes   Vertex A x-coordinate location (12.4 format)
+// vertexAy        0x00c(12)   0x3     15:0    FBI+TREX%     W      No / Yes   Vertex A y-coordinate location (12.4 format)
+// vertexBx        0x010(16)   0x4     15:0    FBI+TREX%     W      No / Yes   Vertex B x-coordinate location (12.4 format)
+// vertexBy        0x014(20)   0x5     15:0    FBI+TREX%     W      No / Yes   Vertex B y-coordinate location (12.4 format)
+// vertexCx        0x018(24)   0x6     15:0    FBI+TREX%     W      No / Yes   Vertex C x-coordinate location (12.4 format)
+// vertexCy        0x01c(28)   0x7     15:0    FBI+TREX%     W      No / Yes   Vertex C y-coordinate location (12.4 format)
+// startR          0x020(32)   0x8     23:0    FBI           W      No / Yes   Starting Red parameter (12.12 format)
+// startG          0x024(36)   0x9     23:0    FBI           W      No / Yes   Starting Green parameter (12.12 format)
+// startB          0x028(40)   0xA     23:0    FBI           W      No / Yes   Starting Blue parameter (12.12 format)
+// startZ          0x02c(44)   0xB     31:0    FBI           W      No / Yes   Starting Z parameter (20.12 format)
+// startA          0x030(48)   0xC     23:0    FBI           W      No / Yes   Starting Alpha parameter (12.12 format)
+// startS          0x034(52)   0xD     31:0    TREX*         W      No / Yes   Starting S/W parameter (14.18 format)
+// startT          0x038(56)   0xE     31:0    TREX*         W      No / Yes   Starting T/W parameter (14.18 format)
+// startW          0x03c(60)   0xF     31:0    FBI+TREX*     W      No / Yes   Starting 1/W parameter (2.30 format)
+// dRdX            0x040(64)   0x10    23:0    FBI           W      No / Yes   Change in Red with respect to X (12.12 format)
+// dGdX            0x044(68)   0x11    23:0    FBI           W      No / Yes   Change in Green with respect to X (12.12 format)
+// dBdX            0x048(72)   0x12    23:0    FBI           W      No / Yes   Change in Blue with respect to X (12.12 format)
+// dZdX            0x04c(76)   0x13    31:0    FBI           W      No / Yes   Change in Z with respect to X (20.12 format)
+// dAdX            0x050(80)   0x14    23:0    FBI           W      No / Yes   Change in Alpha with respect to X (12.12 format)
+// dSdX            0x054(84)   0x15    31:0    TREX*         W      No / Yes   Change in S/W with respect to X (14.18 format)
+// dTdX            0x058(88)   0x16    31:0    TREX*         W      No / Yes   Change in T/W with respect to X (14.18 format)
+// dWdX            0x05c(92)   0x17    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to X (2.30 format)
+// dRdY            0x060(96)   0x18    23:0    FBI           W      No / Yes   Change in Red with respect to Y (12.12 format)
+// dGdY            0x064(100)  0x19    23:0    FBI           W      No / Yes   Change in Green with respect to Y (12.12 format)
+// dBdY            0x068(104)  0x1A    23:0    FBI           W      No / Yes   Change in Blue with respect to Y (12.12 format)
+// dZdY            0x06c(108)  0x1B    31:0    FBI           W      No / Yes   Change in Z with respect to Y (20.12 format)
+// dAdY            0x070(112)  0x1C    23:0    FBI           W      No / Yes   Change in Alpha with respect to Y (12.12 format)
+// dSdY            0x074(116)  0x1D    31:0    TREX*         W      No / Yes   Change in S/W with respect to Y (14.18 format)
+// dTdY            0x078(120)  0x1E    31:0    TREX*         W      No / Yes   Change in T/W with respect to Y (14.18 format)
+// dWdY            0x07c(124)  0x1F    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to Y (2.30 format)
+// triangleCMD     0x080(128)  0x20    31      FBI+TREX%     W      No / Yes   Execute TRIANGLE command (floating point)
+// reserved        0x084(132)  0x21    n/a     n/a           W        n/a
+// fvertexAx       0x088(136)  0x22    31:0    FBI+TREX%     W      No / Yes   Vertex A x-coordinate location (floating point)
+// fvertexAy       0x08c(140)  0x23    31:0    FBI+TREX%     W      No / Yes   Vertex A y-coordinate location (floating point)
+// fvertexBx       0x090(144)  0x24    31:0    FBI+TREX%     W      No / Yes   Vertex B x-coordinate location (floating point)
+// fvertexBy       0x094(148)  0x25    31:0    FBI+TREX%     W      No / Yes   Vertex B y-coordinate location (floating point)
+// fvertexCx       0x098(152)  0x26    31:0    FBI+TREX%     W      No / Yes   Vertex C x-coordinate location (floating point)
+// fvertexCy       0x09c(156)  0x27    31:0    FBI+TREX%     W      No / Yes   Vertex C y-coordinate location (floating point)
+// fstartR         0x0a0(160)  0x28    31:0    FBI           W      No / Yes   Starting Red parameter (floating point)
+// fstartG         0x0a4(164)  0x29    31:0    FBI           W      No / Yes   Starting Green parameter (floating point)
+// fstartB         0x0a8(168)  0x2A    31:0    FBI           W      No / Yes   Starting Blue parameter (floating point)
+// fstartZ         0x0ac(172)  0x2B    31:0    FBI           W      No / Yes   Starting Z parameter (floating point)
+// fstartA         0x0b0(176)  0x2C    31:0    FBI           W      No / Yes   Starting Alpha parameter (floating point)
+// fstartS         0x0b4(180)  0x2D    31:0    TREX*         W      No / Yes   Starting S/W parameter (floating point)
+// fstartT         0x0b8(184)  0x2E    31:0    TREX*         W      No / Yes   Starting T/W parameter (floating point)
+// fstartW         0x0bc(188)  0x2F    31:0    FBI+TREX*     W      No / Yes   Starting 1/W parameter (floating point)
+// fdRdX           0x0c0(192)  0x30    31:0    FBI           W      No / Yes   Change in Red with respect to X (floating point)
+// fdGdX           0x0c4(196)  0x31    31:0    FBI           W      No / Yes   Change in Green with respect to X (floating point)
+// fdBdX           0x0c8(200)  0x32    31:0    FBI           W      No / Yes   Change in Blue with respect to X (floating point)
+// fdZdX           0x0cc(204)  0x33    31:0    FBI           W      No / Yes   Change in Z with respect to X (floating point)
+// fdAdX           0x0d0(208)  0x34    31:0    FBI           W      No / Yes   Change in Alpha with respect to X (floating point)
+// fdSdX           0x0d4(212)  0x35    31:0    TREX*         W      No / Yes   Change in S/W with respect to X (floating point)
+// fdTdX           0x0d8(216)  0x36    31:0    TREX*         W      No / Yes   Change in T/W with respect to X (floating point)
+// fdWdX           0x0dc(220)  0x37    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to X (floating point)
+// fdRdY           0x0e0(224)  0x38    31:0    FBI           W      No / Yes   Change in Red with respect to Y (floating point)
+// fdGdY           0x0e4(228)  0x39    31:0    FBI           W      No / Yes   Change in Green with respect to Y (floating point)
+// fdBdY           0x0e8(232)  0x3A    31:0    FBI           W      No / Yes   Change in Blue with respect to Y (floating point)
+// fdZdY           0x0ec(236)  0x3B    31:0    FBI           W      No / Yes   Change in Z with respect to Y (floating point)
+// fdAdY           0x0f0(240)  0x3C    31:0    FBI           W      No / Yes   Change in Alpha with respect to Y (floating point)
+// fdSdY           0x0f4(244)  0x3D    31:0    TREX*         W      No / Yes   Change in S/W with respect to Y (floating point)
+// fdTdY           0x0f8(248)  0x3E    31:0    TREX*         W      No / Yes   Change in T/W with respect to Y (floating point)
+// fdWdY           0x0fc(252)  0x3F    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to Y (floating point)
+// ftriangleCMD    0x100(256)  0x40    31      FBI+TREX%     W      No / Yes   Execute TRIANGLE command (floating point)
+// fbzColorPath    0x104(260)  0x41    27:0    FBI+TREX%   R/W      No / Yes   FBI Color Path Control
+// fogMode         0x108(264)  0x42     5:0    FBI         R/W      No / Yes   Fog Mode Control
+// alphaMode       0x10c(268)  0x43    31:0    FBI         R/W      No / Yes   Alpha Mode Control
+// fbzMode         0x110(272)  0x44    20:0    FBI         R/W     Yes / Yes   RGB Buffer and Depth-Buffer Control
+// lfbMode         0x114(276)  0x45    16:0    FBI         R/W     Yes / Yes   Linear Frame Buffer Mode Control
+// clipLeftRight   0x118(280)  0x46    31:0    FBI         R/W     Yes / Yes   Left and Right of Clipping Register
+// clipTopBottom   0x11c(284)  0x47    31:0    FBI         R/W     Yes / Yes   Top and Bottom of Clipping Register
+// nopCMD          0x120(288)  0x48       0    FBI+TREX%     W     Yes / Yes   Execute NOP command
+// fastfillCMD     0x124(292)  0x49     n/a    FBI           W     Yes / Yes   Execute FASTFILL command
+// swapbufferCMD   0x128(296)  0x4A     8:0    FBI           W     Yes / Yes   Execute SWAPBUFFER command
+// fogColor        0x12c(300)  0x4B    23:0    FBI           W     Yes / Yes   Fog Color Value
+// zaColor         0x130(304)  0x4C    31:0    FBI           W     Yes / Yes   Constant Alpha/Depth Value
+// chromaKey       0x134(308)  0x4D    23:0    FBI           W     Yes / Yes   Chroma Key Compare Value
+// chromaRange     0x138(312)  0x4E    27:0    FBI           W     Yes / Yes   Chroma Range Compare Values, Modes & Enable
+// userIntrCMD     0x13c(316)  0x4F     9:0    FBI           W     Yes / Yes   Execute USERINTERRUPT command
+// stipple         0x140(320)  0x50    31:0    FBI         R/W     Yes / Yes   Rendering Stipple Value
+// color0          0x144(324)  0x51    31:0    FBI         R/W     Yes / Yes   Constant Color #0
+// color1          0x148(328)  0x52    31:0    FBI         R/W     Yes / Yes   Constant Color #1
+// fbiPixelsIn     0x14c(332)  0x53    23:0    FBI         R          n/a      Pixel Counter (Number pixels processed)
+// fbiChromaFail   0x150(336)  0x54    23:0    FBI         R          n/a      Pixel Counter (Number pixels failed Chroma test)
+// fbiZfuncFail    0x154(340)  0x55    23:0    FBI         R          n/a      Pixel Counter (Number pixels failed Z test)
+// fbiAfuncFail    0x158(344)  0x56    23:0    FBI         R          n/a      Pixel Counter (Number pixels failed Alpha test)
+// fbiPixelsOut    0x15c(348)  0x57    23:0    FBI         R          n/a      Pixel Counter (Number pixels drawn)
+// fogTable        0x160(352)  0x58    31:0    FBI         W       Yes / Yes   Fog Table
+//                     to       to
+//                 0x1dc(476)  0x77
+// reserved        0x1e0(480)  0x78     n/a    n/a         n/a        n/a
+//                     to       to
+//                 0x1e8(488)  0x7A
+// colBufferAddr   0x1ec(492)  0x7B    23:0    FBI         R/W     Yes / Yes   Color Buffer Base Address
+// colBufferStride 0x1f0(496)  0x7C    15:0    FBI         R/W     Yes / Yes   Color Buffer Stride, Memory type
+// auxBufferAddr   0x1f4(500)  0x7D    23:0    FBI         R/W     Yes / Yes   Auxiliary Buffer Base Address
+// auxBufferStride 0x1f8(504)  0x7E    15:0    FBI         R/W     Yes / Yes   Auxiliary Buffer Stride, Memory type
+// reserved        0x1fc(508)  0x7F    n/a     n/a         n/a        n/a
+// clipLeftRight1  0x200(512)  0x80    31:0    FBI         R/W     Yes / Yes   Secondary Left/Right Clipping Register
+// clipTopBottom1  0x204(516)  0x81    31:0    FBI         R/W     Yes / Yes   Secondary Top/Bottom Clipping Register
+// reserved        0x208(520)  0x82     n/a    n/a         n/a        n/a
+//                     to       to
+//                 0x24b(587)  0x92
+// swapPending     0x24c(588)  0x93     n/a    FBI           W      No / No    Swap buffer pending
+// leftOverlayBuf  0x250(592)  0x94    27:0    FBI           W      No / Yes   Left Overlay address
+// rightOverlayBuf 0x254(596)  0x95    27:0    FBI           W      No / Yes   Right Overlay address
+// fbiSwapHistory  0x258(600)  0x96    31:0    FBI         R          n/a      Swap History Register
+// fbiTrianglesOut 0x25c(604)  0x97    23:0    FBI         R          n/a      Triangle Counter (Number triangles drawn)
+// sSetupMode      0x260(608)  0x98    19:0    FBI           W      No / Yes   Triangle setup mode
+// sVx             0x264(612)  0x99    31:0    FBI+TMU*      W      No / Yes   Triangle setup X
+// sVy             0x268(616)  0x9A    31:0    FBI+TMU*      W      No / Yes   Triangle setup Y
+// sARGB           0x26c(620)  0x9B    31:0    FBI+TMU*      W      No / Yes   Triangle setup Alpha, Red, Green, Blue
+// sRed            0x270(624)  0x9C    31:0    FBI           W      No / Yes   Triangle setup Red value
+// sGreen          0x274(628)  0x9D    31:0    FBI           W      No / Yes   Triangle setup Green value
+// sBlue           0x278(632)  0x9E    31:0    FBI           W      No / Yes   Triangle setup Blue value
+// sAlpha          0x27c(636)  0x9F    31:0    FBI           W      No / Yes   Triangle setup Alpha value
+// sVz             0x280(640)  0xA0    31:0    FBI           W      No / Yes   Triangle setup Z
+// sWb             0x284(644)  0xA1    31:0    FBI+TMU*      W      No / Yes   Triangle setup Global W
+// sWtmu0          0x288(648)  0xA2    31:0    TMU*          W      No / Yes   Triangle setup Tmu0 & Tmu1 W
+// sS/W0           0x28c(652)  0xA3    31:0    TMU*          W      No / Yes   Triangle setup Tmu0 & Tmu1 S/W
+// sT/W0           0x290(656)  0xA4    31:0    TMU*          W      No / Yes   Triangle setup Tmu0 & Tmu1 T/W
+// sWtmu1          0x294(660)  0xA5    31:0    TMU1          W      No / Yes   Triangle setup Tmu1 only W
+// sS/Wtmu1        0x298(664)  0xA6    31:0    TMU1          W      No / Yes   Triangle setup Tmu1 only S/W
+// sT/Wtmu1        0x29c(668)  0xA7    31:0    TMU1          W      No / Yes   Triangle setup Tmu1 only T/W
+// sDrawTriCMD     0x2a0(672)  0xA8    31:0    FBI+TMU*      W      No / Yes   Triangle setup (Draw)
+// sBeginTriCMD    0x2a4(676)  0xA9    31:0    FBI           W      No / Yes   Triangle setup Start New triangle
+// reserved        0x2a8(680)  0xAA     n/a    n/a         n/a        n/a
+//                     to       to
+//                 0x2fc(764)  0xBF
+// textureMode     0x300(768)  0xC0    30:0    TREX*         W      No / Yes   Texture Mode Control
+// tLOD            0x304(772)  0xC1    23:0    TREX*         W      No / Yes   Texture LOD Settings
+// tDetail         0x308(776)  0xC2    21:0    TREX*         W      No / Yes   Texture Detail Settings
+// texBaseAddr     0x30c(780)  0xC3    31:0    TREX*         W      No / Yes   Texture Base Address
+// texBaseAddr_1   0x310(784)  0xC4    23:0    TREX*         W      No / Yes   Texture Base Address (supplemental LOD 1)
+// texBaseAddr_2   0x314(788)  0xC5    23:0    TREX*         W      No / Yes   Texture Base Address (supplemental LOD 2)
+// texBaseAddr_3_8 0x318(792)  0xC6    23:0    TREX*         W      No / Yes   Texture Base Address (supplemental LOD 3-8)
+// reserved        0x31c(796)  0xC7     n/a    n/a         n/a        n/a
+// trexInit1       0x320(800)  0xC8    31:0    TREX*         W     Yes / Yes   TREX Hardware Initialization (register 1
+// nccTable0       0x324(804)  0xC9    31:0    TREX*         W     Yes / Yes   Narrow Channel Compression Table 0 (12 entries)
+//                     to       to      or
+//                 0x350(848)  0xD4    26:0
+// nccTable1       0x354(852)  0xD5    31:0    TREX*         W     Yes / Yes   Narrow Channel Compression Table 1 (12 entries)
+//                     to       to      or
+//                 0x380(896)  0xE0    26:0
+// reserved        0x384(900)  0xE1     n/a    n/a         n/a        n/a
+//                     to       to
+//                 0x3fc(1020) 0xFF
+
+// The triangle parameter registers are aliased to a different address mapping to improve PCI bus
+// throughput. The upper bit of the wrap field in the pci address is 0x1 (pci_ad[21]=1), the following table
+// shows the addresses for the triangle parameter registers.
+
+// Register Name   Address     Reg     Bits    Chip        R/W     Sync?       Description
+//                             Num                                 /Fifo?
+// status          0x000(0)    0x0     31:0    FBI         R/W      No / Yes   SST-1 Status
+// intrCtrl        0x004(4)    0x1     19:0    FBI         R/W      No / No    Interrupt Status and Control
+// vertexAx        0x008(8)    0x2     15:0    FBI+TREX%     W      No / Yes   Vertex A x-coordinate location (12.4 format)
+// vertexAy        0x00c(12)   0x3     15:0    FBI+TREX%     W      No / Yes   Vertex A y-coordinate location (12.4 format)
+// vertexBx        0x010(16)   0x4     15:0    FBI+TREX%     W      No / Yes   Vertex B x-coordinate location (12.4 format)
+// vertexBy        0x014(20)   0x5     15:0    FBI+TREX%     W      No / Yes   Vertex B y-coordinate location (12.4 format)
+// vertexCx        0x018(24)   0x6     15:0    FBI+TREX%     W      No / Yes   Vertex C x-coordinate location (12.4 format)
+// vertexCy        0x01c(28)   0x7     15:0    FBI+TREX%     W      No / Yes   Vertex C y-coordinate location (12.4 format)
+// startR          0x020(32)   0x8     23:0    FBI           W      No / Yes   Starting Red parameter (12.12 format)
+// dRdX            0x024(36)   0x9     23:0    FBI           W      No / Yes   Change in Red with respect to X (12.12 format)
+// dRdY            0x028(40)   0xA     23:0    FBI           W      No / Yes   Change in Red with respect to Y (12.12 format)
+// startG          0x02c(44)   0xB     23:0    FBI           W      No / Yes   Starting Green parameter (12.12 format)
+// dGdX            0x030(48)   0xC     23:0    FBI           W      No / Yes   Change in Green with respect to X (12.12 format)
+// dGdY            0x034(52)   0xD     23:0    FBI           W      No / Yes   Change in Green with respect to Y (12.12 format)
+// startB          0x038(56)   0xE     23:0    FBI           W      No / Yes   Starting Blue parameter (12.12 format)
+// dBdX            0x03c(60)   0xF     23:0    FBI           W      No / Yes   Change in Blue with respect to X (12.12 format)
+// dBdY            0x040(64)   0x10    23:0    FBI           W      No / Yes   Change in Blue with respect to Y (12.12 format)
+// startZ          0x044(68)   0x11    31:0    FBI           W      No / Yes   Starting Z parameter (20.12 format)
+// dZdX            0x048(72)   0x12    31:0    FBI           W      No / Yes   Change in Z with respect to X (20.12 format)
+// dZdY            0x04c(76)   0x13    31:0    FBI           W      No / Yes   Change in Z with respect to Y (12.12 format)
+// startA          0x050(80)   0x14    23:0    FBI           W      No / Yes   Starting Alpha parameter (12.12 format)
+// dAdX            0x054(84)   0x15    23:0    FBI           W      No / Yes   Change in Alpha with respect to X (12.12 format)
+// dAdY            0x058(88)   0x16    23:0    FBI           W      No / Yes   Change in Alpha with respect to Y (12.12 format)
+// startS          0x05c(92)   0x17    31:0    TREX*         W      No / Yes   Starting S/W parameter (14.18 format)
+// dSdX            0x060(96)   0x18    31:0    TREX*         W      No / Yes   Change in S/W with respect to X (14.18 format)
+// dSdY            0x064(100)  0x19    31:0    TREX*         W      No / Yes   Change in S/W with respect to Y (14.18 format)
+// startT          0x068(104)  0x1A    31:0    TREX*         W      No / Yes   Starting T/W parameter (14.18 format)
+// dTdX            0x06c(108)  0x1B    31:0    TREX*         W      No / Yes   Change in T/W with respect to X (14.18 format)
+// dTdY            0x070(112)  0x1C    31:0    TREX*         W      No / Yes   Change in T/W with respect to Y (14.18 format)
+// startW          0x074(116)  0x1D    31:0    FBI+TREX*     W      No / Yes   Starting 1/W parameter (2.30 format)
+// dWdX            0x078(120)  0x1E    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to X (2.30 format)
+// dWdY            0x07c(124)  0x1F    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to Y (2.30 format)
+// triangleCMD     0x080(128)  0x20    31      FBI+TREX%     W      No / Yes   Execute TRIANGLE command (sign bit)
+// reserved        0x084(132)  0x21     n/a    n/a           W        n/a
+// fvertexAx       0x088(136)  0x22    31:0    FBI+TREX%     W      No / Yes   Vertex A x-coordinate location (floating point)
+// fvertexAy       0x08c(140)  0x23    31:0    FBI+TREX%     W      No / Yes   Vertex A y-coordinate location (floating point)
+// fvertexBx       0x090(144)  0x24    31:0    FBI+TREX%     W      No / Yes   Vertex B x-coordinate location (floating point)
+// fvertexBy       0x094(148)  0x25    31:0    FBI+TREX%     W      No / Yes   Vertex B y-coordinate location (floating point)
+// fvertexCx       0x098(152)  0x26    31:0    FBI+TREX%     W      No / Yes   Vertex C x-coordinate location (floating point)
+// fvertexCy       0x09c(156)  0x27    31:0    FBI+TREX%     W      No / Yes   Vertex C y-coordinate location (floating point)
+// fstartR         0x0a0(160)  0x28    31:0    FBI           W      No / Yes   Starting Red parameter (floating point)
+// fdRdX           0x0a4(164)  0x29    31:0    FBI           W      No / Yes   Change in Red with respect to X (floating point)
+// fdRdY           0x0a8(168)  0x2A    31:0    FBI           W      No / Yes   Change in Red with respect to Y (floating point)
+// fstartG         0x0ac(172)  0x2B    31:0    FBI           W      No / Yes   Starting Green parameter (floating point)
+// fdGdX           0x0b0(176)  0x2C    31:0    FBI           W      No / Yes   Change in Green with respect to X (floating point)
+// fdGdY           0x0b4(180)  0x2D    31:0    FBI           W      No / Yes   Change in Green with respect to Y (floating point)
+// fstartB         0x0b8(184)  0x2E    31:0    FBI           W      No / Yes   Starting Blue parameter (floating point)
+// fdBdX           0x0bc(188)  0x2F    31:0    FBI           W      No / Yes   Change in Blue with respect to X (floating point)
+// fdBdY           0x0c0(192)  0x30    31:0    FBI           W      No / Yes   Change in Blue with respect to Y (floating point)
+// fstartZ         0x0c4(196)  0x31    31:0    FBI           W      No / Yes   Starting Z parameter (floating point)
+// fdZdX           0x0c8(200)  0x32    31:0    FBI           W      No / Yes   Change in Z with respect to X (floating point)
+// fdZdY           0x0cc(204)  0x33    31:0    FBI           W      No / Yes   Change in Z with respect to Y (floating point)
+// fstartA         0x0d0(208)  0x34    31:0    FBI           W      No / Yes   Starting Alpha parameter (floating point)
+// fdAdX           0x0d4(212)  0x35    31:0    FBI           W      No / Yes   Change in Alpha with respect to X (floating point)
+// fdAdY           0x0d8(216)  0x36    31:0    FBI           W      No / Yes   Change in Alpha with respect to Y (floating point)
+// fstartS         0x0dc(220)  0x37    31:0    TREX*         W      No / Yes   Starting S/W parameter (floating point)
+// fdSdX           0x0e0(224)  0x38    31:0    TREX*         W      No / Yes   Change in S/W with respect to X (floating point)
+// fdSdY           0x0e4(228)  0x39    31:0    TREX*         W      No / Yes   Change in S/W with respect to Y (floating point)
+// fstartT         0x0e8(232)  0x3A    31:0    TREX*         W      No / Yes   Starting T/W parameter (floating point)
+// fdTdX           0x0ec(236)  0x3B    31:0    TREX*         W      No / Yes   Change in T/W with respect to X (floating point)
+// fdTdY           0x0f0(240)  0x3C    31:0    TREX*         W      No / Yes   Change in T/W with respect to Y (floating point)
+// fstartW         0x0f4(244)  0x3D    31:0    FBI+TREX*     W      No / Yes   Starting 1/W parameter (floating point)
+// fdWdX           0x0f8(248)  0x3E    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to X (floating point)
+// fdWdY           0x0fc(252)  0x3F    31:0    FBI+TREX*     W      No / Yes   Change in 1/W with respect to Y (floating point)
+// ftriangleCMD    0x100(256)  0x40    31      FBI+TREX%     W      No / Yes   Execute TRIANGLE command (floating point)
 
 }
