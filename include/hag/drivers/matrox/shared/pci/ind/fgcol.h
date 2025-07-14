@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace ForegroundColor
 {
-    inline void Write(System::PCI::Device_t device, Shared::ForegroundColor_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::ForegroundColor_t value)
     {
         IndirectIndex::Write(device, Shared::Register::ForegroundColor);
         IndirectData::Write(device, value);

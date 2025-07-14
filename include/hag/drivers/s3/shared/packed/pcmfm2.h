@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/farptr.h>
+#include <has/farptr.h>
 #include <hag/drivers/s3/shared/wregdata.h>
 
 namespace Hag::S3::Shared

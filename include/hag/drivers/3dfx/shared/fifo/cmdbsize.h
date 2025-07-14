@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/sysasm.h>
+#include <has/system/sysasm.h>
 #include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 
 namespace Hag::TDfx::Shared::Fifo

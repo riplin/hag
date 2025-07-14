@@ -1,14 +1,14 @@
 //Copyright 2023-Present riplin
 
 #include <stdio.h>
-#include <hag/types.h>
-#include <hag/farptr.h>
+#include <has/types.h>
+#include <has/farptr.h>
 #include <i86.h>
 #include <string.h>
 #include <hag/math/fp/fpmath.h>
 #include <hag/system/bda.h>
-#include <hag/system/pci.h>
-#include <hag/system/sysasm.h>
+#include <has/system/pci.h>
+#include <has/system/sysasm.h>
 #include <support/allocatr.h>
 #include <hag/drivers/s3/trio64/funcs.h>
 
@@ -586,16 +586,16 @@ void dumpplanes(const char* start, uint8_t mode)
     GraphicsController::ReadPlaneSelect::Write(orig);
 }
 
-Hag::Math::fp pX = Hag::Math::fp::Divide(5257311, 200000);
-Hag::Math::fp pZ = Hag::Math::fp::Divide(8506508, 200000);
-Hag::Math::fp nX = pX.Neg();
-Hag::Math::fp nZ = pZ.Neg();
+Has::Math::fp pX = Has::Math::fp::Divide(5257311, 200000);
+Has::Math::fp pZ = Has::Math::fp::Divide(8506508, 200000);
+Has::Math::fp nX = pX.Neg();
+Has::Math::fp nZ = pZ.Neg();
 
-Hag::Math::v4 icoVecs[12] =
+Has::Math::v4 icoVecs[12] =
 {
-    Hag::Math::v4(nX,  0, pZ, 1), Hag::Math::v4(pX,  0, pZ, 1), Hag::Math::v4(nX,  0, nZ, 1), Hag::Math::v4(pX,  0, nZ, 1),
-    Hag::Math::v4( 0, pZ, pX, 1), Hag::Math::v4( 0, pZ, nX, 1), Hag::Math::v4( 0, nZ, pX, 1), Hag::Math::v4( 0, nZ, nX, 1),
-    Hag::Math::v4(pZ, pX,  0, 1), Hag::Math::v4(nZ, pX,  0, 1), Hag::Math::v4(pZ, nX,  0, 1), Hag::Math::v4(nZ, nX,  0, 1),
+    Has::Math::v4(nX,  0, pZ, 1), Has::Math::v4(pX,  0, pZ, 1), Has::Math::v4(nX,  0, nZ, 1), Has::Math::v4(pX,  0, nZ, 1),
+    Has::Math::v4( 0, pZ, pX, 1), Has::Math::v4( 0, pZ, nX, 1), Has::Math::v4( 0, nZ, pX, 1), Has::Math::v4( 0, nZ, nX, 1),
+    Has::Math::v4(pZ, pX,  0, 1), Has::Math::v4(nZ, pX,  0, 1), Has::Math::v4(pZ, nX,  0, 1), Has::Math::v4(nZ, nX,  0, 1),
 };
 
 int32_t icoTri[20][3] =
@@ -606,19 +606,19 @@ int32_t icoTri[20][3] =
     {6, 10,  1}, {9, 11, 0}, {9, 2, 11}, { 9, 5, 2}, {7, 11, 2},
 };
 
-bool isBackFace(Hag::Math::v4& vec0, Hag::Math::v4& vec1, Hag::Math::v4& vec2)
+bool isBackFace(Has::Math::v4& vec0, Has::Math::v4& vec1, Has::Math::v4& vec2)
 {
-    Hag::Math::fp d01x = vec1.x() - vec0.x();
-    Hag::Math::fp d01y = vec1.y() - vec0.y();
-    Hag::Math::fp d02x = vec2.x() - vec0.x();
-    Hag::Math::fp d02y = vec2.y() - vec0.y();
+    Has::Math::fp d01x = vec1.x() - vec0.x();
+    Has::Math::fp d01y = vec1.y() - vec0.y();
+    Has::Math::fp d02x = vec2.x() - vec0.x();
+    Has::Math::fp d02y = vec2.y() - vec0.y();
     return d01x * d02y - d01y * d02x >= 0;
 }
 
 int main(void)
 {
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has::Math;
     using namespace Hag::S3;
     /*
     uint16_t screenWidth = 200;

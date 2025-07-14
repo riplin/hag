@@ -57,7 +57,7 @@ namespace ClipLeftRight
         enum
         {
             Right = 0x00,
-            Bottom = 0x10
+            Left = 0x10
         };
     }
 }
@@ -67,8 +67,8 @@ namespace ClipTopBottom
 {
     enum
     {
-        Bottom = 0x00000fff,
-        Top = 0x0fff0000
+        Top = 0x00000fff,
+        Bottom = 0x0fff0000
     };
 
     namespace Shift

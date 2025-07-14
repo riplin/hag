@@ -13,6 +13,7 @@ namespace Register
     {
         sVertexX = 0x264,           // Vertex coordinate information (IEEE 32 bit single-precision floating point format)
         sVertexY = 0x268,           // Vertex coordinate information (IEEE 32 bit single-precision floating point format)
+        sVertexARGB = 0x26c,
         sVertexRed = 0x270,         // Red value at vertex (0.0 - 255.0). (IEEE 32 bit single-precision floating point format)
         sVertexGreen = 0x274,       // Green value at vertex (0.0 - 255.0). (IEEE 32 bit single-precision floating point format)
         sVertexBlue = 0x278,        // Blue value at vertex (0.0 - 255.0). (IEEE 32 bit single-precision floating point format)
@@ -28,19 +29,28 @@ namespace Register
     };
 }
 
-typedef float sVertex_t;
-namespace sVertex
+// sARGB Register
+// The ARGB register specifies the color at the current vertex in a packed 32 bit value.
+
+typedef uint32_t sARGB_t;
+namespace sARGB
 {
     enum
     {
-        Value = 0xffffffff
+        Blue = 0x000000ff,
+        Green = 0x0000ff00,
+        Red = 0x00ff0000,
+        Alpha = 0xff000000
     };
 
     namespace Shift
     {
         enum
         {
-            Value = 0x00
+            Blue = 0x00,
+            Green = 0x08,
+            Red = 0x10,
+            Alpha = 0x18
         };
     }
 }

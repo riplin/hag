@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 #include <sys/nearptr.h>
 
 namespace Hag::Matrox::Shared::PCI
@@ -18,7 +18,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t ILOADAperture_t;
+typedef Has::System::PCI::Register_t ILOADAperture_t;
 
 namespace ILOADAperture
 {
@@ -50,16 +50,16 @@ namespace ILOADAperture
         };
     }
 
-    inline ILOADAperture_t Read(System::PCI::Device_t device)
+    inline ILOADAperture_t Read(Has::System::PCI::Device_t device)
     {
-        return ILOADAperture_t(System::PCI::Read32(device, Register::ILOADAperture));
+        return ILOADAperture_t(Has::System::PCI::Read32(device, Register::ILOADAperture));
     }
-    inline void Write(System::PCI::Device_t device, ILOADAperture_t value)
+    inline void Write(Has::System::PCI::Device_t device, ILOADAperture_t value)
     {
-        System::PCI::Write32(device, Register::ILOADAperture, value);
+        Has::System::PCI::Write32(device, Register::ILOADAperture, value);
     }
 
-    inline ILOADAperture_t GetAddress(System::PCI::Device_t device)
+    inline ILOADAperture_t GetAddress(Has::System::PCI::Device_t device)
     {
         return (Read(device) & BaseAddress) + __djgpp_conventional_base;
     }

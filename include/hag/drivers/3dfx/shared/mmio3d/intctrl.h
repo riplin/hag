@@ -13,12 +13,12 @@ namespace InterruptControl
 
     inline Shared::InterruptControl_t Read(uint8_t* baseAddress)
     {
-        return *((Shared::InterruptControl_t volatile *)(baseAddress + Shared::ThreeD::Register::Base + Shared::Register::InterruptControl));
+        return *((Shared::InterruptControl_t volatile *)(baseAddress + ((int)Shared::ThreeD::Register::Base | (int)Shared::Register::InterruptControl)));
     }
 
     inline void Write(uint8_t* baseAddress, Shared::InterruptControl_t value)
     {
-        *((Shared::InterruptControl_t volatile *)(baseAddress + Shared::ThreeD::Register::Base + Shared::Register::InterruptControl)) = value;
+        *((Shared::InterruptControl_t volatile *)(baseAddress + ((int)Shared::ThreeD::Register::Base | (int)Shared::Register::InterruptControl))) = value;
     }
 
 }

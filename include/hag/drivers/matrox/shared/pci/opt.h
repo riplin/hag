@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::Matrox::Shared::PCI
 {
@@ -17,7 +17,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t Option_t;
+typedef Has::System::PCI::Register_t Option_t;
 
 namespace Option
 {
@@ -140,16 +140,16 @@ namespace Option
         };
     }
 
-    inline Option_t Read(System::PCI::Device_t device) { return Option_t(System::PCI::Read32(device, Register::Option)); }
-    inline System::PCI::Register8_t ReadByte0(System::PCI::Device_t device) { return System::PCI::Read8(device, Register::Option + 0); }
-    inline System::PCI::Register8_t ReadByte1(System::PCI::Device_t device) { return System::PCI::Read8(device, Register::Option + 1); }
-    inline System::PCI::Register8_t ReadByte2(System::PCI::Device_t device) { return System::PCI::Read8(device, Register::Option + 2); }
-    inline System::PCI::Register8_t ReadByte3(System::PCI::Device_t device) { return System::PCI::Read8(device, Register::Option + 3); }
-    inline void Write(System::PCI::Device_t device, Option_t value) { System::PCI::Write32(device, Register::Option, value); }
-    inline void WriteByte0(System::PCI::Device_t device, uint8_t value) { System::PCI::Write8(device, Register::Option + 0, value); }
-    inline void WriteByte1(System::PCI::Device_t device, uint8_t value) { System::PCI::Write8(device, Register::Option + 1, value); }
-    inline void WriteByte2(System::PCI::Device_t device, uint8_t value) { System::PCI::Write8(device, Register::Option + 2, value); }
-    inline void WriteByte3(System::PCI::Device_t device, uint8_t value) { System::PCI::Write8(device, Register::Option + 3, value); }
+    inline Option_t Read(Has::System::PCI::Device_t device) { return Option_t(Has::System::PCI::Read32(device, Register::Option)); }
+    inline Has::System::PCI::Register8_t ReadByte0(Has::System::PCI::Device_t device) { return Has::System::PCI::Read8(device, Register::Option + 0); }
+    inline Has::System::PCI::Register8_t ReadByte1(Has::System::PCI::Device_t device) { return Has::System::PCI::Read8(device, Register::Option + 1); }
+    inline Has::System::PCI::Register8_t ReadByte2(Has::System::PCI::Device_t device) { return Has::System::PCI::Read8(device, Register::Option + 2); }
+    inline Has::System::PCI::Register8_t ReadByte3(Has::System::PCI::Device_t device) { return Has::System::PCI::Read8(device, Register::Option + 3); }
+    inline void Write(Has::System::PCI::Device_t device, Option_t value) { Has::System::PCI::Write32(device, Register::Option, value); }
+    inline void WriteByte0(Has::System::PCI::Device_t device, uint8_t value) { Has::System::PCI::Write8(device, Register::Option + 0, value); }
+    inline void WriteByte1(Has::System::PCI::Device_t device, uint8_t value) { Has::System::PCI::Write8(device, Register::Option + 1, value); }
+    inline void WriteByte2(Has::System::PCI::Device_t device, uint8_t value) { Has::System::PCI::Write8(device, Register::Option + 2, value); }
+    inline void WriteByte3(Has::System::PCI::Device_t device, uint8_t value) { Has::System::PCI::Write8(device, Register::Option + 3, value); }
 }
 
 }

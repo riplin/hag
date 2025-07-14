@@ -5,7 +5,7 @@
 #include <string.h>
 #include <hag/system/bda.h>
 #include <hag/drivers/vga/vga.h>
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 #include <hag/drivers/matrox/shared/crtc/cpudata.h>         //CR22
 #include <hag/drivers/matrox/shared/crtc/atadrdat.h>        //CR24

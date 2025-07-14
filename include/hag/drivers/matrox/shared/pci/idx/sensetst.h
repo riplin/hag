@@ -10,11 +10,11 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace SenseTest
 {
-    inline Shared::Indexed::SenseTest_t Read(System::PCI::Device_t device)
+    inline Shared::Indexed::SenseTest_t Read(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::SenseTest);
     }
-    inline void Write(System::PCI::Device_t device, Shared::Indexed::SenseTest_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::Indexed::SenseTest_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::SenseTest, value);
     }

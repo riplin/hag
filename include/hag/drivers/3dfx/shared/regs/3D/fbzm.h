@@ -272,7 +272,7 @@ namespace RGBDepthMode
 
         DepthBuffer =                       0x00000010, // 4 Enable depth-buffering (1=enable)
         DepthBufferDisable =                0x00000000,
-        DepthbufferEnable =                 0x00000010,
+        DepthBufferEnable =                 0x00000010,
 
         DepthFunction =                     0x000000e0, // 7:5 Depth-buffer function (see table below)
         DepthFuncNever =                    0x00000000,

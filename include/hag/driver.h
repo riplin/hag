@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/ialloc.h>
+#include <has/ialloc.h>
 
 namespace Hag
 {
@@ -10,7 +10,7 @@ namespace Hag
     class Driver
     {
     public:
-        inline Driver(IAllocator& allocator)
+        inline Driver(Has::IAllocator& allocator)
             : m_allocator(allocator)
         {}
 
@@ -19,7 +19,7 @@ namespace Hag
         void Dispose();
 
     protected:
-        IAllocator& m_allocator;
+        Has::IAllocator& m_allocator;
     };
 
 }

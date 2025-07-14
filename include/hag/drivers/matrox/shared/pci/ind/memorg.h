@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace MemoryOrigin
 {
-    inline void Write(System::PCI::Device_t device, Shared::MemoryOrigin_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::MemoryOrigin_t value)
     {
         IndirectIndex::Write(device, Shared::Register::MemoryOrigin);
         IndirectData::Write(device, value);

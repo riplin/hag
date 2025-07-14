@@ -6,12 +6,12 @@
 #include <sys/nearptr.h>
 #include <hag/system/bda.h>
 #include <support/allocatr.h>
-#include <hag/math/fp/fpmath.h>
+#include <has/math/fp/fpmath.h>
 #include <hag/drivers/matrox/mystique/mystique.h>
 
-extern Hag::Math::v4 icoVecs[12];
+extern Has::Math::v4 icoVecs[12];
 extern int32_t icoTri[20][3];
-extern Hag::Math::v4 icoNorm[20];
+extern Has::Math::v4 icoNorm[20];
 
 void SetStartY(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uint32_t startY);
 void SetPitch(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uint32_t pitch);
@@ -20,19 +20,20 @@ void GlobalInit(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uin
 void DrawLine(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t fgcolor);
 void DrawRectangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t fgcolor);
 void DrawTrapezoid(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, int16_t xLt, int16_t xLb, int16_t xRt, int16_t xRb, int16_t yT, int16_t yB, uint32_t fgcolor);
-void DrawTriangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, Hag::Math::v4* vectors, uint32_t fgcolor);
+void DrawTriangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, Has::Math::v4* vectors, uint32_t fgcolor);
 void FlipFrame(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uint16_t width, uint16_t height);
-bool isBackFace(Hag::Math::v4& vec0, Hag::Math::v4& vec1, Hag::Math::v4& vec2);
+bool isBackFace(Has::Math::v4& vec0, Has::Math::v4& vec1, Has::Math::v4& vec2);
 void setupNormals();
 void colorLerp(uint32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB);
-void gradientLerp(Hag::Color32_t* colors, uint16_t count, Hag::Color32_t* gradient, uint16_t gradientCount, Hag::Math::fp* intensityRamp, uint16_t intensityCount);
+void gradientLerp(Hag::Color32_t* colors, uint16_t count, Hag::Color32_t* gradient, uint16_t gradientCount, Has::Math::fp* intensityRamp, uint16_t intensityCount);
 
 uint32_t colors[256];
 
 int main(void)
 {
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has;
+    using namespace Has::Math;
     using namespace Hag::Color;
     using namespace Hag::Matrox;
 
@@ -68,8 +69,8 @@ int main(void)
     }
 
     //TODO:: figure out another way to feed the device to the functions that need it.
-    System::PCI::Device_t device;
-    if (!System::PCI::FindDevice(0x102B, 0x051A, device))
+    Has::System::PCI::Device_t device;
+    if (!Has::System::PCI::FindDevice(0x102B, 0x051A, device))
     {
         printf("Unable to find PCI device.\n");
         Mystique::Shutdown();
@@ -255,7 +256,7 @@ void GlobalInit(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uin
 
 void DrawLine(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t fgcolor)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::Matrox::Shared;
 
     int32_t dX = x1 - x0;
@@ -304,7 +305,7 @@ void DrawLine(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, int16
 
 void DrawRectangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint32_t fgcolor)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::Matrox::Shared;
 
     int32_t dX = x1 - x0;
@@ -349,7 +350,7 @@ void DrawRectangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, 
 
 void DrawTrapezoid(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, int16_t xLt, int16_t xLb, int16_t xRt, int16_t xRb, int16_t yT, int16_t yB, uint32_t fgcolor)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::Matrox::Shared;
 
     int32_t dY = yB - yT;
@@ -396,9 +397,9 @@ void DrawTrapezoid(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, 
 }
 
 //Takes an array of 3 vectors. Assumes clockwise ordering.
-void DrawTriangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, Hag::Math::v4* vectors, uint32_t fgcolor)
+void DrawTriangle(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, Has::Math::v4* vectors, uint32_t fgcolor)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::Matrox::Shared;
 
     uint16_t vec0 = 0;
@@ -640,16 +641,16 @@ void FlipFrame(Hag::Matrox::Shared::PCI::ControlAperture_t controlAperture, uint
 
 /////////////////////
 
-Hag::Math::fp pX = Hag::Math::fp::Divide(5257311, 200000);
-Hag::Math::fp pZ = Hag::Math::fp::Divide(8506508, 200000);
-Hag::Math::fp nX = pX.Neg();
-Hag::Math::fp nZ = pZ.Neg();
+Has::Math::fp pX = Has::Math::fp::Divide(5257311, 200000);
+Has::Math::fp pZ = Has::Math::fp::Divide(8506508, 200000);
+Has::Math::fp nX = pX.Neg();
+Has::Math::fp nZ = pZ.Neg();
 
-Hag::Math::v4 icoVecs[12] =
+Has::Math::v4 icoVecs[12] =
 {
-    Hag::Math::v4(nX,  0, pZ, 1), Hag::Math::v4(pX,  0, pZ, 1), Hag::Math::v4(nX,  0, nZ, 1), Hag::Math::v4(pX,  0, nZ, 1),
-    Hag::Math::v4( 0, pZ, pX, 1), Hag::Math::v4( 0, pZ, nX, 1), Hag::Math::v4( 0, nZ, pX, 1), Hag::Math::v4( 0, nZ, nX, 1),
-    Hag::Math::v4(pZ, pX,  0, 1), Hag::Math::v4(nZ, pX,  0, 1), Hag::Math::v4(pZ, nX,  0, 1), Hag::Math::v4(nZ, nX,  0, 1),
+    Has::Math::v4(nX,  0, pZ, 1), Has::Math::v4(pX,  0, pZ, 1), Has::Math::v4(nX,  0, nZ, 1), Has::Math::v4(pX,  0, nZ, 1),
+    Has::Math::v4( 0, pZ, pX, 1), Has::Math::v4( 0, pZ, nX, 1), Has::Math::v4( 0, nZ, pX, 1), Has::Math::v4( 0, nZ, nX, 1),
+    Has::Math::v4(pZ, pX,  0, 1), Has::Math::v4(nZ, pX,  0, 1), Has::Math::v4(pZ, nX,  0, 1), Has::Math::v4(nZ, nX,  0, 1),
 };
 
 int32_t icoTri[20][3] =
@@ -660,11 +661,11 @@ int32_t icoTri[20][3] =
     {6, 10,  1}, {9, 11, 0}, {9, 2, 11}, { 9, 5, 2}, {7, 11, 2},
 };
 
-Hag::Math::v4 icoNorm[20];
+Has::Math::v4 icoNorm[20];
 
 void setupNormals()
 {
-    using namespace Hag::Math;
+    using namespace Has::Math;
 
     for (uint32_t i = 0; i < 20; ++i)
     {
@@ -674,9 +675,9 @@ void setupNormals()
     }
 }
 
-bool isBackFace(Hag::Math::v4& vec0, Hag::Math::v4& vec1, Hag::Math::v4& vec2)
+bool isBackFace(Has::Math::v4& vec0, Has::Math::v4& vec1, Has::Math::v4& vec2)
 {
-    using namespace Hag::Math;
+    using namespace Has::Math;
     static fp oneTenth = fp(1) / fp(10); //We were exceeding 32k and that makes the triangle blink
     fp d01x = (vec1.x() - vec0.x()) * oneTenth;
     fp d01y = (vec1.y() - vec0.y()) * oneTenth;
@@ -687,8 +688,9 @@ bool isBackFace(Hag::Math::v4& vec0, Hag::Math::v4& vec1, Hag::Math::v4& vec2)
 
 void colorLerp(Hag::Color32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB)
 {
+    using namespace Has;
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has::Math;
 
     for (uint32_t i = 0; i < steps; ++i)
     {
@@ -707,9 +709,9 @@ void colorLerp(Hag::Color32_t* colors, uint32_t steps, uint32_t colorA, uint32_t
     }
 }
 
-Hag::Math::fp getIntensity(Hag::Math::fp* intensityRamp, uint16_t intensityCount, Hag::Math::fp intensityIndex)
+Has::Math::fp getIntensity(Has::Math::fp* intensityRamp, uint16_t intensityCount, Has::Math::fp intensityIndex)
 {
-    using namespace Hag::Math;
+    using namespace Has::Math;
     // intensityIndex goes from 0.0 to 1.0
     // Multiplying with count should give us a start index and an interpolation value in the fraction.
     
@@ -728,10 +730,11 @@ Hag::Math::fp getIntensity(Hag::Math::fp* intensityRamp, uint16_t intensityCount
     return intensityRamp[index] * inverseInterpolator + intensityRamp[index + 1] * intensityInterpolator;
 }
 
-Hag::Color32_t applyIntensity(Hag::Color32_t color, Hag::Math::fp intensity)
+Hag::Color32_t applyIntensity(Hag::Color32_t color, Has::Math::fp intensity)
 {
+    using namespace Has;
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has::Math;
 
     fp fromRed = (color >> 16) & 0xFF;
     fp fromGreen = (color >> 8) & 0xFF;
@@ -743,10 +746,10 @@ Hag::Color32_t applyIntensity(Hag::Color32_t color, Hag::Math::fp intensity)
     return (color & 0xFF000000) | (Color32_t(red) << 16) | (Color32_t(green) << 8) | Color32_t(blue);                    
 }
 
-void gradientLerp(Hag::Color32_t* colors, uint16_t count, Hag::Color32_t* gradient, uint16_t gradientCount, Hag::Math::fp* intensityRamp, uint16_t intensityCount)
+void gradientLerp(Hag::Color32_t* colors, uint16_t count, Hag::Color32_t* gradient, uint16_t gradientCount, Has::Math::fp* intensityRamp, uint16_t intensityCount)
 {
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has::Math;
 
     uint16_t colorsPerGradientStep = (count - 1) / (gradientCount - 1);
     uint16_t colorsLeft = count - 1;// Skip the last color.

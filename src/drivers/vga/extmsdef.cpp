@@ -1,7 +1,6 @@
 //Copyright 2025-Present riplin
 
 #include <dos.h>
-#include <hag/system/interrup.h>
 #include <hag/drivers/vga/extmsapi.h>
 
 //Default implementation for stock VGA modes.
@@ -9,7 +8,7 @@
 namespace Hag::VGA::ModeSetting::External
 {
 
-bool Initialize(IAllocator& allocator)
+bool Initialize(Has::IAllocator& allocator)
 {
     return true;
 }
@@ -94,12 +93,12 @@ void* GetLinearFrameBuffer()
     return nullptr;
 }
 
-SetupBuffersError_t SetupBuffers(Buffers_t buffers)
+SetVideoError_t SetupBuffers(Buffers_t buffers)
 {
-    //TODO: properly implement this.
+    //TODO: properly implement this. There are some modes that can do double buffer.
     if ((buffers & Buffers::DepthBuffer) != 0)
-        return SetupBuffersError::DepthBufferNotSupported;
-    return (buffers != Buffers::SingleBuffer) ? SetupBuffersError::NotEnoughMemory : SetupBuffersError::Success;
+        return SetVideoError::DepthBufferNotSupported;
+    return (buffers != Buffers::SingleBuffer) ? SetVideoError::InsufficientVideoMemory : SetVideoError::Success;
 }
 
 void SwapScreen2D(bool waitForVSync)

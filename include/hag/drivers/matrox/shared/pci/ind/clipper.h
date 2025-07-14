@@ -15,27 +15,27 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace Clipper
 {
-    inline void WriteXBoundary(System::PCI::Device_t device, Shared::ClipperXBoundary_t value)
+    inline void WriteXBoundary(Has::System::PCI::Device_t device, Shared::ClipperXBoundary_t value)
     {
         IndirectIndex::Write(device, Shared::Register::ClipperXBoundary);
         IndirectData::Write(device, value);
     }
-    inline void WriteXLeft(System::PCI::Device_t device, Shared::ClipperXLeftBoundary_t value)
+    inline void WriteXLeft(Has::System::PCI::Device_t device, Shared::ClipperXLeftBoundary_t value)
     {
         IndirectIndex::Write(device, Shared::Register::ClipperXLeftBoundary);
         IndirectData::Write(device, value);
     }
-    inline void WriteXRight(System::PCI::Device_t device, Shared::ClipperXRightBoundary_t value)
+    inline void WriteXRight(Has::System::PCI::Device_t device, Shared::ClipperXRightBoundary_t value)
     {
         IndirectIndex::Write(device, Shared::Register::ClipperXRightBoundary);
         IndirectData::Write(device, value);
     }
-    inline void WriteYTop(System::PCI::Device_t device, Shared::ClipperYTopBoundary_t value)
+    inline void WriteYTop(Has::System::PCI::Device_t device, Shared::ClipperYTopBoundary_t value)
     {
         IndirectIndex::Write(device, Shared::Register::ClipperYTopBoundary);
         IndirectData::Write(device, value);
     }
-    inline void WriteYBottom(System::PCI::Device_t device, Shared::ClipperYBottomBoundary_t value)
+    inline void WriteYBottom(Has::System::PCI::Device_t device, Shared::ClipperYBottomBoundary_t value)
     {
         IndirectIndex::Write(device, Shared::Register::ClipperYBottomBoundary);
         IndirectData::Write(device, value);

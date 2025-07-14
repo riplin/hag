@@ -2,15 +2,40 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <has/types.h>
 
-namespace Hag {
+namespace Hag
+{
 
 typedef uint16_t Color15_t;
 typedef uint16_t Color16_t;
 typedef uint32_t Color32_t;
 namespace Color
 {
+
+namespace Bpp16
+{
+    enum
+    {
+        Black                   = 0x0000,
+        Blue                    = 0x001F,
+        Green                   = 0x07E0,
+        LightGreen              = 0x7FEF,
+        Lime                    = 0x6FE1,
+        Cyan                    = 0x07FF,
+        Red                     = 0xF800,
+        Cherry                  = 0xD045,
+        Pink                    = 0xFBEF,
+        Magenta                 = 0xF81F,
+        RoyalPurple             = 0x480D,
+        Yellow                  = 0xFFE0,
+        Cream                   = 0xFFDA,
+        White                   = 0xFFFF,
+        Orange                  = 0xFBE0,
+        OrangeRed               = 0xFA20,
+        BabyBlue                = 0x8E7E,
+    };
+}
 
 namespace Bpp32
 {

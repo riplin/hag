@@ -10,7 +10,7 @@ namespace Hag
 
 Factory* Factory::m_factories = nullptr;
 
-Driver* Factory::CreateDriver(IAllocator& allocator)
+Driver* Factory::CreateDriver(Has::IAllocator& allocator)
 {
     if (m_factories == nullptr)
     {

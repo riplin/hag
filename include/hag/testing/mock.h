@@ -5,7 +5,7 @@
 #ifdef MOCK
 
 #include <hag/drivers/vga/regtype.h>
-#include <hag/ialloc.h>
+#include <has/ialloc.h>
 
 namespace Hag::Testing::Mock {
 
@@ -60,7 +60,7 @@ struct PortAndValue
     uint8_t Value;
 };
 
-void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters, uint8_t* ramdacRegisters);
+void Initialize(Has::IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters, uint8_t* ramdacRegisters);
 void SelectInstance(int instance);
 
 void Snapshot();

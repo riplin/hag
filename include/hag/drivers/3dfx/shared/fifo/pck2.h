@@ -3,7 +3,7 @@
 #pragma once
 
 #include <initializer_list>
-#include <hag/testing/log.h>
+#include <has/testing/log.h>
 #include <hag/drivers/3dfx/shared/funcs/system.h>
 #include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 #include <hag/drivers/3dfx/shared/regs/2D/baseaddr.h>

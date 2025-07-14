@@ -17,14 +17,14 @@
 #include <hag/testing/testpat.h>
 
 #include <hag/system/bda.h>
-#include <hag/system/pci.h>
-#include <hag/system/pit.h>
+#include <has/system/pci.h>
+#include <has/system/pit.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/vesa/vidmodes.h>
 
 #include <hag/drivers/vga/modeset.h>
 
-#include <hag/system/keyboard.h>
+#include <has/system/keyboard.h>
 #include <hag/drivers/vga/vga.h>
 #include <support/dump.h>
 
@@ -58,7 +58,7 @@
 #include <hag/drivers/3dfx/shared/fifo/fifodefr.h>
 #include <hag/drivers/3dfx/shared/fifo/fifofunc.h>
 
-#include <hag/testing/log.h>
+#include <has/testing/log.h>
 
 Hag::System::BDA::VideoParameterTable s_VideoParameters[] =
 {
@@ -1021,8 +1021,8 @@ uint16_t GetIOBaseAddress()//Offset 0x3d69
     // pop    ax
     // ret
     //TODO: fix
-    Hag::System::PCI::Device_t device = 0;
-    Hag::System::PCI::FindDevice(0x121a, 0x0003, device);
+    Has::System::PCI::Device_t device = 0;
+    Has::System::PCI::FindDevice(0x121a, 0x0003, device);
     return Hag::TDfx::Shared::PCI::IOBaseAddress::GetBaseAddress(device);
 }
 
@@ -1902,6 +1902,7 @@ void PaletteSetup(Hag::System::BDA::VideoParameterTable& parameters)//Offset 0x4
 
 void ConfigureExtensionRegisters()//Offset 0x363c
 {
+    using namespace Has::System;
     using namespace Hag::System;
     using namespace Hag::TDfx;
     //     pushad
@@ -4279,8 +4280,9 @@ bool SetSuperVGAVideoMode(Hag::Vesa::VideoMode_t vesaMode)//Offset 0x2d4c
 namespace CPP
 {
 
-void ConfigureExtensionRegisters(Hag::System::PCI::Device_t device, ModeData* modeData, ExtraModeData* extraModeData)//Offset 0x363c
+void ConfigureExtensionRegisters(Has::System::PCI::Device_t device, ModeData* modeData, ExtraModeData* extraModeData)//Offset 0x363c
 {
+    using namespace Has::System;
     using namespace Hag::System;
     using namespace Hag::TDfx;
 
@@ -5868,8 +5870,8 @@ void BansheeDump(FILE* fptext, FILE* fpbin, Hag::VGA::Register_t baseIOPort)
 
     if (fptext != nullptr) fprintf(fptext, "\nBanshee IO Range Registers:\n");
 
-    System::PCI::Device_t device = 0;
-    System::PCI::FindDevice(0x121a, 0x0003, device);
+    Has::System::PCI::Device_t device = 0;
+    Has::System::PCI::FindDevice(0x121a, 0x0003, device);
     PCI::IOBaseAddress_t baseAddress = PCI::IOBaseAddress::GetBaseAddress(device);
     if (fptext != nullptr) fprintf(fptext, "Base address offset     : 0x%04X\n", uint16_t(baseAddress));
     if (fpbin != nullptr) fwrite(&baseAddress, sizeof(baseAddress), 1, fpbin);
@@ -7147,7 +7149,7 @@ void DrawLineFifoDeferred(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Ha
 
 void FillRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::TDfx;
     LOG("main", "FillRectangle");
 
@@ -7172,7 +7174,7 @@ void FillRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Colo
 
 void FillRectangleFifoDirect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::TDfx;
     LOG("main", "FillRectangleFifoDirect");
 
@@ -7190,7 +7192,7 @@ void FillRectangleFifoDirect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 
 void FillRectangleFifoDeferred(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::TDfx;
     LOG("main", "FillRectangleFifoDeferred");
 
@@ -7210,7 +7212,7 @@ void FillRectangleFifoDeferred(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y
 
 void DrawRectangleFifoDirect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::TDfx;
     LOG("main", "DrawRectangleFifoDirect");
 
@@ -7238,7 +7240,7 @@ void DrawRectangleFifoDirect(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1,
 
 void DrawRectangleFifoDeferred(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, Hag::Color32_t color)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::TDfx;
     LOG("main", "DrawRectangleFifoDeferred");
 
@@ -7293,8 +7295,7 @@ int main(void)
     uint16_t width = 800;
     //uint16_t stride = 4096;
     uint16_t height = 600;
-    VGA::ModeSetting::SetVideoMode(width, height, VGA::ModeSetting::BitsPerPixel::Bpp24, VGA::ModeSetting::Flags::LinearFramebuffer);
-    VGA::ModeSetting::SetupBuffers(VGA::ModeSetting::Buffers::Depth16Bpp | VGA::ModeSetting::Buffers::DoubleBuffer);
+    VGA::ModeSetting::SetVideoMode(width, height, VGA::ModeSetting::BitsPerPixel::Bpp24, VGA::ModeSetting::Flags::LinearFramebuffer, VGA::ModeSetting::RefreshRate::DontCare, true, VGA::ModeSetting::Buffers::Depth16Bpp | VGA::ModeSetting::Buffers::DoubleBuffer);
 
     //Testing::TestPatterns::Draw24BppPattern(width, height, stride, VGA::ModeSetting::GetLinearFrameBufferAs<uint8_t>());
     do

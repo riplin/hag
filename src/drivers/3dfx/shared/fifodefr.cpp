@@ -1,7 +1,7 @@
 
 //Copyright 2025-Present riplin
 
-#include <hag/testing/log.h>
+#include <has/testing/log.h>
 #include <hag/drivers/3dfx/shared/fifo/fifodefr.h>
 
 namespace Hag::TDfx::Shared::Fifo::Deferred::TwoD

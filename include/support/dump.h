@@ -3,7 +3,7 @@
 #pragma once
 
 #include <stdio.h>
-#include <hag/types.h>
+#include <has/types.h>
 #include <hag/drivers/vga/regtype.h>
 
 namespace Support

@@ -10,11 +10,11 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace SystemPLLN
 {
-    inline Shared::Indexed::SystemPLLN_t Read(System::PCI::Device_t device)
+    inline Shared::Indexed::SystemPLLN_t Read(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::SystemPLLN);
     }
-    inline void Write(System::PCI::Device_t device, Shared::Indexed::SystemPLLN_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::Indexed::SystemPLLN_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::SystemPLLN, value);
     }

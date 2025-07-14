@@ -3,10 +3,10 @@
 #pragma once
 
 #include <stdio.h>
-#include <hag/types.h>
+#include <has/types.h>
 #include <assert.h>
 
-#include <hag/testing/log.h>
+#include <has/testing/log.h>
 
 #include <hag/drivers/3dfx/shared/fifo/cmdbaddr.h>
 #include <hag/drivers/3dfx/shared/fifo/cmdbsize.h>

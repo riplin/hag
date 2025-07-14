@@ -122,7 +122,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         400,
         640,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x5B,//Hag::Vesa::VideoMode::G640x400x8bpp
         0xA000,
@@ -140,7 +146,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         480,
         640,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x5F,//Hag::Vesa::VideoMode::G640x480x8bpp
         0xA000,
@@ -158,7 +170,11 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         600,
         100,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Planar | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Planar |
+        VGA::ModeSetting::Flags::SingleParameter |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x6A,//Hag::Vesa::VideoMode::G800x600x4bpp
         0xA000,
@@ -176,7 +192,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         600,
         800,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x5C,//Hag::Vesa::VideoMode::G800x600x8bpp
         0xA000,
@@ -194,7 +216,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         768,
         1024,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x5E,//Hag::Vesa::VideoMode::G1024x768x8bpp
         0xA000,
@@ -212,7 +240,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         1024,
         1280,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x6B,//Hag::Vesa::VideoMode::G1280x1024x8bpp
         0xA000,
@@ -230,7 +264,11 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         60,
         160,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
-        VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Text |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x68,//Hag::Vesa::VideoMode::T80x60x4bpp
         0xB800,
@@ -248,7 +286,11 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         25,
         264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
-        VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Text |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x55,//Hag::Vesa::VideoMode::T132x25x4bpp
         0xB800,
@@ -266,7 +308,11 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         43,
         264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
-        VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Text |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x54,//Hag::Vesa::VideoMode::T132x43x4bpp
         0xB800,
@@ -284,7 +330,11 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         50,
         264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
-        VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Text |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x65,//Hag::Vesa::VideoMode::T132x50x4bpp
         0xB800,
@@ -302,7 +352,11 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         60,
         264,
         VGA::ModeSetting::BitsPerPixel::Bpp4,
-        VGA::ModeSetting::Flags::Text | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Text |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x64,//Hag::Vesa::VideoMode::T132x60x4bpp
         0xB800,
@@ -320,7 +374,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         200,
         320,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x78,
         0xA000,
@@ -338,7 +398,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         240,
         320,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x20,
         0xA000,
@@ -356,7 +422,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         300,
         400,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x23,
         0xA000,
@@ -374,7 +446,13 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         384,
         512,
         VGA::ModeSetting::BitsPerPixel::Bpp8,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x26,
         0xA000,
@@ -392,7 +470,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         200,
         640,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x79,//Hag::Vesa::VideoMode::G320x200x16bpp
         0xA000,
@@ -408,9 +493,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 10F parameter: 0x21
         320,
         200,
-        1024,
+        960,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R70Hz,
+        0x7A,//Hag::Vesa::VideoMode::G320x200x32bpp
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA23,
+        0x28
+    },
+    { // Mode 10F parameter: 0x21
+        320,
+        200,
+        1280,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x7A,//Hag::Vesa::VideoMode::G320x200x32bpp
         0xA000,
@@ -428,7 +543,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         240,
         640,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x21,
         0xA000,
@@ -444,9 +566,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 183 parameter: 0x22
         320,
         240,
-        1024,
+        960,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R60Hz,
+        0x22,
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA24,
+        0x28
+    },
+    { // Mode 183 parameter: 0x22
+        320,
+        240,
+        1280,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x22,
         0xA000,
@@ -464,7 +616,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         300,
         800,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x24,
         0xA000,
@@ -480,9 +639,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 186 parameter: 0x23
         400,
         300,
-        2048,
+        1200,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R60Hz,
+        0x25,
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA25,
+        0x64
+    },
+    { // Mode 186 parameter: 0x23
+        400,
+        300,
+        1600,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x25,
         0xA000,
@@ -500,7 +689,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         384,
         1024,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x27,
         0xA000,
@@ -516,9 +712,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 189 parameter: 0x24
         512,
         384,
-        2048,
+        1536,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R60Hz,
+        0x28,
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA26,
+        0x80
+    },
+    { // Mode 189 parameter: 0x24
+        512,
+        384,
+        2048,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x28,
         0xA000,
@@ -536,7 +762,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         400,
         640,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x29,
         0xA000,
@@ -552,9 +785,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 18B parameter: 0x08
         640,
         400,
-        2048,
+        1920,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R70Hz,
+        0x2A,
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA12,
+        0x50
+    },
+    { // Mode 18B parameter: 0x08
+        640,
+        400,
+        2560,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R70Hz,
         0x2A,
         0xA000,
@@ -572,7 +835,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         480,
         1280,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x6E,//Hag::Vesa::VideoMode::G640x480x16bpp
         0xA000,
@@ -588,9 +858,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 112 parameter: 0x09
         640,
         480,
-        2048,
+        1920,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R60Hz,
+        0x69,//Hag::Vesa::VideoMode::G640x480x32bpp
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA13,
+        0x50
+    },
+    { // Mode 112 parameter: 0x09
+        640,
+        480,
+        2560,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x69,//Hag::Vesa::VideoMode::G640x480x32bpp
         0xA000,
@@ -608,7 +908,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         600,
         1600,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x70,//Hag::Vesa::VideoMode::G800x600x16bpp
         0xA000,
@@ -624,9 +931,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 115 parameter: 0x0B
         800,
         600,
-        4096,
+        2400,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R60Hz,
+        0x71,//Hag::Vesa::VideoMode::G800x600x32bpp
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA15,
+        0x64
+    },
+    { // Mode 115 parameter: 0x0B
+        800,
+        600,
+        3200,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x71,//Hag::Vesa::VideoMode::G800x600x32bpp
         0xA000,
@@ -644,7 +981,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         768,
         2048,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x72,//Hag::Vesa::VideoMode::G1024x768x16bpp
         0xA000,
@@ -660,9 +1004,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 118 parameter: 0x0F
         1024,
         768,
-        4096,
+        3072,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R60Hz,
+        0x73,//Hag::Vesa::VideoMode::G1024x768x32bpp
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA16,
+        0x80
+    },
+    { // Mode 118 parameter: 0x0F
+        1024,
+        768,
+        4096,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x73,//Hag::Vesa::VideoMode::G1024x768x32bpp
         0xA000,
@@ -680,7 +1054,14 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
         1024,
         2560,
         VGA::ModeSetting::BitsPerPixel::Bpp16,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        VGA::ModeSetting::Flags::Accelerate3D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x74,//Hag::Vesa::VideoMode::G1280x1024x16bpp
         0xA000,
@@ -696,9 +1077,39 @@ Function::ModeSetting::ModeDescriptor s_Descriptors[] =
     { // Mode 11B parameter: 0x0C
         1280,
         1024,
-        4096,
+        3840,
         VGA::ModeSetting::BitsPerPixel::Bpp24,
-        VGA::ModeSetting::Flags::Graphics | VGA::ModeSetting::Flags::Color | VGA::ModeSetting::Flags::Sequential | VGA::ModeSetting::Flags::LinearFramebuffer | VGA::ModeSetting::Flags::SingleParameter | Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
+        VGA::ModeSetting::RefreshRate::R60Hz,
+        0x75,//Hag::Vesa::VideoMode::G1280x1024x32bpp
+        0xA000,
+        VGA::Register::CRTControllerIndexD,
+        Hag::System::BDA::DetectedHardware::Color80x25,
+        VGA::ModeSetting::Scanlines::Invalid,
+        0xFF,
+        0xFF,
+        nullptr,
+        PA17,
+        0xA0
+    },
+    { // Mode 11B parameter: 0x0C
+        1280,
+        1024,
+        5120,
+        VGA::ModeSetting::BitsPerPixel::Bpp32,
+        VGA::ModeSetting::Flags::Graphics |
+        VGA::ModeSetting::Flags::Color |
+        VGA::ModeSetting::Flags::Sequential |
+        VGA::ModeSetting::Flags::SingleParameter |
+        VGA::ModeSetting::Flags::LinearFramebuffer |
+        VGA::ModeSetting::Flags::Accelerate2D |
+        Function::ModeSetting::Flags::TDfx,
         VGA::ModeSetting::RefreshRate::R60Hz,
         0x75,//Hag::Vesa::VideoMode::G1280x1024x32bpp
         0xA000,

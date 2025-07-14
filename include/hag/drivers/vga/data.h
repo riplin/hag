@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <has/types.h>
 #include <hag/drivers/vga/miscout.h>
 #include <hag/drivers/vga/attribc/data.h>
 #include <hag/drivers/vga/crtc/data.h>

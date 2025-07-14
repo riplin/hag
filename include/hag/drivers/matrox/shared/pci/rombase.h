@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::Matrox::Shared::PCI
 {
@@ -17,7 +17,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t RomBaseAddress_t;
+typedef Has::System::PCI::Register_t RomBaseAddress_t;
 
 namespace RomBaseAddress
 {
@@ -59,8 +59,8 @@ namespace RomBaseAddress
         };
     }
 
-    inline RomBaseAddress_t Read(System::PCI::Device_t device) { return RomBaseAddress_t(System::PCI::Read32(device, Register::RomBaseAddress)); }
-    inline void Write(System::PCI::Device_t device, RomBaseAddress_t value) { System::PCI::Write32(device, Register::RomBaseAddress, value); }
+    inline RomBaseAddress_t Read(Has::System::PCI::Device_t device) { return RomBaseAddress_t(Has::System::PCI::Read32(device, Register::RomBaseAddress)); }
+    inline void Write(Has::System::PCI::Device_t device, RomBaseAddress_t value) { Has::System::PCI::Write32(device, Register::RomBaseAddress, value); }
 }
 
 }

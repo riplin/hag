@@ -3,7 +3,7 @@
 #pragma once
 
 #include <sys/nearptr.h>
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::TDfx::Shared::PCI
 {
@@ -12,7 +12,7 @@ namespace Register
 {
     enum
     {
-        FrameBufferBaseAddress = System::PCI::Header0::BaseAddress1
+        FrameBufferBaseAddress = Has::System::PCI::Header0::BaseAddress1
     };
 }
 
@@ -26,13 +26,13 @@ namespace FrameBufferBaseAddress
     };
 
 
-    inline FrameBufferBaseAddress_t Read(System::PCI::Device_t device)
+    inline FrameBufferBaseAddress_t Read(Has::System::PCI::Device_t device)
     {
-        return FrameBufferBaseAddress_t(System::PCI::Read32(device, Register::FrameBufferBaseAddress));
+        return FrameBufferBaseAddress_t(Has::System::PCI::Read32(device, Register::FrameBufferBaseAddress));
     }
 
     template <typename T>
-    T* GetBaseAddressAs(System::PCI::Device_t device)
+    T* GetBaseAddressAs(Has::System::PCI::Device_t device)
     {
         return (T*)((Read(device) & Address) + __djgpp_conventional_base);
     }

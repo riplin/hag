@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 #include <sys/nearptr.h>
 
 namespace Hag::Matrox::Shared::PCI
@@ -18,7 +18,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t FrameBufferAperture_t;
+typedef Has::System::PCI::Register_t FrameBufferAperture_t;
 
 namespace FrameBufferAperture
 {
@@ -56,18 +56,18 @@ namespace FrameBufferAperture
         };
     }
 
-    inline FrameBufferAperture_t Read(System::PCI::Device_t device)
+    inline FrameBufferAperture_t Read(Has::System::PCI::Device_t device)
     {
-        return FrameBufferAperture_t(System::PCI::Read32(device, Register::FrameBufferAperture));
+        return FrameBufferAperture_t(Has::System::PCI::Read32(device, Register::FrameBufferAperture));
     }
 
-    inline void Write(System::PCI::Device_t device, FrameBufferAperture_t value)
+    inline void Write(Has::System::PCI::Device_t device, FrameBufferAperture_t value)
     {
-        System::PCI::Write32(device, Register::FrameBufferAperture, value);
+        Has::System::PCI::Write32(device, Register::FrameBufferAperture, value);
     }
 
     template<typename T>
-    T* GetAddress(System::PCI::Device_t device)
+    T* GetAddress(Has::System::PCI::Device_t device)
     {
         return (T*)((Read(device) & BaseAddress) + __djgpp_conventional_base);
     }

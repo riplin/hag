@@ -13,7 +13,7 @@ namespace Status
     
     inline Shared::Status_t Read(uint8_t* baseAddress)
     {
-        return *((Shared::Status_t volatile *)(baseAddress + Shared::ThreeD::Register::Base + Shared::Register::Status));
+        return *((Shared::Status_t volatile *)(baseAddress + ((int)Shared::ThreeD::Register::Base | (int)Shared::Register::Status)));
     }
 
 }

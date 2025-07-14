@@ -3,7 +3,7 @@
 #pragma once
 
 #include <assert.h>
-#include <hag/testing/log.h>
+#include <has/testing/log.h>
 #include <hag/drivers/3dfx/shared/fifo/pck2.h>
 #include <hag/drivers/3dfx/shared/fifo/pck4.h>
 
@@ -12,6 +12,15 @@
 // The direct API will immediately emit a fifo packet with the data provided.
 // The direct API is completely unaware of the deferred API!
 // Any deferred values that get committed after a direct API call will override that direct value!
+
+namespace Hag::TDfx::Shared::Fifo::Direct::ThreeD
+{
+    template <int F>
+    void FastFill(bool dithering = false)
+    {
+        Packet4::Emit3D<F, Packet4::Registers<Packet4::ThreeD::Index::FastFillCommand, Packet4::ThreeD::Index::FastFillCommand>>(0, dithering ? Shared::ThreeD::Command::FastFill::NoDithering : 0);
+    }
+}
 
 namespace Hag::TDfx::Shared::Fifo::Direct::TwoD
 {

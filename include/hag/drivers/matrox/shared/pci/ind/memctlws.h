@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace MemoryControlWaitState
 {
-    inline void Write(System::PCI::Device_t device, Shared::MemoryControlWaitState_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::MemoryControlWaitState_t value)
     {
         IndirectIndex::Write(device, Shared::Register::MemoryControlWaitState);
         IndirectData::Write(device, value);

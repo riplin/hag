@@ -181,7 +181,7 @@ namespace TextureLevelOfDetail
             LodMax = 0x06,
             LodBias = 0x0c,
             LodContent = 0x12,
-            LodContent = 0x13,
+            LodMakeup = 0x13,
             LodS = 0x14,
             LodAspectRatio = 0x15,
             LodFraction = 0x17,

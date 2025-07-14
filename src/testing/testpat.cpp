@@ -1,7 +1,7 @@
 //Copyright 2025-Present riplin
 
 #include <stdio.h>
-#include <hag/farptr.h>
+#include <has/farptr.h>
 #include <hag/testing/testpat.h>
 #include <hag/drivers/vga/modeset.h>
 #include <hag/drivers/vga/sqrc/enwrtpl.h>
@@ -137,6 +137,8 @@ void DrawTextBox(uint16_t x0, uint16_t y0,
                  uint8_t attribute,
                  uint16_t screenWidth, uint8_t* videoMemory)
 {
+    using namespace Has;
+    
     uint16_t top = min<uint16_t>(y0, y1);
     uint16_t bottom = max<uint16_t>(y0, y1) - top;
     uint16_t left = min<uint16_t>(x0, x1);

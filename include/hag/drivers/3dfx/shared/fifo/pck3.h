@@ -201,4 +201,8 @@ namespace Hag::TDfx::Shared::Fifo::Packet3
                sMode |
                (Command_t(padding) << Shift::Padding);
     }
+
+
+
+    
 }

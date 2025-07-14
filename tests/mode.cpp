@@ -11,12 +11,12 @@
 #endif
 #include "../src/drivers/matrox/shared/sysintl.h"
 #include "mode.h"
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 #include <hag/system/bda.h>
-#include <hag/system/pit.h>
-#include <hag/system/machid.h>
-#include <hag/system/keyboard.h>
-#include <hag/system/interrup.h>
+#include <has/system/pit.h>
+#include <has/system/machid.h>
+#include <has/system/keyboard.h>
+#include <has/system/interrup.h>
 #include <hag/drivers/vga/vidmodes.h>
 #include <hag/drivers/vga/extmsapi.h>
 #include <hag/vesa/vidmodes.h>
@@ -2918,6 +2918,7 @@ void ApplyVideoParameters(Hag::System::BDA::VideoParameterTable& videoParameterT
 
 void ClearScreen(VideoMode& videoMode)
 {
+    using namespace Has;
     using namespace Hag::System;
 
     if (((BDA::VideoModeOptions::Get() & BDA::VideoModeOptions::DontClearDisplay) == 0) &&
@@ -3049,7 +3050,9 @@ void UploadFont(ParameterFontPair& parameterFontPair)
 
 void ApplyGraphicsCharacterSetOverride()
 {
+    using namespace Has::System;
     using namespace Hag::System;
+
     BDA::VideoParameterControlBlock* videoParameterControlBlock = 
         BDA::VideoParameterControlBlockPointer::Get().ToPointer<BDA::VideoParameterControlBlock>();
     
@@ -3075,7 +3078,9 @@ void ApplyGraphicsCharacterSetOverride()
 
 void SetInterruptTableFontPointer(VideoMode& videoMode)
 {
+    using namespace Has::System;
     using namespace Hag::System;
+
     if (GetNumberOfActiveScanlines(videoMode) != Scanlines::S200)
     {
         InterruptTable::Pointer<InterruptTable::CharacterTable>() = VGA::ModeSetting::s_Font8x16;
@@ -3296,6 +3301,8 @@ void ApplyMode(VideoMode* videoMode, Hag::System::BDA::VideoModeOptions_t videoM
 //
 uint32_t CalculatePLL_MNPS(uint32_t requestedFrequencyKHz)//Offset 0x5e4b
 {
+    using namespace Has;
+    
     requestedFrequencyKHz = min<uint32_t>(max<uint32_t>(requestedFrequencyKHz, 6262), 218864);
     
     uint32_t mnps = 0;
@@ -3356,7 +3363,7 @@ uint32_t CalculatePLL_MNPS(uint32_t requestedFrequencyKHz)//Offset 0x5e4b
 
 void SetupSquareWave()
 {
-    using namespace Hag::System;
+    using namespace Has::System;
 
     PIT::Command::Write(PIT::Command::ModeSquareWaveGenerator | PIT::Command::LowByteHighByte | PIT::Command::SelectChannel2);
     PIT::Data::WriteChannel2(0xA9);
@@ -3365,7 +3372,7 @@ void SetupSquareWave()
 
 void Sleep2(uint8_t count)//count * 8 * 1193 ticks time
 {
-    using namespace Hag::System;
+    using namespace Has::System;
 
     SetupSquareWave();
 
@@ -3479,6 +3486,7 @@ void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)
 
 bool Set(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, bool clearDisplay)
 {
+    using namespace Has::System;
     using namespace Hag::System;
 
     VideoMode* videoMode = Get(width, height, bpp, flags, refreshRate);

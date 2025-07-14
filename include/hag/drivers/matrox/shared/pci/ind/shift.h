@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace FunnelShifterControl
 {
-    inline void Write(System::PCI::Device_t device, Shared::FunnelShifterControl_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::FunnelShifterControl_t value)
     {
         IndirectIndex::Write(device, Shared::Register::FunnelShifterControl);
         IndirectData::Write(device, value);

@@ -2,8 +2,8 @@
 
 #pragma once
 
+#include <has/system/sysasm.h>
 #include <hag/drivers/3dfx/shared/regs/pllctrl0.h>
-#include <hag/system/sysasm.h>
 
 namespace Hag::TDfx::Shared::IO
 {

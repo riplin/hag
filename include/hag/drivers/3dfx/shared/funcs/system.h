@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
-#include <hag/ialloc.h>
+#include <has/types.h>
 #include <hag/drivers/3dfx/shared/fifo/fifobase.h>
 
 #define HAG_3DFX_SYSTEM                                     \

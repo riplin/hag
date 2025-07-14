@@ -2,8 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
-#include <hag/ialloc.h>
+#include <has/types.h>
 
 #define HAG_MATROX_SYSTEM                                   \
     using namespace Hag::Matrox::Shared::Function::System;

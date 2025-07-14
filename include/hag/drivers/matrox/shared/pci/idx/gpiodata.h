@@ -10,11 +10,11 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace GeneralPurposeIOData
 {
-    inline Shared::Indexed::GeneralPurposeIOData_t Read(System::PCI::Device_t device)
+    inline Shared::Indexed::GeneralPurposeIOData_t Read(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::GeneralPurposeIOData);
     }
-    inline void Write(System::PCI::Device_t device, Shared::Indexed::GeneralPurposeIOData_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::Indexed::GeneralPurposeIOData_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::GeneralPurposeIOData, value);
     }

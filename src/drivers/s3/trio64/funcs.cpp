@@ -1,8 +1,8 @@
 //Copyright 2023-Present riplin
 
 #include <hag/system/bda.h>
-#include <hag/system/pci.h>
-#include <hag/system/sysasm.h>
+#include <has/system/pci.h>
+#include <has/system/sysasm.h>
 #include <hag/drivers/vga/data.h>
 #include <hag/drivers/s3/trio64/funcs.h>
 
@@ -1006,7 +1006,7 @@ void* GetLinearFrameBufferInternal(Shared::VESAVideoModeData* vesaData)
 {
     void* ret = nullptr;
     
-    using namespace Hag::System;
+    using namespace Has::System;
     using namespace Hag::System::BDA;
     
     if (vesaData != nullptr)
@@ -1715,6 +1715,8 @@ void SetScissors(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom)
 
 void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color)
 {
+    using namespace Has;
+
     WaitGraphicsEngineReadyFast();
     MMIO::Packed::ForegroundColor::Write(color);
     MMIO::ForegroundMix::Write(ForegroundMix::MixNew | ForegroundMix::SelectForegroundColor);
@@ -1841,6 +1843,8 @@ void DrawTriangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x
 
 void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint32_t color)
 {
+    using namespace Has;
+    
     WaitGraphicsEngineReadyFast();
     MMIO::Packed::ForegroundColor::Write(color);
     MMIO::ForegroundMix::Write(ForegroundMix::MixNew | ForegroundMix::SelectForegroundColor);

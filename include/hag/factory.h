@@ -3,7 +3,7 @@
 #pragma once
 
 #include <hag/driver.h>
-#include <hag/ialloc.h>
+#include <has/ialloc.h>
 
 namespace Hag
 {
@@ -11,10 +11,10 @@ namespace Hag
     class Factory
     {
     public:
-        static Driver* CreateDriver(IAllocator& allocator);
+        static Driver* CreateDriver(Has::IAllocator& allocator);
 
     protected:
-        virtual Driver* InstantiateDriver(IAllocator& allocator) const = 0;
+        virtual Driver* InstantiateDriver(Has::IAllocator& allocator) const = 0;
 
     private:
         static Factory* m_factories;

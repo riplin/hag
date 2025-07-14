@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <has/types.h>
 #include <hag/system/bda.h>
 #include <hag/drivers/matrox/shared/crtcext/hrcntext.h>
 #include <hag/drivers/matrox/shared/crtcext/vrcntext.h>

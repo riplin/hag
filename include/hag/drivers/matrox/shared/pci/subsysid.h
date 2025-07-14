@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::Matrox::Shared::PCI
 {
@@ -18,7 +18,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t SubsystemID_t;
+typedef Has::System::PCI::Register_t SubsystemID_t;
 
 namespace SubsystemID
 {
@@ -52,8 +52,8 @@ namespace SubsystemID
         };
     }
 
-    inline SubsystemID_t Read(System::PCI::Device_t device) { return SubsystemID_t(System::PCI::Read32(device, Register::SubsystemIDR)); }
-    inline void Write(System::PCI::Device_t device, SubsystemID_t value) { System::PCI::Write32(device, Register::SubsystemIDW, value); }
+    inline SubsystemID_t Read(Has::System::PCI::Device_t device) { return SubsystemID_t(Has::System::PCI::Read32(device, Register::SubsystemIDR)); }
+    inline void Write(Has::System::PCI::Device_t device, SubsystemID_t value) { Has::System::PCI::Write32(device, Register::SubsystemIDW, value); }
 }
 
 }

@@ -3,8 +3,8 @@
 #pragma once
 
 #include <string.h>
-#include <hag/types.h>
-#include <hag/farptr.h>
+#include <has/types.h>
+#include <has/farptr.h>
 #include <hag/drivers/vga/vidmodes.h>
 #include <hag/drivers/vga/regtype.h>
 #include <hag/testing/mock.h>

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <has/types.h>
 
 namespace Hag::TDfx::Shared
 {

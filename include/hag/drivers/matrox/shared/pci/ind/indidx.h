@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::Matrox::Shared::PCI
 {
@@ -17,7 +17,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t IndirectIndex_t;
+typedef Has::System::PCI::Register_t IndirectIndex_t;
 
 namespace IndirectIndex
 {
@@ -38,8 +38,8 @@ namespace IndirectIndex
         };
     }
 
-    inline IndirectIndex_t Read(System::PCI::Device_t device) { return System::PCI::Read32(device, Register::IndirectIndex); }
-    inline void Write(System::PCI::Device_t device, IndirectIndex_t value) { System::PCI::Write32(device, Register::IndirectIndex, value); }
+    inline IndirectIndex_t Read(Has::System::PCI::Device_t device) { return Has::System::PCI::Read32(device, Register::IndirectIndex); }
+    inline void Write(Has::System::PCI::Device_t device, IndirectIndex_t value) { Has::System::PCI::Write32(device, Register::IndirectIndex, value); }
 }
 
 }

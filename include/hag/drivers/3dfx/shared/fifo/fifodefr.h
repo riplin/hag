@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/testing/log.h>
+#include <has/testing/log.h>
 #include <hag/drivers/3dfx/shared/fifo/pck2.h>
 #include <hag/drivers/3dfx/shared/fifo/pck4.h>
 

@@ -3,8 +3,8 @@
 #pragma once
 
 #include <functional>
-#include <hag/types.h>
-#include <hag/ialloc.h>
+#include <has/types.h>
+#include <has/ialloc.h>
 #include <hag/system/bda.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/drivers/vga/modeset.h>
@@ -104,16 +104,16 @@ namespace Flags //Internal flags in addition to the public flags.
 {
     enum
     {
-        PublicFlags = 0x00FF,
-        ParameterCount = 0x8000,
-        MultiParameter = 0x8000,
-        SingleParameter = 0x0000,
+        PublicFlags =           0x0000FFFF,
+        ParameterCount =        0x80000000,
+        SingleParameter =       0x00000000,
+        MultiParameter =        0x80000000,
 
         //These flags can be used by drivers.
-        DriverFlag0 = 0x0800,
-        DriverFlag1 = 0x0400,
-        DriverFlag2 = 0x0200,
-        DriverFlag3 = 0x0100,
+        DriverFlag0 =           0x00080000,
+        DriverFlag1 =           0x00040000,
+        DriverFlag2 =           0x00020000,
+        DriverFlag3 =           0x00010000,
     };
 }
 
@@ -233,7 +233,7 @@ extern const ModeDescriptor* s_CurrentDescriptor;
 
 namespace External
 {
-    extern bool Initialize(IAllocator& allocator);
+    extern bool Initialize(Has::IAllocator& allocator);
     extern void Shutdown();
 
     extern SetVideoError_t SupportsRefreshRate(const ModeDescriptor&descriptor, RefreshRate_t refreshRate);
@@ -261,7 +261,7 @@ namespace External
     extern void SetupClock(const ModeDescriptor& descriptor, RefreshRate_t refreshRate);
 
     extern void* GetLinearFrameBuffer();
-    extern SetupBuffersError_t SetupBuffers(Buffers_t buffers);
+    extern SetVideoError_t SetupBuffers(Buffers_t buffers);
     extern void SwapScreen2D(bool waitForVSync);
 }
 

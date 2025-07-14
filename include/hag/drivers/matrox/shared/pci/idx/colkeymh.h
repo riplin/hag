@@ -10,11 +10,11 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace ColorKeyMaskHigh
 {
-    inline Shared::Indexed::ColorKeyMaskHigh_t Read(System::PCI::Device_t device)
+    inline Shared::Indexed::ColorKeyMaskHigh_t Read(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::ColorKeyMaskHigh);
     }
-    inline void Write(System::PCI::Device_t device, Shared::Indexed::ColorKeyMaskHigh_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::Indexed::ColorKeyMaskHigh_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::ColorKeyMaskHigh, value);
     }

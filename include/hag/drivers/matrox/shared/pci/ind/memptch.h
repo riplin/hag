@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace MemoryPitch
 {
-    inline void Write(System::PCI::Device_t device, Shared::MemoryPitch_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::MemoryPitch_t value)
     {
         IndirectIndex::Write(device, Shared::Register::MemoryPitch);
         IndirectData::Write(device, value);

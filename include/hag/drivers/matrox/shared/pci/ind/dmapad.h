@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace DMAPadding
 {
-    inline void Write(System::PCI::Device_t device, Shared::DMAPadding_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::DMAPadding_t value)
     {
         IndirectIndex::Write(device, Shared::Register::DMAPadding);
         IndirectData::Write(device, value);

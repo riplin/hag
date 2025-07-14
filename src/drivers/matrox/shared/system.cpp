@@ -3,9 +3,9 @@
 #include <dos.h>
 #include <stdio.h>
 #include <string.h>
-#include <hag/system/pci.h>
-#include <hag/system/pit.h>
-#include <hag/system/interrup.h>
+#include <has/system/pci.h>
+#include <has/system/pit.h>
+#include <has/system/interrup.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/drivers/vga/extmsapi.h>
 #include <hag/drivers/matrox/shared/pci/fbap.h>
@@ -20,8 +20,8 @@ namespace Hag::Matrox::Shared::Function::System
 
     
 bool s_Initialized = false;
-static IAllocator* s_Allocator = nullptr;
-Hag::System::PCI::Device_t s_Device = 0xFFFF;
+static Has::IAllocator* s_Allocator = nullptr;
+Has::System::PCI::Device_t s_Device = 0xFFFF;
 uint32_t s_MemorySize = 0;//Memory size in KB
 
 uint8_t GetMemoryIn64KBlocks()
@@ -33,7 +33,7 @@ uint8_t GetMemoryIn64KBlocks()
 
     VGA::Sequencer::ClockingMode::Write(clockingMode | VGA::Sequencer::ClockingMode::ScreenOff);
 
-    Hag::System::PIT::MiniSleep();
+    Has::System::PIT::MiniSleep();
 
     VGA::GraphicsController::MemoryMapModeControl_t memoryMapModeControl = VGA::GraphicsController::MemoryMapModeControl::Read();
 
@@ -111,7 +111,7 @@ uint8_t GetMemoryIn64KBlocks()
     return foundMem >> 8;
 }
 
-bool Initialize(IAllocator& allocator)
+bool Initialize(Has::IAllocator& allocator)
 {
     using namespace Hag::System;
     
@@ -119,7 +119,7 @@ bool Initialize(IAllocator& allocator)
     {
         s_Allocator = &allocator;
 
-        if (!Hag::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
+        if (!Has::System::PCI::FindDevice(0x102B, 0x051A, s_Device))
             return false;
 
         s_MemorySize = GetMemoryIn64KBlocks() << 6;

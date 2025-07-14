@@ -10,7 +10,7 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace CRCRemainderLow
 {
-    inline Shared::Indexed::CRCRemainderLow_t Read(System::PCI::Device_t device)
+    inline Shared::Indexed::CRCRemainderLow_t Read(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::CRCRemainderLow);
     }

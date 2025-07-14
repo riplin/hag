@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <has/types.h>
 #include <hag/vesa/data.h>
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/data.h>

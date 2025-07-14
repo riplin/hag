@@ -114,8 +114,44 @@
 #include <hag/drivers/3dfx/shared/mmio2d/srcfmt.h>
 #include <hag/drivers/3dfx/shared/mmio2d/xy.h>
 
-#include <hag/drivers/3dfx/shared/mmio3d/status.h>
+#include <hag/drivers/3dfx/shared/mmio3d/alpham.h>
+#include <hag/drivers/3dfx/shared/mmio3d/buffaddr.h>
+#include <hag/drivers/3dfx/shared/mmio3d/buffstrd.h>
+#include <hag/drivers/3dfx/shared/mmio3d/chrkey.h>
+#include <hag/drivers/3dfx/shared/mmio3d/chrrng.h>
+#include <hag/drivers/3dfx/shared/mmio3d/clip.h>
+#include <hag/drivers/3dfx/shared/mmio3d/cmd.h>
+#include <hag/drivers/3dfx/shared/mmio3d/color.h>
+#include <hag/drivers/3dfx/shared/mmio3d/colpth.h>
+#include <hag/drivers/3dfx/shared/mmio3d/delta.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbiaff.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbichrf.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbipi.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbipo.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbiswph.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbitrio.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbizff.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbzm.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fogcol.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fogm.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fogtable.h>
 #include <hag/drivers/3dfx/shared/mmio3d/intctrl.h>
+#include <hag/drivers/3dfx/shared/mmio3d/lfbm.h>
+#include <hag/drivers/3dfx/shared/mmio3d/ncctbl.h>
+#include <hag/drivers/3dfx/shared/mmio3d/ovlbuf.h>
+#include <hag/drivers/3dfx/shared/mmio3d/ssetupm.h>
+#include <hag/drivers/3dfx/shared/mmio3d/start.h>
+#include <hag/drivers/3dfx/shared/mmio3d/status.h>
+#include <hag/drivers/3dfx/shared/mmio3d/stipple.h>
+#include <hag/drivers/3dfx/shared/mmio3d/svertex.h>
+#include <hag/drivers/3dfx/shared/mmio3d/swpbfpnd.h>
+#include <hag/drivers/3dfx/shared/mmio3d/tbaseadr.h>
+#include <hag/drivers/3dfx/shared/mmio3d/tdetail.h>
+#include <hag/drivers/3dfx/shared/mmio3d/tlod.h>
+#include <hag/drivers/3dfx/shared/mmio3d/trxinit1.h>
+#include <hag/drivers/3dfx/shared/mmio3d/txtrm.h>
+#include <hag/drivers/3dfx/shared/mmio3d/vertex.h>
+#include <hag/drivers/3dfx/shared/mmio3d/zacol.h>
 
 #include <hag/drivers/3dfx/shared/fifo/agpgaddr.h>
 #include <hag/drivers/3dfx/shared/fifo/agpgstrd.h>
@@ -310,6 +346,54 @@ namespace Hag::TDfx::Banshee
     {
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, Status);
         IMPORTNAMESPACEANDTYPEANDSHIFT(Shared, InterruptControl);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, BufferAddress);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, BufferStride);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, ChromaRange);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, ClipLeftRight);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, ClipTopBottom);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, ClipLeftRight1);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, ClipTopBottom1);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD::Command, Triangle);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD::Command, Nop);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD::Command, FastFill);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD::Command, SwapBuffer);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD::Command, UserInterrupt);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD::Command, DrawTriangle);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD::Command, BeginTriangle);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Color);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbzColorPath);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Delta12p12);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Delta20p12);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Delta14p18);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Delta2p30);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbiAFuncFail);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbiChromaFail);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbiPixelsIn);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbiPixelsOut);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbiSwapHistory);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbiTrianglesOut);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FbiZFuncFail);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, RGBDepthMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FogColor);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FogMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, FogTable);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, LinearFrameBufferMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, NccTable);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, OverlayBufferAddress);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, sSetupMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Start12p12);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Start14p18);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Start2p30);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Stipple);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, sARGB);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, SwapBufferPending);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, TextureBaseAddress);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, TextureDetail);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, TextureLevelOfDetail);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, TrexInit1);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, TextureMode);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, Vertex);
+        IMPORTNAMESPACEANDTYPEANDSHIFT(Shared::ThreeD, DepthAlphaConstant);
     }
 
     namespace MMIO2D
@@ -338,6 +422,42 @@ namespace Hag::TDfx::Banshee
     {
         IMPORTNAMESPACE(Shared::MMIO3D, Status);
         IMPORTNAMESPACE(Shared::MMIO3D, InterruptControl);
+        IMPORTNAMESPACE(Shared::MMIO3D, AlphaMode);
+        IMPORTNAMESPACE(Shared::MMIO3D, BufferAddress);
+        IMPORTNAMESPACE(Shared::MMIO3D, BufferStride);
+        IMPORTNAMESPACE(Shared::MMIO3D, ChromaKey);
+        IMPORTNAMESPACE(Shared::MMIO3D, ChromaRange);
+        IMPORTNAMESPACE(Shared::MMIO3D, Clip);
+        IMPORTNAMESPACE(Shared::MMIO3D, Command);
+        IMPORTNAMESPACE(Shared::MMIO3D, Color);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbzColorPath);
+        IMPORTNAMESPACE(Shared::MMIO3D, Delta);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbiAFuncFail);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbiChromaFail);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbiPixelsIn);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbiPixelsOut);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbiSwapHistory);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbiTrianglesOut);
+        IMPORTNAMESPACE(Shared::MMIO3D, FbiZFuncFail);
+        IMPORTNAMESPACE(Shared::MMIO3D, RGBDepthMode);
+        IMPORTNAMESPACE(Shared::MMIO3D, FogColor);
+        IMPORTNAMESPACE(Shared::MMIO3D, FogMode);
+        IMPORTNAMESPACE(Shared::MMIO3D, FogTable);
+        IMPORTNAMESPACE(Shared::MMIO3D, LinearFrameBufferMode);
+        IMPORTNAMESPACE(Shared::MMIO3D, NccTable);
+        IMPORTNAMESPACE(Shared::MMIO3D, OverlayBufferAddress);
+        IMPORTNAMESPACE(Shared::MMIO3D, sSetupMode);
+        IMPORTNAMESPACE(Shared::MMIO3D, Start);
+        IMPORTNAMESPACE(Shared::MMIO3D, Stipple);
+        IMPORTNAMESPACE(Shared::MMIO3D, sVertex);
+        IMPORTNAMESPACE(Shared::MMIO3D, SwapBufferPending);
+        IMPORTNAMESPACE(Shared::MMIO3D, TextureBaseAddress);
+        IMPORTNAMESPACE(Shared::MMIO3D, TextureDetail);
+        IMPORTNAMESPACE(Shared::MMIO3D, TextureLevelOfDetail);
+        IMPORTNAMESPACE(Shared::MMIO3D, TrexInit1);
+        IMPORTNAMESPACE(Shared::MMIO3D, TextureMode);
+        IMPORTNAMESPACE(Shared::MMIO3D, Vertex);
+        IMPORTNAMESPACE(Shared::MMIO3D, DepthAlphaConstant);
     }
 
     namespace Fifo
@@ -374,6 +494,7 @@ namespace Hag::TDfx::Banshee
         namespace Direct
         {
             IMPORTNAMESPACE(Shared::Fifo::Direct, TwoD);
+            IMPORTNAMESPACE(Shared::Fifo::Direct, ThreeD);
         }
 
         namespace Deferred

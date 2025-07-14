@@ -13,14 +13,14 @@
 
 #include <hag/color.h>
 #include <hag/system/bda.h>
-#include <hag/system/pci.h>
-#include <hag/system/pit.h>
-#include <hag/system/machid.h>
-#include <hag/system/keyboard.h>
+#include <has/system/pci.h>
+#include <has/system/pit.h>
+#include <has/system/machid.h>
+#include <has/system/keyboard.h>
 #include <hag/vesa/vidmodes.h>
 #include <hag/drivers/vga/vga.h>
 
-#include <hag/math/fp/fpmath.h>
+#include <has/math/fp/fpmath.h>
 
 #include "mode.h"
 #include <hag/drivers/matrox/shared/funcs/system.h>
@@ -2604,7 +2604,7 @@ namespace ASM
     void ResetCRTCExtensionRegisters()//Offset 0x6257
     {
         using namespace Hag;
-        using namespace Hag::System;
+        using namespace Has::System;
         using namespace Hag::Matrox;
         
         REGS r;
@@ -4490,7 +4490,7 @@ namespace ASM
     void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)//Offset 0x6090
     {
         using namespace Hag;
-        using namespace Hag::System;
+        using namespace Has::System;
         using namespace Hag::Matrox;
 
         REGS r;
@@ -4812,7 +4812,7 @@ namespace ASM
         // ret
     }
 
-    void ConfigurePalette(Hag::System::PCI::Device_t device)//Offset 0x61d7
+    void ConfigurePalette(Has::System::PCI::Device_t device)//Offset 0x61d7
     {
         using namespace Hag;
         using namespace Hag::System;
@@ -5034,6 +5034,7 @@ namespace ASM
     void Func0x6310(VesaMode* siPointer)//Offset 0x6310
     {
         using namespace Hag;
+        using namespace Has::System;
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
@@ -8333,7 +8334,7 @@ namespace CPP
     void ResetCRTCExtensionRegisters()
     {
         using namespace Hag;
-        using namespace Hag::System;
+        using namespace Has::System;
         using namespace Hag::Matrox;
         
         PCI::Device_t mystique = 0;
@@ -9277,7 +9278,7 @@ namespace CPP
     //
     uint32_t CalculatePLL_MNPS(uint32_t requestedFrequencyKHz)//Offset 0x5e4b
     {
-        using namespace Hag;
+        using namespace Has;
 
         requestedFrequencyKHz = min<uint32_t>(max<uint32_t>(requestedFrequencyKHz, 6262), 218864);
         
@@ -9339,7 +9340,7 @@ namespace CPP
 
     void SetupSquareWave()
     {
-        using namespace Hag::System;
+        using namespace Has::System;
 
         PIT::Command::Write(PIT::Command::ModeSquareWaveGenerator | PIT::Command::LowByteHighByte | PIT::Command::SelectChannel2);
         PIT::Data::WriteChannel2(0xA9);
@@ -9348,7 +9349,7 @@ namespace CPP
 
     void Sleep2(uint8_t count)//count * 8 * 1193 ticks time
     {
-        using namespace Hag::System;
+        using namespace Has::System;
 
         SetupSquareWave();
 
@@ -9399,7 +9400,7 @@ namespace CPP
     void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)
     {
         using namespace Hag;
-        using namespace Hag::System;
+        using namespace Has::System;
         using namespace Hag::Matrox;
 
         PCI::Device_t mystique = 0;
@@ -9467,7 +9468,7 @@ namespace CPP
         VGA::Sequencer::ClockingMode::Write(VGA::Sequencer::ClockingMode::Read() & ~VGA::Sequencer::ClockingMode::ScreenOff);
     }
 
-    void ConfigurePalette(Hag::System::PCI::Device_t device)
+    void ConfigurePalette(Has::System::PCI::Device_t device)
     {
         using namespace Hag;
         using namespace Hag::System;
@@ -9541,6 +9542,7 @@ namespace CPP
     void ApplyVesaSettings(VesaMode* siPointer)
     {
         using namespace Hag;
+        using namespace Has::System;
         using namespace Hag::System;
         using namespace Hag::Matrox;
 
@@ -12615,6 +12617,7 @@ void DumpModeSettings(uint16_t mode)
 {
     using namespace Hag;
     using namespace Hag::Matrox;
+    using namespace Has::System;
     using namespace Hag::System;
 
     printf("\n//Mode: %X\n", mode);
@@ -12725,7 +12728,7 @@ bool PrintModeListCallback(uint16_t width, uint16_t height, Hag::VGA::ModeSettin
 int main(void)
 {
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has::Math;
     using namespace Hag::Color;
     using namespace Hag::Testing;
     using namespace Hag::Matrox::Shared;

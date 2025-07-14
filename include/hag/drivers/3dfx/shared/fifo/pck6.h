@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <has/types.h>
 
 // CMDFIFO Packet Type 6
 // CMDFIFO Packet Type 6 is a fixed length packet, requiring 5 32-bit words for the complete packet.

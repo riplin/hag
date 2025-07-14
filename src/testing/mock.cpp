@@ -70,7 +70,7 @@ struct Instance
 
     }
 
-    void Initialize(IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount);
+    void Initialize(Has::IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount);
     void Reset();
     void Snapshot();
     void Rollback();
@@ -105,7 +105,7 @@ struct Instance
     uint16_t DefaultPortValuesCount;
 };
 
-void Instance::Initialize(IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount)
+void Instance::Initialize(Has::IAllocator& allocator, PortAndValue* defaultValues, uint16_t defaultValuesCount)
 {
     if (Allocator != nullptr)
         Shutdown();
@@ -483,7 +483,7 @@ struct ReadOnlyReg
 class IndexedPort : public CustomPortHandler
 {
 public:
-    inline IndexedPort(IAllocator& allocator, const char* name, uint16_t indexPort, uint16_t dataPort, uint16_t regCount, uint8_t indexMask, uint8_t* defaultValues, uint8_t* orMask, uint8_t* andMask)
+    inline IndexedPort(Has::IAllocator& allocator, const char* name, uint16_t indexPort, uint16_t dataPort, uint16_t regCount, uint8_t indexMask, uint8_t* defaultValues, uint8_t* orMask, uint8_t* andMask)
         : CustomPortHandler(name)
         , m_Allocator(&allocator)
         , m_IndexPort(indexPort)
@@ -775,7 +775,7 @@ ReadOnlyReg* m_ReadOnlyRegisters;
 class AttributePortHandler : public CustomPortHandler
 {
 public:
-    AttributePortHandler(IAllocator& allocator, uint8_t* defaultValues)
+    AttributePortHandler(Has::IAllocator& allocator, uint8_t* defaultValues)
         : CustomPortHandler("Attribute Ports")
         , m_Allocator(allocator)
         , Mask(nullptr)
@@ -1019,7 +1019,7 @@ private:
 class RAMDACPortHandler : public CustomPortHandler
 {
 public:
-    RAMDACPortHandler(IAllocator& allocator, uint8_t* defaultValues)
+    RAMDACPortHandler(Has::IAllocator& allocator, uint8_t* defaultValues)
         : CustomPortHandler("RAMDAC Ports")
         , m_Allocator(allocator)
         , Mask(nullptr)
@@ -1256,7 +1256,7 @@ private:
     uint16_t WriteIndex;
 };
 
-void Initialize(IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters, uint8_t* ramdacRegisters)
+void Initialize(Has::IAllocator& allocator, PortAndValue* defaultPortsAndValues, uint16_t defaultPortsAndValuesCount, uint8_t* attributeControllerRegisters, uint8_t* ramdacRegisters)
 {
     s_Instance0.Initialize(allocator, defaultPortsAndValues, defaultPortsAndValuesCount);
     s_Instance1.Initialize(allocator, defaultPortsAndValues, defaultPortsAndValuesCount);

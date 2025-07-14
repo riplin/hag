@@ -10,6 +10,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 add_compile_options(-Wall -std=c++23 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals)
 # -march=pentium3 -msse
 
+link_directories(../has/build)
+
 add_compile_options(
     "$<$<CONFIG:RELEASE>:-DRELEASE>"
     "$<$<CONFIG:DEBUG>:-DDEBUG>"
@@ -32,25 +34,19 @@ set (ENV{DXE_LD_LIBRARY_PATH} "${CMAKE_FIND_ROOT_PATH}/djgpp/lib/gcc/i586-pc-msd
 message("Environment variable DJDIR: $ENV{DJDIR}")
 message("Environment variable DXE_LD_LIBRARY_PATH: $ENV{DXE_LD_LIBRARY_PATH}")
 
-include_directories(include)
+include_directories(
+    ../has/include
+    include
+    )
 
 add_library(hag
             src/color.cpp
-            src/math/fp/fp.cpp
-            src/math/fp/fptables.cpp
-            src/math/fp/m44.cpp
-            src/math/flt/flt.cpp
-            src/math/flt/m44.cpp
             src/system/bda.cpp
-            src/system/pci.cpp
-            src/system/pit.cpp
             src/testing/mock.cpp
             src/testing/testpat.cpp
-            src/testing/log.cpp
            )
 
 add_library(hagsup
-            support/allocatr.cpp
             support/dump.cpp
            )
 
@@ -101,6 +97,12 @@ target_link_libraries(myst
                       hagsup
                       hag
                      )
+
+target_link_libraries(myst debug hassupd)
+target_link_libraries(myst debug hasd)
+target_link_libraries(myst optimized hassup)
+target_link_libraries(myst optimized has)
+
 #add_dependencies(myst mystiquedxe)
 
 #add_custom_target(assets
@@ -117,10 +119,15 @@ add_executable(mystst
 
 #libraries are linked in reverse order
 target_link_libraries(mystst
-                      hagsup
                       mystique
+                      hagsup
                       hag
                      )
+
+target_link_libraries(mystst debug hassupd)
+target_link_libraries(mystst debug hasd)
+target_link_libraries(mystst optimized hassup)
+target_link_libraries(mystst optimized has)
 
 add_executable(bantst
                tests/bantst.cpp
@@ -131,7 +138,14 @@ target_link_libraries(bantst
                       banshee
                       hagsup
                       hag
+                      hassup
+                      has
                      )
+
+target_link_libraries(bantst debug hassupd)
+target_link_libraries(bantst debug hasd)
+target_link_libraries(bantst optimized hassup)
+target_link_libraries(bantst optimized has)
 
 add_executable(bansh
                tests/bansh.cpp
@@ -143,3 +157,8 @@ target_link_libraries(bansh
                       hagsup
                       hag
                      )
+
+target_link_libraries(bansh debug hassupd)
+target_link_libraries(bansh debug hasd)
+target_link_libraries(bansh optimized hassup)
+target_link_libraries(bansh optimized has)

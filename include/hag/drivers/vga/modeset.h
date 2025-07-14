@@ -3,8 +3,8 @@
 #pragma once
 
 #include <functional>
-#include <hag/types.h>
-#include <hag/ialloc.h>
+#include <has/types.h>
+#include <has/ialloc.h>
 
 #define HAG_IMPORT_MODESETTING                                                     \
     using namespace VGA::ModeSetting;                                              \
@@ -32,24 +32,28 @@ namespace Hag::VGA::ModeSetting
         };
     }
 
-    typedef uint16_t Flags_t;
+    typedef uint32_t Flags_t;
     namespace Flags
     {
         enum
         {
-            Mode = 0x01,                //Mode type is text or graphics
-            Text = 0x01,
-            Graphics = 0x00,
+            Mode =                  0x00000001, // Mode type is text or graphics
+            Graphics =              0x00000000,
+            Text =                  0x00000001,
 
-            Chromacity = 0x02,          //Monochrome or color
-            Monochrome = 0x02,
-            Color = 0x00,
+            Chromacity =            0x00000002, // Monochrome or color
+            Color =                 0x00000000,
+            Monochrome =            0x00000002,
 
-            MemoryOrganization = 0x04,  //Sequential or planar memory organization, only applies to graphical modes
-            Sequential = 0x00,
-            Planar = 0x04,
+            MemoryOrganization =    0x00000004, // Sequential or planar memory organization, only applies to graphical modes
+            Sequential =            0x00000000,
+            Planar =                0x00000004,
 
-            LinearFramebuffer = 0x08,   //Linear framebuffer access
+            LinearFramebuffer =     0x00000008, // Linear framebuffer access
+
+            HardwareAcceleration =  0x00000030, // 2D acceleration, 3D acceleration (not mutually exclusive)
+            Accelerate2D =          0x00000010,
+            Accelerate3D =          0x00000020
         };
     }
 
@@ -77,21 +81,11 @@ namespace Hag::VGA::ModeSetting
             RefreshRateNotSupported = 0x04,
             NotSupportedByRamdac = 0x05,
             NotSupportedByMonitor = 0x06,
+            UnsupportedBufferCount = 0x07,
+            DepthBufferNotSupported = 0x08,
+            DepthBufferFormatNotSupported = 0x09,
         };
-    }
-
-    typedef uint8_t SetupBuffersError_t;
-    namespace SetupBuffersError
-    {
-        enum
-        {
-            Success = 0x00,
-            IllegalBufferCount = 0x01,
-            ModeNotSet = 0x02,
-            DepthBufferNotSupported = 0x03,
-            DepthBufferFormatNotSupported = 0x04,
-            NotEnoughMemory = 0x05,
-        };
+        extern const char* ToString(SetVideoError_t error);
     }
 
     typedef uint8_t Buffers_t;
@@ -111,15 +105,14 @@ namespace Hag::VGA::ModeSetting
         };
     }
 
-    bool Initialize(IAllocator& allocator);
+    bool Initialize(Has::IAllocator& allocator);
     void Shutdown();
 
     typedef std::function<bool(uint16_t width, uint16_t height, uint16_t stride, BitsPerPixel_t bpp, Flags_t flags, uint16_t segment)> VideoModeCallback_t;//Return true to continue receiving modes.
     void EnumerateVideoModes(const VideoModeCallback_t& callback);
 
     SetVideoError_t HasVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare);
-    SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare, bool clearDisplay = true);
-    SetupBuffersError_t SetupBuffers(Buffers_t buffers);
+    SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags = Flags::Sequential, RefreshRate_t refreshRate = RefreshRate::DontCare, bool clearDisplay = true, Buffers_t buffers = Buffers::SingleBuffer);
 
     void SwapScreen2D(bool waitForVSync);
 

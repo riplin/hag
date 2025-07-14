@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace Sign
 {
-    inline void Write(System::PCI::Device_t device, Shared::Sign_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::Sign_t value)
     {
         IndirectIndex::Write(device, Shared::Register::Sign);
         IndirectData::Write(device, value);

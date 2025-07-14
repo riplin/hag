@@ -1,7 +1,7 @@
 //Copyright 2023-Present riplin
 
 #include <stdio.h>
-#include <hag/types.h>
+#include <has/types.h>
 
 int main(void)
 {

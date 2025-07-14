@@ -3,7 +3,7 @@
 #pragma once
 
 #include <hag/drivers/3dfx/shared/regs/vgainit1.h>
-#include <hag/system/sysasm.h>
+#include <has/system/sysasm.h>
 
 namespace Hag::TDfx::Shared::IO
 {

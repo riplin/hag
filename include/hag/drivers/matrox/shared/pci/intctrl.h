@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::Matrox::Shared::PCI
 {
@@ -17,7 +17,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t InterruptControl_t;
+typedef Has::System::PCI::Register_t InterruptControl_t;
 
 namespace InterruptControl
 {
@@ -48,8 +48,8 @@ namespace InterruptControl
         };
     }
 
-    inline InterruptControl_t Read(System::PCI::Device_t device) { return InterruptControl_t(System::PCI::Read32(device, Register::InterruptControl)); }
-    inline void Write(System::PCI::Device_t device, InterruptControl_t value) { System::PCI::Write32(device, Register::InterruptControl, value); }
+    inline InterruptControl_t Read(Has::System::PCI::Device_t device) { return InterruptControl_t(Has::System::PCI::Read32(device, Register::InterruptControl)); }
+    inline void Write(Has::System::PCI::Device_t device, InterruptControl_t value) { Has::System::PCI::Write32(device, Register::InterruptControl, value); }
 }
 
 }

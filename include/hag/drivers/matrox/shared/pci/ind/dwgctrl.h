@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace DrawingControl
 {
-    inline void Write(System::PCI::Device_t device, Shared::DrawingControl_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::DrawingControl_t value)
     {
         IndirectIndex::Write(device, Shared::Register::DrawingControl);
         IndirectData::Write(device, value);

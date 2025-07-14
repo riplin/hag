@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include <hag/types.h>
-#include <hag/system/sysasm.h>
+#include <has/types.h>
+#include <has/system/sysasm.h>
 
 namespace Hag::VGA
 {

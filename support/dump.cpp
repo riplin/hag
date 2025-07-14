@@ -3,7 +3,7 @@
 #include <support/dump.h>
 #include <hag/drivers/vga/vga.h>
 #include <hag/system/bda.h>
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Support
 {
@@ -20,7 +20,7 @@ struct ScanContext
 
 bool FindDevices(uint8_t bus, uint8_t slot, uint8_t function, void* context)
 {
-    using namespace Hag::System;
+    using namespace Has::System;
 
     ScanContext* ctx = (ScanContext*)context;
 
@@ -80,7 +80,7 @@ void PCIDump(FILE* fptext, FILE* fpbin, uint16_t vendor, const char* vendorName,
     context.vendor = vendor;
     context.vendorName = vendorName;
 
-    Hag::System::PCI::ScanBus(0, FindDevices, &context);
+    Has::System::PCI::ScanBus(0, FindDevices, &context);
 }
 
 void BDADump(FILE* fptext, FILE* fpbin)

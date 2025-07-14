@@ -15,6 +15,7 @@ namespace Hag::TDfx::Shared::Fifo::Function
     template <int F>
     void WriteLaunchArea(const Shared::TwoD::LaunchCommand_t* sourceCommands, uint16_t commandCount)
     {
+        using namespace Has;
         uint8_t maxEntries = numbits(Packet4::GeneralRegisterMask);
 
         uint8_t launchOffset = 0;
@@ -47,6 +48,8 @@ namespace Hag::TDfx::Shared::Fifo::Function
     template <int F>
     void WritePattern(const Shared::TwoD::Pattern_t* pattern, uint8_t patternCount)
     {
+        using namespace Has;
+
         assert(patternCount <= 64);
         uint8_t maxEntries = numbits(Packet4::GeneralRegisterMask);
         uint8_t patternOffset = 0;

@@ -23,14 +23,14 @@ typedef uint8_t IndexedData_t;
 
 namespace IndexedData
 {
-    inline IndirectData_t Read(System::PCI::Device_t device, Hag::VGA::DACWriteIndex_t index)
+    inline IndirectData_t Read(Has::System::PCI::Device_t device, Hag::VGA::DACWriteIndex_t index)
     {
         VGA::DACWriteIndex::Write(index);
         IndirectIndex::Write(device, Register::IndexedData);
         return IndirectData::ReadByte2(device);
     }
     
-    inline void Write(System::PCI::Device_t device, Hag::VGA::DACWriteIndex_t index, IndexedData_t value)
+    inline void Write(Has::System::PCI::Device_t device, Hag::VGA::DACWriteIndex_t index, IndexedData_t value)
     {
         VGA::DACWriteIndex::Write(index);
         IndirectIndex::Write(device, Register::IndexedData);

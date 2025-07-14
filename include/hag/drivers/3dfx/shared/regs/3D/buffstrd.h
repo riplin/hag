@@ -31,7 +31,7 @@ namespace BufferStride
 {
     enum
     {
-        StrideLin = 0x00001fff,
+        StrideLin = 0x00003fff,
         StrideTile = 0x0000007f,
         MemoryType = 0x00008000,
         MemoryLinear = 0x00000000,

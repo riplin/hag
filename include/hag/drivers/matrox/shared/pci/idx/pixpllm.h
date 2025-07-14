@@ -10,27 +10,27 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace PixelPLLM
 {
-    inline Shared::Indexed::PixelPLLM_t ReadA(System::PCI::Device_t device)
+    inline Shared::Indexed::PixelPLLM_t ReadA(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::PixelPLLMA);
     }
-    inline Shared::Indexed::PixelPLLM_t ReadB(System::PCI::Device_t device)
+    inline Shared::Indexed::PixelPLLM_t ReadB(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::PixelPLLMB);
     }
-    inline Shared::Indexed::PixelPLLM_t ReadC(System::PCI::Device_t device)
+    inline Shared::Indexed::PixelPLLM_t ReadC(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::PixelPLLMC);
     }
-    inline void WriteA(System::PCI::Device_t device, Shared::Indexed::PixelPLLM_t value)
+    inline void WriteA(Has::System::PCI::Device_t device, Shared::Indexed::PixelPLLM_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::PixelPLLMA, value);
     }
-    inline void WriteB(System::PCI::Device_t device, Shared::Indexed::PixelPLLM_t value)
+    inline void WriteB(Has::System::PCI::Device_t device, Shared::Indexed::PixelPLLM_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::PixelPLLMB, value);
     }
-    inline void WriteC(System::PCI::Device_t device, Shared::Indexed::PixelPLLM_t value)
+    inline void WriteC(Has::System::PCI::Device_t device, Shared::Indexed::PixelPLLM_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::PixelPLLMC, value);
     }

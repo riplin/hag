@@ -11,7 +11,7 @@ namespace Hag::Matrox::Shared::PCI::Indirect
 
 namespace MemoryAccess
 {
-    inline void Write(System::PCI::Device_t device, Shared::MemoryAccess_t value)
+    inline void Write(Has::System::PCI::Device_t device, Shared::MemoryAccess_t value)
     {
         IndirectIndex::Write(device, Shared::Register::MemoryAccess);
         IndirectData::Write(device, value);

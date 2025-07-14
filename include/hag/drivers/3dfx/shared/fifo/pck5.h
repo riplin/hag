@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/types.h>
+#include <has/types.h>
 
 // CMDFIFO Packet Type 5
 // CMDFIFO Packet Type 5 is a variable length packet, requiring a minimum of 3 32-bit words, and a

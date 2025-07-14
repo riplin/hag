@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::TDfx::Shared::PCI
 {
@@ -11,7 +11,7 @@ namespace Register
 {
     enum
     {
-        IOBaseAddress = System::PCI::Header0::BaseAddress2
+        IOBaseAddress = Has::System::PCI::Header0::BaseAddress2
     };
 }
 
@@ -25,12 +25,12 @@ namespace IOBaseAddress
     };
 
 
-    inline IOBaseAddress_t Read(System::PCI::Device_t device)
+    inline IOBaseAddress_t Read(Has::System::PCI::Device_t device)
     {
-        return IOBaseAddress_t(System::PCI::Read32(device, Register::IOBaseAddress));
+        return IOBaseAddress_t(Has::System::PCI::Read32(device, Register::IOBaseAddress));
     }
 
-    inline uint16_t GetBaseAddress(System::PCI::Device_t device)
+    inline uint16_t GetBaseAddress(Has::System::PCI::Device_t device)
     {
         return uint16_t(Read(device) & Address);
     }

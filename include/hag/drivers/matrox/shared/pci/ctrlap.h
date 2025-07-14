@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 #include <sys/nearptr.h>
 
 namespace Hag::Matrox::Shared::PCI
@@ -18,7 +18,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t ControlAperture_t;
+typedef Has::System::PCI::Register_t ControlAperture_t;
 
 namespace ControlAperture
 {
@@ -51,16 +51,16 @@ namespace ControlAperture
         };
     }
 
-    inline ControlAperture_t Read(System::PCI::Device_t device)
+    inline ControlAperture_t Read(Has::System::PCI::Device_t device)
     {
-        return ControlAperture_t(System::PCI::Read32(device, Register::ControlAperture));
+        return ControlAperture_t(Has::System::PCI::Read32(device, Register::ControlAperture));
     }
-    inline void Write(System::PCI::Device_t device, ControlAperture_t value)
+    inline void Write(Has::System::PCI::Device_t device, ControlAperture_t value)
     {
-        System::PCI::Write32(device, Register::ControlAperture, value);
+        Has::System::PCI::Write32(device, Register::ControlAperture, value);
     }
 
-    inline ControlAperture_t GetAddress(System::PCI::Device_t device)
+    inline ControlAperture_t GetAddress(Has::System::PCI::Device_t device)
     {
         return (Read(device) & BaseAddress) + __djgpp_conventional_base;
     }

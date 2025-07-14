@@ -1,8 +1,8 @@
 //Copyright 2025-Present riplin
 
 #include <dpmi.h>
-#include <hag/system/pit.h>
-#include <hag/system/interrup.h>
+#include <has/system/pit.h>
+#include <has/system/interrup.h>
 #include <hag/drivers/vga/modeset.h>
 #include <hag/drivers/vga/extmsapi.h>
 
@@ -37,7 +37,7 @@ bool DeclareAperture(uint32_t address, uint32_t size)
 }
 
 static bool s_Initialized = false;
-static IAllocator* s_Allocator = nullptr;
+static Has::IAllocator* s_Allocator = nullptr;
 static uint16_t s_FontSelector = 0;
 FARPointer s_Font8x8;
 FARPointer s_Font8x8Graphics;
@@ -47,9 +47,9 @@ FARPointer s_SystemFont;
 FARPointer s_SystemFontGraphics;
 const ModeDescriptor* s_CurrentDescriptor = nullptr;
 
-bool Initialize(IAllocator& allocator)
+bool Initialize(Has::IAllocator& allocator)
 {
-    using namespace Hag::System;
+    using namespace Has::System;
 
     if (!s_Initialized)
     {
@@ -80,7 +80,7 @@ bool Initialize(IAllocator& allocator)
 
 void Shutdown()
 {
-    using namespace Hag::System;
+    using namespace Has::System;
 
     if (s_Initialized)
     {
@@ -132,11 +132,18 @@ static const ModeDescriptor* GetModeDescriptor(uint16_t width, uint16_t height, 
 
     External::IterateModeDescriptors([&](const ModeDescriptor& descriptor, SetVideoError_t internalError)
     {
+        //Hardware acceleration and linear frame buffer are only important if the user asked for it.
+        //And it out if it's not requested so we don't mismatch on it.
+        Flags_t mask = ~(Flags::HardwareAcceleration | Flags::LinearFramebuffer);
+
+        //Preserve everything except the bits that were not present in either flags or mask.
+        Flags_t descriptorFlags = descriptor.Flags & (flags | mask);
+
         bool ret = true;
         if (descriptor.Width == width &&
             descriptor.Height == height &&
             descriptor.Bpp == bpp &&
-            (descriptor.Flags & Flags::PublicFlags) == flags)
+            (descriptorFlags & Flags::PublicFlags) == flags)
         {
             RefreshRate_t currentRefreshRate = (refreshRate == RefreshRate::DontCare) ? descriptor.RefreshRate : refreshRate;
 
@@ -452,7 +459,7 @@ static Sequencer::ClockingMode_t TurnScreenOff()
 
 static void ApplyParameters(const ModeDescriptor& descriptor, Register_t baseVideoIOPort, RefreshRate_t refreshRate)
 {
-    using namespace Hag::System;
+    using namespace Has::System;
 
     SYS_ClearInterrupts();
     
@@ -601,6 +608,7 @@ static void ConfigureTextMemoryMapping()
 
 static void ApplyGraphicsCharacterSetOverride()
 {
+    using namespace Has::System;
     using namespace Hag::System;
     if (!BDA::VideoParameterControlBlockPointer::Get().IsNull())
     {
@@ -632,6 +640,7 @@ static void ApplyGraphicsCharacterSetOverride()
 
 static void SetInterruptTableFontPointer(const ModeDescriptor& descriptor)
 {
+    using namespace Has::System;
     using namespace Hag::System;
     if (GetNumberOfActiveScanlines(descriptor) != Scanlines::S200)
     {
@@ -757,8 +766,9 @@ static void ApplyMode(const ModeDescriptor& descriptor, Hag::System::BDA::VideoM
         BDA::CGAColorPaletteMaskSetting::Get() = descriptor.CGAColorPaletteMaskSetting;
 }
 
-SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, bool clearDisplay)
+SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp, Flags_t flags, RefreshRate_t refreshRate, bool clearDisplay, Buffers_t buffers)
 {
+    using namespace Has::System;
     using namespace Hag::System;
 
     SetVideoError_t error = SetVideoError::Success;
@@ -805,7 +815,7 @@ SetVideoError_t SetVideoMode(uint16_t width, uint16_t height, BitsPerPixel_t bpp
     External::TurnMonitorOn();
     TurnScreenOn();
 
-    return SetVideoError::Success;
+    return External::SetupBuffers(buffers);
 }
 
 void* GetLinearFrameBuffer()
@@ -814,17 +824,6 @@ void* GetLinearFrameBuffer()
         ((s_CurrentDescriptor->Flags & Flags::LinearFramebuffer) != 0))
         return External::GetLinearFrameBuffer();
     return nullptr;
-}
-
-SetupBuffersError_t SetupBuffers(Buffers_t buffers)
-{
-    if (s_CurrentDescriptor == nullptr)
-        return SetupBuffersError::ModeNotSet;
-
-    if ((buffers & Buffers::ImageBuffers) == 0)
-        return SetupBuffersError::IllegalBufferCount;
-
-    return External::SetupBuffers(buffers);
 }
 
 void SwapScreen2D(bool waitForVSync)
@@ -849,6 +848,40 @@ CRTController::ScreenOffset_t ModeDescriptor::CalculateVGAOffset() const
     uint8_t charWidth = (everyFourth != 0) ? 4 : ((everySecond != 0) ? 2 : 1);
 
     return CRTController::ScreenOffset_t((parameters.Timings.Horizontal.DisplayEnd + 1) / (charWidth * 2));
+}
+
+namespace SetVideoError
+{
+
+const char* ToString(SetVideoError_t error)
+{
+    switch (error)
+    {
+    case Success:
+        return "Success";
+    case SystemNotInitialized:
+        return "System not initialized";
+    case UnknownMode:
+        return "Unknown mode";
+    case InsufficientVideoMemory:
+        return "Insufficient video memory";
+    case RefreshRateNotSupported:
+        return "Refresh rate not supported";
+    case NotSupportedByRamdac:
+        return "Not supported by RAMDAC";
+    case NotSupportedByMonitor:
+        return "Not supported by monitor";
+    case UnsupportedBufferCount:
+        return "Unsupported buffer count";
+    case DepthBufferNotSupported:
+        return "Depth buffer not supported";
+    case DepthBufferFormatNotSupported:
+        return "Depth buffer format not supported";
+    default:
+        return "Unknown error";
+    }
+}
+
 }
 
 }

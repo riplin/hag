@@ -1,7 +1,7 @@
 //Copyright 2025-Present riplin
 
 #include <hag/system/bda.h>
-#include <hag/system/pit.h>
+#include <has/system/pit.h>
 #include <hag/drivers/vga/extmsapi.h>
 #include <hag/drivers/matrox/shared/funcs/system.h>
 #include <hag/drivers/matrox/shared/crtcext/adgenext.h>
@@ -25,7 +25,7 @@
 namespace Hag::VGA::ModeSetting::External
 {
 
-bool Initialize(IAllocator& allocator)
+bool Initialize(Has::IAllocator& allocator)
 {
     return Matrox::Shared::Function::System::Initialize(allocator);
 }
@@ -487,6 +487,8 @@ void WriteExtensionRegisters(const ModeDescriptor& descriptor)
 //
 uint32_t CalculatePLL_MNPS(uint32_t requestedFrequencyKHz)//Offset 0x5e4b
 {
+    using namespace Has;
+
     requestedFrequencyKHz = min<uint32_t>(max<uint32_t>(requestedFrequencyKHz, 6262), 218864);
     
     uint32_t mnps = 0;
@@ -563,7 +565,7 @@ namespace PixelClocksSettings
 
 void ConfigurePixelClocks(uint32_t mnps, PixelClocksSettings_t PllAndClock)
 {
-    using namespace Hag::System;
+    using namespace Has::System;
     using namespace Hag::Matrox;
 
     //5.7.8.3 (A) Step 1: Force the screen off.
@@ -644,12 +646,12 @@ void* GetLinearFrameBuffer()
     return Matrox::Shared::PCI::FrameBufferAperture::GetAddress<void>(Matrox::Shared::Function::System::s_Device);
 }
 
-SetupBuffersError_t SetupBuffers(Buffers_t buffers)
+SetVideoError_t SetupBuffers(Buffers_t buffers)
 {
     //TODO: properly implement this.
     if ((buffers & Buffers::DepthBuffer) != 0)
-        return SetupBuffersError::DepthBufferNotSupported;
-    return (buffers != Buffers::SingleBuffer) ? SetupBuffersError::NotEnoughMemory : SetupBuffersError::Success;
+        return SetVideoError::DepthBufferNotSupported;
+    return (buffers != Buffers::SingleBuffer) ? SetVideoError::InsufficientVideoMemory : SetVideoError::Success;
 }
 
 void SwapScreen2D(bool waitForVSync)

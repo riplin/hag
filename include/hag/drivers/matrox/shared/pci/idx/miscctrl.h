@@ -10,11 +10,12 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace MiscellaneousControl
 {
-    inline Shared::Indexed::MiscellaneousControl_t Read(System::PCI::Device_t device)
+    inline Shared::Indexed::MiscellaneousControl_t Read(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::MiscellaneousControl);
     }
-    inline void Write(System::PCI::Device_t device, Shared::Indexed::MiscellaneousControl_t value)
+    
+    inline void Write(Has::System::PCI::Device_t device, Shared::Indexed::MiscellaneousControl_t value)
     {
         IndexedData::Write(device, Shared::Indexed::Register::MiscellaneousControl, value);
     }

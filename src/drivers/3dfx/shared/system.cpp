@@ -2,9 +2,8 @@
 
 #include <dos.h>
 #include <dpmi.h>
-#include <stdio.h>
-#include <hag/system/pci.h>
-#include <hag/system/interrup.h>
+#include <has/system/pci.h>
+#include <has/system/interrup.h>
 #include <hag/drivers/vga/vga.h>
 
 #include <hag/drivers/3dfx/shared/io/viddsa.h>
@@ -17,6 +16,7 @@
 #include <hag/drivers/3dfx/shared/fifo/pck2.h>
 
 #include <hag/drivers/3dfx/shared/mmio2d/baseaddr.h>
+#include <hag/drivers/3dfx/shared/mmio3d/buffaddr.h>
 
 #include "sysintl.h"
 #include "modintl.h"
@@ -25,22 +25,17 @@ namespace Hag::TDfx::Shared::Function::System
 {
 
 bool s_Initialized = false;
-static IAllocator* s_Allocator = nullptr;
-Hag::System::PCI::Device_t s_Device = 0xFFFF;
+static Has::IAllocator* s_Allocator = nullptr;
+Has::System::PCI::Device_t s_Device = 0xFFFF;
 uint16_t s_IOBaseAddress = 0xFFFF;
 uint8_t* s_LinearFrameBuffer = nullptr;
 uint8_t* s_ControlAperture = nullptr;
 uint32_t s_MemorySize = 0;//Memory size in KB
 
-uint8_t s_SurfaceCount2D = 0;
-uint8_t s_FrontSurface2D = 0;
-uint8_t s_BackSurface2D = 0;
-uint32_t s_Surfaces2D[2] = { 0 };
-
-uint8_t s_SurfaceCount3D = 0;
-uint8_t s_FrontSurface3D = 0;
-uint8_t s_BackSurface3D = 0;
-uint32_t s_Surfaces3D[3] = { 0 };
+uint8_t s_SurfaceCount = 0;
+uint8_t s_FrontSurface = 0;
+uint8_t s_BackSurface = 0;
+uint32_t s_Surfaces[3] = { 0 };
 
 uint32_t s_DepthSurface = 0;
 uint32_t s_TextureMemory = 0;
@@ -61,7 +56,7 @@ uint16_t GetMemoryIn64KBlocks()
     return uint16_t(MemorySizes[index]) << 2;
 }
 
-bool Initialize(IAllocator& allocator)
+bool Initialize(Has::IAllocator& allocator)
 {
     using namespace Hag::System;
 
@@ -69,8 +64,8 @@ bool Initialize(IAllocator& allocator)
     {
         s_Allocator = &allocator;
 
-        Hag::System::PCI::FindDevice(0x121a, 0x0003, s_Device);
-        // if (!Hag::System::PCI::FindDevice(0x121a, 0x0003, s_Device))
+        Has::System::PCI::FindDevice(0x121a, 0x0003, s_Device);
+        // if (!Has::System::PCI::FindDevice(0x121a, 0x0003, s_Device))
         //     return false;
 
         s_IOBaseAddress = Shared::PCI::IOBaseAddress::GetBaseAddress(s_Device);
@@ -121,29 +116,36 @@ uint32_t GetMemorySize()
 
 static void ApplyBufferSettings()
 {
-    IO::VideoDesktopStartAddress::Write(s_IOBaseAddress, s_Surfaces2D[s_FrontSurface2D]);
-    MMIO2D::BaseAddress::WriteDestination(s_ControlAperture, s_Surfaces2D[s_BackSurface2D]);
+    IO::VideoDesktopStartAddress::Write(s_IOBaseAddress, s_Surfaces[s_FrontSurface]);
+    MMIO2D::BaseAddress::WriteDestination(s_ControlAperture, s_Surfaces[s_BackSurface]);
+
+    MMIO3D::BufferAddress::WriteColor(Function::System::s_ControlAperture, s_Surfaces[s_BackSurface]);
+    MMIO3D::BufferAddress::WriteAux(Function::System::s_ControlAperture, s_DepthSurface);
 }
 
-// Maybe I need to somehow have a surface creation routine instead.
-// and build up a swap chain.
-VGA::ModeSetting::SetupBuffersError_t SetupBuffers(VGA::ModeSetting::Buffers_t buffers)
+VGA::ModeSetting::SetVideoError_t SetupBuffers(VGA::ModeSetting::Buffers_t buffers)
 {
-    if ((VGA::ModeSetting::s_CurrentDescriptor->Flags & TDfx::Shared::Function::ModeSetting::Flags::TDfx) == 0)
-    {//TODO: Standard vga!
-        return VGA::ModeSetting::SetupBuffersError::ModeNotSet;
-    }
-
+    using namespace Has;
+    
     uint32_t currentMemoryAddress = 0;
     CleanUpBuffers();
 
-    //TODO: Split out 2d surface config? Or also have some form of shared config if possible? 
-    s_SurfaceCount2D = min<uint8_t>(buffers & VGA::ModeSetting::Buffers::ImageBuffers, 2);
-    s_FrontSurface2D = 0;
-    s_BackSurface2D = 1 % s_SurfaceCount2D;
-    for (uint8_t i = 0; i < s_SurfaceCount2D; ++i)
+    if ((VGA::ModeSetting::s_CurrentDescriptor->Flags & TDfx::Shared::Function::ModeSetting::Flags::TDfx) == 0)
     {
-        s_Surfaces2D[i] = currentMemoryAddress;
+        //TODO: there are some modes that can do double buffering.
+        if ((buffers & VGA::ModeSetting::Buffers::ImageBuffers) != VGA::ModeSetting::Buffers::SingleBuffer)
+        {
+            return VGA::ModeSetting::SetVideoError::UnsupportedBufferCount;
+        }
+        return VGA::ModeSetting::SetVideoError::Success;
+    }
+
+    s_SurfaceCount = buffers & VGA::ModeSetting::Buffers::ImageBuffers;
+    s_FrontSurface = 0;
+    s_BackSurface = 1 % s_SurfaceCount;
+    for (uint8_t i = 0; i < s_SurfaceCount; ++i)
+    {
+        s_Surfaces[i] = currentMemoryAddress;
         currentMemoryAddress += VGA::ModeSetting::s_CurrentDescriptor->Stride * VGA::ModeSetting::s_CurrentDescriptor->Height;
         currentMemoryAddress = alignup<uint32_t>(currentMemoryAddress, 16);
     }
@@ -162,17 +164,7 @@ VGA::ModeSetting::SetupBuffersError_t SetupBuffers(VGA::ModeSetting::Buffers_t b
 
     //Todo: 2d cache...
 
-    s_SurfaceCount3D = buffers & VGA::ModeSetting::Buffers::ImageBuffers;
-    s_FrontSurface3D = 0;
-    s_BackSurface3D = 1 % s_SurfaceCount3D;
-    for (uint8_t i = 0; i < s_SurfaceCount3D; ++i)
-    {//TODO: currently only 16bpp
-        s_Surfaces3D[i] = currentMemoryAddress;
-        currentMemoryAddress += alignup<uint32_t>(VGA::ModeSetting::s_CurrentDescriptor->Width * 2, 16) * VGA::ModeSetting::s_CurrentDescriptor->Height;
-        currentMemoryAddress = alignup<uint32_t>(currentMemoryAddress, 16);
-    }
-
-    if (s_SurfaceCount3D == 3)
+    if (s_SurfaceCount == 3)
     {
         IO::DRAMInit1::Write(s_IOBaseAddress,
             (IO::DRAMInit1::Read(s_IOBaseAddress) & ~DRAMInit1::Buffering) |
@@ -191,7 +183,7 @@ VGA::ModeSetting::SetupBuffersError_t SetupBuffers(VGA::ModeSetting::Buffers_t b
         if (depthFormat != VGA::ModeSetting::Buffers::Depth16Bpp)
         {
             CleanUpBuffers();
-            return VGA::ModeSetting::SetupBuffersError::DepthBufferFormatNotSupported;
+            return VGA::ModeSetting::SetVideoError::DepthBufferFormatNotSupported;
         }
         currentMemoryAddress = alignup<uint32_t>(currentMemoryAddress, 16);
         s_DepthSurface = currentMemoryAddress;
@@ -204,28 +196,22 @@ VGA::ModeSetting::SetupBuffersError_t SetupBuffers(VGA::ModeSetting::Buffers_t b
     
     if (currentMemoryAddress >= (s_MemorySize << 10))
     {
-        printf("Not enough memory!");
         CleanUpBuffers();
-        return VGA::ModeSetting::SetupBuffersError::NotEnoughMemory;
+        return VGA::ModeSetting::SetVideoError::InsufficientVideoMemory;
     }
     ApplyBufferSettings();
 
-    return VGA::ModeSetting::SetupBuffersError::Success;
+    return VGA::ModeSetting::SetVideoError::Success;
 }
 
 void CleanUpBuffers()
 {
     ShutdownFifos();
 
-    s_SurfaceCount2D = 0;
-    s_FrontSurface2D = 0;
-    s_BackSurface2D = 0;
-    s_Surfaces2D[0] = s_Surfaces2D[1] = 0;
-
-    s_SurfaceCount3D = 0;
-    s_FrontSurface3D = 0;
-    s_BackSurface3D = 0;
-    s_Surfaces3D[0] = s_Surfaces3D[1] = s_Surfaces3D[2] = 0;
+    s_SurfaceCount = 0;
+    s_FrontSurface = 0;
+    s_BackSurface = 0;
+    s_Surfaces[0] = s_Surfaces[1] = s_Surfaces[2] = 0;
 
     s_DepthSurface = 0;
     s_TextureMemory = 0;
@@ -298,8 +284,8 @@ void SwapScreen2D(bool waitForVSync)
         readPtr1 = (uint32_t * volatile)(s_LinearFrameBuffer + Fifo::CommandReadPointerLow::Read<1>(s_ControlAperture));
     } while ((readPtr0 != s_FifoHandler0.CurrentAddress) || (readPtr1 != s_FifoHandler1.CurrentAddress));
 */
-    s_FrontSurface2D = (s_FrontSurface2D + 1) % s_SurfaceCount2D;
-    s_BackSurface2D = (s_BackSurface2D + 1) % s_SurfaceCount2D;
+    s_FrontSurface = (s_FrontSurface + 1) % s_SurfaceCount;
+    s_BackSurface = (s_BackSurface + 1) % s_SurfaceCount;
     ApplyBufferSettings();
 }
 

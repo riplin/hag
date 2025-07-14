@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <hag/drivers/s3/trio64/trio64.h>
 #include <hag/drivers/vga/funcs.h>
-#include <hag/system/sysasm.h>
+#include <has/system/sysasm.h>
 
 Hag::VGA::Register_t Registers[] =
 {

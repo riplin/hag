@@ -10,7 +10,7 @@ namespace Hag::Matrox::Shared::PCI::Indexed
 
 namespace SystemPLLStatus
 {
-    inline Shared::Indexed::SystemPLLStatus_t Read(System::PCI::Device_t device)
+    inline Shared::Indexed::SystemPLLStatus_t Read(Has::System::PCI::Device_t device)
     {
         return IndexedData::Read(device, Shared::Indexed::Register::SystemPLLStatus);
     }

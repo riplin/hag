@@ -18,7 +18,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t IndexedData_t;
+typedef Has::System::PCI::Register_t IndexedData_t;
 
 namespace IndexedData
 {

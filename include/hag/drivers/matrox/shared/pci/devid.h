@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <hag/system/pci.h>
+#include <has/system/pci.h>
 
 namespace Hag::Matrox::Shared::PCI
 {
@@ -17,7 +17,7 @@ enum
 
 }
 
-typedef System::PCI::Register_t DeviceIdentification_t;
+typedef Has::System::PCI::Register_t DeviceIdentification_t;
 
 namespace DeviceIdentification
 {
@@ -36,7 +36,7 @@ namespace DeviceIdentification
         };
     }
 
-    inline DeviceIdentification_t Read(System::PCI::Device_t device) { return System::PCI::Read32(device, Register::DeviceIdentification); }
+    inline DeviceIdentification_t Read(Has::System::PCI::Device_t device) { return Has::System::PCI::Read32(device, Register::DeviceIdentification); }
 }
 
 }

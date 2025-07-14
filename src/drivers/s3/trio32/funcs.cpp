@@ -1,8 +1,8 @@
 //Copyright 2023-Present riplin
 
 #include <hag/system/bda.h>
-#include <hag/system/pci.h>
-#include <hag/system/sysasm.h>
+#include <has/system/pci.h>
+#include <has/system/sysasm.h>
 #include <hag/drivers/vga/data.h>
 #include <hag/drivers/vga/funcs.h>
 #include <hag/drivers/s3/trio32/funcs.h>

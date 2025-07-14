@@ -1,7 +1,7 @@
 //Copyright 2025-Present riplin
 
 #include <dos.h>
-#include <hag/system/interrup.h>
+#include <has/system/interrup.h>
 #include <hag/drivers/vga/extmsapi.h>
 #include "modintl.h"
 #include "sysintl.h"
@@ -21,10 +21,15 @@
 #include <hag/drivers/3dfx/shared/mmio2d/clip.h>
 #include <hag/drivers/3dfx/shared/mmio2d/dstfmt.h>
 
+#include <hag/drivers/3dfx/shared/mmio3d/lfbm.h>
+#include <hag/drivers/3dfx/shared/mmio3d/fbzm.h>
+#include <hag/drivers/3dfx/shared/mmio3d/buffstrd.h>
+#include <hag/drivers/3dfx/shared/mmio3d/clip.h>
+
 namespace Hag::VGA::ModeSetting::External
 {
 
-bool Initialize(IAllocator& allocator)
+bool Initialize(Has::IAllocator& allocator)
 {
     return TDfx::Shared::Function::System::Initialize(allocator);
 }
@@ -275,8 +280,8 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
         IO::VGAInit0::Write(Function::System::s_IOBaseAddress,
                             (IO::VGAInit0::Read(Function::System::s_IOBaseAddress) & VGAInit0::WakeUpSelect) | VGAInit0::ExtensionsEnabled);
 
-        System::PCI::Write16(Function::System::s_Device, System::PCI::PreHeader::Command,
-        System::PCI::Read16(Function::System::s_Device, System::PCI::PreHeader::Command) & ~System::PCI::Command::VGAPaletteSnoop);
+        Has::System::PCI::Write16(Function::System::s_Device, Has::System::PCI::PreHeader::Command,
+        Has::System::PCI::Read16(Function::System::s_Device, Has::System::PCI::PreHeader::Command) & ~Has::System::PCI::Command::VGAPaletteSnoop);
 
         IO::DACMode::Write(Function::System::s_IOBaseAddress, 0);
         IO::VideoDesktopStartAddress::Write(Function::System::s_IOBaseAddress, 0);
@@ -311,8 +316,6 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
             videoProcessorConfiguration = VideoProcessorConfiguration::DesktopPixelFormatRGB32;
         }
 
-        uint8_t* baseAddress2d = TDfx::Shared::PCI::ControlBaseAddress::GetBaseAddressAs<uint8_t>(Function::System::s_Device);
-
         if ((timings.Config & Function::ModeSetting::Configuration::ExtendedVideoShiftOut) != 0)
         {
             videoProcessorConfiguration |= VideoProcessorConfiguration::Enable |
@@ -325,33 +328,58 @@ void ApplyExtendedModeSettings(const ModeDescriptor& descriptor)
             videoProcessorConfiguration |=  (timings.Config & (Function::ModeSetting::Configuration::Interlace |
                                                             Function::ModeSetting::Configuration::HalfMode)) << 2;
             
-            TwoD::DestinationFormat_t bpp2D = 0;
-            switch(descriptor.Bpp)
+            if ((descriptor.Flags & Flags::Accelerate2D) != 0)
             {
-            case BitsPerPixel::Bpp8:
-                bpp2D = TwoD::DestinationFormat::Bpp8;
-                break;
-            case BitsPerPixel::Bpp16:
-                bpp2D = TwoD::DestinationFormat::Bpp16;
-                break;
-            case BitsPerPixel::Bpp24:
-                bpp2D = TwoD::DestinationFormat::Bpp24;
-                break;
-            case BitsPerPixel::Bpp32:
-                bpp2D = TwoD::DestinationFormat::Bpp32;
-                break;
-            default:
-                break;
+                TwoD::DestinationFormat_t bpp2D = 0;
+                switch(descriptor.Bpp)
+                {
+                case BitsPerPixel::Bpp8:
+                    bpp2D = TwoD::DestinationFormat::Bpp8;
+                    break;
+                case BitsPerPixel::Bpp16:
+                    bpp2D = TwoD::DestinationFormat::Bpp16;
+                    break;
+                case BitsPerPixel::Bpp24:
+                    bpp2D = TwoD::DestinationFormat::Bpp24;
+                    break;
+                case BitsPerPixel::Bpp32:
+                    bpp2D = TwoD::DestinationFormat::Bpp32;
+                    break;
+                default:
+                    break;
+                }
+                
+                MMIO2D::DestinationFormat::Write(Function::System::s_ControlAperture, descriptor.Stride | bpp2D);
+
+                MMIO2D::Clip::WriteClip0Min(Function::System::s_ControlAperture, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
+                MMIO2D::Clip::WriteClip0Max(Function::System::s_ControlAperture, (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
+                MMIO2D::Clip::WriteClip1Min(Function::System::s_ControlAperture, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
+                MMIO2D::Clip::WriteClip1Max(Function::System::s_ControlAperture, (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
             }
-            
-            //TODO: the 3D core probably needs this setup as well.
-            MMIO2D::DestinationFormat::Write(baseAddress2d, descriptor.Stride | bpp2D);
 
-            MMIO2D::Clip::WriteClip0Min(baseAddress2d, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
-            MMIO2D::Clip::WriteClip0Max(baseAddress2d, (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
-            MMIO2D::Clip::WriteClip1Min(baseAddress2d, (uint32_t(0) << TwoD::Clip::Shift::Y) | 0);
-            MMIO2D::Clip::WriteClip1Max(baseAddress2d, (uint32_t(descriptor.Height) << TwoD::Clip::Shift::Y) | descriptor.Width);
+            if ((descriptor.Flags & Flags::Accelerate3D) != 0)
+            {
+                MMIO3D::LinearFrameBufferMode::Write(Function::System::s_ControlAperture,
+                    ThreeD::LinearFrameBufferMode::Format16BppZ16BppRGB |
+                    ThreeD::LinearFrameBufferMode::PipelineProcessingEnabled |
+                    ThreeD::LinearFrameBufferMode::LaneABGR);
 
+                ThreeD::RGBDepthMode_t depthBufferConfig = 0;
+                if (Function::System::s_DepthSurface != 0)
+                {
+                    //Configure depth flags.
+                    depthBufferConfig = ThreeD::RGBDepthMode::DepthBufferW | ThreeD::RGBDepthMode::DepthFuncAlways;
+                }
+
+                //TODO: more setup here.
+                MMIO3D::RGBDepthMode::Write(Function::System::s_ControlAperture, depthBufferConfig);
+
+                MMIO3D::BufferStride::WriteColor(Function::System::s_ControlAperture, descriptor.Stride);
+                MMIO3D::BufferStride::WriteAux(Function::System::s_ControlAperture, descriptor.Width << 1);
+
+                MMIO3D::Clip::WriteLeftRight(Function::System::s_ControlAperture, (0 << ThreeD::ClipLeftRight::Shift::Left) | (descriptor.Width << ThreeD::ClipLeftRight::Shift::Right));
+                MMIO3D::Clip::WriteTopBottom(Function::System::s_ControlAperture, (0 << ThreeD::ClipTopBottom::Shift::Top) | (descriptor.Height << ThreeD::ClipTopBottom::Shift::Bottom));
+            }
         }
 
         IO::VideoProcessorConfiguration::Write(Function::System::s_IOBaseAddress, videoProcessorConfiguration);
@@ -440,7 +468,7 @@ void* GetLinearFrameBuffer()
     return TDfx::Shared::Function::System::s_LinearFrameBuffer;
 }
 
-SetupBuffersError_t SetupBuffers(Buffers_t buffers)
+SetVideoError_t SetupBuffers(Buffers_t buffers)
 {
     return TDfx::Shared::Function::System::SetupBuffers(buffers);
 }
@@ -451,44 +479,3 @@ void SwapScreen2D(bool waitForVSync)
 }
 
 }
-
-
-
-/*
-
-//Stride calculation...
-
-        uint16_t stride = 0;
-        if ((descriptor.Flags & Flags::Mode) == Flags::Text)
-        {
-            stride = descriptor.Width << 1;
-        }
-        else
-        {
-            VGA::ModeSetting::BitsPerPixel_t bpp = descriptor.Bpp;
-            if (bpp == BitsPerPixel::Bpp15)
-                bpp = BitsPerPixel::Bpp16;
-            
-            stride = (descriptor.Width * bpp) >> 3;
-            if (bpp == BitsPerPixel::Bpp4)
-                stride >>= 2;
-            if (bpp == BitsPerPixel::Bpp24)
-            {
-                //Power of 2
-                stride = (descriptor.Width * bpp) >> 3;
-                uint8_t shift = 0;
-                uint8_t bits = 0;
-                while (stride != 0)
-                {
-                    bits += stride & 1;
-                    stride >>= 1;
-                    ++shift;
-                }
-                stride = 1 << (shift - 1);
-                if (bits > 1)
-                    stride <<= 1;
-            }
-        }
-
-
-*/

@@ -11,65 +11,7 @@ namespace Register
 {
     enum
     {
-        EnableFunction =                    0x00000001, // Enable alpha function (1=enable)
-
-        AlphaFunction =                     0x0000000e,
-        FuncNever =                         0x00000000,
-        FuncLessThan =                      0x00000002,
-        FuncEqual =                         0x00000004,
-        FuncLessThanOrEqual =               0x00000006,
-        FuncGreaterThan =                   0x00000008,
-        FuncNotEqual =                      0x0000000a,
-        FuncGreaterThanOrEqual =            0x0000000c,
-        FuncAlways =                        0x0000000e,
-
-        EnableBlending =                    0x00000010,
-
-        SourceRGBBlendingFactor =           0x00000f00,
-        SrcRGBFZero =                       0x00000000,
-        SrcRGBFSourceAlpha =                0x00000100,
-        SrcRGBFColor =                      0x00000200,
-        SrcRGBFDestinationAlpha =           0x00000300,
-        SrcRGBFOne =                        0x00000400,
-        SrcRGBFOneMinusSourceAlpha =        0x00000500,
-        SrcRGBFOneMinusColor =              0x00000600,
-        SrcRGBFOneMinusDestinationAlpha =   0x00000700,
-        SrcRGBFASaturate =                  0x00000f00,
-
-        DestinationRGBBlendingFactor =      0x0000f000,
-        DstRGBFZero =                       0x00000000,
-        DstRGBFSourceAlpha =                0x00001000,
-        DstRGBFColor =                      0x00002000,
-        DstRGBFDestinationAlpha =           0x00003000,
-        DstRGBFOne =                        0x00004000,
-        DstRGBFOneMinusSourceAlpha =        0x00005000,
-        DstRGBFOneMinusColor =              0x00006000,
-        DstRGBFOneMinusDestinationAlpha =   0x00007000,
-        DstRGBFColorBeforeFog =             0x0000f000,
-
-        SourceAlphaBlendingFactor =         0x000f0000,
-        SrcAFZero =                         0x00000000,
-        SrcAFSourceAlpha =                  0x00010000,
-        SrcAFColor =                        0x00020000,
-        SrcAFDestinationAlpha =             0x00030000,
-        SrcAFOne =                          0x00040000,
-        SrcAFOneMinusSourceAlpha =          0x00050000,
-        SrcAFOneMinusColor =                0x00060000,
-        SrcAFOneMinusDestinationAlpha =     0x00070000,
-        SrcAFASaturateAntiAlias =           0x000f0000,
-
-        DestinationAlphaBlendingFactor =    0x00f00000,
-        DstAFZero =                         0x00000000,
-        DstAFSourceAlpha =                  0x00100000,
-        DstAFColor =                        0x00200000,
-        DstAFDestinationAlpha =             0x00300000,
-        DstAFOne =                          0x00400000,
-        DstAFOneMinusSourceAlpha =          0x00500000,
-        DstAFOneMinusColor =                0x00600000,
-        DstAFOneMinusDestinationAlpha =     0x00700000,
-        DstAFDestinationBlendFactor =       0x00f00000,
-        
-        AlphaReferenceValue =               0xff000000
+        AlphaMode = 0x10c
     };
 }
 
@@ -205,14 +147,79 @@ namespace AlphaMode
 {
     enum
     {
+        EnableFunction =                    0x00000001, // Enable alpha function (1=enable)
 
+        AlphaFunction =                     0x0000000e,
+        FuncNever =                         0x00000000,
+        FuncLessThan =                      0x00000002,
+        FuncEqual =                         0x00000004,
+        FuncLessThanOrEqual =               0x00000006,
+        FuncGreaterThan =                   0x00000008,
+        FuncNotEqual =                      0x0000000a,
+        FuncGreaterThanOrEqual =            0x0000000c,
+        FuncAlways =                        0x0000000e,
+
+        EnableBlending =                    0x00000010,
+
+        SourceRGBBlendingFactor =           0x00000f00,
+        SrcRGBFZero =                       0x00000000,
+        SrcRGBFSourceAlpha =                0x00000100,
+        SrcRGBFColor =                      0x00000200,
+        SrcRGBFDestinationAlpha =           0x00000300,
+        SrcRGBFOne =                        0x00000400,
+        SrcRGBFOneMinusSourceAlpha =        0x00000500,
+        SrcRGBFOneMinusColor =              0x00000600,
+        SrcRGBFOneMinusDestinationAlpha =   0x00000700,
+        SrcRGBFASaturate =                  0x00000f00,
+
+        DestinationRGBBlendingFactor =      0x0000f000,
+        DstRGBFZero =                       0x00000000,
+        DstRGBFSourceAlpha =                0x00001000,
+        DstRGBFColor =                      0x00002000,
+        DstRGBFDestinationAlpha =           0x00003000,
+        DstRGBFOne =                        0x00004000,
+        DstRGBFOneMinusSourceAlpha =        0x00005000,
+        DstRGBFOneMinusColor =              0x00006000,
+        DstRGBFOneMinusDestinationAlpha =   0x00007000,
+        DstRGBFColorBeforeFog =             0x0000f000,
+
+        SourceAlphaBlendingFactor =         0x000f0000,
+        SrcAFZero =                         0x00000000,
+        SrcAFSourceAlpha =                  0x00010000,
+        SrcAFColor =                        0x00020000,
+        SrcAFDestinationAlpha =             0x00030000,
+        SrcAFOne =                          0x00040000,
+        SrcAFOneMinusSourceAlpha =          0x00050000,
+        SrcAFOneMinusColor =                0x00060000,
+        SrcAFOneMinusDestinationAlpha =     0x00070000,
+        SrcAFASaturateAntiAlias =           0x000f0000,
+
+        DestinationAlphaBlendingFactor =    0x00f00000,
+        DstAFZero =                         0x00000000,
+        DstAFSourceAlpha =                  0x00100000,
+        DstAFColor =                        0x00200000,
+        DstAFDestinationAlpha =             0x00300000,
+        DstAFOne =                          0x00400000,
+        DstAFOneMinusSourceAlpha =          0x00500000,
+        DstAFOneMinusColor =                0x00600000,
+        DstAFOneMinusDestinationAlpha =     0x00700000,
+        DstAFDestinationBlendFactor =       0x00f00000,
+        
+        AlphaReferenceValue =               0xff000000
     };
 
     namespace Shift
     {
         enum
         {
-
+            EnableFunction =                    0x00,
+            AlphaFunction =                     0x01,
+            EnableBlending =                    0x04,
+            SourceRGBBlendingFactor =           0x08,
+            DestinationRGBBlendingFactor =      0x0c,
+            SourceAlphaBlendingFactor =         0x10,
+            DestinationAlphaBlendingFactor =    0x14,
+            AlphaReferenceValue =               0x18
         };
     }
 }

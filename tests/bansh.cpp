@@ -1,12 +1,13 @@
 //Copyright 2025-Present riplin
 
+#include <stdio.h>
 #include <functional>
 #include <sys/nearptr.h>
 #include <support/allocatr.h>
 
 #include <hag/color.h>
-#include <hag/testing/log.h>
-#include <hag/math/math.h>
+#include <has/testing/log.h>
+#include <has/math/math.h>
 #include <hag/drivers/3dfx/banshee/banshee.h>
 
 // #include <xmmintrin.h>
@@ -22,41 +23,43 @@
 // LOG("test", "c: %0.4f, %0.4f, %0.4f, %0.4f", c[0], c[1], c[2], c[3]);
 
 
-extern Hag::Math::v4 icoVecs[12];
+extern Has::Math::v4 icoVecs[12];
 extern uint32_t icoTri[20][3];
-extern Hag::Math::v4 icoNorm[20];
+extern Has::Math::v4 icoNorm[20];
 
 void setupNormals();
 void colorLerp(Hag::Color32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB);
 
-typedef std::function<void(Hag::Color32_t color, const Hag::Math::v4* triangle)> TriangleRender_t;
-void RenderModel(const Hag::Math::v3& val,
+typedef std::function<void(Hag::Color32_t color, const Has::Math::v4* triangle)> TriangleRender_t;
+void RenderModel(const Has::Math::v3& val,
                  uint16_t screenCenterX,
                  uint16_t screenCenterY,
-                 const Hag::Math::v4& light,
-                 const Hag::Math::v3& modelTranslate,
-                 const Hag::Math::m44& scale,
-                 const Hag::Math::m44& proj,
-                 const Hag::Math::v4* vectors,
-                 Hag::Math::v4* tempVectors,
+                 const Has::Math::v4& light,
+                 const Has::Math::v3& modelTranslate,
+                 const Has::Math::m44& scale,
+                 const Has::Math::m44& proj,
+                 const Has::Math::v4* vectors,
+                 Has::Math::v4* tempVectors,
                  uint32_t vectorCount,
                  const uint32_t(*indices)[3],
-                 const Hag::Math::v4* normals,
-                 Hag::Math::v4* tempNormals,
+                 const Has::Math::v4* normals,
+                 Has::Math::v4* tempNormals,
                  uint32_t indexCount,
                 const TriangleRender_t& triangleRender);
 
 void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void FillRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
-void DrawTriangle(const Hag::Math::v4* vectors);
+void DrawTriangle(const Has::Math::v4* vectors);
 
 uint32_t colors[256];
+
+#include "../src/drivers/3dfx/shared/sysintl.h"
 
 int main(void)
 {
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has::Math;
     using namespace Hag::TDfx;
     using namespace Hag::Color;
 
@@ -86,13 +89,64 @@ int main(void)
     v4 light = v4(v3(1.0f).Normalize(), 0);
     
     Support::Allocator allocator;
-    Banshee::Initialize(allocator);
+    if (!Banshee::Initialize(allocator))
+    {
+        printf("Failed to initialize Banshee.\n");
+        return -1;
+    }
 
-    Banshee::SetVideoMode(width, height, Banshee::BitsPerPixel::Bpp24, Banshee::Flags::LinearFramebuffer);
-    Banshee::SetupBuffers(Banshee::Buffers::Depth16Bpp | Banshee::Buffers::DoubleBuffer);
+    Banshee::SetVideoError_t result = Banshee::SetVideoMode(width,
+                                                            height,
+                                                            Banshee::BitsPerPixel::Bpp16,
+                                                            Banshee::Flags::Accelerate3D,
+                                                            Banshee::RefreshRate::DontCare,
+                                                            true,
+                                                            Banshee::Buffers::Depth16Bpp |
+                                                            Banshee::Buffers::DoubleBuffer);
+    
+    if (result != Banshee::SetVideoError::Success)
+    {
+        printf("%s\n", Banshee::SetVideoError::ToString(result));
+        return -1;
+    }
+
+    uint16_t* ptr = Banshee::GetLinearFrameBufferAs<uint16_t>();
+    for (int i = 0; i < width * height * 2; ++i)
+    {
+        *(ptr++) = 0xffff;
+    }
+
+    Banshee::MMIO3D::FbzColorPath::Write(Shared::Function::System::s_ControlAperture,
+        Banshee::ThreeD::FbzColorPath::RGBColor1 |
+        Banshee::ThreeD::FbzColorPath::AlphaColor1 |
+        Banshee::ThreeD::FbzColorPath::CCULSColor0 |
+        Banshee::ThreeD::FbzColorPath::ACULSColor0 |
+        Banshee::ThreeD::FbzColorPath::CCULSOLocal |
+        Banshee::ThreeD::FbzColorPath::CCUZOOther |
+        Banshee::ThreeD::FbzColorPath::CCUZLLocal |
+        Banshee::ThreeD::FbzColorPath::CCUSColorLocal |
+        Banshee::ThreeD::FbzColorPath::CCUBCNormal |
+        Banshee::ThreeD::FbzColorPath::ACUSAlphaLocal |
+        Banshee::ThreeD::FbzColorPath::ACUBCNormal |
+        Banshee::ThreeD::FbzColorPath::ACUAddAlphaLocal |
+        Banshee::ThreeD::FbzColorPath::ParameterAdjust |
+        Banshee::ThreeD::FbzColorPath::TextureMappingDisable |
+        Banshee::ThreeD::FbzColorPath::ClampingEnable |
+        Banshee::ThreeD::FbzColorPath::AntiAliasingDisable
+        );
 
     do
     {
+
+        Banshee::MMIO3D::Color::Write0(Shared::Function::System::s_ControlAperture, Color::Bpp32::BabyBlue);
+        Banshee::MMIO3D::Color::Write1(Shared::Function::System::s_ControlAperture, Color::Bpp32::Lime);
+
+        Banshee::Fifo::Direct::ThreeD::FastFill<0>(false);
+        Banshee::Fifo::Deferred::TwoD::SetForegroundColor(Color::Bpp16::Cherry);
+        DrawRectangle(0, 0, width - 1, height - 1);
+        //Banshee::MMIO3D::Command::WriteFastFill(Shared::Function::System::s_ControlAperture, Banshee::ThreeD::FastFill::NoDithering);
+
+        /*
         Banshee::Fifo::Deferred::TwoD::SetForegroundColor(Color::Bpp32::Black);
         FillRectangle(0, 0, width, height);
 
@@ -118,7 +172,7 @@ int main(void)
                 Banshee::Fifo::Deferred::TwoD::SetForegroundColor(color);
                 DrawTriangle(triangle);
             });
-
+        */
         val = (val + inc) % TwoPi;        
 
         Banshee::SwapScreen2D(true);
@@ -134,7 +188,7 @@ int main(void)
 
 void FillRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::TDfx;
     LOG("main", "FillRectangle");
 
@@ -153,7 +207,7 @@ void FillRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 
 void DrawRectangle(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
 {
-    using namespace Hag;
+    using namespace Has;
     using namespace Hag::TDfx;
     LOG("main", "DrawRectangle");
 
@@ -195,7 +249,7 @@ void DrawLine(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1)
     Shared::Fifo::Deferred::TwoD::Commit(0);
 }
 
-void DrawTriangle(const Hag::Math::v4* vectors)
+void DrawTriangle(const Has::Math::v4* vectors)
 {
     using namespace Hag;
     using namespace Hag::TDfx;
@@ -262,11 +316,11 @@ float pZ = 85.0650808352039932f;
 float nX = -pX;
 float nZ = -pZ;
 
-Hag::Math::v4 icoVecs[12] =
+Has::Math::v4 icoVecs[12] =
 {
-    Hag::Math::v4(nX,  0, pZ, 1), Hag::Math::v4(pX,  0, pZ, 1), Hag::Math::v4(nX,  0, nZ, 1), Hag::Math::v4(pX,  0, nZ, 1),
-    Hag::Math::v4( 0, pZ, pX, 1), Hag::Math::v4( 0, pZ, nX, 1), Hag::Math::v4( 0, nZ, pX, 1), Hag::Math::v4( 0, nZ, nX, 1),
-    Hag::Math::v4(pZ, pX,  0, 1), Hag::Math::v4(nZ, pX,  0, 1), Hag::Math::v4(pZ, nX,  0, 1), Hag::Math::v4(nZ, nX,  0, 1),
+    Has::Math::v4(nX,  0, pZ, 1), Has::Math::v4(pX,  0, pZ, 1), Has::Math::v4(nX,  0, nZ, 1), Has::Math::v4(pX,  0, nZ, 1),
+    Has::Math::v4( 0, pZ, pX, 1), Has::Math::v4( 0, pZ, nX, 1), Has::Math::v4( 0, nZ, pX, 1), Has::Math::v4( 0, nZ, nX, 1),
+    Has::Math::v4(pZ, pX,  0, 1), Has::Math::v4(nZ, pX,  0, 1), Has::Math::v4(pZ, nX,  0, 1), Has::Math::v4(nZ, nX,  0, 1),
 };
 
 uint32_t icoTri[20][3] =
@@ -277,11 +331,11 @@ uint32_t icoTri[20][3] =
     {6, 10,  1}, {9, 11, 0}, {9, 2, 11}, { 9, 5, 2}, {7, 11, 2},
 };
 
-Hag::Math::v4 icoNorm[20];
+Has::Math::v4 icoNorm[20];
 
 void setupNormals()
 {
-    using namespace Hag::Math::flt;
+    using namespace Has::Math;
 
     for (uint32_t i = 0; i < 20; ++i)
     {
@@ -291,9 +345,8 @@ void setupNormals()
     }
 }
 
-bool isBackFace(const Hag::Math::v4& vec0, const Hag::Math::v4& vec1, const Hag::Math::v4& vec2)
+bool isBackFace(const Has::Math::v4& vec0, const Has::Math::v4& vec1, const Has::Math::v4& vec2)
 {
-    using namespace Hag::Math::flt;
     float d01x = (vec1.x() - vec0.x());
     float d01y = (vec1.y() - vec0.y());
     float d02x = (vec2.x() - vec0.x());
@@ -301,24 +354,24 @@ bool isBackFace(const Hag::Math::v4& vec0, const Hag::Math::v4& vec1, const Hag:
     return d01x * d02y - d01y * d02x >= 0;
 }
 
-void RenderModel(const Hag::Math::v3& val,
+void RenderModel(const Has::Math::v3& val,
                  uint16_t screenCenterX,
                  uint16_t screenCenterY,
-                 const Hag::Math::v4& light,
-                 const Hag::Math::v3& modelTranslate,
-                 const Hag::Math::m44& scale,
-                 const Hag::Math::m44& proj,
-                 const Hag::Math::v4* vectors,
-                 Hag::Math::v4* tempVectors,
+                 const Has::Math::v4& light,
+                 const Has::Math::v3& modelTranslate,
+                 const Has::Math::m44& scale,
+                 const Has::Math::m44& proj,
+                 const Has::Math::v4* vectors,
+                 Has::Math::v4* tempVectors,
                  uint32_t vectorCount,
                  const uint32_t(*indices)[3],
-                 const Hag::Math::v4* normals,
-                 Hag::Math::v4* tempNormals,
+                 const Has::Math::v4* normals,
+                 Has::Math::v4* tempNormals,
                  uint32_t indexCount,
                  const TriangleRender_t& triangleRender)
 {
-    using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has;
+    using namespace Has::Math;
     using namespace Hag::TDfx;
 
     LOG("main", "RenderModel");
@@ -360,8 +413,9 @@ void RenderModel(const Hag::Math::v3& val,
 
 void colorLerp(Hag::Color32_t* colors, uint32_t steps, uint32_t colorA, uint32_t colorB)
 {
+    using namespace Has;
     using namespace Hag;
-    using namespace Hag::Math;
+    using namespace Has::Math;
 
     for (uint32_t i = 0; i < steps; ++i)
     {
