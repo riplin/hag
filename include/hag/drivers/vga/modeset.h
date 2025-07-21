@@ -119,4 +119,8 @@ namespace Hag::VGA::ModeSetting
     void* GetLinearFrameBuffer();
 
     template <typename T> T* GetLinearFrameBufferAs() { return (T*)GetLinearFrameBuffer(); }
+
+    void SetCursor(bool enable, uint8_t startScanline, uint8_t endScanline);
+    void SetColors(uint8_t colorsMinusOne, uint8_t* colors, uint8_t startColor);
+    void UploadCharacterGlyphs(uint8_t charactersMinusOne, uint8_t* characterGlyphs, uint8_t startGlyph, uint8_t glyphHeight, uint8_t bankIndex);
 }

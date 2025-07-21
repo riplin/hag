@@ -884,4 +884,66 @@ const char* ToString(SetVideoError_t error)
 
 }
 
+void SetCursor(bool enable, uint8_t startScanline, uint8_t endScanline)
+{
+    using namespace Hag::System;
+    BDA::CursorScanLines::Get().Start = startScanline;
+    BDA::CursorScanLines::Get().End = endScanline;
+    CRTController::CursorStartScanLine::Write(BDA::VideoBaseIOPort::Get(), startScanline | (enable ? 0 : CRTController::CursorStartScanLine::CursorOff));
+    CRTController::CursorEndScanLine::Write(BDA::VideoBaseIOPort::Get(), endScanline);
+}
+
+void SetColors(uint8_t colorsMinusOne, uint8_t* colors, uint8_t startColor)
+{
+    using namespace Hag::System::BDA;
+    uint8_t red = 0;
+    uint8_t green = 0;
+    uint8_t blue = 0;
+    uint8_t greyscale = 0;
+
+    DACWriteIndex::Write(startColor);
+
+    if ((VideoDisplayDataArea::Get() & 
+        (VideoDisplayDataArea::GrayScale | VideoDisplayDataArea::MonochromeMonitor)) == 0x00)
+    {
+        uint16_t tripleCount = (colorsMinusOne + 1) * 3;
+        for (uint16_t idx = 0; idx < tripleCount; ++idx)
+        {
+            RAMDACData::Write(*(colors++));
+        }
+    }
+    else
+    {
+        for (uint16_t i = 0; i < colorsMinusOne + 1; ++i)
+        {
+            red = *(colors++);
+            green = *(colors++);
+            blue = *(colors++);
+            greyscale = ((0x4D * uint16_t(red)) +
+                         (0x97 * uint16_t(green)) +
+                         (0x1c * uint16_t(blue)) + 0x80) >> 8;
+            RAMDACData::Write(greyscale);
+            RAMDACData::Write(greyscale);
+            RAMDACData::Write(greyscale);
+        }
+    }
+}
+
+void UploadCharacterGlyphs(uint8_t charactersMinusOne, uint8_t* characterGlyphs, uint8_t startGlyph, uint8_t glyphHeight, uint8_t bankIndex)
+{
+    ConfigureFontLoadMemoryMapping();
+    
+    uint16_t offset = startGlyph << 5;
+
+    static uint8_t Bank[] = { 0x00, 0x40, 0x80, 0xC0, 0x20, 0x60, 0xA0, 0xE0 };
+    FARPointer ptr(0xA000, offset + (uint16_t(Bank[bankIndex]) << 8));
+   
+    for (uint16_t character = 0; character < charactersMinusOne + 1; ++character)
+    {
+        memcpy(ptr.ToPointer<uint8_t>(glyphHeight) + (character << 5), characterGlyphs + character * glyphHeight, glyphHeight);
+    }
+
+    ConfigureTextMemoryMapping();
+}
+
 }

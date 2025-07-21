@@ -83,7 +83,7 @@ void WriteExtensionRegisters(const ModeDescriptor& descriptor)
 
 }
 
-void SetupClock(const ModeDescriptor& descriptor)
+void SetupClock(const ModeDescriptor& descriptor, RefreshRate_t refreshRate)
 {
 
 }

@@ -7,6 +7,8 @@ set (CMAKE_CXX_COMPILER_RANLIB ${CMAKE_FIND_ROOT_PATH}/djgpp/i586-pc-msdosdjgpp/
 set(CMAKE_GENERATOR Ninja)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
+set(CMAKE_DEBUG_POSTFIX d)
+
 add_compile_options(-Wall -std=c++23 -save-temps -U __STRICT_ANSI__ -Wno-array-bounds -fext-numeric-literals)
 # -march=pentium3 -msse
 
@@ -26,7 +28,6 @@ add_link_options(
     "$<$<CONFIG:RELEASE>:-s>"
 )
 
-#How do i make this blasted thing do this conditionally???
 #add_compile_options(-D MOCK)
 
 set (ENV{DJDIR} "${CMAKE_FIND_ROOT_PATH}/djgpp/")
