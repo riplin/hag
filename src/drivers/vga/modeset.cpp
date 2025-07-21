@@ -2,6 +2,7 @@
 
 #include <dpmi.h>
 #include <has/system/pit.h>
+#include <has/testing/log.h>
 #include <has/system/interrup.h>
 #include <hag/drivers/vga/modeset.h>
 #include <hag/drivers/vga/extmsapi.h>
@@ -55,23 +56,31 @@ bool Initialize(Has::IAllocator& allocator)
     {
         s_Allocator = &allocator;
         uint16_t fontSegment = 0;
+        LOG("VGA", "Allocating DOS memory for font");
         if (s_Allocator->AllocDosMem(Data::Font8x8Size + Data::Font8x14Size + Data::Font8x16Size, s_FontSelector, fontSegment))
         {
+            LOG("VGA", "Allocated");
             s_Font8x8.Set(fontSegment, 0x0000);
             s_Font8x8Graphics.Set(fontSegment, Data::Font8x8Size >> 1);
             s_Font8x14.Set(fontSegment, Data::Font8x8Size);
             s_Font8x16.Set(fontSegment, Data::Font8x8Size + Data::Font8x14Size);
+            LOG("VGA", "Copying 8x8 font");
             memcpy(s_Font8x8.ToPointer<uint8_t>(Data::Font8x8Size), Data::Font8x8, Data::Font8x8Size);
+            LOG("VGA", "Copying 8x14 font");
             memcpy(s_Font8x14.ToPointer<uint8_t>(Data::Font8x14Size), Data::Font8x14, Data::Font8x14Size);
+            LOG("VGA", "Copying 8x16 font");
             memcpy(s_Font8x16.ToPointer<uint8_t>(Data::Font8x16Size), Data::Font8x16, Data::Font8x16Size);
 
+            LOG("VGA", "Setting character and graphics font interrupt vectors");
             SYS_ClearInterrupts();
             s_SystemFont = InterruptTable::Pointer<InterruptTable::CharacterTable>();
             s_SystemFontGraphics = InterruptTable::Pointer<InterruptTable::GraphicsFont8x8>();
             SYS_RestoreInterrupts();
+            LOG("VGA", "Done");
 
             s_Initialized = true;
 
+            LOG("VGA", "External initialization");
             return External::Initialize(allocator);
         }
     }
