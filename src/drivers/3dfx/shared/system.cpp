@@ -259,7 +259,7 @@ void SwapScreen2D(bool waitForVSync)
     using namespace Hag;
     using namespace Hag::System;
 
-    if (waitForVSync) HAG_LIKELY
+    if (waitForVSync) HAS_LIKELY
     {
 /*
         Fifo::Packet2::Emit<0, Fifo::Packet2::Registers<
